@@ -59,7 +59,7 @@ VLA-Arena 专注于四个关键领域：
 ### 1. 安装
 ```bash
 # 克隆仓库
-git clone https://github.com/your-org/VLA-Arena.git
+git clone https://github.com/PKU-Alignment/VLA-Arena.git
 cd VLA-Arena
 
 # 创建环境
@@ -67,8 +67,21 @@ conda create -n vla-arena python=3.10
 conda activate vla-arena
 
 # 安装依赖
+pip install -r requirements.txt
+
+# 安装 VLA-Arena
 pip install -e .
 ```
+
+#### 注意事项
+- `robosuite/utils` 目录下可能缺少 `mujoco.dll` 文件，可从 `mujoco/mujoco.dll` 处获取；
+- 在 Windows 平台使用时，需在 `robosuite\utils\binding_utils.py` 中对 `mujoco` 渲染方式进行修改：
+  ```python
+  if _SYSTEM == "Darwin":
+    os.environ["MUJOCO_GL"] = "cgl"
+  else:
+    os.environ["MUJOCO_GL"] = "wgl"    # "egl" to "wgl"
+  ```
 
 ### 2. 基础评估
 ```bash

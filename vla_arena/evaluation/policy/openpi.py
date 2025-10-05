@@ -74,12 +74,12 @@ class OpenPI(Policy):
                  host="0.0.0.0",
                  port=8000,
                  replan_steps=4,
+                 eval_cfgs_path='../../configs/evaluation/openpi.yaml',
                  **kwargs):
         super().__init__(**kwargs)
         self.eval_cfgs = read_eval_cfgs(self.name, eval_cfgs_path)
         self.replan_steps = replan_steps
         self.action_plan = collections.deque(maxlen=replan_steps)
-        self.name = "openpi"
         self.timestep = 0
         self._uri = f"ws://{host}:{port}"
         self._packer = Packer()
@@ -87,8 +87,8 @@ class OpenPI(Policy):
     
     def _process_observation(self, obs, **kwargs):
         return {
-            "observation/image": obs["agentview_image"],
-            "observation/wrist_image": obs["robot0_eye_in_hand_image"],
+            "observation/image": obs["agentview_image"][::-1, ::-1, :],
+            "observation/wrist_image": obs["robot0_eye_in_hand_image"][::-1, ::-1, :],
             "observation/state": np.concatenate([obs["robot0_eef_pos"], obs["robot0_eef_quat"], np.array([obs["robot0_gripper_open"]])]),
             "prompt": self.instruction,
         }

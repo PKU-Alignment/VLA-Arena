@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import math
 from vla_arena.evaluation.policy.base import Policy, PolicyRegistry
-from vla_arena.evaluation.policy.modeling_smolvla import SmolVLAPolicy
+from vla_arena.evaluation.policy.modeling_smolvla.modeling_smolvla import SmolVLAPolicy
 from vla_arena.evaluation.utils import normalize_gripper_action, invert_gripper_action
 from vla_arena.evaluation.utils import read_eval_cfgs
 
@@ -33,7 +33,7 @@ class SmolVLA(Policy):
     def __init__(self, 
                  model_ckpt,
                  device="cuda",
-                 eval_cfgs_path='../../configs/evaluation/SmolVLA.yaml',
+                 eval_cfgs_path='../../configs/evaluation/smolvla.yaml',
                  **kwargs):
         """
         Initialize SmolVLA policy.
@@ -50,7 +50,7 @@ class SmolVLA(Policy):
         
         # Load the pretrained SmolVLA model
         print(f"Loading SmolVLA model from: {model_ckpt}")
-        # self.eval_cfgs = read_eval_cfgs(self.name, eval_cfgs_path)
+        self.eval_cfgs = read_eval_cfgs(self.name, eval_cfgs_path)
         model = SmolVLAPolicy.from_pretrained(model_ckpt)
         model.to(device)
         model.eval()

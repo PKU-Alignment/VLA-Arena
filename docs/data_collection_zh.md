@@ -28,7 +28,7 @@ python scripts/collect_demonstration.py --bddl-file <您的bddl文件路径>
   </tr>
   <tr>
     <td><code>空格键</code></td>
-    <td>切换夹持器（打开/关闭）</td>
+    <td>切换夹爪（打开/关闭）</td>
     <td><img src="image/spacebar.gif" style="width:100px;height:auto;"></td>
   </tr>
   <tr>
@@ -132,6 +132,8 @@ python scripts/regenerate_dataset.py \
 cd rlds_dataset_builder
 conda env create -f environment_ubuntu.yml
 conda activate rlds_env
+
+pip install -e .
 ```
 
 主要依赖包包括：`tensorflow`、`tensorflow_datasets`、`tensorflow_hub`、`apache_beam`、`matplotlib`、`plotly`、`wandb`、`h5py`等。
@@ -193,24 +195,11 @@ tfds build --overwrite --data_dir ~/tensorflow_datasets
 对于大型数据集，可以使用多线程并行处理提高转换速度。修改 `VLA_Arena_dataset_builder.py` 中的参数：
 
 ```python
-N_WORKERS = 40              # 并行工作线程数
-MAX_PATHS_IN_MEMORY = 80    # 内存中同时处理的文件数
+N_WORKERS = 10              # 并行工作线程数
+MAX_PATHS_IN_MEMORY = 10    # 内存中同时处理的文件数
 ```
 
-### 4.6 验证转换结果
-
-使用可视化脚本验证转换结果：
-
-```bash
-python3 visualize_dataset.py VLA_Arena --data_dir ~/tensorflow_datasets
-```
-
-该脚本会：
-- 显示随机选择的几个轨迹
-- 展示语言指令和对应的动作序列
-- 生成动作和状态的直方图统计
-
-### 4.7 输出格式
+### 4.6 输出格式
 
 转换完成后，数据集将保存在 `~/tensorflow_datasets/VLA_Arena/` 目录下，包含：
 - TFRecord文件：实际的训练数据
@@ -253,7 +242,7 @@ pip install -r conversion_requirements.txt
 # 设置RLDS数据集路径
 DATA_DIR="/path/to/your/rlds/dataset"
 
-# 设置LeRobot输出路径
+# 设置LeRobot输出路径，默认为 "./lerobot_dataset"
 HF_LEROBOT_HOME="/path/to/lerobot/datasets"
 
 # 是否推送到Hugging Face Hub（可选）
@@ -305,10 +294,6 @@ DATA_DIR=/path/to/your/rlds/dataset ./scripts/convert.sh
 在 `convert_data_to_lerobot.py` 中可以调整以下参数：
 
 ```python
-# 数据集配置
-REPO_NAME = "your_hf_username/vla-arena"  # 数据集名称
-RAW_DATASET_NAMES = ["vla_arena"]         # 源数据集名称
-
 # 机器人配置
 robot_type="panda"    # 机器人类型
 fps=10               # 数据采样频率
@@ -336,7 +321,6 @@ image_writer_processes=5   # 图像写入进程数
 ### 注意事项
 
 - 确保有足够的磁盘空间存储转换后的数据集
-- 转换过程大约需要60分钟（取决于数据集大小）
 - 图像数据会进行压缩以节省存储空间
 - 转换后的数据集可以直接用于LeRobot框架的训练
 - 如果转换失败，检查RLDS数据集路径是否正确

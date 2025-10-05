@@ -65,10 +65,6 @@ def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_d
         ignore_done=True,
         use_camera_obs=not args.not_use_camera_obs,
         camera_depths=args.use_depth,
-        camera_names=[
-            "robot0_eye_in_hand",
-            "agentview",
-        ],
         reward_shaping=True,
         control_freq=20,
         camera_heights=128,
@@ -122,16 +118,20 @@ def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_d
             env.sim.set_state_from_flattened(states[init_idx])
             env.sim.forward()
             model_xml = env.sim.model.get_xml()
+
+            camera_names = env.camera_names
             
             # 收集数据的容器
             ee_states = []
             gripper_states = []
             joint_states = []
             robot_states = []
-            agentview_images = []
-            eye_in_hand_images = []
-            agentview_depths = []
-            eye_in_hand_depths = []
+            camera_list={}
+            for camera in camera_names:
+                camera_list[camera]={
+                    "images": [],
+                    "depths": [],
+                }
             valid_index = []
             
             # 回放动作并收集观测
@@ -168,10 +168,10 @@ def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_d
                 # 收集图像数据
                 if not args.not_use_camera_obs:
                     if args.use_depth:
-                        agentview_depths.append(obs["agentview_depth"])
-                        eye_in_hand_depths.append(obs["robot0_eye_in_hand_depth"])
-                    agentview_images.append(obs["agentview_image"])
-                    eye_in_hand_images.append(obs["robot0_eye_in_hand_image"])
+                        for camera in camera_names:
+                            camera_list[camera]["depths"].append(obs[camera+"_depth"])
+                    for camera in camera_names:
+                        camera_list[camera]["images"].append(obs[camera+"_image"])
             
             # 准备最终数据
             states = states[valid_index]
@@ -191,7 +191,7 @@ def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_d
                 'robot_states': np.stack(robot_states, axis=0) if robot_states else None,
                 'model_file': model_xml,
                 'init_state': states[init_idx] if len(states) > 0 else None,
-                'num_samples': len(agentview_images),
+                'num_samples': len(camera_list[camera_names[0]]["images"]),
                 'source_file': demo_file_path,
                 'original_ep': ep,
             }
@@ -204,13 +204,15 @@ def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_d
                 demo_data['ee_pos'] = demo_data['ee_states'][:, :3]
                 demo_data['ee_ori'] = demo_data['ee_states'][:, 3:]
             
-            if not args.not_use_camera_obs and agentview_images:
-                demo_data['agentview_rgb'] = np.stack(agentview_images, axis=0)
-                demo_data['eye_in_hand_rgb'] = np.stack(eye_in_hand_images, axis=0)
+            if not args.not_use_camera_obs:
+                for camera in camera_names:
+                    if camera_list[camera]["images"]:
+                        demo_data[camera+"_rgb"] = np.stack(camera_list[camera]["images"], axis=0)
                 
-                if args.use_depth and agentview_depths:
-                    demo_data['agentview_depth'] = np.stack(agentview_depths, axis=0)
-                    demo_data['eye_in_hand_depth'] = np.stack(eye_in_hand_depths, axis=0)
+                if args.use_depth:
+                    for camera in camera_names:
+                        if camera_list[camera]["depths"]:
+                            demo_data[camera+"_depth"] = np.stack(camera_list[camera]["depths"], axis=0)
             
             processed_demos.append(demo_data)
             global_demo_counter += 1
@@ -229,6 +231,7 @@ def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_d
         'problem_info': problem_info,
         'bddl_file_name': bddl_file_name,
         'env_kwargs': env_kwargs,
+        'camera_names': camera_names,
     }
     
     return processed_demos, global_demo_counter, metadata
@@ -355,6 +358,7 @@ def main():
                 "env_kwargs": metadata['env_kwargs'],
             }
             grp.attrs["env_args"] = json.dumps(env_args)
+            grp.attrs['camera_names'] = metadata['camera_names']
             
             grp.attrs["bddl_file_name"] = bddl_file_name
             if os.path.exists(bddl_file_name):
@@ -375,9 +379,10 @@ def main():
                         obs_grp.create_dataset(key, data=demo_data[key])
                 
                 # 图像数据
-                for key in ['agentview_rgb', 'eye_in_hand_rgb', 'agentview_depth', 'eye_in_hand_depth']:
-                    if key in demo_data:
-                        obs_grp.create_dataset(key, data=demo_data[key])
+                for camera in metadata['camera_names']:
+                    for key in [camera + suffix for suffix in ["_rgb", "_depth"]]:
+                        if key in demo_data:
+                            obs_grp.create_dataset(key, data=demo_data[key])
                 
                 # 写入动作和状态数据
                 ep_data_grp.create_dataset("actions", data=demo_data['actions'])

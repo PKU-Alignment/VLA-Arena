@@ -1,3 +1,4 @@
+tyro
 tensorflow-datasets
 tensorflow
 lerobot @ git+https://github.com/learnerljh/lerobot.git@main

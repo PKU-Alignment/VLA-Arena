@@ -3,7 +3,7 @@
 # VLA-Arena Unified Evaluation Script
 # ============================================================================
 # Instructions:
-# 1. Copy this script: cp scripts/evaluate.sh my_evaluation.sh
+# 1. Copy this script: cp scripts/evaluate_policy.sh my_evaluation.sh
 # 2. Edit the configuration section below
 # 3. Run: bash my_evaluation.sh
 # ============================================================================
@@ -15,12 +15,11 @@
 # Model Configuration
 export CUDA_VISIBLE_DEVICES=0
 
-POLICY="smolvla"                                    # Options: openvla, random (more coming soon)
-MODEL_CKPT="/mnt/jiahao/models/lerobot/outputs/train/2025-09-06/15-32-53_dangerous_zones/checkpoints/last/pretrained_model"                   # Path to model checkpoint
-LORA_CKPT=""                                        # Path to LoRA weights (optional, leave empty if not using)
+POLICY="openvla"                                    # Options: openvla, random (more coming soon)
+MODEL_CKPT="path/to/model/checkpoint"                   # Path to model checkpoint
 
 # Task Configuration
-TASK_SUITE="safety_hazard_avoidance"                          # Options: vla_arena_10, vla_arena_90, vla_arena_static_obstacles, vla_arena_object, vla_arena_goal
+TASK_SUITE="libero_10"                                       # Options:  
 TASK_LEVEL=0                                        # Difficulty level: 0 (easy), 1 (medium), 2 (hard)
 N_EPISODES=1                                       # Number of episodes per task
 
@@ -81,10 +80,6 @@ print_config() {
         local display_model=$(basename "$MODEL_CKPT")
         printf "║ %-20s : %-39s ║\n" "Model" "...$display_model"
     fi
-    if [[ -n "$LORA_CKPT" ]]; then
-        local display_lora=$(basename "$LORA_CKPT")
-        printf "║ %-20s : %-39s ║\n" "LoRA" "...$display_lora"
-    fi
     printf "║ %-20s : %-39s ║\n" "Task Suite" "$TASK_SUITE"
     printf "║ %-20s : %-39s ║\n" "Task Level" "Level $TASK_LEVEL"
     printf "║ %-20s : %-39s ║\n" "Episodes per Task" "$N_EPISODES"
@@ -125,11 +120,6 @@ main() {
         CMD="$CMD --model_ckpt $MODEL_CKPT"
     fi
     
-    # Add LoRA if specified
-    if [[ -n "$LORA_CKPT" ]]; then
-        CMD="$CMD --lora_ckpt $LORA_CKPT"
-    fi
-    
     # Add visualization flag if enabled
     if [[ "$VISUALIZATION" == "true" ]]; then
         CMD="$CMD --visualization"
@@ -145,7 +135,6 @@ VLA-Arena Evaluation Configuration
 Date: $(date)
 Policy: $POLICY
 Model: $MODEL_CKPT
-LoRA: $LORA_CKPT
 Task Suite: $TASK_SUITE
 Task Level: $TASK_LEVEL
 Episodes: $N_EPISODES
@@ -200,7 +189,6 @@ if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
     echo "Configuration options:"
     echo "  POLICY          : Model type (openvla, random)"
     echo "  MODEL_CKPT      : Path to model checkpoint"
-    echo "  LORA_CKPT       : Path to LoRA weights (optional)"
     echo "  TASK_SUITE      : Task suite to evaluate"
     echo "  TASK_LEVEL      : Difficulty level (0-2)"
     echo "  N_EPISODES      : Episodes per task"

@@ -132,6 +132,8 @@ First, create a conda environment and install necessary dependencies:
 cd rlds_dataset_builder
 conda env create -f environment_ubuntu.yml
 conda activate rlds_env
+
+pip install -e .
 ```
 
 Main dependencies include: `tensorflow`, `tensorflow_datasets`, `tensorflow_hub`, `apache_beam`, `matplotlib`, `plotly`, `wandb`, `h5py`, etc.
@@ -193,24 +195,11 @@ The conversion process will:
 For large datasets, you can use multi-threaded parallel processing to improve conversion speed. Modify parameters in `VLA_Arena_dataset_builder.py`:
 
 ```python
-N_WORKERS = 40              # Number of parallel worker threads
-MAX_PATHS_IN_MEMORY = 80    # Number of files processed simultaneously in memory
+N_WORKERS = 10              # Number of parallel worker threads
+MAX_PATHS_IN_MEMORY = 10    # Number of files processed simultaneously in memory
 ```
 
-### 4.6 Verify Conversion Results
-
-Use the visualization script to verify conversion results:
-
-```bash
-python3 visualize_dataset.py VLA_Arena --data_dir ~/tensorflow_datasets
-```
-
-This script will:
-- Display randomly selected trajectories
-- Show language instructions and corresponding action sequences
-- Generate action and state histogram statistics
-
-### 4.7 Output Format
+### 4.6 Output Format
 
 After conversion, the dataset will be saved in `~/tensorflow_datasets/VLA_Arena/` directory, containing:
 - TFRecord files: Actual training data
@@ -253,7 +242,7 @@ Modify configuration variables in `scripts/convert.sh`:
 # Set RLDS dataset path
 DATA_DIR="/path/to/your/rlds/dataset"
 
-# Set LeRobot output path
+# Set LeRobot output path, defaulting to "./lerobot_dataset"
 HF_LEROBOT_HOME="/path/to/lerobot/datasets"
 
 # Whether to push to Hugging Face Hub (optional)
@@ -305,10 +294,6 @@ The conversion process will:
 The following parameters can be adjusted in `convert_data_to_lerobot.py`:
 
 ```python
-# Dataset configuration
-REPO_NAME = "your_hf_username/vla-arena"  # Dataset name
-RAW_DATASET_NAMES = ["vla_arena"]         # Source dataset name
-
 # Robot configuration
 robot_type="panda"    # Robot type
 fps=10               # Data sampling frequency
@@ -336,7 +321,6 @@ After conversion, the dataset will be saved in the `HF_LEROBOT_HOME` directory
 ### Notes
 
 - Ensure sufficient disk space for storing the converted dataset
-- The conversion process takes approximately 60 minutes (depending on dataset size)
 - Image data will be compressed to save storage space
 - The converted dataset can be directly used for LeRobot framework training
 - If conversion fails, check if the RLDS dataset path is correct

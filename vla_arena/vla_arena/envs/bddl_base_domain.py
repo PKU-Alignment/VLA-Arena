@@ -137,7 +137,7 @@ class BDDLBaseDomain(SingleArmEnv):
         horizon=1000,
         ignore_done=False,
         hard_reset=True,
-        camera_names="agentview",
+        camera_names=["agentview"],
         camera_heights=256,
         camera_widths=256,
         camera_depths=False,
@@ -199,11 +199,18 @@ class BDDLBaseDomain(SingleArmEnv):
         self.custom_asset_dir = os.path.abspath(os.path.join(DIR_PATH, "../assets"))
 
         self.bddl_file_name = bddl_file_name
+        self.camera_names=camera_names
         self.parsed_problem = BDDLUtils.robosuite_parse_problem(self.bddl_file_name)
+        if self.parsed_problem["camera_names"]:
+            self.camera_names=self.parsed_problem["camera_names"]
+        if "robot0_eye_in_hand" in self.camera_names:
+            self.camera_names.remove("robot0_eye_in_hand")
+        self.camera_names.append("robot0_eye_in_hand")
 
         self.obj_of_interest = self.parsed_problem["obj_of_interest"]
         self.moving_objects = self.parsed_problem["moving_objects"]
         self.image_settings = self.parsed_problem["image_settings"]
+        self.noise = self.parsed_problem["noise"]
 
         self._assert_problem_name()
 
@@ -228,7 +235,7 @@ class BDDLBaseDomain(SingleArmEnv):
             horizon=horizon,
             ignore_done=ignore_done,
             hard_reset=hard_reset,
-            camera_names=camera_names,
+            camera_names=self.camera_names,
             camera_heights=camera_heights,
             camera_widths=camera_widths,
             camera_depths=camera_depths,
@@ -351,16 +358,16 @@ class BDDLBaseDomain(SingleArmEnv):
 
     def _setup_camera(self, mujoco_arena):
         # Modify default agentview camera
-        mujoco_arena.set_camera(
-            camera_name="canonical_agentview",
-            pos=[0.5386131746834771, 0.0, 1.4903500240372423],
-            quat=[
-                0.6380177736282349,
-                0.3048497438430786,
-                0.30484986305236816,
-                0.6380177736282349,
-            ],
-        )
+        # mujoco_arena.set_camera(
+        #     camera_name="canonical_agentview",
+        #     pos=[1.0, 0.0, 1.0],
+        #     quat=[
+        #         0.6380177736282349,
+        #         0.3048497438430786,
+        #         0.30484986305236816,
+        #         0.6380177736282349,
+        #     ],
+        # )
         mujoco_arena.set_camera(
             camera_name="agentview",
             pos=[0.5886131746834771, 0.0, 1.4903500240372423],
@@ -828,13 +835,19 @@ class BDDLBaseDomain(SingleArmEnv):
         if force_update:
             self._update_observables(force=True)
 
+        camera_obs=[camera_name+"_image" for camera_name in self.camera_names]
         # Loop through all observables and grab their current observation
         for obs_name, observable in self._observables.items():
             if observable.is_enabled() and observable.is_active():
                 obs = observable.obs
-                if obs_name=="agentview_image" or obs_name=="robot0_eye_in_hand_image":
+                if obs_name in camera_obs:
                     if self.image_settings:
                         obs=ajust_image(obs,**self.image_settings)
+                    if self.noise:
+                        if self.noise[0]=="gaussian":
+                            obs=add_gaussian_noise(obs,*self.noise[1:])
+                        elif self.noise[0]=="salt_pepper":
+                            obs=add_salt_pepper_noise(obs,self.noise[1])
                 observations[obs_name] = obs
                 modality = observable.modality + "-state"
                 if modality not in obs_by_modality:
@@ -1359,3 +1372,28 @@ def adjust_temperature(img, temperature=6500):
     img[..., 2] = np.clip(img[..., 2] * b_factor, 0, 255)  # B通道
 
     return img.astype(np.uint8)
+
+def add_gaussian_noise(image, mean=0, var=0.01):
+    """添加高斯噪声"""
+    # 将图像归一化到[0,1]范围处理
+    image = image / 255.0
+    sigma = var **0.5
+    # 生成高斯噪声
+    gauss = np.random.normal(mean, sigma, image.shape)
+    # 添加噪声到图像
+    noisy_image = image + gauss
+    # 确保像素值在[0,1]范围内
+    noisy_image = np.clip(noisy_image, 0, 1)
+    # 转换回[0,255]整数范围
+    return (noisy_image * 255).astype(np.uint8)
+
+def add_salt_pepper_noise(image, prob=0.05):
+    """添加椒盐噪声"""
+    output = np.copy(image)
+    # 计算椒盐噪声的像素数量
+    thres = 1 - prob
+    # 添加盐噪声（白色）
+    output[np.random.random(image.shape) < prob] = 255
+    # 添加椒噪声（黑色）
+    output[np.random.random(image.shape) > thres] = 0
+    return output

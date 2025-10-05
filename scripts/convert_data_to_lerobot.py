@@ -2,18 +2,13 @@ import shutil
 
 from lerobot.common.datasets.lerobot_dataset import HF_LEROBOT_HOME
 from lerobot.common.datasets.lerobot_dataset import LeRobotDataset
+from pathlib import Path
 import tensorflow_datasets as tfds
 import tyro
 
-REPO_NAME = "your_hf_username/vla-arena"  # Name of the output dataset, also used for the Hugging Face Hub
-RAW_DATASET_NAMES = [
-    "vla_arena",
-]  # For simplicity we can combine multiple datasets into one training dataset
 
-
-def main(data_dir: str, *, push_to_hub: bool = False):
-    # Clean up any existing dataset in the output directory
-    output_path = HF_LEROBOT_HOME / REPO_NAME
+def main(data_dir: str, output_path: Path = HF_LEROBOT_HOME, *, push_to_hub: bool = False):
+    # Clean up any existing dataset in the output directory\
     if output_path.exists():
         shutil.rmtree(output_path)
 
@@ -21,7 +16,7 @@ def main(data_dir: str, *, push_to_hub: bool = False):
     # OpenPi assumes that proprio is stored in `state` and actions in `action`
     # LeRobot assumes that dtype of image data is `image`
     dataset = LeRobotDataset.create(
-        repo_id=REPO_NAME,
+        repo_id="VLA_Arena",
         robot_type="panda",
         fps=10,
         features={
@@ -52,20 +47,19 @@ def main(data_dir: str, *, push_to_hub: bool = False):
 
     # Loop over raw datasets and write episodes to the LeRobot dataset
     # You can modify this for your own data format
-    for raw_dataset_name in RAW_DATASET_NAMES:
-        raw_dataset = tfds.load(raw_dataset_name, data_dir=data_dir, split="train")
-        for episode in raw_dataset:
-            for step in episode["steps"].as_numpy_iterator():
-                dataset.add_frame(
-                    {
-                        "image": step["observation"]["image"],
-                        "wrist_image": step["observation"]["wrist_image"],
-                        "state": step["observation"]["state"],
-                        "actions": step["action"],
-                    },
-task=step["language_instruction"].decode()
-                )
-            dataset.save_episode()
+    raw_dataset = tfds.builder_from_directory(data_dir).as_dataset(split='all')
+    for episode in raw_dataset:
+        for step in episode["steps"].as_numpy_iterator():
+            dataset.add_frame(
+                {
+                    "image": step["observation"]["image"],
+                    "wrist_image": step["observation"]["wrist_image"],
+                    "state": step["observation"]["state"],
+                    "actions": step["action"],
+                },
+                task=step["language_instruction"].decode()
+            )
+        dataset.save_episode()
 
     # Optionally push to the Hugging Face Hub
     if push_to_hub:

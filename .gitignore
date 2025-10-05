@@ -11,6 +11,7 @@ clip/
 gpt/
 bert/
 logs/
+model_input_logs/
 
 *.mp4
 *.npz
@@ -19,9 +20,12 @@ vla_arena.egg-info/
 scripts/demonstration_data/
 demonstration_data/
 scripts/datasets/
+datasets/
 rollouts/
 data.bat
 rename.py
 scripts/regenerate_strict.py
 render.bat
 render_dataset_with_omniverse.py
+my_evaluation.sh
+print_hdf5.py

@@ -7,18 +7,18 @@
 DATASET_NAME=""
 VLA_PATH=""
 DATA_ROOT_DIR=""
-RUN_ROOT_DIR="all_runs"
+RUN_ROOT_DIR=""
 OPENVLA_ROOT_DIR=""
-BATCH_SIZE=7
+BATCH_SIZE=8
 LEARNING_RATE=5e-4
-MAX_STEPS=150000
+MAX_STEPS=200000
 USE_LORA=true
 LORA_RANK=32
 LORA_DROPOUT=0.0
 USE_QUANTIZATION=false
 IMAGE_AUG=true
-WANDB_PROJECT="openvla-oft-workflow-generalization"
-WANDB_ENTITY="trial"
+WANDB_PROJECT=""
+WANDB_ENTITY=""
 NUM_GPUS=1
 
 # OFT specific parameters
@@ -411,16 +411,17 @@ def add_dataset_config():
         # Find the end of OXE_DATASET_CONFIGS dictionary and add before closing brace
         pattern = r'(\s+)(\})\s*$'
         
-        config_entry = f'''    "{dataset_name}": {{
-        "image_obs_keys": {{"primary": "$IMAGE_OBS_PRIMARY", "secondary": $IMAGE_OBS_SECONDARY, "wrist": $IMAGE_OBS_WRIST}},
-        "depth_obs_keys": {{"primary": $DEPTH_OBS_PRIMARY, "secondary": $DEPTH_OBS_SECONDARY, "wrist": $DEPTH_OBS_WRIST}},
+        config_entry = f'''
+    "{dataset_name}": {{
+        "image_obs_keys": {{"primary": "$IMAGE_OBS_PRIMARY", "secondary": "$IMAGE_OBS_SECONDARY", "wrist": "$IMAGE_OBS_WRIST"}},
+        "depth_obs_keys": {{"primary": "$DEPTH_OBS_PRIMARY", "secondary": "$DEPTH_OBS_SECONDARY", "wrist": "$DEPTH_OBS_WRIST"}},
         "state_obs_keys": [{state_obs_str}],
         "state_encoding": StateEncoding.$STATE_ENCODING,
         "action_encoding": ActionEncoding.$ACTION_ENCODING,
     }},'''
         
         # Insert before the closing brace
-        replacement = f'\\1{config_entry}\\n\\1\\2'
+        replacement = f'{config_entry}\n}}'
         configs_content = re.sub(pattern, replacement, configs_content, flags=re.MULTILINE)
         
         # Write back to configs.py
@@ -439,10 +440,10 @@ def add_dataset_config():
         # Find the end of OXE_STANDARDIZATION_TRANSFORMS dictionary and add before closing brace
         pattern = r'(\s+)(\})\s*$'
         
-        transform_entry = f'    "{dataset_name}": libero_dataset_transform,'
+        transform_entry = f'\n    "{dataset_name}": libero_dataset_transform,'
         
         # Insert before the closing brace
-        replacement = f'\\1{transform_entry}\\n\\1\\2'
+        replacement = f'{transform_entry}\n}}'
         transforms_content = re.sub(pattern, replacement, transforms_content, flags=re.MULTILINE)
         
         # Write back to transforms.py
@@ -481,25 +482,6 @@ CMD="$CMD --use_quantization $USE_QUANTIZATION"
 CMD="$CMD --image_aug $IMAGE_AUG"
 CMD="$CMD --wandb_project \"$WANDB_PROJECT\""
 CMD="$CMD --wandb_entity \"$WANDB_ENTITY\""
-CMD="$CMD --use_l1_regression $USE_L1_REGRESSION"
-CMD="$CMD --use_diffusion $USE_DIFFUSION"
-CMD="$CMD --num_diffusion_steps_train $NUM_DIFFUSION_STEPS_TRAIN"
-CMD="$CMD --use_film $USE_FILM"
-CMD="$CMD --num_images_in_input $NUM_IMAGES_IN_INPUT"
-CMD="$CMD --use_proprio $USE_PROPRIO"
-CMD="$CMD --lr_warmup_steps $LR_WARMUP_STEPS"
-CMD="$CMD --num_steps_before_decay $NUM_STEPS_BEFORE_DECAY"
-CMD="$CMD --grad_accumulation_steps $GRAD_ACCUMULATION_STEPS"
-CMD="$CMD --use_val_set $USE_VAL_SET"
-CMD="$CMD --val_freq $VAL_FREQ"
-CMD="$CMD --val_time_limit $VAL_TIME_LIMIT"
-CMD="$CMD --save_freq $SAVE_FREQ"
-CMD="$CMD --save_latest_checkpoint_only $SAVE_LATEST_CHECKPOINT_ONLY"
-CMD="$CMD --resume $RESUME"
-CMD="$CMD --diffusion_sample_freq $DIFFUSION_SAMPLE_FREQ"
-CMD="$CMD --merge_lora_during_training $MERGE_LORA_DURING_TRAINING"
-CMD="$CMD --wandb_log_freq $WANDB_LOG_FREQ"
-CMD="$CMD --shuffle_buffer_size $SHUFFLE_BUFFER_SIZE"
 
 # Add resume_step if provided
 if [ -n "$RESUME_STEP" ]; then

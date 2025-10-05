@@ -4,11 +4,9 @@ channels:
 dependencies:
   - ca-certificates
   - libffi=3.3
-  - ncurses=6.4
   - openssl=1.1.1u
   - pip=23.2.1
   - python=3.9.0
-  - readline=8.2
   - setuptools=68.0.0
   - sqlite
   - tk=8.6.12
@@ -102,7 +100,7 @@ dependencies:
       - tensorflow-datasets==4.9.2
       - tensorflow-estimator==2.13.0
       - tensorflow-hub==0.14.0
-      - tensorflow-io-gcs-filesystem==0.32.0
+      - tensorflow-io-gcs-filesystem==0.23.1
       - tensorflow-metadata==1.13.1
       - termcolor==2.3.0
       - toml==0.10.2

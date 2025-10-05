@@ -5,7 +5,6 @@ from vla_arena.vla_arena.envs.robots import *
 from vla_arena.vla_arena.envs.objects import *
 from vla_arena.vla_arena.envs.predicates import *
 from vla_arena.vla_arena.envs.regions import *
-from vla_arena.vla_arena.envs.utils import rectangle2xyrange
 
 
 @register_problem
@@ -13,10 +12,7 @@ class Libero_Coffee_Table_Manipulation(BDDLBaseDomain):
     def __init__(self, bddl_file_name, *args, **kwargs):
         self.workspace_name = "coffee_table"
         self.visualization_sites_list = []
-        if "coffee_table_full_size" in kwargs:
-            self.coffee_table_full_size = coffee_table_full_size
-        else:
-            self.coffee_table_full_size = (0.70, 1.6, 0.024)
+        self.coffee_table_full_size = kwargs.get("coffee_table_full_size", (0.70, 1.6, 0.024))
         self.coffee_table_offset = (0, 0, 0.41)
         # For z offset of environment fixtures
         self.z_offset = 0.01 - self.coffee_table_full_size[2]
@@ -415,10 +411,7 @@ class Libero_Kitchen_Tabletop_Manipulation(BDDLBaseDomain):
     def __init__(self, bddl_file_name, *args, **kwargs):
         self.workspace_name = "kitchen_table"
         self.visualization_sites_list = []
-        if "table_full_size" in kwargs:
-            self.kitchen_table_full_size = table_full_size
-        else:
-            self.kitchen_table_full_size = (1.0, 1.2, 0.05)
+        self.kitchen_table_full_size = kwargs.get("table_full_size", (1.0, 1.2, 0.05))
         self.kitchen_table_offset = (0.0, 0, 0.90)
         # For z offset of environment fixtures
         self.z_offset = 0.01 - self.kitchen_table_full_size[2]
@@ -624,10 +617,7 @@ class Libero_Living_Room_Tabletop_Manipulation(BDDLBaseDomain):
     def __init__(self, bddl_file_name, *args, **kwargs):
         self.workspace_name = "living_room_table"
         self.visualization_sites_list = []
-        if "living_room_table_full_size" in kwargs:
-            self.living_room_table_full_size = living_room_table_full_size
-        else:
-            self.living_room_table_full_size = (0.70, 1.6, 0.024)
+        self.living_room_table_full_size = kwargs.get("living_room_table_full_size", (0.70, 1.6, 0.024))
         self.living_room_table_offset = (0, 0, 0.41)
         # For z offset of environment fixtures
         self.z_offset = 0.01 - self.living_room_table_full_size[2]
@@ -833,10 +823,7 @@ class Libero_Study_Tabletop_Manipulation(BDDLBaseDomain):
     def __init__(self, bddl_file_name, *args, **kwargs):
         self.workspace_name = "study_table"
         self.visualization_sites_list = []
-        if "table_full_size" in kwargs:
-            self.study_table_full_size = table_full_size
-        else:
-            self.study_table_full_size = (1.0, 1.2, 0.05)
+        self.study_table_full_size = kwargs.get("table_full_size", (1.0, 1.2, 0.05))
         self.study_table_offset = (-0.2, 0, 0.867)
         # For z offset of environment fixtures
         self.z_offset = 0.01 - self.study_table_full_size[2]
@@ -1045,10 +1032,7 @@ class Libero_Tabletop_Manipulation(BDDLBaseDomain):
     def __init__(self, bddl_file_name, *args, **kwargs):
         self.workspace_name = "main_table"
         self.visualization_sites_list = []
-        if "table_full_size" in kwargs:
-            self.table_full_size = table_full_size
-        else:
-            self.table_full_size = (1.0, 1.2, 0.05)
+        self.table_full_size = kwargs.get("table_full_size", (1.0, 1.2, 0.05))
         self.table_offset = (0, 0, 0.90)
         # For z offset of environment fixtures
         self.z_offset = 0.01 - self.table_full_size[2]

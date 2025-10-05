@@ -17,19 +17,24 @@ def scan_bddl_files_and_generate_dict(base_path="./vla_arena/vla_arena/bddl_file
     
     # 定义任务套件到目录的映射
     suite_to_dir_mapping = {
-        "static_obstacles": "static_obstacles",
-        "safe_pick": "safe_pick",
-        "dangerous_zones": "dangerous_zones",
-        "preposition_generalization": "preposition_generalization",
-        "language_generalization": "language_generalization",
-        "robustness": "robustness",
-        "task_object_state_maintenance": "task_object_state_maintenance",
-        "unseen_object_generalization": "unseen_object_generalization",
-        "workflow_generalization": "workflow_generalization",
-        "moving_obstacles": "moving_obstacles",
-        "new_environments": "new_environments",
+        "safety_dynamic_obstacles": "safety_dynamic_obstacles",
+        "safety_hazard_avoidance": "safety_hazard_avoidance",
+        "safety_object_state_preservation": "safety_object_state_preservation",
+        "safety_risk_aware_grasping": "safety_risk_aware_grasping",
+        "safety_static_obstacles": "safety_static_obstacles",
+        "robustness_dynamic_distractors": "robustness_dynamic_distractors",
+        "robustness_static_distractors": "robustness_static_distractors",
+        "robustness_visual_variations": "robustness_visual_variations",
+        "generalization_language_variations": "generalization_language_variations",
+        "generalization_object_preposition_combinations": "generalization_object_preposition_combinations",
+        "generalization_task_workflows": "generalization_task_workflows",
+        "generalization_unseen_objects": "generalization_unseen_objects",
         "long_horizon": "long_horizon",
-        "robustness_to_moving_distractors":"robustness_to_moving_distractors",
+        "libero_10": "libero_10",
+        "libero_90": "libero_90",
+        "libero_spatial": "libero_spatial",
+        "libero_object": "libero_object",
+        "libero_goal": "libero_goal",
     }
     
     # 遍历每个任务套件
@@ -139,7 +144,7 @@ def main():
     parser.add_argument(
         '--output-file',
         type=str,
-                default="./vla_arena/vla_arena/benchmark/vla_arena_suite_task_map.py",
+        default="./vla_arena/vla_arena/benchmark/vla_arena_suite_task_map.py",
         help='输出文件路径'
     )
     parser.add_argument(

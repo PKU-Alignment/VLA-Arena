@@ -151,6 +151,8 @@ def robosuite_parse_problem(problem_filename):
         language_instruction = ""
         cost_state = []
         moving_objects = []
+        camera_names=[]
+        noise=[]
         while tokens:
             group = tokens.pop()
             t = group[0]
@@ -215,6 +217,19 @@ def robosuite_parse_problem(problem_filename):
                 while group:
                     if group[0].isalpha():
                         image_settings[group.pop(0)]=float(group.pop(1))
+            elif t == ":camera":
+                group.pop(0)
+                while group:
+                    camera_names.append(group.pop(0))
+            elif t == ":noise":
+                group.pop(0)
+                if group[0]=="gaussian":
+                    noise.append(group.pop(0))
+                    noise.append(float(group.pop(0)))
+                    noise.append(float(group.pop(0)))
+                elif group[0]=="salt_pepper":
+                    noise.append(group.pop(0))
+                    noise.append(float(group.pop(0)))
             else:
                 print("%s is not recognized in problem" % t)
         return {
@@ -230,6 +245,8 @@ def robosuite_parse_problem(problem_filename):
             "cost_state": cost_state,
             "moving_objects": moving_objects,
             "image_settings": image_settings,
+            "camera_names": camera_names,
+            "noise": noise,
         }
     else:
         raise Exception(

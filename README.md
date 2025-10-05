@@ -61,9 +61,22 @@ cd VLA-Arena
 conda create -n vla-arena python=3.10
 conda activate vla-arena
 
+# Install requirements
+pip install -r requirements.txt
+
 # Install VLA-Arena
 pip install -e .
 ```
+
+#### Notes
+- The `mujoco.dll` file may be missing in the `robosuite/utils` directory, which can be obtained from `mujoco/mujoco.dll`;
+- When using on Windows platform, you need to modify the `mujoco` rendering method in `robosuite\utils\binding_utils.py`:
+  ```python
+  if _SYSTEM == "Darwin":
+    os.environ["MUJOCO_GL"] = "cgl"
+  else:
+    os.environ["MUJOCO_GL"] = "wgl"    # Change "egl" to "wgl"
+   ```
 
 ### 2. Basic Evaluation
 ```bash

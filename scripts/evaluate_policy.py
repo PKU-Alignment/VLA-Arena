@@ -5,7 +5,9 @@ from vla_arena.evaluation.evaluator import Evaluator
 from vla_arena.evaluation.policy import SmolVLA
 from vla_arena.evaluation.policy import OpenVLA
 from vla_arena.evaluation.policy import OpenVLAOFT
+from vla_arena.evaluation.policy import OpenPI
 from vla_arena.evaluation.policy import RandomPolicy
+from vla_arena.evaluation.policy import PolicyRegistry
 
 # import debugpy
 # try:
@@ -24,8 +26,7 @@ def parse_levels(levels_str):
     Parse level string to support various formats:
     - Single level: "0" -> [0]
     - Range: "0-2" -> [0, 1, 2]
-    - List: "0,2,4" -> [0, 2, 4]
-    - Mixed: "0-2,5" -> [0, 1, 2, 5]
+    - List: "0,2" -> [0, 2]
     """
     if levels_str is None:
         return None
@@ -66,6 +67,11 @@ def get_args():
                            "generalization_task_workflows",
                            "generalization_unseen_objects",
                            "long_horizon",
+                           "libero_10",
+                           "libero_90",
+                           "libero_spatial",
+                           "libero_object",
+                           "libero_goal",
                        ], 
                        help="The evaluation track to run")
     
@@ -75,9 +81,10 @@ def get_args():
     
     parser.add_argument('--n-episode', default=1, type=int, 
                        help="The number of episodes to evaluate for each task")
-    parser.add_argument('--policy', default="openvla", 
+    parser.add_argument('--policy', default="openvla", type=str,
+                       choices=PolicyRegistry.list_policies(),
                        help="The policy to evaluate")
-    parser.add_argument('--model_ckpt', default="/mnt/jiahao/models/openvla", 
+    parser.add_argument('--model_ckpt', default=None,
                        help="The base model checkpoint path")
     parser.add_argument('--save-dir', default="logs", 
                        help="The directory to save the evaluation results")
@@ -170,33 +177,14 @@ def evaluate(args):
         visualization=args.visualization,
         metrics=args.metrics
     )
-    
-    # Initialize policy
-    if args.policy.lower() == "openvla":
-        policy = OpenVLA(
-            model_ckpt=args.model_ckpt,
-            # TODO: re-compute the norm state by your own dataset
-        )
-    elif args.policy.lower() == "openvla-oft":
-        policy = OpenVLAOFT(
-            model_ckpt=args.model_ckpt,
-            # TODO: re-compute the norm state by your own dataset
-        )
-    elif args.policy.lower() == "pi0":
-        # Example for PI0 or other sequence-based policies
-        policy = PI0(
-            model_ckpt=args.model_ckpt,
-            replan_freq=args.replanstep
-        )
-    elif args.policy.lower() == "smolvla":
-        policy = SmolVLA(
-            model_ckpt=args.model_ckpt,
-        )
+    if args.policy not in PolicyRegistry.list_policies():
+        raise ValueError(f"Policy '{args.policy}' is not registered. Available policies: {PolicyRegistry.list_policies()}")
+    if args.policy != "openpi":
+        policy = PolicyRegistry.get(args.policy, model_ckpt=args.model_ckpt if args.model_ckpt else None)
     else:
-        policy = RandomPolicy()
+        policy = PolicyRegistry.get(args.policy, host=args.host, port=args.port)
     
     # Run evaluation
-    # try:
     results = evaluator.evaluate(policy)
     
     # Print quick summary of results

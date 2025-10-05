@@ -21,8 +21,8 @@ def get_dummy_action():
 def get_random_action():
     return [np.random.uniform(-1, 1), np.random.uniform(-1, 1), np.random.uniform(-1, 1), np.random.uniform(-1, 1), np.random.uniform(-1, 1), np.random.uniform(-1, 1), -1]
 
-def get_image(obs):
-    img = obs["agentview_image"]
+def get_image(obs, cam_name):
+    img = obs[cam_name+"_image"]
     img = img[::-1, ::-1, :]
     return img
 
@@ -54,10 +54,11 @@ def debug_single_file(bddl_file: str):
         "camera_widths": resolution,
     }
     env = OffScreenRenderEnv(**env_args)
+    camera_name=env.env.camera_names[0]
 
     # 1. 加载环境并获取初始观测
     obs = env.reset()
-    replay_images = [get_image(obs)]
+    replay_images = [get_image(obs,camera_name)]
 
     # 2. 运行一段时间并收集图像
     t = 0
@@ -67,7 +68,7 @@ def debug_single_file(bddl_file: str):
         obs, reward, done, info = env.step(get_random_action())
         # print(obs)
         cost += info.get('cost', 0)
-        replay_images.append(get_image(obs))
+        replay_images.append(get_image(obs,camera_name))
         t += 1
         print(f"Step {t}, cumulative cost: {cost}")
         if done:

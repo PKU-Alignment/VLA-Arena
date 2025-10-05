@@ -9,10 +9,13 @@ from PIL import Image
 # Add the openvla path
 sys.path.append('/DATA/disk0/borong/openvla')
 
-import prismatic
+from vla_arena.evaluation.policy.prismatic_for_openvla import *
 from vla_arena.evaluation.policy.base import Policy, PolicyRegistry 
-from vla_arena.evaluation.utils import normalize_gripper_action, invert_gripper_action, read_eval_cfgs, resize_image_for_policy, center_crop_image
-from vla_arena.evaluation.policy.prismatic import *
+from vla_arena.evaluation.utils import normalize_gripper_action, invert_gripper_action, read_eval_cfgs
+from vla_arena.evaluation.openvla_utils import (
+    resize_image_for_policy,
+    center_crop_image,
+)
 
 # Import LoRA support
 try:
@@ -41,6 +44,7 @@ class OpenVLA(Policy):
     
     def __init__(self, 
                  model_ckpt,
+                 eval_cfgs_path='../../configs/evaluation/openvla.yaml',
                  attn_implementation=None,
                  norm_config_file=None,
                  device="cuda",
@@ -55,7 +59,7 @@ class OpenVLA(Policy):
             device: Device to run on ("cuda" or "cpu")
             **kwargs: Additional arguments including 'instruction'
         """
-        eval_cfgs = read_eval_cfgs(self.name)
+        eval_cfgs = read_eval_cfgs(self.name, eval_cfgs_path)
         
         # Check device availability
         if device == "cuda" and not torch.cuda.is_available():

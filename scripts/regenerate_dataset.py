@@ -189,14 +189,16 @@ def replay_actions(env, actions, initial_state):
     for _ in range(10):
         obs, reward, done, info = env.step(get_dummy_action())
     
+    camera_names = env.env.camera_names
     # Data collection lists
     states = []
     ee_states = []
     gripper_states = []
     joint_states = []
     robot_states = []
-    agentview_images = []
-    eye_in_hand_images = []
+    camera_images={}
+    for camera in camera_names:
+        camera_images[camera] = []
     
     # Replay actions
     for action_idx, action in enumerate(actions):
@@ -216,8 +218,9 @@ def replay_actions(env, actions, initial_state):
                 T.quat2axisangle(obs["robot0_eef_quat"]),
             ))
         )
-        agentview_images.append(obs["agentview_image"])
-        eye_in_hand_images.append(obs["robot0_eye_in_hand_image"])
+
+        for camera in camera_names:
+            camera_images[camera].append(obs[camera+"_image"])
         
         # Execute action
         obs, reward, done, info = env.step(action.tolist())
@@ -228,17 +231,19 @@ def replay_actions(env, actions, initial_state):
     else:
         success = bool(done)
     
-    return {
+    result = {
         'states': states,
         'ee_states': ee_states,
         'gripper_states': gripper_states,
         'joint_states': joint_states,
         'robot_states': robot_states,
-        'agentview_images': agentview_images,
-        'eye_in_hand_images': eye_in_hand_images,
         'actions': actions,
         'success': success
     }
+    for camera in camera_names:
+        result[camera + '_images'] = camera_images[camera]
+
+    return result
 
 
 def process_task_without_balancing(task, task_id, task_level, level_raw_dir, env, task_description):
@@ -368,6 +373,7 @@ def process_level(task_suite, task_level, args, metainfo_json_dict):
         task = task_suite.get_task_by_level_id(task_level, task_id)
         env, task_description = get_env(task, resolution=IMAGE_RESOLUTION)
         task_description = env.language_instruction
+        camera_names = env.env.camera_names
         try:
         # Process task without balancing
             successful_demos, task_stats = process_task_without_balancing(
@@ -396,6 +402,7 @@ def process_level(task_suite, task_level, args, metainfo_json_dict):
         
         with h5py.File(task_data_path, "w") as new_data_file:
             grp = new_data_file.create_group("data")
+            grp.attrs['camera_names'] = camera_names
             
             for idx, (demo_id, demo_info) in enumerate(successful_demos.items()):
                 replay_data = demo_info['data']
@@ -423,8 +430,8 @@ def process_level(task_suite, task_level, args, metainfo_json_dict):
                 obs_grp.create_dataset("ee_states", data=np.stack(replay_data['ee_states'], axis=0))
                 obs_grp.create_dataset("ee_pos", data=np.stack(replay_data['ee_states'], axis=0)[:, :3])
                 obs_grp.create_dataset("ee_ori", data=np.stack(replay_data['ee_states'], axis=0)[:, 3:])
-                obs_grp.create_dataset("agentview_rgb", data=np.stack(replay_data['agentview_images'], axis=0))
-                obs_grp.create_dataset("eye_in_hand_rgb", data=np.stack(replay_data['eye_in_hand_images'], axis=0))
+                for camera in camera_names:
+                    obs_grp.create_dataset(camera + "_rgb", data=np.stack(replay_data[camera + '_images'], axis=0))
                 
                 # Save action and state data
                 ep_data_grp.create_dataset("actions", data=actions)

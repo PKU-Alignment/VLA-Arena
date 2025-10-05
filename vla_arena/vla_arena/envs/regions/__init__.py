@@ -1,3 +1,5 @@
+# type: ignore
+# pylint: skip-file
 from .base_region_sampler import *
 from .workspace_region_sampler import *
 from .object_property_sampler import *
@@ -25,6 +27,12 @@ REGION_SAMPLERS = {
     "kitchen_tabletop_manipulation": {
         "kitchen_table": TableRegionSampler
     },
+    "libero_tabletop_manipulation": {"table": TableRegionSampler},
+    "libero_coffee_table_manipulation": {"coffee_table": TableRegionSampler},
+    "libero_living_room_tabletop_manipulation": {"living_room_table": TableRegionSampler},
+    "libero_study_tabletop_manipulation": {"study_table": TableRegionSampler},
+    "libero_kitchen_tabletop_manipulation": {"kitchen_table": TableRegionSampler},
+    "libero_floor_manipulation": {"floor": TableRegionSampler},
 }
 
 

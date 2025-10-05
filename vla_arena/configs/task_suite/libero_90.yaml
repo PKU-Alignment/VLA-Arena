@@ -1,0 +1,5 @@
+task_suite_name: LIBERO_90
+num_steps_wait: 10
+num_trials_per_task: 50
+initial_states_path: DEFAULT
+max_episode_length: 420

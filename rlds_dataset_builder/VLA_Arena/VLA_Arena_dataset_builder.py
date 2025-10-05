@@ -20,14 +20,18 @@ def _generate_examples(paths) -> Iterator[Tuple[str, Any]]:
     def _parse_example(episode_path, demo_id):
         # load raw data
         with h5py.File(episode_path, "r") as F:
+            if 'camera_names' not in F['data'].attrs.keys():
+                camera_name = "agentview"
+            else:
+                camera_name = F['data'].attrs['camera_names'][0]
             if f"demo_{demo_id}" not in F['data'].keys():
                 return None # skip episode if the demo doesn't exist (e.g. due to failed demo)
             actions = F['data'][f"demo_{demo_id}"]["actions"][()]
             states = F['data'][f"demo_{demo_id}"]["obs"]["ee_states"][()]
             gripper_states = F['data'][f"demo_{demo_id}"]["obs"]["gripper_states"][()]
             joint_states = F['data'][f"demo_{demo_id}"]["obs"]["joint_states"][()]
-            images = F['data'][f"demo_{demo_id}"]["obs"]["agentview_rgb"][()]
-            wrist_images = F['data'][f"demo_{demo_id}"]["obs"]["eye_in_hand_rgb"][()]
+            images = F['data'][f"demo_{demo_id}"]["obs"][camera_name + "_rgb"][()]
+            wrist_images = F['data'][f"demo_{demo_id}"]["obs"]["robot0_eye_in_hand_rgb"][()]
 
         # compute language instruction
         raw_file_string = os.path.basename(episode_path).split('/')[-1]
@@ -91,8 +95,8 @@ class VLAArena(MultiThreadedDatasetBuilder):
     RELEASE_NOTES = {
       '1.0.0': 'Initial release.',
     }
-    N_WORKERS = 40             # number of parallel workers for data conversion
-    MAX_PATHS_IN_MEMORY = 80   # number of paths converted & stored in memory before writing to disk
+    N_WORKERS = 10             # number of parallel workers for data conversion
+    MAX_PATHS_IN_MEMORY = 10   # number of paths converted & stored in memory before writing to disk
                                # -> the higher the faster / more parallel conversion, adjust based on avilable RAM
                                # note that one path may yield multiple episodes and adjust accordingly
     PARSE_FCN = _generate_examples      # handle to parse function from file paths to RLDS episodes
@@ -165,5 +169,5 @@ class VLAArena(MultiThreadedDatasetBuilder):
     def _split_paths(self):
         """Define filepaths for data splits."""
         return {
-            "train": glob.glob("your/path/to/data/*.hdf5"),
+            "train": glob.glob("your/path/to/hdf5/file"),
         }

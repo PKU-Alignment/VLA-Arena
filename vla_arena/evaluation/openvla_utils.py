@@ -17,27 +17,12 @@ import tensorflow as tf
 import torch
 from huggingface_hub import HfApi, hf_hub_download
 from PIL import Image
-from transformers import AutoConfig, AutoImageProcessor, AutoModelForVision2Seq, AutoProcessor
-from timm.models.vision_transformer import VisionTransformer
 
 # Apply JSON numpy patch for serialization
 json_numpy.patch()
 
 import sys
 sys.path.insert(0, '/DATA/disk0/borong/openvla-oft')
-import prismatic
-from prismatic.extern.hf.configuration_prismatic import OpenVLAConfig
-from prismatic.extern.hf.modeling_prismatic import OpenVLAForActionPrediction
-from prismatic.extern.hf.processing_prismatic import PrismaticImageProcessor, PrismaticProcessor
-# from prismatic.models.action_heads import DiffusionActionHead, L1RegressionActionHead
-# from prismatic.models.film_vit_wrapper import FiLMedPrismaticVisionBackbone
-# from prismatic.models.projectors import NoisyActionProjector, ProprioProjector
-# from prismatic.vla.constants import (
-#     ACTION_DIM,
-#     ACTION_PROPRIO_NORMALIZATION_TYPE,
-# )
-from prismatic.vla.datasets.rlds.utils.data_utils import NormalizationType
-
 # Initialize important constants
 DATE = time.strftime("%Y_%m_%d")
 DATE_TIME = time.strftime("%Y_%m_%d-%H_%M_%S")
@@ -100,12 +85,7 @@ def detect_robot_platform():
 ROBOT_PLATFORM = detect_robot_platform()
 
 # Set the appropriate constants based on the detected platform
-if ROBOT_PLATFORM == "LIBERO":
-    constants = LIBERO_CONSTANTS
-elif ROBOT_PLATFORM == "ALOHA":
-    constants = ALOHA_CONSTANTS
-elif ROBOT_PLATFORM == "BRIDGE":
-    constants = BRIDGE_CONSTANTS
+constants = LIBERO_CONSTANTS
 
 # Assign constants to global variables
 NUM_ACTIONS_CHUNK = constants["NUM_ACTIONS_CHUNK"]
@@ -119,7 +99,7 @@ print(f"  NUM_ACTIONS_CHUNK = {NUM_ACTIONS_CHUNK}")
 print(f"  ACTION_DIM = {ACTION_DIM}")
 print(f"  PROPRIO_DIM = {PROPRIO_DIM}")
 print(f"  ACTION_PROPRIO_NORMALIZATION_TYPE = {ACTION_PROPRIO_NORMALIZATION_TYPE}")
-print("If needed, manually set the correct constants in `prismatic/vla/constants.py`!")
+print("If needed, manually set the correct constants in `vla_arena/evaluation/openvla_utils.py`!")
 
 def update_auto_map(pretrained_checkpoint: str) -> None:
     """
@@ -150,8 +130,8 @@ def update_auto_map(pretrained_checkpoint: str) -> None:
         config = json.load(f)
 
     config["auto_map"] = {
-        "AutoConfig": "configuration_prismatic.OpenVLAConfig",
-        "AutoModelForVision2Seq": "modeling_prismatic.OpenVLAForActionPrediction",
+        "AutoConfig": "processing_prismatic.OpenVLAConfig",
+        "AutoModelForVision2Seq": "processing_prismatic.OpenVLAForActionPrediction",
     }
 
     # Write back the updated config
@@ -160,8 +140,8 @@ def update_auto_map(pretrained_checkpoint: str) -> None:
 
     print(f"Updated config.json at: {os.path.abspath(config_path)}")
     print("Changes made:")
-    print('  - Set AutoConfig to "configuration_prismatic.OpenVLAConfig"')
-    print('  - Set AutoModelForVision2Seq to "modeling_prismatic.OpenVLAForActionPrediction"')
+    print('  - Set AutoConfig to "processing_prismatic.OpenVLAConfig"')
+    print('  - Set AutoModelForVision2Seq to "processing_prismatic.OpenVLAForActionPrediction"')
 
 
 def check_identical_files(path1: Union[str, Path], path2: Union[str, Path]) -> bool:
@@ -238,7 +218,7 @@ def check_model_logic_mismatch(pretrained_checkpoint: str) -> None:
     Check and sync model logic files between current code and checkpoint.
 
     Handles the relationship between current and checkpoint versions of both
-    modeling_prismatic.py and configuration_prismatic.py:
+    modeling_prismatic.py and processing_prismatic.py:
     - If checkpoint file exists and differs: creates backup and copies current version
     - If checkpoint file doesn't exist: copies current version
 
@@ -249,9 +229,9 @@ def check_model_logic_mismatch(pretrained_checkpoint: str) -> None:
         return
 
     # Find current files
-    curr_files = {"modeling_prismatic.py": None, "configuration_prismatic.py": None}
+    curr_files = {"modeling_prismatic.py": None, "processing_prismatic.py": None}
 
-    for root, _, files in os.walk("./prismatic/"):
+    for root, _, files in os.walk("./vla_arena/evaluation/policy/prismatic_for_openvla/"):
         for filename in curr_files.keys():
             if filename in files and curr_files[filename] is None:
                 curr_files[filename] = os.path.join(root, filename)
@@ -617,3 +597,89 @@ def load_component_state_dict(checkpoint_path: str) -> Dict[str, torch.Tensor]:
             new_state_dict[k] = v
 
     return new_state_dict
+
+def normalize_proprio(proprio: np.ndarray, norm_stats: Dict[str, Any]) -> np.ndarray:
+    """
+    Normalize proprioception data to match training distribution.
+
+    Args:
+        proprio: Raw proprioception data
+        norm_stats: Normalization statistics
+
+    Returns:
+        np.ndarray: Normalized proprioception data
+    """
+    if ACTION_PROPRIO_NORMALIZATION_TYPE == NormalizationType.BOUNDS:
+        mask = norm_stats.get("mask", np.ones_like(norm_stats["min"], dtype=bool))
+        proprio_high, proprio_low = np.array(norm_stats["max"]), np.array(norm_stats["min"])
+    elif ACTION_PROPRIO_NORMALIZATION_TYPE == NormalizationType.BOUNDS_Q99:
+        mask = norm_stats.get("mask", np.ones_like(norm_stats["q01"], dtype=bool))
+        proprio_high, proprio_low = np.array(norm_stats["q99"]), np.array(norm_stats["q01"])
+    else:
+        raise ValueError("Unsupported action/proprio normalization type detected!")
+
+    normalized_proprio = np.clip(
+        np.where(
+            mask,
+            2 * (proprio - proprio_low) / (proprio_high - proprio_low + 1e-8) - 1,
+            proprio,
+        ),
+        a_min=-1.0,
+        a_max=1.0,
+    )
+
+    return normalized_proprio
+
+def model_is_on_hf_hub(model_path: str) -> bool:
+    """Checks whether a model path points to a model on Hugging Face Hub."""
+    # If the API call below runs without error, the model is on the hub
+    try:
+        HfApi().model_info(model_path)
+        return True
+    except Exception:
+        return False
+
+def crop_and_resize(image, crop_scale, batch_size):
+    """
+    Center-crops an image to have area `crop_scale` * (original image area), and then resizes back
+    to original size. We use the same logic seen in the `dlimp` RLDS datasets wrapper to avoid
+    distribution shift at test time.
+
+    Args:
+        image: TF Tensor of shape (batch_size, H, W, C) or (H, W, C) and datatype tf.float32 with
+               values between [0,1].
+        crop_scale: The area of the center crop with respect to the original image.
+        batch_size: Batch size.
+    """
+    # Convert from 3D Tensor (H, W, C) to 4D Tensor (batch_size, H, W, C)
+    assert image.shape.ndims == 3 or image.shape.ndims == 4
+    expanded_dims = False
+    if image.shape.ndims == 3:
+        image = tf.expand_dims(image, axis=0)
+        expanded_dims = True
+
+    # Get height and width of crop
+    new_heights = tf.reshape(tf.clip_by_value(tf.sqrt(crop_scale), 0, 1), shape=(batch_size,))
+    new_widths = tf.reshape(tf.clip_by_value(tf.sqrt(crop_scale), 0, 1), shape=(batch_size,))
+
+    # Get bounding box representing crop
+    height_offsets = (1 - new_heights) / 2
+    width_offsets = (1 - new_widths) / 2
+    bounding_boxes = tf.stack(
+        [
+            height_offsets,
+            width_offsets,
+            height_offsets + new_heights,
+            width_offsets + new_widths,
+        ],
+        axis=1,
+    )
+
+    # Crop and then resize back up
+    image = tf.image.crop_and_resize(image, bounding_boxes, tf.range(batch_size), (224, 224))
+
+    # Convert back to 3D Tensor (H, W, C)
+    if expanded_dims:
+        image = image[0]
+
+    return image

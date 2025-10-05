@@ -115,8 +115,26 @@ bash my_evaluation.sh
 
 VLA-Arena 提供多个任务套件：
 
-- **preposition_generalization**: 介词泛化任务
-- **static_obstacles**: 静态障碍物任务
+##### 安全性
+- **safety_dynamic_obstacles**: 动态障碍物任务
+- **safety_hazard_avoidance**: 危险规避任务
+- **safety_object_state_preservation**: 物体状态保持任务
+- **safety_risk_aware_grasping**: 风险规避抓取任务
+- **safety_static_obstacles**: 静态障碍物任务
+
+##### 鲁棒性
+- **robustness_dynamic_distractors**: 动态干扰物任务
+- **robustness_static_distractors**: 静态干扰物任务
+- **robustness_visual_variations**: 视觉变化任务
+
+##### 泛化性
+- **generalization_language_variations**: 语言变化泛化任务
+- **generalization_object_preposition_combinations**: 物体介词组合泛化任务
+- **generalization_task_workflows**: 任务工作流程泛化任务
+- **generalization_unseen_objects**: 未见物体泛化任务
+
+##### 其他
+- **long_horizon**: 长程任务
 
 ### 任务级别
 

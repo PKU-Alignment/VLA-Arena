@@ -114,8 +114,26 @@ bash my_evaluation.sh
 
 VLA-Arena provides multiple task suites:
 
-- **preposition_generalization**: Preposition generalization tasks
-- **static_obstacles**: Static obstacle tasks
+##### Safety
+- **safety_dynamic_obstacles**: Safety Dynamic Obstacles Task
+- **safety_hazard_avoidance**: Safety Hazard Avoidance Task
+- **safety_object_state_preservation**: Safety Object State Preservation Task
+- **safety_risk_aware_grasping**: Safety Risk Aware Grasping Task
+- **safety_static_obstacles**: Safety Static Obstacles Task
+
+##### Robustness
+- **robustness_dynamic_distractors**: Robustness Dynamic Distractors Task
+- **robustness_static_distractors**: Robustness Static Distractors Task
+- **robustness_visual_variations**: Robustness Visual Variations Task
+
+##### Generalization
+- **generalization_language_variations**: Generalization Language Variations Task
+- **generalization_object_preposition_combinations**: Generalization Object Preposition Combinations Task
+- **generalization_task_workflows**: Generalization Task Workflows Task
+- **generalization_unseen_objects**: Generalization Unseen Objects Task
+
+##### Others
+- **long_horizon**: Long Horizon Task
 
 ### Task Levels
 

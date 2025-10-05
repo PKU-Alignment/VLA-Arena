@@ -1,0 +1,14 @@
+# Model-specific parameters
+model_family: "univla"                        # Model family
+action_decoder_path: "/DATA/disk0/borong/UniVLA/runs/univla+libero_spatial_no_noops+b16+lr-0.00035+lora-r32+dropout-0.0--image_aug=w-LowLevelDecoder-ws-12/action_decoder-30000.pt"                       # Action decoder model path
+load_in_8bit: false
+load_in_4bit: false
+# Image processing parameters
+center_crop: true                            # Center crop? (if trained w/ random crop image aug)
+image_resize_size: 224                        # Image resize size for action prediction
+# Action prediction parameters
+window_size: 12                              # Window size for action prediction
+unnorm_key: libero_spatial_no_noops                    # Un-normalization key for action prediction
+
+# Random seed
+seed: 7                                      # Random Seed (for reproducibility)

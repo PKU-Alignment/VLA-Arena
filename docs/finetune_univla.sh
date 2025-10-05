@@ -10,7 +10,7 @@ LAM_PATH=""
 DATA_ROOT_DIR=""
 RUN_ROOT_DIR="all_runs"
 UNIVLA_ROOT_DIR=""
-BATCH_SIZE=8
+BATCH_SIZE=1
 LEARNING_RATE=3.5e-4
 MAX_STEPS=100000
 SAVE_STEPS=10000
@@ -392,16 +392,17 @@ def add_dataset_config():
         # Find the end of OXE_DATASET_CONFIGS dictionary and add before closing brace
         pattern = r'(\s+)(\})\s*$'
         
-        config_entry = f'''    "{dataset_name}": {{
-        "image_obs_keys": {{"primary": "$IMAGE_OBS_PRIMARY", "secondary": $IMAGE_OBS_SECONDARY, "wrist": $IMAGE_OBS_WRIST}},
-        "depth_obs_keys": {{"primary": $DEPTH_OBS_PRIMARY, "secondary": $DEPTH_OBS_SECONDARY, "wrist": $DEPTH_OBS_WRIST}},
+        config_entry = f'''
+    "{dataset_name}": {{
+        "image_obs_keys": {{"primary": "$IMAGE_OBS_PRIMARY", "secondary": "$IMAGE_OBS_SECONDARY", "wrist": "$IMAGE_OBS_WRIST"}},
+        "depth_obs_keys": {{"primary": "$DEPTH_OBS_PRIMARY", "secondary": "$DEPTH_OBS_SECONDARY", "wrist": "$DEPTH_OBS_WRIST"}},
         "state_obs_keys": [{state_obs_str}],
         "state_encoding": StateEncoding.$STATE_ENCODING,
         "action_encoding": ActionEncoding.$ACTION_ENCODING,
     }},'''
         
         # Insert before the closing brace
-        replacement = f'\\1{config_entry}\\n\\1\\2'
+        replacement = f'{config_entry}\n}}'
         configs_content = re.sub(pattern, replacement, configs_content, flags=re.MULTILINE)
         
         # Write back to configs.py
@@ -420,10 +421,10 @@ def add_dataset_config():
         # Find the end of OXE_STANDARDIZATION_TRANSFORMS dictionary and add before closing brace
         pattern = r'(\s+)(\})\s*$'
         
-        transform_entry = f'    "{dataset_name}": libero_dataset_transform,'
+        transform_entry = f'\n    "{dataset_name}": libero_dataset_transform,'
         
         # Insert before the closing brace
-        replacement = f'\\1{transform_entry}\\n\\1\\2'
+        replacement = f'{transform_entry}\n}}'
         transforms_content = re.sub(pattern, replacement, transforms_content, flags=re.MULTILINE)
         
         # Write back to transforms.py

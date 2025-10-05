@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from transformers import AutoModelForVision2Seq, AutoProcessor
 from PIL import Image
-from vla_arena.evaluation.policy.base import Policy 
+from vla_arena.evaluation.policy.base import Policy, PolicyRegistry
 from vla_arena.evaluation.utils import normalize_gripper_action, invert_gripper_action, read_eval_cfgs
 from vla_arena.evaluation.policy.prismatic_for_openvla_oft import *
 from vla_arena.evaluation.openvla_utils import (
@@ -18,6 +18,7 @@ from vla_arena.evaluation.openvla_utils import (
     find_checkpoint_file,
     load_component_state_dict,
     prepare_images_for_vla,
+    normalize_proprio,
 )
 
 
@@ -49,7 +50,7 @@ def quat2axisangle(quat):
     
     return axis * angle
 
-
+@PolicyRegistry.register("openvla-oft")
 class OpenVLAOFT(Policy):
     """OpenVLA with Online Fine-Tuning capabilities."""
     
@@ -65,9 +66,9 @@ class OpenVLAOFT(Policy):
                  device="cuda",
                  unnorm_key=None,
                  # OFT specific parameters
-                 eval_cfgs_path='../../configs/OpenVLA-OFT.yaml',
+                 eval_cfgs_path='../../configs/evaluation/openvla_oft.yaml',
                  # Logging parameters
-                 enable_input_logging=True,
+                 enable_input_logging=False,
                  logging_dir="./model_input_logs",
                  **kwargs):
         """
@@ -98,21 +99,23 @@ class OpenVLAOFT(Policy):
         """
         
         # Read evaluation configs and store OFT parameters
-        eval_cfgs = read_eval_cfgs(self.name)
+        eval_cfgs = read_eval_cfgs(self.name, eval_cfgs_path)
         self.unnorm_key = eval_cfgs.get("unnorm_key", unnorm_key)
         self.unnorm_key = "libero_spatial_no_noops" if self.unnorm_key is None else self.unnorm_key
-        self.use_l1_regression = eval_cfgs.get("use_l1_regression", use_l1_regression)
-        self.use_diffusion = eval_cfgs.get("use_diffusion", use_diffusion)
-        self.num_diffusion_steps_train = eval_cfgs.get("num_diffusion_steps_train", num_diffusion_steps_train)
-        self.num_diffusion_steps_inference = eval_cfgs.get("num_diffusion_steps_inference", num_diffusion_steps_inference)
-        self.use_film = eval_cfgs.get("use_film", use_film)
-        self.num_images_in_input = eval_cfgs.get("num_images_in_input", num_images_in_input)
-        self.use_proprio = eval_cfgs.get("use_proprio", use_proprio)
-        self.center_crop = eval_cfgs.get("center_crop", center_crop)
-        self.num_open_loop_steps = eval_cfgs.get("num_open_loop_steps", num_open_loop_steps)
+        self.use_l1_regression = eval_cfgs.get("use_l1_regression", True)
+        self.use_diffusion = eval_cfgs.get("use_diffusion", False)
+        self.num_diffusion_steps_train = eval_cfgs.get("num_diffusion_steps_train", 50)
+        self.num_diffusion_steps_inference = eval_cfgs.get("num_diffusion_steps_inference", 50)
+        self.use_film = eval_cfgs.get("use_film", True)
+        self.num_images_in_input = eval_cfgs.get("num_images_in_input", 2)
+        self.use_proprio = eval_cfgs.get("use_proprio", False)
+        self.center_crop = eval_cfgs.get("center_crop", True)
         self.image_resize_size = eval_cfgs.get("image_resize_size", 224)
-        self.lora_rank = eval_cfgs.get("lora_rank", lora_rank)
-        self.llm_dim = eval_cfgs.get("llm_dim", llm_dim)
+        self.lora_rank = eval_cfgs.get("lora_rank", 32)
+        self.llm_dim = eval_cfgs.get("llm_dim", 4096)
+        self.load_in_8bit = eval_cfgs.get("load_in_8bit", False)
+        self.load_in_4bit = eval_cfgs.get("load_in_4bit", False)
+        self.num_open_loop_steps = eval_cfgs.get("num_open_loop_steps", 8)
         self.device = device
         
         # Initialize logging parameters
@@ -138,7 +141,7 @@ class OpenVLAOFT(Policy):
             print(f"Input logging enabled. Logs will be saved to: {self.logging_dir}")
 
         # Initialize action queue for open-loop control
-        self.action_queue = deque(maxlen=num_open_loop_steps)
+        self.action_queue = deque(maxlen=self.num_open_loop_steps)
         
         # Check device availability
         if device == "cuda" and not torch.cuda.is_available():
@@ -164,8 +167,8 @@ class OpenVLAOFT(Policy):
             local_files_only=True,
             trust_remote_code=True,
             norm_stats=norm_stats,
-            load_in_8bit=load_in_8bit,
-            load_in_4bit=load_in_4bit
+            load_in_8bit=self.load_in_8bit,
+            load_in_4bit=self.load_in_4bit
         )
         print('config loaded successfully!')
         # Load processor
@@ -183,9 +186,9 @@ class OpenVLAOFT(Policy):
             "trust_remote_code": True
         }
         
-        if load_in_8bit:
+        if self.load_in_8bit:
             model_kwargs["load_in_8bit"] = True
-        elif load_in_4bit:
+        elif self.load_in_4bit:
             model_kwargs["load_in_4bit"] = True
         else:
             model_kwargs["torch_dtype"] = torch.bfloat16
@@ -202,7 +205,7 @@ class OpenVLAOFT(Policy):
         print("Model loaded successfully!")
         
         # Move model to device if not quantized
-        if not (load_in_8bit or load_in_4bit):
+        if not (self.load_in_8bit or self.load_in_4bit):
             self.model = self.model.to(device)
         print(f"Model moved to device: {device}")
         
@@ -222,17 +225,8 @@ class OpenVLAOFT(Policy):
     def _initialize_oft_components(self):
         """Initialize Online Fine-Tuning specific components"""
         # Create a config object that the imported functions expect
-        class Config:
-            def __init__(self, parent):
-                self.use_proprio = parent.use_proprio
-                self.use_l1_regression = parent.use_l1_regression
-                self.use_diffusion = parent.use_diffusion
-                self.num_diffusion_steps_inference = parent.num_diffusion_steps_inference
-                self.model_family = "openvla"
-                self.pretrained_checkpoint = parent.model_ckpt
-                self.use_film = parent.use_film
         
-        cfg = Config(self)
+        
         
         # Initialize proprio projector using imported function
         self.proprio_projector = None
@@ -242,20 +236,43 @@ class OpenVLAOFT(Policy):
         # Initialize action head using imported function
         self.action_head = None
         if self.use_l1_regression or self.use_diffusion:
-            self.action_head = self._get_action_head(cfg, self.llm_dim)
+            self.action_head = self._get_action_head(self.llm_dim)
         
         # Initialize noisy action projector using imported function
         self.noisy_action_projector = None
         if self.use_diffusion:
-            self.noisy_action_projector = get_noisy_action_projector(cfg, self.llm_dim)
+            self.noisy_action_projector = self._get_noisy_action_projector(self.llm_dim)
         
         if self.use_film:
             # Apply FiLM to the model using imported function
-            self.model = self._apply_film_to_vla(cfg)
+            self.model = self._apply_film_to_vla()
 
         # Check and set unnorm key for action normalization
         self._check_unnorm_key()
-    
+    def _get_noisy_action_projector(self, llm_dim: int) -> NoisyActionProjector:
+        """
+        Get noisy action projector for diffusion-based action prediction.
+
+        Args:      
+            llm_dim: Dimension of the language model
+
+        Returns:
+            NoisyActionProjector: The initialized noisy action projector
+        """
+        # Initialize projector and move to device
+        noisy_action_projector = NoisyActionProjector(
+            llm_dim=llm_dim,
+        ).to(self.device)
+        noisy_action_projector = noisy_action_projector.to(torch.bfloat16).to(self.device)
+        noisy_action_projector.eval()
+
+        # Find and load checkpoint
+        checkpoint_path = find_checkpoint_file(self.model_ckpt, "noisy_action_projector")
+        state_dict = load_component_state_dict(checkpoint_path)
+        noisy_action_projector.load_state_dict(state_dict)
+
+        return noisy_action_projector
+
     def _check_unnorm_key(self):
         """Check and set the action unnormalization key"""        
         # Check if model has norm_stats
@@ -271,7 +288,8 @@ class OpenVLAOFT(Policy):
                 "libero_object_no_noops",
                 "libero_goal_no_noops",
                 "libero_10_no_noops",
-                "libero_90_no_noops"
+                "libero_90_no_noops",
+                "vla_arena"
             ]
             
             for key in possible_keys:
@@ -286,12 +304,11 @@ class OpenVLAOFT(Policy):
         else:
             print("Warning: Model does not have norm_stats attribute")
     
-    def _get_proprio_projector(self, llm_dim=4096, proprio_dim=8):
+    def _get_proprio_projector(self, llm_dim=4096, proprio_dim=8) -> ProprioProjector:
         """
         Get proprioception projector for the VLA model.
 
-        Args:
-            cfg: Configuration object with model parameters
+        Args:  
             llm_dim: Dimension of the language model
             proprio_dim: Dimension of proprioception data
 
@@ -306,18 +323,17 @@ class OpenVLAOFT(Policy):
         proprio_projector = proprio_projector.to(torch.bfloat16).to(self.device)
         proprio_projector.eval()
 
-        checkpoint_path = find_checkpoint_file(cfg.pretrained_checkpoint, "proprio_projector")
+        checkpoint_path = find_checkpoint_file(self.model_ckpt, "proprio_projector")
         state_dict = load_component_state_dict(checkpoint_path)
         proprio_projector.load_state_dict(state_dict)
 
         return proprio_projector
     
-    def _get_action_head(self, cfg=None, llm_dim=4096) -> Union[L1RegressionActionHead, DiffusionActionHead]:
+    def _get_action_head(self, llm_dim=4096) -> Union[L1RegressionActionHead, DiffusionActionHead]:
         """
         Get action head for continuous value prediction.
 
         Args:
-            cfg: Configuration object with model parameters
             llm_dim: Dimension of the language model
 
         Returns:
@@ -326,7 +342,7 @@ class OpenVLAOFT(Policy):
         Raises:
             AssertionError: If both L1 regression and diffusion are specified
         """
-        assert not (cfg.use_l1_regression and cfg.use_diffusion), "Cannot use both L1 regression and diffusion action head!"
+        assert not (self.use_l1_regression and self.use_diffusion), "Cannot use both L1 regression and diffusion action head!"
 
         # Initialize appropriate action head based on configuration
         if self.use_l1_regression:             
@@ -344,20 +360,19 @@ class OpenVLAOFT(Policy):
 
         action_head = action_head.to(torch.bfloat16).to(self.device)
         action_head.eval()
-        checkpoint_path = find_checkpoint_file(cfg.pretrained_checkpoint, "action_head")
+        checkpoint_path = find_checkpoint_file(self.model_ckpt, "action_head")
         state_dict = load_component_state_dict(checkpoint_path)
         action_head.load_state_dict(state_dict)
 
         return action_head
 
     
-    def _apply_film_to_vla(self, cfg=None) -> torch.nn.Module:
+    def _apply_film_to_vla(self) -> torch.nn.Module:
         """
         Apply FiLM (Feature-wise Linear Modulation) to the VLA vision backbone.
 
         Args:
             vla: The VLA model
-            cfg: Configuration object with model parameters
 
         Returns:
             torch.nn.Module: VLA model with FiLM applied
@@ -381,7 +396,7 @@ class OpenVLAOFT(Policy):
         vla.model.vision_backbone = new_vision_backbone
 
         # Load vision backbone checkpoint
-        checkpoint_path = find_checkpoint_file(cfg.pretrained_checkpoint, "vision_backbone")
+        checkpoint_path = find_checkpoint_file(self.model_ckpt, "vision_backbone")
         state_dict = torch.load(checkpoint_path, weights_only=True)
         vla.model.vision_backbone.load_state_dict(state_dict)
 
@@ -584,7 +599,7 @@ class OpenVLAOFT(Policy):
                 proprio = None
                 if self.use_proprio:
                     proprio = obs["state"]
-                    proprio_norm_stats = vla.norm_stats[self.unnorm_key]["proprio"]
+                    proprio_norm_stats = self.model.norm_stats[self.unnorm_key]["proprio"]
                     obs["state"] = normalize_proprio(proprio, proprio_norm_stats)
                     proprio = obs["state"]
                     proprio = torch.tensor(proprio, dtype=torch.float32, device=self.device)

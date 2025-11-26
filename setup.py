@@ -13,7 +13,7 @@ long_description = "".join(lines)
 
 setup(
     name="vla-arena",
-    packages=[package for package in find_packages() if package.startswith("vla_arena")],
+    packages=[package for package in find_packages(where="./") if package.startswith("vla_arena")],
     install_requires=[],
     eager_resources=["*"],
     include_package_data=True,

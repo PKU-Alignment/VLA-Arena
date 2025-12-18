@@ -1,6 +1,6 @@
 # VLA-Arena 模型评估与自定义模型指南
 
-VLA-Arena 是一个用于评估视觉-语言-动作（VLA）模型的统一框架。本指南将帮助您了解如何使用 VLA-Arena 评估现有模型以及如何添加自定义模型。
+VLA-Arena 是一个用于评估视觉-语言-动作（VLA）模型的统一框架。本指南将帮助你了解如何使用 VLA-Arena 评估现有模型以及如何添加自定义模型。
 
 ## 目录
 
@@ -14,7 +14,7 @@ VLA-Arena 是一个用于评估视觉-语言-动作（VLA）模型的统一框�
 
 ### 环境准备
 
-确保您已经安装了 VLA-Arena 及其依赖项：
+确保你已经安装了 VLA-Arena 及其依赖项：
 
 ```bash
 # 安装 VLA-Arena
@@ -173,7 +173,7 @@ class MyCustomPolicy(Policy):
             print("CUDA not available, falling back to CPU")
             device = "cpu"
         
-        # 加载您的模型
+        # 加载你的模型
         self.model = self._load_model(model_ckpt, device)
         self.device = device
         self.instruction = kwargs.get('instruction', None)
@@ -185,7 +185,7 @@ class MyCustomPolicy(Policy):
     
     def _load_model(self, model_ckpt, device):
         """
-        加载您的自定义模型
+        加载你的自定义模型
         
         Args:
             model_ckpt: 模型检查点路径
@@ -194,14 +194,14 @@ class MyCustomPolicy(Policy):
         Returns:
             加载的模型
         """
-        # 在这里实现您的模型加载逻辑
+        # 在这里实现你的模型加载逻辑
         # 例如：
         # model = YourCustomModel.from_pretrained(model_ckpt)
         # model.to(device)
         # model.eval()
         # return model
         
-        raise NotImplementedError("请实现您的模型加载逻辑")
+        raise NotImplementedError("请实现你的模型加载逻辑")
     
     def reset_instruction(self, instruction):
         """
@@ -253,7 +253,7 @@ class MyCustomPolicy(Policy):
         Returns:
             processed_obs: 处理后的观察
         """
-        # 实现您的观察预处理逻辑
+        # 实现你的观察预处理逻辑
         # 例如图像预处理、状态向量构建等
         
         processed_obs = {
@@ -307,7 +307,7 @@ class MyCustomPolicy(Policy):
 
 ### 2. 注册策略
 
-确保您的策略文件被正确导入。在 `vla_arena/evaluation/policy/__init__.py` 中添加：
+确保你的策略文件被正确导入。在 `vla_arena/evaluation/policy/__init__.py` 中添加：
 
 ```python
 from .my_custom_policy import MyCustomPolicy
@@ -315,7 +315,7 @@ from .my_custom_policy import MyCustomPolicy
 
 ### 3. 创建配置文件
 
-为您的模型创建配置文件 `vla_arena/configs/evaluation/my_custom_model.yaml`：
+为你的模型创建配置文件 `vla_arena/configs/evaluation/my_custom_model.yaml`：
 
 ```yaml
 # 模型特定配置
@@ -327,7 +327,7 @@ center_crop: true  # 是否中心裁剪
 
 ### 4. 使用自定义模型
 
-现在您可以在评估脚本中使用您的自定义模型：
+现在你可以在评估脚本中使用你的自定义模型：
 
 ```bash
 python scripts/evaluate_policy.py \
@@ -774,7 +774,7 @@ Level 1:
 
 ### 结果分析工具
 
-您可以使用以下Python脚本快速分析评估结果：
+你可以使用以下Python脚本快速分析评估结果：
 
 ```python
 import json
@@ -840,4 +840,4 @@ echo "Evaluation completed. Results saved to: $OUTPUT_DIR"
 ```
 
 
-如果您遇到问题或有改进建议，请参考代码注释或联系开发团队。
+如果你遇到问题或有改进建议，请参考代码注释或联系开发团队。

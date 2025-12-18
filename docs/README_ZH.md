@@ -126,6 +126,48 @@
 
 ---
 
+### 5. 任务资产管理指南
+**文件：** `asset_management_zh.md`
+
+打包、分享和安装自定义任务和场景的综合指南。
+
+#### 目录结构：
+1. [概述](#1-概述)
+   - 完整工作流：设计 → 打包 → 上传 → 下载 → 安装 → 使用
+   - 核心功能和特性
+   - 打包内容说明
+2. [打包单个任务](#2-打包单个任务)
+   - 打包命令和选项
+   - 自动依赖检测
+   - 示例和输出
+3. [打包任务套件](#3-打包任务套件)
+   - 多任务打包
+   - 套件组织
+4. [检查包内容](#4-检查包内容)
+   - 包内容预览
+   - 元数据检查
+5. [安装包](#5-安装包)
+   - 安装程序
+   - 冲突处理
+   - 选项和标志
+6. [上传到云端](#6-上传到云端)
+   - HuggingFace Hub 集成
+   - 身份验证设置
+   - 自动回退方法
+7. [从云端下载](#7-从云端下载)
+   - 包发现
+   - 下载和安装
+8. [卸载包](#8-卸载包)
+   - 安全移除程序
+9. [包结构说明](#9-包结构说明)
+   - `.vlap` 文件格式
+   - 清单规范
+10. [故障排除](#10-故障排除)
+    - 常见问题和解决方案
+    - 最佳实践
+
+---
+
 ## 🔧 脚本文件
 
 ### 微调脚本
@@ -147,14 +189,17 @@
 docs/
 ├── data_collection.md          # 数据收集指南（英文）
 ├── data_collection_zh.md       # 数据收集指南（中文）
-├── scene_construction.md      # 场景构建指南（英文）
-├── scene_construction_zh.md   # 场景构建指南（中文）
-├── finetune_zh.md             # 模型微调指南（中文）
-├── evaluation.md              # 模型评估指南（英文）
-├── evaluation_zh.md           # 模型评估指南（中文）
-├── finetune_openvla.sh        # OpenVLA 微调脚本
-├── finetune_openvla_oft.sh    # OpenVLA OFT 微调脚本
-└── image/                     # 文档图片和 GIF
+├── scene_construction.md       # 场景构建指南（英文）
+├── scene_construction_zh.md    # 场景构建指南（中文）
+├── finetune.md                 # 模型微调指南（英文）
+├── finetune_zh.md              # 模型微调指南（中文）
+├── evaluation.md               # 模型评估指南（英文）
+├── evaluation_zh.md            # 模型评估指南（中文）
+├── asset_management.md         # 任务资产管理指南（英文）
+├── asset_management_zh.md      # 任务资产管理指南（中文）
+├── finetune_openvla.sh         # OpenVLA 微调脚本
+├── finetune_openvla_oft.sh     # OpenVLA OFT 微调脚本
+└── image/                      # 文档图片和 GIF
 ```
 
 ---
@@ -163,7 +208,7 @@ docs/
 
 ### 1. 场景构建
 1. 阅读 `scene_construction_zh.md` 了解 BDDL 文件结构
-2. 使用 BDDL 语法定义您的任务场景
+2. 使用 BDDL 语法定义你的任务场景
 3. 使用 `scripts/visualize_bddl.py` 预览场景
 
 ### 2. 数据收集
@@ -173,12 +218,17 @@ docs/
 
 ### 3. 模型训练
 1. 使用 `finetune_openvla.sh` 或 `finetune_openvla_oft.sh` 进行模型微调
-2. 根据您的需求配置训练参数
+2. 根据你的需求配置训练参数
 3. 通过 WandB 监控训练进度
 
 ### 4. 模型评估
 1. 按照 `evaluation_zh.md` 进行模型评估程序
 2. 使用 `scripts/evaluate_policy.py` 进行全面评估
 3. 分析结果并迭代改进模型
+
+### 5. 任务分享（可选）
+1. 按照 `asset_management_zh.md` 打包你的自定义任务
+2. 使用 `scripts/manage_assets.py` 上传到云端
+3. 与社区分享你的任务套件
 
 

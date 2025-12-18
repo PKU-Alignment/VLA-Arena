@@ -126,6 +126,48 @@ Complete guide for evaluating VLA models and adding custom models to VLA-Arena.
 
 ---
 
+### 5. Task Asset Management Guide
+**File:** `asset_management.md`
+
+Comprehensive guide for packaging, sharing, and installing custom tasks and scenes.
+
+#### Table of Contents:
+1. [Overview](#1-overview)
+   - Complete workflow: Design → Pack → Upload → Download → Install → Use
+   - Key features and capabilities
+   - What gets packaged
+2. [Package a Single Task](#2-package-a-single-task)
+   - Packaging commands and options
+   - Automatic dependency detection
+   - Examples and output
+3. [Package a Task Suite](#3-package-a-task-suite)
+   - Multi-task packaging
+   - Suite organization
+4. [Inspect a Package](#4-inspect-a-package)
+   - Package content preview
+   - Metadata inspection
+5. [Install a Package](#5-install-a-package)
+   - Installation procedures
+   - Conflict handling
+   - Options and flags
+6. [Upload to Cloud](#6-upload-to-cloud)
+   - HuggingFace Hub integration
+   - Authentication setup
+   - Automatic fallback methods
+7. [Download from Cloud](#7-download-from-cloud)
+   - Package discovery
+   - Download and installation
+8. [Uninstall a Package](#8-uninstall-a-package)
+   - Safe removal procedures
+9. [Package Structure](#9-package-structure)
+   - `.vlap` file format
+   - Manifest specification
+10. [Troubleshooting](#10-troubleshooting)
+    - Common issues and solutions
+    - Best practices
+
+---
+
 ## 🔧 Script Files
 
 ### Fine-tuning Scripts
@@ -149,12 +191,15 @@ docs/
 ├── data_collection_zh.md       # Data collection guide (Chinese)
 ├── scene_construction.md       # Scene construction guide (English)
 ├── scene_construction_zh.md    # Scene construction guide (Chinese)
-├── finetune.md             # Model fine-tuning guide (Chinese)
-├── evaluation.md              # Model evaluation guide (English)
-├── evaluation_zh.md           # Model evaluation guide (Chinese)
-├── finetune_openvla.sh        # OpenVLA fine-tuning script
-├── finetune_openvla_oft.sh    # OpenVLA OFT fine-tuning script
-└── image/                     # Documentation images and GIFs
+├── finetune.md                 # Model fine-tuning guide (English)
+├── finetune_zh.md              # Model fine-tuning guide (Chinese)
+├── evaluation.md               # Model evaluation guide (English)
+├── evaluation_zh.md            # Model evaluation guide (Chinese)
+├── asset_management.md         # Task asset management guide (English)
+├── asset_management_zh.md      # Task asset management guide (Chinese)
+├── finetune_openvla.sh         # OpenVLA fine-tuning script
+├── finetune_openvla_oft.sh     # OpenVLA OFT fine-tuning script
+└── image/                      # Documentation images and GIFs
 ```
 
 ---
@@ -180,3 +225,8 @@ docs/
 1. Follow `evaluation.md` for model evaluation procedures
 2. Use `scripts/evaluate_policy.py` for comprehensive evaluation
 3. Analyze results and iterate on model improvements
+
+### 5. Task Sharing (Optional)
+1. Follow `asset_management.md` to package your custom tasks
+2. Use `scripts/manage_assets.py` to upload to cloud
+3. Share your task packages with the community

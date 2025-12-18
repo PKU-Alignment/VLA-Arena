@@ -1,6 +1,6 @@
 # 场景构建指南
 
-VLA-Arena 提供了一种灵活的场景构建方法。本指南将帮助您了解如何通过 BDDL (Behavior Domain Definition Language) 和配套工具来定义任务场景、管理资产和可视化环境。
+VLA-Arena 提供了一种灵活的场景构建方法。本指南将帮助你了解如何通过 BDDL (Behavior Domain Definition Language) 和配套工具来定义任务场景、管理资产和可视化环境。
 
 ## 目录
 1. [BDDL 文件结构](#1-bddl-文件结构)
@@ -260,13 +260,13 @@ python scripts/visualize_bddl.py --bddl_file "your_bddl_file_path"
 BDDL 文件中的固定对象和可操作对象必须是`vla_arena/vla_arena/assets`目录中已存在的资产。该目录是场景中所有可用资产的仓库。
 
 ### 现成资产
-我们提供了丰富的现成资产，这些资产储存在`articulated_objects`、`stable_hoped_objects`、`stable_scanned_objects`和`turbosquid_objects `中。这些现成资产涵盖了各种常见对象，您可以直接将它们添加到场景中，无需额外设置。
+我们提供了丰富的现成资产，这些资产储存在`articulated_objects`、`stable_hoped_objects`、`stable_scanned_objects`和`turbosquid_objects `中。这些现成资产涵盖了各种常见对象，你可以直接将它们添加到场景中，无需额外设置。
 
 ### 自定义资产
-您也可以使用自己的资产来自定义场景：
+你也可以使用自己的资产来自定义场景：
 #### 1. 准备有效的资产
 
-您准备使用的资产必须包含以下组件：
+你准备使用的资产必须包含以下组件：
 1. **OBJ 文件** - 这种 3D 模型文件格式包含资产的几何数据（顶点、边、面等），定义了其基本形状和结构。
 
 2. **纹理映射（PNG 文件）** - 这些图像文件为 3D 模型提供表面细节，包括颜色、图案和纹理，增强资产的视觉真实感。
@@ -320,7 +320,7 @@ BDDL 文件中的固定对象和可操作对象必须是`vla_arena/vla_arena/ass
 ```
 
 #### 2. 注册资产
-您应该在`vla_arena/vla_arena/envs/objects/`下的相应文件中注册新资产，以便 BDDL 文件解析器能够正确识别相应的对象：
+你应该在`vla_arena/vla_arena/envs/objects/`下的相应文件中注册新资产，以便 BDDL 文件解析器能够正确识别相应的对象：
 ```python
 @register_object
 class Apple(GoogleScannedObject):

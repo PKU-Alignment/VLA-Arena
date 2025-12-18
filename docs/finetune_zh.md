@@ -1,10 +1,10 @@
 # 使用VLA-Arena生成的数据集微调其他模型
 
-VLA-Arena提供了完整的搜集数据、转换数据格式、评估语言-视觉-动作模型的框架，本指南将带您了解如何使用VLA-Arena生成的数据集微调一些VLA模型
+VLA-Arena提供了完整的搜集数据、转换数据格式、评估语言-视觉-动作模型的框架，本指南将带你了解如何使用VLA-Arena生成的数据集微调一些VLA模型
 
 ## 快速开始
 
-如果您已经准备好了数据集和OpenVLA模型，可以直接使用以下命令开始微调：
+如果你已经准备好了数据集和OpenVLA模型，可以直接使用以下命令开始微调：
 
 ### 标准OpenVLA微调
 
@@ -189,7 +189,7 @@ conda activate openvla
 
 #### 数据集配置参数
 
-脚本会自动将您的数据集配置添加到 `configs.py` 和 `transforms.py` 文件中。您可以自定义数据集配置：
+脚本会自动将你的数据集配置添加到 `configs.py` 和 `transforms.py` 文件中。你可以自定义数据集配置：
 
 - `--image_obs_primary`: 主要图像观测键（默认：`image`）
 - `--image_obs_secondary`: 次要图像观测键（默认：空）
@@ -257,17 +257,17 @@ conda activate openvla
 #### 脚本功能
 
 1. **参数验证**：检查必需参数是否提供
-2. **添加数据集配置**：自动将您的数据集配置添加到：
+2. **添加数据集配置**：自动将你的数据集配置添加到：
    - `{openvla_root_dir}/prismatic/vla/datasets/rlds/oxe/configs.py`
    - `{openvla_root_dir}/prismatic/vla/datasets/rlds/oxe/transforms.py`
-3. **运行微调**：使用您的参数执行OpenVLA微调脚本
+3. **运行微调**：使用你的参数执行OpenVLA微调脚本
 
 #### 注意事项
 
 - 脚本使用 `libero_dataset_transform` 作为新数据集的默认变换函数
 - 如果数据集配置已存在，将跳过添加配置步骤
 - 脚本自动处理状态观测键中的 `None` 值
-- 确保您的数据集采用正确的RLDS格式并位于指定的数据目录中
+- 确保你的数据集采用正确的RLDS格式并位于指定的数据目录中
 
 ## 微调OpenVLA OFT
 
@@ -371,7 +371,7 @@ conda activate openvla
 
 #### 数据集配置参数
 
-脚本会自动将您的数据集配置添加到 `configs.py` 和 `transforms.py` 文件中。您可以自定义数据集配置：
+脚本会自动将你的数据集配置添加到 `configs.py` 和 `transforms.py` 文件中。你可以自定义数据集配置：
 
 - `--image_obs_primary`: 主要图像观测键（默认：`image`）
 - `--image_obs_secondary`: 次要图像观测键（默认：空）
@@ -444,10 +444,10 @@ conda activate openvla
 #### 脚本功能
 
 1. **参数验证**：检查必需参数是否提供
-2. **添加数据集配置**：自动将您的数据集配置添加到：
+2. **添加数据集配置**：自动将你的数据集配置添加到：
    - `{openvla_root_dir}/prismatic/vla/datasets/rlds/oxe/configs.py`
    - `{openvla_root_dir}/prismatic/vla/datasets/rlds/oxe/transforms.py`
-3. **运行OFT微调**：使用您的参数执行OpenVLA OFT微调脚本
+3. **运行OFT微调**：使用你的参数执行OpenVLA OFT微调脚本
 4. **多GPU支持**：支持多GPU分布式训练
 
 #### 注意事项
@@ -456,7 +456,7 @@ conda activate openvla
 - 支持扩散建模，适合需要生成式动作预测的场景
 - FiLM语言融合可以提供更好的语言-视觉交互
 - 多图像输入支持多视角机器人任务
-- 确保您的硬件资源足够支持所选的训练配置
+- 确保你的硬件资源足够支持所选的训练配置
 
 ## 微调UniVLA
 
@@ -467,8 +467,8 @@ conda activate openvla
 conda create -n univla python=3.10 -y
 conda activate univla
 
-# 安装PyTorch。下面是一个示例命令，但您应该检查以下链接
-# 以找到适合您计算平台的安装说明：
+# 安装PyTorch。下面是一个示例命令，但你应该检查以下链接
+# 以找到适合你计算平台的安装说明：
 # https://pytorch.org/get-started/locally/
 conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia -y  # 请更新！
 
@@ -572,7 +572,7 @@ UniVLA使用潜在动作模型（LAM）进行动作表示。这些参数控制LA
 
 #### 数据集配置参数
 
-脚本会自动将您的数据集配置添加到 `configs.py` 和 `transforms.py` 文件中。您可以自定义数据集配置：
+脚本会自动将你的数据集配置添加到 `configs.py` 和 `transforms.py` 文件中。你可以自定义数据集配置：
 
 - `--image_obs_primary`: 主要图像观测键（默认：`image`）
 - `--image_obs_secondary`: 次要图像观测键（默认：空）
@@ -659,10 +659,10 @@ UniVLA使用潜在动作模型（LAM）进行动作表示。这些参数控制LA
 #### 脚本功能
 
 1. **参数验证**：检查必需参数是否提供
-2. **添加数据集配置**：自动将您的数据集配置添加到：
+2. **添加数据集配置**：自动将你的数据集配置添加到：
    - `{univla_root_dir}/prismatic/vla/datasets/rlds/oxe/configs.py`
    - `{univla_root_dir}/prismatic/vla/datasets/rlds/oxe/transforms.py`
-3. **运行UniVLA微调**：使用您的参数执行UniVLA微调脚本
+3. **运行UniVLA微调**：使用你的参数执行UniVLA微调脚本
 4. **多GPU支持**：支持多GPU分布式训练
 5. **LAM集成**：自动配置和加载潜在动作模型
 
@@ -673,7 +673,7 @@ UniVLA使用潜在动作模型（LAM）进行动作表示。这些参数控制LA
 - 脚本使用 `libero_dataset_transform` 作为新数据集的默认变换函数
 - 如果数据集配置已存在，将跳过添加配置步骤
 - 脚本自动处理状态观测键中的 `None` 值
-- 确保您的数据集采用正确的RLDS格式并位于指定的数据目录中
+- 确保你的数据集采用正确的RLDS格式并位于指定的数据目录中
 - UniVLA支持冻结和未冻结的VLA骨干网络训练
 
 ## 微调OpenPi
@@ -821,9 +821,9 @@ uv run bash scripts/finetune_openpi.sh \
 #### 脚本功能
 
 1. **参数验证**：检查必需参数是否提供
-2. **添加训练配置**：自动将您的训练配置添加到 `src/openpi/training/config.py`
+2. **添加训练配置**：自动将你的训练配置添加到 `src/openpi/training/config.py`
 3. **计算归一化统计**：自动运行 `scripts/compute_norm_stats.py`
-4. **运行训练**：使用您的参数执行OpenPi训练脚本
+4. **运行训练**：使用你的参数执行OpenPi训练脚本
 5. **支持覆盖**：可选择覆盖现有检查点
 
 #### 注意事项

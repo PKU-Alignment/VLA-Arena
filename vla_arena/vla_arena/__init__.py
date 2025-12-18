@@ -15,6 +15,7 @@
 
 import os
 
+
 # All paths are relative to this file's location
 _BENCHMARK_ROOT = os.path.dirname(os.path.abspath(__file__))
 
@@ -37,8 +38,8 @@ def get_default_path_dict(custom_location=None):
 def get_vla_arena_path(query_key):
     """Get path for a VLA-Arena resource, resolved relative to this file."""
     paths = get_default_path_dict()
-    
+
     if query_key not in paths:
         raise KeyError(f"Key '{query_key}' not found. Available keys: {list(paths.keys())}")
-    
+
     return os.path.abspath(paths[query_key])

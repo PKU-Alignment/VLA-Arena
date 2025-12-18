@@ -35,34 +35,35 @@ Commands:
 Examples:
     # Pack a single task
     python manage_assets.py pack path/to/task.bddl -o ./packages --author "Your Name"
-    
+
     # Pack an entire task suite
     python manage_assets.py pack-suite robustness_dynamic_distractors -o ./packages
-    
+
     # Inspect a package
     python manage_assets.py inspect my_task.vlap
-    
+
     # Install a package
     python manage_assets.py install my_task.vlap
-    
+
     # Upload to your cloud repo (required)
     python manage_assets.py upload my_task.vlap --repo username/task-assets
-    
+
     # Download and install from a cloud repo
     python manage_assets.py download my_task --repo username/task-assets --install
-    
+
     # List available packages in a repo
     python manage_assets.py list --repo username/task-assets
 """
 
-import sys
 import os
+import sys
+
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from vla_arena.vla_arena.utils.asset_manager import main
 
+
 if __name__ == '__main__':
     main()
-

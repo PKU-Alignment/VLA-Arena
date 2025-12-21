@@ -31,13 +31,21 @@ from vla_arena.vla_arena.envs.env_wrapper import OffScreenRenderEnv
 #     pass
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--bddl_file', type=str, required=True, help='BDDL file path or directory')
+parser.add_argument(
+    '--bddl_file', type=str, required=True, help='BDDL file path or directory'
+)
 parser.add_argument('--resolution', type=int, default=256, help='Resolution')
 parser.add_argument(
-    '--output_path', type=str, default='./vla_arena/vla_arena/init_files', help='Output path',
+    '--output_path',
+    type=str,
+    default='./vla_arena/vla_arena/init_files',
+    help='Output path',
 )
 parser.add_argument(
-    '--root_path', type=str, default='./vla_arena/vla_arena/bddl_files', help='Root path',
+    '--root_path',
+    type=str,
+    default='./vla_arena/vla_arena/bddl_files',
+    help='Root path',
 )
 args = parser.parse_args()
 
@@ -51,9 +59,13 @@ def process_single_file_with_retry(bddl_file, relative_path='', max_retries=4):
         relative_path: Path relative to input root directory, used to maintain directory structure
         max_retries: Maximum number of retries
     """
-    for attempt in range(max_retries + 1):  # +1 because it includes the first attempt
+    for attempt in range(
+        max_retries + 1
+    ):  # +1 because it includes the first attempt
         try:
-            print(f'Processing file: {bddl_file} (Attempt {attempt + 1}/{max_retries + 1})')
+            print(
+                f'Processing file: {bddl_file} (Attempt {attempt + 1}/{max_retries + 1})'
+            )
             process_single_file(bddl_file, relative_path)
             return  # Successfully processed, return directly
 
@@ -61,13 +73,20 @@ def process_single_file_with_retry(bddl_file, relative_path='', max_retries=4):
             error_name = e.__class__.__name__
 
             # Check if it's a RandomizationError
-            if 'RandomizationError' in error_name or 'randomization' in str(e).lower():
+            if (
+                'RandomizationError' in error_name
+                or 'randomization' in str(e).lower()
+            ):
                 if attempt < max_retries:
                     print(f'Encountered RandomizationError: {e}')
-                    print(f'Retrying... ({attempt + 1}/{max_retries} retries used)')
+                    print(
+                        f'Retrying... ({attempt + 1}/{max_retries} retries used)'
+                    )
                     time.sleep(0.5)  # Brief wait before retry
                     continue
-                print(f'Failed after {max_retries} retries due to RandomizationError')
+                print(
+                    f'Failed after {max_retries} retries due to RandomizationError'
+                )
                 print(f'Error details: {e}')
                 raise e
             # If not RandomizationError, raise exception directly
@@ -103,7 +122,10 @@ def process_single_file(bddl_file, relative_path=''):
         init_states = []
         flattened_state = env.get_sim_state()
         print(flattened_state.shape, type(flattened_state))
-        if isinstance(flattened_state, np.ndarray) and flattened_state.ndim == 1:
+        if (
+            isinstance(flattened_state, np.ndarray)
+            and flattened_state.ndim == 1
+        ):
             init_states.append(flattened_state)
 
         # 3. Build output path, maintain original directory structure

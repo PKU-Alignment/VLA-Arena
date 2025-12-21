@@ -36,7 +36,9 @@ from typing import Any
 from torch.multiprocessing import Queue
 
 
-def get_last_item_from_queue(queue: Queue, block=True, timeout: float = 0.1) -> Any:
+def get_last_item_from_queue(
+    queue: Queue, block=True, timeout: float = 0.1
+) -> Any:
     if block:
         try:
             item = queue.get(timeout=timeout)

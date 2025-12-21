@@ -59,9 +59,13 @@ class ControlEnv:
         light_adjustment=False,
         **kwargs,
     ):
-        assert os.path.exists(bddl_file_name), f'[error] {bddl_file_name} does not exist!'
+        assert os.path.exists(
+            bddl_file_name
+        ), f'[error] {bddl_file_name} does not exist!'
 
-        controller_configs = suite.load_composite_controller_config(robot=robots[0])
+        controller_configs = suite.load_composite_controller_config(
+            robot=robots[0]
+        )
 
         problem_info = BDDLUtils.get_problem_info(bddl_file_name)
         # Check if we're using a multi-armed environment and use env_configuration argument if so
@@ -228,15 +232,25 @@ class SegmentationRenderEnv(OffScreenRenderEnv):
         obs = self.env.reset()
         self.segmentation_id_mapping = {}
 
-        for i, instance_name in enumerate(list(self.env.model.instances_to_ids.keys())):
+        for i, instance_name in enumerate(
+            list(self.env.model.instances_to_ids.keys())
+        ):
             if instance_name == 'Panda0':
                 self.segmentation_robot_id = i
 
-        for i, instance_name in enumerate(list(self.env.model.instances_to_ids.keys())):
-            if instance_name not in ['Panda0', 'RethinkMount0', 'PandaGripper0']:
+        for i, instance_name in enumerate(
+            list(self.env.model.instances_to_ids.keys())
+        ):
+            if instance_name not in [
+                'Panda0',
+                'RethinkMount0',
+                'PandaGripper0',
+            ]:
                 self.segmentation_id_mapping[i] = instance_name
 
-        self.instance_to_id = {v: k + 1 for k, v in self.segmentation_id_mapping.items()}
+        self.instance_to_id = {
+            v: k + 1 for k, v in self.segmentation_id_mapping.items()
+        }
         return obs
 
     def get_segmentation_instances(self, segmentation_image):
@@ -250,7 +264,9 @@ class SegmentationRenderEnv(OffScreenRenderEnv):
         )
 
         for seg_id, instance_name in self.segmentation_id_mapping.items():
-            seg_img_dict[instance_name] = segmentation_image * (segmentation_image == seg_id + 1)
+            seg_img_dict[instance_name] = segmentation_image * (
+                segmentation_image == seg_id + 1
+            )
         return seg_img_dict
 
     def get_segmentation_of_interest(self, segmentation_image):

@@ -23,7 +23,9 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
-from vla_arena.models.openvla_oft.prismatic.overwatch import initialize_overwatch
+from vla_arena.models.openvla_oft.prismatic.overwatch import (
+    initialize_overwatch,
+)
 from vla_arena.models.openvla_oft.prismatic.vla.constants import (
     ACTION_PROPRIO_NORMALIZATION_TYPE,
 )
@@ -34,6 +36,7 @@ from vla_arena.models.openvla_oft.prismatic.vla.datasets.rlds.oxe.configs import
 from vla_arena.models.openvla_oft.prismatic.vla.datasets.rlds.oxe.transforms import (
     OXE_STANDARDIZATION_TRANSFORMS,
 )
+
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)
@@ -67,21 +70,38 @@ def make_oxe_dataset_kwargs(
     elif dataset_kwargs['action_encoding'] is ActionEncoding.EEF_R6:
         dataset_kwargs['absolute_action_mask'] = [False] * 9 + [True]
         dataset_kwargs['action_normalization_mask'] = [True] * 9 + [False]
-    elif dataset_kwargs['action_encoding'] is ActionEncoding.JOINT_POS_BIMANUAL:
+    elif (
+        dataset_kwargs['action_encoding'] is ActionEncoding.JOINT_POS_BIMANUAL
+    ):
         dataset_kwargs['absolute_action_mask'] = [True] * 14
         dataset_kwargs['action_normalization_mask'] = [True] * 14
-    dataset_kwargs['action_proprio_normalization_type'] = action_proprio_normalization_type
+    dataset_kwargs['action_proprio_normalization_type'] = (
+        action_proprio_normalization_type
+    )
 
     # Adjust Loaded Camera Views
-    if len(missing_keys := (set(load_camera_views) - set(dataset_kwargs['image_obs_keys']))) > 0:
-        raise ValueError(f'Cannot load `{dataset_name}`; missing camera views `{missing_keys}`')
+    if (
+        len(
+            missing_keys := (
+                set(load_camera_views) - set(dataset_kwargs['image_obs_keys'])
+            )
+        )
+        > 0
+    ):
+        raise ValueError(
+            f'Cannot load `{dataset_name}`; missing camera views `{missing_keys}`'
+        )
 
     # Filter
     dataset_kwargs['image_obs_keys'] = {
-        k: v for k, v in dataset_kwargs['image_obs_keys'].items() if k in load_camera_views
+        k: v
+        for k, v in dataset_kwargs['image_obs_keys'].items()
+        if k in load_camera_views
     }
     dataset_kwargs['depth_obs_keys'] = {
-        k: v for k, v in dataset_kwargs['depth_obs_keys'].items() if k in load_camera_views
+        k: v
+        for k, v in dataset_kwargs['depth_obs_keys'].items()
+        if k in load_camera_views
     }
 
     # Eliminate Unnecessary Keys
@@ -97,13 +117,19 @@ def make_oxe_dataset_kwargs(
         dataset_kwargs['language_key'] = 'language_instruction'
 
     # Specify Standardization Transform
-    dataset_kwargs['standardize_fn'] = OXE_STANDARDIZATION_TRANSFORMS[dataset_name]
+    dataset_kwargs['standardize_fn'] = OXE_STANDARDIZATION_TRANSFORMS[
+        dataset_name
+    ]
 
     # Add any aux arguments
     if 'aux_kwargs' in dataset_kwargs:
         dataset_kwargs.update(dataset_kwargs.pop('aux_kwargs'))
 
-    return {'name': dataset_name, 'data_dir': str(data_root_dir), **dataset_kwargs}
+    return {
+        'name': dataset_name,
+        'data_dir': str(data_root_dir),
+        **dataset_kwargs,
+    }
 
 
 def get_oxe_dataset_kwargs_and_weights(
@@ -132,7 +158,9 @@ def get_oxe_dataset_kwargs_and_weights(
     included_datasets, filtered_mixture_spec = set(), []
     for d_name, d_weight in mixture_spec:
         if d_name in included_datasets:
-            overwatch.warning(f'Skipping Duplicate Dataset: `{(d_name, d_weight)}`')
+            overwatch.warning(
+                f'Skipping Duplicate Dataset: `{(d_name, d_weight)}`'
+            )
             continue
 
         included_datasets.add(d_name)

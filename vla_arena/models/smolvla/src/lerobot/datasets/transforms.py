@@ -36,8 +36,8 @@ import torch
 from torchvision.transforms import v2
 from torchvision.transforms.v2 import (
     Transform,
-    functional as F,  # noqa: N812
 )
+from torchvision.transforms.v2 import functional as F  # noqa: N812
 
 
 class RandomSubsetApply(Transform):
@@ -62,7 +62,9 @@ class RandomSubsetApply(Transform):
     ) -> None:
         super().__init__()
         if not isinstance(transforms, Sequence):
-            raise TypeError('Argument transforms should be a sequence of callables')
+            raise TypeError(
+                'Argument transforms should be a sequence of callables'
+            )
         if p is None:
             p = [1] * len(transforms)
         elif len(p) != len(transforms):
@@ -75,7 +77,9 @@ class RandomSubsetApply(Transform):
         elif not isinstance(n_subset, int):
             raise TypeError('n_subset should be an int or None')
         elif not (1 <= n_subset <= len(transforms)):
-            raise ValueError(f'n_subset should be in the interval [1, {len(transforms)}]')
+            raise ValueError(
+                f'n_subset should be in the interval [1, {len(transforms)}]'
+            )
 
         self.transforms = transforms
         total = sum(p)
@@ -88,11 +92,15 @@ class RandomSubsetApply(Transform):
     def forward(self, *inputs: Any) -> Any:
         needs_unpacking = len(inputs) > 1
 
-        selected_indices = torch.multinomial(torch.tensor(self.p), self.n_subset)
+        selected_indices = torch.multinomial(
+            torch.tensor(self.p), self.n_subset
+        )
         if not self.random_order:
             selected_indices = selected_indices.sort().values
 
-        self.selected_transforms = [self.transforms[i] for i in selected_indices]
+        self.selected_transforms = [
+            self.transforms[i] for i in selected_indices
+        ]
 
         for transform in self.selected_transforms:
             outputs = transform(*inputs)
@@ -136,26 +144,41 @@ class SharpnessJitter(Transform):
     def _check_input(self, sharpness):
         if isinstance(sharpness, (int, float)):
             if sharpness < 0:
-                raise ValueError('If sharpness is a single number, it must be non negative.')
+                raise ValueError(
+                    'If sharpness is a single number, it must be non negative.'
+                )
             sharpness = [1.0 - sharpness, 1.0 + sharpness]
             sharpness[0] = max(sharpness[0], 0.0)
-        elif isinstance(sharpness, collections.abc.Sequence) and len(sharpness) == 2:
+        elif (
+            isinstance(sharpness, collections.abc.Sequence)
+            and len(sharpness) == 2
+        ):
             sharpness = [float(v) for v in sharpness]
         else:
-            raise TypeError(f'{sharpness=} should be a single number or a sequence with length 2.')
+            raise TypeError(
+                f'{sharpness=} should be a single number or a sequence with length 2.'
+            )
 
         if not 0.0 <= sharpness[0] <= sharpness[1]:
-            raise ValueError(f'sharpness values should be between (0., inf), but got {sharpness}.')
+            raise ValueError(
+                f'sharpness values should be between (0., inf), but got {sharpness}.'
+            )
 
         return float(sharpness[0]), float(sharpness[1])
 
     def make_params(self, flat_inputs: list[Any]) -> dict[str, Any]:
-        sharpness_factor = torch.empty(1).uniform_(self.sharpness[0], self.sharpness[1]).item()
+        sharpness_factor = (
+            torch.empty(1)
+            .uniform_(self.sharpness[0], self.sharpness[1])
+            .item()
+        )
         return {'sharpness_factor': sharpness_factor}
 
     def transform(self, inpt: Any, params: dict[str, Any]) -> Any:
         sharpness_factor = params['sharpness_factor']
-        return self._call_kernel(F.adjust_sharpness, inpt, sharpness_factor=sharpness_factor)
+        return self._call_kernel(
+            F.adjust_sharpness, inpt, sharpness_factor=sharpness_factor
+        )
 
 
 @dataclass

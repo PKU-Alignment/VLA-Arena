@@ -26,7 +26,11 @@ from vla_arena.vla_arena.envs.env_wrapper import OffScreenRenderEnv
 
 DATE = time.strftime('%Y_%m_%d')
 DATE_TIME = time.strftime('%Y_%m_%d-%H_%M_%S')
-DEVICE = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
+DEVICE = (
+    torch.device('cuda:0')
+    if torch.cuda.is_available()
+    else torch.device('cpu')
+)
 
 
 def get_dummy_action():
@@ -52,12 +56,17 @@ def get_image(obs, cam_name):
     return img
 
 
-def save_rollout_video(rollout_images, idx, success, task_description, log_file=None):
+def save_rollout_video(
+    rollout_images, idx, success, task_description, log_file=None
+):
     """Saves an MP4 replay of an episode."""
     rollout_dir = f'./rollouts/{DATE}'
     os.makedirs(rollout_dir, exist_ok=True)
     processed_task_description = (
-        task_description.lower().replace(' ', '_').replace('\n', '_').replace('.', '_')[:50]
+        task_description.lower()
+        .replace(' ', '_')
+        .replace('\n', '_')
+        .replace('.', '_')[:50]
     )
     mp4_path = f'{rollout_dir}/{DATE_TIME}--episode={idx}--success={success}--task={processed_task_description}.mp4'
     video_writer = imageio.get_writer(mp4_path, fps=30)
@@ -106,15 +115,28 @@ def debug_single_file(bddl_file: str):
 
     # 3. Save replay video
     task_name = os.path.basename(bddl_file)
-    save_rollout_video(replay_images, 1, success=done, task_description=task_name, log_file=None)
+    save_rollout_video(
+        replay_images,
+        1,
+        success=done,
+        task_description=task_name,
+        log_file=None,
+    )
 
     # 4. Close environment
     env.close()
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Recursively find and debug all .bddl files')
-    parser.add_argument('--bddl_file', type=str, required=True, help='BDDL file path or directory')
+    parser = argparse.ArgumentParser(
+        description='Recursively find and debug all .bddl files'
+    )
+    parser.add_argument(
+        '--bddl_file',
+        type=str,
+        required=True,
+        help='BDDL file path or directory',
+    )
     args = parser.parse_args()
 
     path = args.bddl_file

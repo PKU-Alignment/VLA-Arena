@@ -69,7 +69,9 @@ def collect_human_trajectory(
 
     env.render()
 
-    task_completion_hold_count = -1  # counter to collect 10 timesteps after reaching goal
+    task_completion_hold_count = (
+        -1
+    )  # counter to collect 10 timesteps after reaching goal
     device.start_control()
 
     # Print action info for all robots
@@ -101,7 +103,9 @@ def collect_human_trajectory(
     # Keep track of prev gripper actions when using since they are position-based and must be maintained when arms switched
     all_prev_gripper_actions = [
         {
-            f'{robot_arm}_gripper': np.repeat([0], robot.gripper[robot_arm].dof)
+            f'{robot_arm}_gripper': np.repeat(
+                [0], robot.gripper[robot_arm].dof
+            )
             for robot_arm in robot.arms
             if robot.gripper[robot_arm].dof > 0
         }
@@ -134,7 +138,9 @@ def collect_human_trajectory(
                     active_robot.composite_controller.joint_action_policy.input_type
                 )
             else:
-                controller_input_type = active_robot.part_controllers[arm_name].input_type
+                controller_input_type = active_robot.part_controllers[
+                    arm_name
+                ].input_type
 
             if controller_input_type == 'delta':
                 action_dict[arm_name] = input_ac_dict[f'{arm_name}_delta']
@@ -148,10 +154,14 @@ def collect_human_trajectory(
             robot.create_action_vector(all_prev_gripper_actions[i])
             for i, robot in enumerate(env.robots)
         ]
-        env_action[device.active_robot] = active_robot.create_action_vector(action_dict)
+        env_action[device.active_robot] = active_robot.create_action_vector(
+            action_dict
+        )
         env_action = np.concatenate(env_action)
         for gripper_ac in all_prev_gripper_actions[device.active_robot]:
-            all_prev_gripper_actions[device.active_robot][gripper_ac] = action_dict[gripper_ac]
+            all_prev_gripper_actions[device.active_robot][gripper_ac] = (
+                action_dict[gripper_ac]
+            )
 
         obs, reward, done, info = env.step(env_action)
         # replay_images.append(get_image(obs))
@@ -181,11 +191,17 @@ def collect_human_trajectory(
         # state machine to check for having a success for 10 consecutive timesteps
         if env._check_success():
             if task_completion_hold_count > 0:
-                task_completion_hold_count -= 1  # latched state, decrement count
+                task_completion_hold_count -= (
+                    1  # latched state, decrement count
+                )
             else:
-                task_completion_hold_count = 10  # reset count on first success timestep
+                task_completion_hold_count = (
+                    10  # reset count on first success timestep
+                )
         else:
-            task_completion_hold_count = -1  # null the counter if there's no success
+            task_completion_hold_count = (
+                -1
+            )  # null the counter if there's no success
 
         # limit frame rate if necessary
         if max_fr is not None:
@@ -240,7 +256,9 @@ def collect_human_trajectory(
     return saving
 
 
-def gather_demonstrations_as_hdf5(directory, out_dir, env_info, args, remove_directory=[]):
+def gather_demonstrations_as_hdf5(
+    directory, out_dir, env_info, args, remove_directory=[]
+):
     """
     Gathers the demonstrations saved in @directory into a
     single hdf5 file.
@@ -279,7 +297,11 @@ def gather_demonstrations_as_hdf5(directory, out_dir, env_info, args, remove_dir
 
     num_eps = 0
     env_name = None  # will get populated at some point
-    problem_info = BDDLUtils.get_problem_info(args.bddl_file) if hasattr(args, 'bddl_file') else {}
+    problem_info = (
+        BDDLUtils.get_problem_info(args.bddl_file)
+        if hasattr(args, 'bddl_file')
+        else {}
+    )
 
     for ep_directory in os.listdir(directory):
         # Skip directories marked for removal
@@ -304,7 +326,9 @@ def gather_demonstrations_as_hdf5(directory, out_dir, env_info, args, remove_dir
             if 'successful' in dic:
                 success = success or dic['successful']
             else:
-                success = True  # Default to saving all demos if no success flag
+                success = (
+                    True  # Default to saving all demos if no success flag
+                )
 
         if len(states) == 0:
             continue
@@ -340,7 +364,9 @@ def gather_demonstrations_as_hdf5(directory, out_dir, env_info, args, remove_dir
     if hasattr(args, 'bddl_file'):
         grp.attrs['problem_info'] = json.dumps(problem_info)
         grp.attrs['bddl_file_name'] = args.bddl_file
-        grp.attrs['bddl_file_content'] = str(open(args.bddl_file, encoding='utf-8').read())
+        grp.attrs['bddl_file_content'] = str(
+            open(args.bddl_file, encoding='utf-8').read()
+        )
 
     f.close()
     print(f'Saved {num_eps} demonstrations to {hdf5_path}')
@@ -511,7 +537,9 @@ if __name__ == '__main__':
         )
 
     elif args.device == 'mjgui':
-        assert args.renderer == 'mjviewer', 'Mocap is only supported with the mjviewer renderer'
+        assert (
+            args.renderer == 'mjviewer'
+        ), 'Mocap is only supported with the mjviewer renderer'
         from robosuite.devices.mjgui import MJGUI
 
         device = MJGUI(env=env)
@@ -522,7 +550,9 @@ if __name__ == '__main__':
         )
 
     # make a new timestamped directory
-    t1, t2 = datetime.datetime.now().strftime('%Y%m%d_%H%M%S'), datetime.datetime.now().strftime(
+    t1, t2 = datetime.datetime.now().strftime(
+        '%Y%m%d_%H%M%S'
+    ), datetime.datetime.now().strftime(
         '%f',
     )
     DATE = time.strftime('%Y_%m_%d')
@@ -552,5 +582,7 @@ if __name__ == '__main__':
         )
         if saving:
             print(f'Remove directory list: {remove_directory}')
-            gather_demonstrations_as_hdf5(tmp_directory, new_dir, env_info, args, remove_directory)
+            gather_demonstrations_as_hdf5(
+                tmp_directory, new_dir, env_info, args, remove_directory
+            )
             i += 1

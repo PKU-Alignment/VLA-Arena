@@ -19,11 +19,12 @@ import pathlib
 import time
 
 import numpy as np
-from openpi_client import websocket_client_policy as _websocket_client_policy
 import polars as pl
 import rich
 import tqdm
 import tyro
+from openpi_client import websocket_client_policy as _websocket_client_policy
+
 
 logger = logging.getLogger(__name__)
 
@@ -152,7 +153,9 @@ def main(args: Args) -> None:
     for _ in tqdm.trange(args.num_steps, desc="Running policy"):
         inference_start = time.time()
         action = policy.infer(obs_fn())
-        timing_recorder.record("client_infer_ms", 1000 * (time.time() - inference_start))
+        timing_recorder.record(
+            "client_infer_ms", 1000 * (time.time() - inference_start)
+        )
         for key, value in action.get("server_timing", {}).items():
             timing_recorder.record(f"server_{key}", value)
         for key, value in action.get("policy_timing", {}).items():
@@ -168,10 +171,18 @@ def _random_observation_aloha() -> dict:
     return {
         "state": np.ones((14,)),
         "images": {
-            "cam_high": np.random.randint(256, size=(3, 224, 224), dtype=np.uint8),
-            "cam_low": np.random.randint(256, size=(3, 224, 224), dtype=np.uint8),
-            "cam_left_wrist": np.random.randint(256, size=(3, 224, 224), dtype=np.uint8),
-            "cam_right_wrist": np.random.randint(256, size=(3, 224, 224), dtype=np.uint8),
+            "cam_high": np.random.randint(
+                256, size=(3, 224, 224), dtype=np.uint8
+            ),
+            "cam_low": np.random.randint(
+                256, size=(3, 224, 224), dtype=np.uint8
+            ),
+            "cam_left_wrist": np.random.randint(
+                256, size=(3, 224, 224), dtype=np.uint8
+            ),
+            "cam_right_wrist": np.random.randint(
+                256, size=(3, 224, 224), dtype=np.uint8
+            ),
         },
         "prompt": "do something",
     }
@@ -182,7 +193,9 @@ def _random_observation_droid() -> dict:
         "observation/exterior_image_1_left": np.random.randint(
             256, size=(224, 224, 3), dtype=np.uint8
         ),
-        "observation/wrist_image_left": np.random.randint(256, size=(224, 224, 3), dtype=np.uint8),
+        "observation/wrist_image_left": np.random.randint(
+            256, size=(224, 224, 3), dtype=np.uint8
+        ),
         "observation/joint_position": np.random.rand(7),
         "observation/gripper_position": np.random.rand(1),
         "prompt": "do something",
@@ -192,8 +205,12 @@ def _random_observation_droid() -> dict:
 def _random_observation_libero() -> dict:
     return {
         "observation/state": np.random.rand(8),
-        "observation/image": np.random.randint(256, size=(224, 224, 3), dtype=np.uint8),
-        "observation/wrist_image": np.random.randint(256, size=(224, 224, 3), dtype=np.uint8),
+        "observation/image": np.random.randint(
+            256, size=(224, 224, 3), dtype=np.uint8
+        ),
+        "observation/wrist_image": np.random.randint(
+            256, size=(224, 224, 3), dtype=np.uint8
+        ),
         "prompt": "do something",
     }
 

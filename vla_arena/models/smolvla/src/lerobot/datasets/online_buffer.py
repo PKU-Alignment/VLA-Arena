@@ -41,7 +41,6 @@ from typing import Any
 
 import numpy as np
 import torch
-
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
 
 
@@ -54,7 +53,9 @@ def _make_memmap_safe(**kwargs) -> np.memmap:
     https://numpy.org/doc/stable/reference/arrays.dtypes.html#arrays-dtypes-constructing
     """
     if kwargs['mode'].startswith('w'):
-        required_space = kwargs['dtype'].itemsize * np.prod(kwargs['shape'])  # bytes
+        required_space = kwargs['dtype'].itemsize * np.prod(
+            kwargs['shape']
+        )  # bytes
         stats = os.statvfs(Path(kwargs['filename']).parent)
         available_space = stats.f_bavail * stats.f_frsize  # bytes
         if required_space >= available_space * 0.8:
@@ -90,7 +91,9 @@ class OnlineBuffer(torch.utils.data.Dataset):
         data_spec: dict[str, Any] | None,
         buffer_capacity: int | None,
         fps: float | None = None,
-        delta_timestamps: dict[str, list[float]] | dict[str, np.ndarray] | None = None,
+        delta_timestamps: (
+            dict[str, list[float]] | dict[str, np.ndarray] | None
+        ) = None,
     ):
         """
         The online buffer can be provided from scratch or you can load an existing online buffer by passing
@@ -167,20 +170,38 @@ class OnlineBuffer(torch.utils.data.Dataset):
         complete_data_spec = {
             # _next_index will be a pointer to the next index that we should start filling from when we add
             # more data.
-            OnlineBuffer.NEXT_INDEX_KEY: {'dtype': np.dtype('int64'), 'shape': ()},
+            OnlineBuffer.NEXT_INDEX_KEY: {
+                'dtype': np.dtype('int64'),
+                'shape': (),
+            },
             # Since the memmap is initialized with all-zeros, this keeps track of which indices are occupied
             # with real data rather than the dummy initialization.
-            OnlineBuffer.OCCUPANCY_MASK_KEY: {'dtype': np.dtype('?'), 'shape': (buffer_capacity,)},
-            OnlineBuffer.INDEX_KEY: {'dtype': np.dtype('int64'), 'shape': (buffer_capacity,)},
-            OnlineBuffer.FRAME_INDEX_KEY: {'dtype': np.dtype('int64'), 'shape': (buffer_capacity,)},
+            OnlineBuffer.OCCUPANCY_MASK_KEY: {
+                'dtype': np.dtype('?'),
+                'shape': (buffer_capacity,),
+            },
+            OnlineBuffer.INDEX_KEY: {
+                'dtype': np.dtype('int64'),
+                'shape': (buffer_capacity,),
+            },
+            OnlineBuffer.FRAME_INDEX_KEY: {
+                'dtype': np.dtype('int64'),
+                'shape': (buffer_capacity,),
+            },
             OnlineBuffer.EPISODE_INDEX_KEY: {
                 'dtype': np.dtype('int64'),
                 'shape': (buffer_capacity,),
             },
-            OnlineBuffer.TIMESTAMP_KEY: {'dtype': np.dtype('float64'), 'shape': (buffer_capacity,)},
+            OnlineBuffer.TIMESTAMP_KEY: {
+                'dtype': np.dtype('float64'),
+                'shape': (buffer_capacity,),
+            },
         }
         for k, v in data_spec.items():
-            complete_data_spec[k] = {'dtype': v['dtype'], 'shape': (buffer_capacity, *v['shape'])}
+            complete_data_spec[k] = {
+                'dtype': v['dtype'],
+                'shape': (buffer_capacity, *v['shape']),
+            }
         return complete_data_spec
 
     def add_data(self, data: dict[str, np.ndarray]):
@@ -193,7 +214,10 @@ class OnlineBuffer(torch.utils.data.Dataset):
         Shift the incoming data index and episode_index to continue on from the last frame. Note that this
         will be done in place!
         """
-        if len(missing_keys := (set(self.data_keys).difference(set(data)))) > 0:
+        if (
+            len(missing_keys := (set(self.data_keys).difference(set(data))))
+            > 0
+        ):
             raise ValueError(f'Missing data keys: {missing_keys}')
         new_data_length = len(data[self.data_keys[0]])
         if not all(len(data[k]) == new_data_length for k in self.data_keys):
@@ -207,13 +231,19 @@ class OnlineBuffer(torch.utils.data.Dataset):
 
         # Shift the incoming indices if necessary.
         if self.num_frames > 0:
-            last_episode_index = self._data[OnlineBuffer.EPISODE_INDEX_KEY][next_index - 1]
-            last_data_index = self._data[OnlineBuffer.INDEX_KEY][next_index - 1]
+            last_episode_index = self._data[OnlineBuffer.EPISODE_INDEX_KEY][
+                next_index - 1
+            ]
+            last_data_index = self._data[OnlineBuffer.INDEX_KEY][
+                next_index - 1
+            ]
             data[OnlineBuffer.EPISODE_INDEX_KEY] += last_episode_index + 1
             data[OnlineBuffer.INDEX_KEY] += last_data_index + 1
 
         # Insert the new data starting from next_index. It may be necessary to wrap around to the start.
-        n_surplus = max(0, new_data_length - (self._buffer_capacity - next_index))
+        n_surplus = max(
+            0, new_data_length - (self._buffer_capacity - next_index)
+        )
         for k in self.data_keys:
             if n_surplus == 0:
                 slc = slice(next_index, next_index + new_data_length)
@@ -224,7 +254,9 @@ class OnlineBuffer(torch.utils.data.Dataset):
                 self._data[OnlineBuffer.OCCUPANCY_MASK_KEY][next_index:] = True
                 self._data[k][:n_surplus] = data[k][-n_surplus:]
         if n_surplus == 0:
-            self._data[OnlineBuffer.NEXT_INDEX_KEY] = next_index + new_data_length
+            self._data[OnlineBuffer.NEXT_INDEX_KEY] = (
+                next_index + new_data_length
+            )
         else:
             self._data[OnlineBuffer.NEXT_INDEX_KEY] = n_surplus
 
@@ -271,7 +303,9 @@ class OnlineBuffer(torch.utils.data.Dataset):
         if idx >= len(self) or idx < -len(self):
             raise IndexError
 
-        item = {k: v[idx] for k, v in self._data.items() if not k.startswith('_')}
+        item = {
+            k: v[idx] for k, v in self._data.items() if not k.startswith('_')
+        }
 
         if self.delta_timestamps is None:
             return self._item_to_tensors(item)
@@ -284,7 +318,9 @@ class OnlineBuffer(torch.utils.data.Dataset):
                 self._data[OnlineBuffer.OCCUPANCY_MASK_KEY],
             )
         )[0]
-        episode_timestamps = self._data[OnlineBuffer.TIMESTAMP_KEY][episode_data_indices]
+        episode_timestamps = self._data[OnlineBuffer.TIMESTAMP_KEY][
+            episode_data_indices
+        ]
 
         for data_key in self.delta_timestamps:
             # Note: The logic in this loop is copied from `load_previous_and_future_frames`.
@@ -309,7 +345,9 @@ class OnlineBuffer(torch.utils.data.Dataset):
             )
 
             # Load frames for this data key.
-            item[data_key] = self._data[data_key][episode_data_indices[argmin_]]
+            item[data_key] = self._data[data_key][
+                episode_data_indices[argmin_]
+            ]
 
             item[f'{data_key}{OnlineBuffer.IS_PAD_POSTFIX}'] = is_pad
 
@@ -317,7 +355,9 @@ class OnlineBuffer(torch.utils.data.Dataset):
 
     def get_data_by_key(self, key: str) -> torch.Tensor:
         """Returns all data for a given data key as a Tensor."""
-        return torch.from_numpy(self._data[key][self._data[OnlineBuffer.OCCUPANCY_MASK_KEY]])
+        return torch.from_numpy(
+            self._data[key][self._data[OnlineBuffer.OCCUPANCY_MASK_KEY]]
+        )
 
 
 def compute_sampler_weights(
@@ -348,7 +388,9 @@ def compute_sampler_weights(
         - Options `drop_first_n_frames` and `episode_indices_to_use` can be added easily. They were not
           included here to avoid adding complexity.
     """
-    if len(offline_dataset) == 0 and (online_dataset is None or len(online_dataset) == 0):
+    if len(offline_dataset) == 0 and (
+        online_dataset is None or len(online_dataset) == 0
+    ):
         raise ValueError(
             'At least one of `offline_dataset` or `online_dataset` should be contain data.'
         )
@@ -356,7 +398,9 @@ def compute_sampler_weights(
         raise ValueError(
             '`online_dataset` and `online_sampling_ratio` must be provided together or not at all.'
         )
-    offline_sampling_ratio = 0 if online_sampling_ratio is None else 1 - online_sampling_ratio
+    offline_sampling_ratio = (
+        0 if online_sampling_ratio is None else 1 - online_sampling_ratio
+    )
 
     weights = []
 
@@ -368,7 +412,10 @@ def compute_sampler_weights(
             strict=True,
         ):
             offline_data_mask_indices.extend(
-                range(start_index.item(), end_index.item() - offline_drop_n_last_frames)
+                range(
+                    start_index.item(),
+                    end_index.item() - offline_drop_n_last_frames,
+                )
             )
         offline_data_mask = torch.zeros(len(offline_dataset), dtype=torch.bool)
         offline_data_mask[torch.tensor(offline_data_mask_indices)] = True
@@ -388,7 +435,10 @@ def compute_sampler_weights(
             start_index = where_episode[0][0]
             end_index = where_episode[0][-1] + 1
             online_data_mask_indices.extend(
-                range(start_index.item(), end_index.item() - online_drop_n_last_frames)
+                range(
+                    start_index.item(),
+                    end_index.item() - online_drop_n_last_frames,
+                )
             )
         online_data_mask = torch.zeros(len(online_dataset), dtype=torch.bool)
         online_data_mask[torch.tensor(online_data_mask_indices)] = True

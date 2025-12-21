@@ -33,8 +33,8 @@ from typing import Any
 import flax.linen as nn
 import jax
 import jax.numpy as jnp
-
 from openpi.models import resnet as models_resnet
+
 
 Array = Any
 PRNGKey = Any
@@ -71,9 +71,13 @@ class AddPositionEmbs(nn.Module):
           Output tensor with shape `(bs, timesteps, in_dim)`.
         """
         # inputs.shape is (batch_size, seq_len, emb_dim).
-        assert inputs.ndim == 3, f"Number of dimensions should be 3, but it is: {inputs.ndim}"
+        assert (
+            inputs.ndim == 3
+        ), f"Number of dimensions should be 3, but it is: {inputs.ndim}"
         pos_emb_shape = (1, inputs.shape[1], inputs.shape[2])
-        pe = self.param("pos_embedding", self.posemb_init, pos_emb_shape, self.param_dtype)
+        pe = self.param(
+            "pos_embedding", self.posemb_init, pos_emb_shape, self.param_dtype
+        )
         return inputs + pe
 
 
@@ -85,13 +89,19 @@ class MlpBlock(nn.Module):
     param_dtype: Dtype = jnp.float32
     out_dim: int | None = None
     dropout_rate: float = 0.1
-    kernel_init: Callable[[PRNGKey, Shape, Dtype], Array] = nn.initializers.xavier_uniform()
-    bias_init: Callable[[PRNGKey, Shape, Dtype], Array] = nn.initializers.normal(stddev=1e-6)
+    kernel_init: Callable[[PRNGKey, Shape, Dtype], Array] = (
+        nn.initializers.xavier_uniform()
+    )
+    bias_init: Callable[[PRNGKey, Shape, Dtype], Array] = (
+        nn.initializers.normal(stddev=1e-6)
+    )
 
     @nn.compact
     def __call__(self, inputs, *, deterministic):
         """Applies Transformer MlpBlock module."""
-        actual_out_dim = inputs.shape[-1] if self.out_dim is None else self.out_dim
+        actual_out_dim = (
+            inputs.shape[-1] if self.out_dim is None else self.out_dim
+        )
         x = nn.Dense(
             features=self.mlp_dim,
             dtype=self.dtype,
@@ -112,7 +122,9 @@ class MlpBlock(nn.Module):
         )(  # pytype: disable=wrong-arg-types
             x
         )
-        return nn.Dropout(rate=self.dropout_rate)(output, deterministic=deterministic)
+        return nn.Dropout(rate=self.dropout_rate)(
+            output, deterministic=deterministic
+        )
 
 
 class Encoder1DBlock(nn.Module):
@@ -147,7 +159,9 @@ class Encoder1DBlock(nn.Module):
         """
 
         # Attention block.
-        assert inputs.ndim == 3, f"Expected (batch, seq, hidden) got {inputs.shape}"
+        assert (
+            inputs.ndim == 3
+        ), f"Expected (batch, seq, hidden) got {inputs.shape}"
         x = nn.LayerNorm(dtype=self.dtype)(inputs)
         x = nn.MultiHeadDotProductAttention(
             dtype=self.dtype,
@@ -164,9 +178,11 @@ class Encoder1DBlock(nn.Module):
 
         # MLP block.
         y = nn.LayerNorm(dtype=self.dtype)(x)
-        y = MlpBlock(mlp_dim=self.mlp_dim, dtype=self.dtype, dropout_rate=self.dropout_rate)(
-            y, deterministic=deterministic
-        )
+        y = MlpBlock(
+            mlp_dim=self.mlp_dim,
+            dtype=self.dtype,
+            dropout_rate=self.dropout_rate,
+        )(y, deterministic=deterministic)
 
         return x + y, None
 
@@ -212,7 +228,9 @@ class Encoder(nn.Module):
 
         x = x.astype(self.dtype)
         # Input Encoder
-        block = nn.remat(Encoder1DBlock, prevent_cse=False, static_argnums=(2,))
+        block = nn.remat(
+            Encoder1DBlock, prevent_cse=False, static_argnums=(2,)
+        )
         x, _ = nn.scan(
             block,
             variable_axes={"params": 0},
@@ -256,11 +274,17 @@ class VisionTransformer(nn.Module):
 
             # Root block.
             x = models_resnet.StdConv(
-                features=width, kernel_size=(7, 7), strides=(2, 2), use_bias=False, name="conv_root"
+                features=width,
+                kernel_size=(7, 7),
+                strides=(2, 2),
+                use_bias=False,
+                name="conv_root",
             )(x)
             x = nn.GroupNorm(name="gn_root")(x)
             x = nn.relu(x)
-            x = nn.max_pool(x, window_shape=(3, 3), strides=(2, 2), padding="SAME")
+            x = nn.max_pool(
+                x, window_shape=(3, 3), strides=(2, 2), padding="SAME"
+            )
 
             # ResNet stages.
             if self.resnet.num_layers:
@@ -302,9 +326,9 @@ class VisionTransformer(nn.Module):
                 cls = jnp.tile(cls, [n, 1, 1])
                 x = jnp.concatenate([cls, x], axis=1)
 
-            x = self.encoder(name="Transformer", **self.transformer, dtype=self.dtype)(
-                x, train=train
-            )
+            x = self.encoder(
+                name="Transformer", **self.transformer, dtype=self.dtype
+            )(x, train=train)
 
         if self.classifier == "token":
             x = x[:, 0]
@@ -316,7 +340,9 @@ class VisionTransformer(nn.Module):
             raise ValueError(f"Invalid classifier={self.classifier}")
 
         if self.representation_size is not None:
-            x = nn.Dense(features=self.representation_size, name="pre_logits")(x)
+            x = nn.Dense(features=self.representation_size, name="pre_logits")(
+                x
+            )
             x = nn.tanh(x)
         else:
             x = IdentityLayer(name="pre_logits")(x)

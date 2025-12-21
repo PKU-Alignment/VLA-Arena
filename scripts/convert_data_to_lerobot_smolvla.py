@@ -40,7 +40,9 @@ import tyro
 from lerobot.common.datasets.lerobot_dataset import LeRobotDataset
 
 
-def main(data_dir: str = '', output_dir: str = '', *, push_to_hub: bool = False):
+def main(
+    data_dir: str = '', output_dir: str = '', *, push_to_hub: bool = False
+):
     # Clean up any existing dataset in the output directory
     output_path = Path(output_dir)
     if output_path.exists():
@@ -68,12 +70,33 @@ def main(data_dir: str = '', output_dir: str = '', *, push_to_hub: bool = False)
             'observation.state': {
                 'dtype': 'float32',
                 'shape': (8,),
-                'names': {'motors': ['x', 'y', 'z', 'roll', 'pitch', 'yaw', 'gripper', 'gripper']},
+                'names': {
+                    'motors': [
+                        'x',
+                        'y',
+                        'z',
+                        'roll',
+                        'pitch',
+                        'yaw',
+                        'gripper',
+                        'gripper',
+                    ]
+                },
             },
             'action': {
                 'dtype': 'float32',
                 'shape': (7,),
-                'names': {'motors': ['x', 'y', 'z', 'roll', 'pitch', 'yaw', 'gripper']},
+                'names': {
+                    'motors': [
+                        'x',
+                        'y',
+                        'z',
+                        'roll',
+                        'pitch',
+                        'yaw',
+                        'gripper',
+                    ]
+                },
             },
         },
         image_writer_threads=10,
@@ -88,7 +111,9 @@ def main(data_dir: str = '', output_dir: str = '', *, push_to_hub: bool = False)
             dataset.add_frame(
                 {
                     'observation.images.image': step['observation']['image'],
-                    'observation.images.wrist_image': step['observation']['wrist_image'],
+                    'observation.images.wrist_image': step['observation'][
+                        'wrist_image'
+                    ],
                     'observation.state': step['observation']['state'],
                     'action': step['action'],
                 },

@@ -35,10 +35,13 @@ from typing import Any
 
 from lerobot.cameras.utils import make_cameras_from_configs
 from lerobot.robots.so100_follower import SO100Follower
-from lerobot.robots.so100_follower.config_so100_follower import SO100FollowerConfig
+from lerobot.robots.so100_follower.config_so100_follower import (
+    SO100FollowerConfig,
+)
 
 from ..robot import Robot
 from .config_bi_so100_follower import BiSO100FollowerConfig
+
 
 logger = logging.getLogger(__name__)
 
@@ -82,14 +85,20 @@ class BiSO100Follower(Robot):
 
     @property
     def _motors_ft(self) -> dict[str, type]:
-        return {f'left_{motor}.pos': float for motor in self.left_arm.bus.motors} | {
+        return {
+            f'left_{motor}.pos': float for motor in self.left_arm.bus.motors
+        } | {
             f'right_{motor}.pos': float for motor in self.right_arm.bus.motors
         }
 
     @property
     def _cameras_ft(self) -> dict[str, tuple]:
         return {
-            cam: (self.config.cameras[cam].height, self.config.cameras[cam].width, 3)
+            cam: (
+                self.config.cameras[cam].height,
+                self.config.cameras[cam].width,
+                3,
+            )
             for cam in self.cameras
         }
 
@@ -137,11 +146,15 @@ class BiSO100Follower(Robot):
 
         # Add "left_" prefix
         left_obs = self.left_arm.get_observation()
-        obs_dict.update({f'left_{key}': value for key, value in left_obs.items()})
+        obs_dict.update(
+            {f'left_{key}': value for key, value in left_obs.items()}
+        )
 
         # Add "right_" prefix
         right_obs = self.right_arm.get_observation()
-        obs_dict.update({f'right_{key}': value for key, value in right_obs.items()})
+        obs_dict.update(
+            {f'right_{key}': value for key, value in right_obs.items()}
+        )
 
         for cam_key, cam in self.cameras.items():
             start = time.perf_counter()

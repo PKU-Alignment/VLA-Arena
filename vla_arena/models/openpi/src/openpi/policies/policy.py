@@ -12,25 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections.abc import Sequence
 import logging
 import pathlib
 import time
+from collections.abc import Sequence
 from typing import Any, TypeAlias
+from typing_extensions import override
 
 import flax
 import flax.traverse_util
 import jax
 import jax.numpy as jnp
 import numpy as np
-from openpi_client import base_policy as _base_policy
 import torch
-from typing_extensions import override
-
 from openpi import transforms as _transforms
 from openpi.models import model as _model
 from openpi.shared import array_typing as at
 from openpi.shared import nnx_utils
+from openpi_client import base_policy as _base_policy
+
 
 BasePolicy: TypeAlias = _base_policy.BasePolicy
 
@@ -85,12 +85,19 @@ class Policy(BasePolicy):
         inputs = self._input_transform(inputs)
         if not self._is_pytorch_model:
             # Make a batch and convert to jax.Array.
-            inputs = jax.tree.map(lambda x: jnp.asarray(x)[np.newaxis, ...], inputs)
-            self._rng, sample_rng_or_pytorch_device = jax.random.split(self._rng)
+            inputs = jax.tree.map(
+                lambda x: jnp.asarray(x)[np.newaxis, ...], inputs
+            )
+            self._rng, sample_rng_or_pytorch_device = jax.random.split(
+                self._rng
+            )
         else:
             # Convert inputs to PyTorch tensors and move to correct device
             inputs = jax.tree.map(
-                lambda x: torch.from_numpy(np.array(x)).to(self._pytorch_device)[None, ...], inputs
+                lambda x: torch.from_numpy(np.array(x)).to(
+                    self._pytorch_device
+                )[None, ...],
+                inputs,
             )
             sample_rng_or_pytorch_device = self._pytorch_device
 
@@ -103,8 +110,12 @@ class Policy(BasePolicy):
                 else jnp.asarray(noise)
             )
 
-            if noise.ndim == 2:  # If noise is (action_horizon, action_dim), add batch dimension
-                noise = noise[None, ...]  # Make it (1, action_horizon, action_dim)
+            if (
+                noise.ndim == 2
+            ):  # If noise is (action_horizon, action_dim), add batch dimension
+                noise = noise[
+                    None, ...
+                ]  # Make it (1, action_horizon, action_dim)
             sample_kwargs["noise"] = noise
 
         observation = _model.Observation.from_dict(inputs)
@@ -117,7 +128,9 @@ class Policy(BasePolicy):
         }
         model_time = time.monotonic() - start_time
         if self._is_pytorch_model:
-            outputs = jax.tree.map(lambda x: np.asarray(x[0, ...].detach().cpu()), outputs)
+            outputs = jax.tree.map(
+                lambda x: np.asarray(x[0, ...].detach().cpu()), outputs
+            )
         else:
             outputs = jax.tree.map(lambda x: np.asarray(x[0, ...]), outputs)
 

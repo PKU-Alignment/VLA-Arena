@@ -40,7 +40,9 @@ def get_radial_flexion(flexion: float, abduction: float, splay: float):
     return abduction * splay + flexion * (1 - splay)
 
 
-def homunculus_glove_to_hope_jr_hand(glove_action: dict[str, float]) -> dict[str, float]:
+def homunculus_glove_to_hope_jr_hand(
+    glove_action: dict[str, float],
+) -> dict[str, float]:
     return {
         'thumb_cmc.pos': glove_action['thumb_cmc.pos'],
         'thumb_mcp.pos': glove_action['thumb_mcp.pos'],
@@ -69,10 +71,14 @@ def homunculus_glove_to_hope_jr_hand(glove_action: dict[str, float]) -> dict[str
         ),
         'middle_pip_dip.pos': glove_action['middle_dip.pos'],
         'ring_radial_flexor.pos': get_radial_flexion(
-            glove_action['ring_mcp_flexion.pos'], glove_action['ring_mcp_abduction.pos'], RING_SPLAY
+            glove_action['ring_mcp_flexion.pos'],
+            glove_action['ring_mcp_abduction.pos'],
+            RING_SPLAY,
         ),
         'ring_ulnar_flexor.pos': get_ulnar_flexion(
-            glove_action['ring_mcp_flexion.pos'], glove_action['ring_mcp_abduction.pos'], RING_SPLAY
+            glove_action['ring_mcp_flexion.pos'],
+            glove_action['ring_mcp_abduction.pos'],
+            RING_SPLAY,
         ),
         'ring_pip_dip.pos': glove_action['ring_dip.pos'],
         'pinky_radial_flexor.pos': get_radial_flexion(

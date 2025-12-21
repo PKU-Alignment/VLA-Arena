@@ -48,7 +48,6 @@ from pathlib import Path
 from pprint import pformat
 
 import draccus
-
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
 from lerobot.robots import (  # noqa: F401
     Robot,
@@ -89,7 +88,9 @@ def replay(cfg: ReplayConfig):
 
     robot = make_robot_from_config(cfg.robot)
     dataset = LeRobotDataset(
-        cfg.dataset.repo_id, root=cfg.dataset.root, episodes=[cfg.dataset.episode]
+        cfg.dataset.repo_id,
+        root=cfg.dataset.root,
+        episodes=[cfg.dataset.episode],
     )
     actions = dataset.hf_dataset.select_columns('action')
     robot.connect()

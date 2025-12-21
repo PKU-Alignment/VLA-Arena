@@ -14,7 +14,6 @@
 
 import flax.nnx as nnx
 import jax
-
 import openpi.models.pi0_config as _pi0_config
 
 
@@ -22,7 +21,9 @@ def _get_frozen_state(config: _pi0_config.Pi0Config) -> nnx.State:
     abstract_model = nnx.eval_shape(config.create, jax.random.key(0))
 
     freeze_filter = config.get_freeze_filter()
-    return nnx.state(abstract_model, nnx.All(nnx.Param, freeze_filter)).flat_state()
+    return nnx.state(
+        abstract_model, nnx.All(nnx.Param, freeze_filter)
+    ).flat_state()
 
 
 def test_pi0_full_finetune():
@@ -53,7 +54,8 @@ def test_pi0_action_expert_lora():
 
 def test_pi0_all_lora():
     config = _pi0_config.Pi0Config(
-        paligemma_variant="gemma_2b_lora", action_expert_variant="gemma_300m_lora"
+        paligemma_variant="gemma_2b_lora",
+        action_expert_variant="gemma_300m_lora",
     )
     state = _get_frozen_state(config)
     # sum of gemma_lora and action_expert_lora's frozen params.

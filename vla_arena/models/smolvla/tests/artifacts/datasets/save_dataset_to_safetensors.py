@@ -43,9 +43,8 @@ Example usage:
 import shutil
 from pathlib import Path
 
-from safetensors.torch import save_file
-
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
+from safetensors.torch import save_file
 
 
 def save_dataset_to_safetensors(output_dir, repo_id='lerobot/pusht'):
@@ -67,7 +66,10 @@ def save_dataset_to_safetensors(output_dir, repo_id='lerobot/pusht'):
 
     # save 2 frames at the middle of first episode
     i = int(
-        (dataset.episode_data_index['to'][0].item() - dataset.episode_data_index['from'][0].item())
+        (
+            dataset.episode_data_index['to'][0].item()
+            - dataset.episode_data_index['from'][0].item()
+        )
         / 2
     )
     save_file(dataset[i], repo_dir / f'frame_{i}.safetensors')
@@ -105,4 +107,6 @@ if __name__ == '__main__':
         'lerobot/nyu_franka_play_dataset',
         'lerobot/cmu_stretch',
     ]:
-        save_dataset_to_safetensors('tests/artifacts/datasets', repo_id=dataset)
+        save_dataset_to_safetensors(
+            'tests/artifacts/datasets', repo_id=dataset
+        )

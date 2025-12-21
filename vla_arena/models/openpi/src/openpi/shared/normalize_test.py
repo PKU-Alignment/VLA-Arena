@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import numpy as np
-
 import openpi.shared.normalize as normalize
 
 
@@ -34,7 +33,9 @@ def test_serialize_deserialize():
     stats.update(np.arange(12).reshape(4, 3))  # 4 vectors of length 3
 
     norm_stats = {"test": stats.get_statistics()}
-    norm_stats2 = normalize.deserialize_json(normalize.serialize_json(norm_stats))
+    norm_stats2 = normalize.deserialize_json(
+        normalize.serialize_json(norm_stats)
+    )
     assert np.allclose(norm_stats["test"].mean, norm_stats2["test"].mean)
     assert np.allclose(norm_stats["test"].std, norm_stats2["test"].std)
 

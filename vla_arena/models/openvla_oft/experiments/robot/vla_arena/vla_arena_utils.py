@@ -19,7 +19,11 @@ import os
 
 import imageio
 import numpy as np
-from vla_arena.models.openvla_oft.experiments.robot.robot_utils import DATE, DATE_TIME
+
+from vla_arena.models.openvla_oft.experiments.robot.robot_utils import (
+    DATE,
+    DATE_TIME,
+)
 from vla_arena.vla_arena import get_vla_arena_path
 from vla_arena.vla_arena.envs import OffScreenRenderEnv
 
@@ -36,7 +40,10 @@ def get_vla_arena_env(
     """Initializes and returns the VLA-Arena environment, along with the task description."""
     task_description = task.language
     task_bddl_file = os.path.join(
-        get_vla_arena_path('bddl_files'), task.problem_folder, f'level_{task.level}', task.bddl_file
+        get_vla_arena_path('bddl_files'),
+        task.problem_folder,
+        f'level_{task.level}',
+        task.bddl_file,
     )
     env_args = {
         'bddl_file_name': task_bddl_file,
@@ -59,23 +66,32 @@ def get_vla_arena_dummy_action(model_family: str):
 def get_vla_arena_image(obs):
     """Extracts third-person image from observations and preprocesses it."""
     img = obs['agentview_image']
-    img = img[::-1, ::-1]  # IMPORTANT: rotate 180 degrees to match train preprocessing
+    img = img[
+        ::-1, ::-1
+    ]  # IMPORTANT: rotate 180 degrees to match train preprocessing
     return img
 
 
 def get_vla_arena_wrist_image(obs):
     """Extracts wrist camera image from observations and preprocesses it."""
     img = obs['robot0_eye_in_hand_image']
-    img = img[::-1, ::-1]  # IMPORTANT: rotate 180 degrees to match train preprocessing
+    img = img[
+        ::-1, ::-1
+    ]  # IMPORTANT: rotate 180 degrees to match train preprocessing
     return img
 
 
-def save_rollout_video(rollout_images, idx, success, task_description, log_file=None, task_level=0):
+def save_rollout_video(
+    rollout_images, idx, success, task_description, log_file=None, task_level=0
+):
     """Saves an MP4 replay of an episode."""
     rollout_dir = f'./rollouts/{DATE}'
     os.makedirs(rollout_dir, exist_ok=True)
     processed_task_description = (
-        task_description.lower().replace(' ', '_').replace('\n', '_').replace('.', '_')[:50]
+        task_description.lower()
+        .replace(' ', '_')
+        .replace('\n', '_')
+        .replace('.', '_')[:50]
     )
     mp4_path = f'{rollout_dir}/{DATE_TIME}--openvla_oft--episode={idx}--success={success}--level={task_level}--task={processed_task_description}.mp4'
     video_writer = imageio.get_writer(mp4_path, fps=30)

@@ -23,12 +23,16 @@ import torch
 from torch import nn as nn
 from transformers import MistralForCausalLM
 from transformers.models.mistral.modeling_mistral import MistralDecoderLayer
-from vla_arena.models.openvla.prismatic.models.backbones.llm.base_llm import HFCausalLLMBackbone
+
+from vla_arena.models.openvla.prismatic.models.backbones.llm.base_llm import (
+    HFCausalLLMBackbone,
+)
 from vla_arena.models.openvla.prismatic.models.backbones.llm.prompting import (
     MistralInstructPromptBuilder,
     PromptBuilder,
     PurePromptBuilder,
 )
+
 
 # Registry =>> Support Mistral Models (from HF Transformers)
 # fmt: off
@@ -67,7 +71,9 @@ class MistralLLMBackbone(HFCausalLLMBackbone):
         # [Special Case] Mistral PAD Token Handling --> for clarity, we add an extra token (and resize)
         self.tokenizer.add_special_tokens({'pad_token': '<PAD>'})
         self.llm.config.pad_token_id = self.tokenizer.pad_token_id
-        self.llm.resize_token_embeddings(len(self.tokenizer), pad_to_multiple_of=64)
+        self.llm.resize_token_embeddings(
+            len(self.tokenizer), pad_to_multiple_of=64
+        )
 
     @property
     def prompt_builder_fn(self) -> type[PromptBuilder]:
@@ -77,7 +83,9 @@ class MistralLLMBackbone(HFCausalLLMBackbone):
         elif self.identifier.endswith('-instruct'):
             return MistralInstructPromptBuilder
 
-        raise ValueError(f'No PromptBuilder defined for LLM Backbone `{self.identifier}`')
+        raise ValueError(
+            f'No PromptBuilder defined for LLM Backbone `{self.identifier}`'
+        )
 
     @property
     def transformer_layer_cls(self) -> type[nn.Module]:

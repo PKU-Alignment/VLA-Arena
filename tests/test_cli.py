@@ -34,7 +34,15 @@ class TestCLIMain:
         monkeypatch.setattr('vla_arena.cli.main.train_main', mock_train_main)
 
         with patch(
-            'sys.argv', ['vla-arena', 'train', '--model', 'openvla', '--config', 'test.yaml'],
+            'sys.argv',
+            [
+                'vla-arena',
+                'train',
+                '--model',
+                'openvla',
+                '--config',
+                'test.yaml',
+            ],
         ):
             try:
                 cli_main_function()
@@ -50,7 +58,15 @@ class TestCLIMain:
         monkeypatch.setattr('vla_arena.cli.main.eval_main', mock_eval_main)
 
         with patch(
-            'sys.argv', ['vla-arena', 'eval', '--model', 'openvla', '--config', 'test.yaml'],
+            'sys.argv',
+            [
+                'vla-arena',
+                'eval',
+                '--model',
+                'openvla',
+                '--config',
+                'test.yaml',
+            ],
         ):
             try:
                 cli_main_function()
@@ -97,7 +113,9 @@ class TestEvalMain:
 
     @patch('vla_arena.cli.eval.importlib.util.find_spec')
     @patch('vla_arena.cli.eval.importlib.import_module')
-    def test_eval_main_config_path_absolute(self, mock_import_module, mock_find_spec):
+    def test_eval_main_config_path_absolute(
+        self, mock_import_module, mock_find_spec
+    ):
         """Test that config path is converted to absolute."""
         mock_spec = Mock()
         mock_spec.origin = '/path/to/evaluator.py'
@@ -115,7 +133,11 @@ class TestEvalMain:
         # Check that config path passed to main is absolute
         call_args = mock_module.main.call_args
         assert call_args is not None
-        config_path = call_args[1].get('cfg') or call_args[0][0] if call_args[0] else None
+        config_path = (
+            call_args[1].get('cfg') or call_args[0][0]
+            if call_args[0]
+            else None
+        )
         if config_path:
             assert os.path.isabs(config_path)
 
@@ -174,7 +196,9 @@ class TestTrainMain:
     @patch('vla_arena.cli.train.subprocess.run')
     @patch('vla_arena.cli.train.torch.cuda.device_count')
     @patch.dict(os.environ, {}, clear=False)
-    def test_train_main_launch_torchrun(self, mock_device_count, mock_subprocess, mock_find_spec):
+    def test_train_main_launch_torchrun(
+        self, mock_device_count, mock_subprocess, mock_find_spec
+    ):
         """Test train_main launching torchrun."""
         mock_spec = Mock()
         mock_spec.origin = '/path/to/trainer.py'
@@ -208,7 +232,9 @@ class TestTrainMain:
 
     @patch('vla_arena.cli.train.importlib.util.find_spec')
     @patch('vla_arena.cli.train.importlib.import_module')
-    def test_train_main_overwrite_flag(self, mock_import_module, mock_find_spec):
+    def test_train_main_overwrite_flag(
+        self, mock_import_module, mock_find_spec
+    ):
         """Test train_main with overwrite flag."""
         mock_spec = Mock()
         mock_spec.origin = '/path/to/trainer.py'

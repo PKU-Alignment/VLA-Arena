@@ -22,13 +22,24 @@ and strategy configurations.
 from collections.abc import Callable
 
 import torch
+
 from vla_arena.models.univla.prismatic.models.vlms import PrismaticVLM
-from vla_arena.models.univla.prismatic.training.strategies import FSDPStrategy, TrainingStrategy
+from vla_arena.models.univla.prismatic.training.strategies import (
+    FSDPStrategy,
+    TrainingStrategy,
+)
+
 
 # Registry =>> Maps ID --> {cls(), kwargs} :: supports FSDP for now, but DDP handler is also implemented!
 TRAIN_STRATEGIES = {
-    'fsdp-shard-grad-op': {'cls': FSDPStrategy, 'kwargs': {'sharding_strategy': 'shard-grad-op'}},
-    'fsdp-full-shard': {'cls': FSDPStrategy, 'kwargs': {'sharding_strategy': 'full-shard'}},
+    'fsdp-shard-grad-op': {
+        'cls': FSDPStrategy,
+        'kwargs': {'sharding_strategy': 'shard-grad-op'},
+    },
+    'fsdp-full-shard': {
+        'cls': FSDPStrategy,
+        'kwargs': {'sharding_strategy': 'full-shard'},
+    },
 }
 
 
@@ -76,4 +87,6 @@ def get_train_strategy(
         )
         return strategy
     else:
-        raise ValueError(f'Train Strategy `{train_strategy}` is not supported!')
+        raise ValueError(
+            f'Train Strategy `{train_strategy}` is not supported!'
+        )

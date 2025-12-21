@@ -20,7 +20,10 @@ import torch
 import torchvision.transforms as transforms
 from lightning import LightningDataModule
 from torch.utils.data import DataLoader, IterableDataset, get_worker_info
-from vla_arena.models.univla.vla_arena.models.univla.prismatic.util import set_global_seed
+
+from vla_arena.models.univla.vla_arena.models.univla.prismatic.util import (
+    set_global_seed,
+)
 from vla_arena.models.univla.vla_arena.models.univla.prismatic.util.data_utils import (
     CollatorForLatentAction,
 )
@@ -97,7 +100,9 @@ class LightningDataset(LightningDataModule):
 
     def train_dataloader(self) -> DataLoader:
         if isinstance(self.train_dataset, IterableDataset):
-            worker_init_fn = default(self.worker_init_fn, default_worker_init_fn)
+            worker_init_fn = default(
+                self.worker_init_fn, default_worker_init_fn
+            )
         else:
             worker_init_fn = self.worker_init_fn
         return DataLoader(
@@ -112,7 +117,9 @@ class LightningDataset(LightningDataModule):
 
     def val_dataloader(self) -> DataLoader:
         if isinstance(self.val_dataset, IterableDataset):
-            worker_init_fn = default(self.worker_init_fn, default_worker_init_fn)
+            worker_init_fn = default(
+                self.worker_init_fn, default_worker_init_fn
+            )
         else:
             worker_init_fn = self.worker_init_fn
         return DataLoader(
@@ -127,7 +134,9 @@ class LightningDataset(LightningDataModule):
 
     def test_dataloader(self) -> DataLoader:
         if isinstance(self.test_dataset, IterableDataset):
-            worker_init_fn = default(self.worker_init_fn, default_worker_init_fn)
+            worker_init_fn = default(
+                self.worker_init_fn, default_worker_init_fn
+            )
         else:
             worker_init_fn = self.worker_init_fn
         return DataLoader(
@@ -163,8 +172,12 @@ class random_crop_resize:
         left = random.randint(0, width - crop_size)
         top = random.randint(0, height - crop_size)
 
-        image_cropped = image.crop((left, top, left + crop_size, top + crop_size))
-        image_resized = image_cropped.resize((self.target_size, self.target_size), Image.BILINEAR)
+        image_cropped = image.crop(
+            (left, top, left + crop_size, top + crop_size)
+        )
+        image_resized = image_cropped.resize(
+            (self.target_size, self.target_size), Image.BILINEAR
+        )
         image_resized = self.to_tensor(image_resized)
 
         return image_resized
@@ -202,12 +215,12 @@ class LightningOpenX(LightningDataset):
         self.shuffle_buffer_size = shuffle_buffer_size
         self.image_aug = image_aug
 
-        self.num_workers = (
-            0  # Important =>> Set to 0 if using RLDS; TFDS rolls its own parallelism!
-        )
+        self.num_workers = 0  # Important =>> Set to 0 if using RLDS; TFDS rolls its own parallelism!
         self.worker_init_fn = set_global_seed(42, get_worker_init_fn=True)
 
-        self.batch_transform = RLDSBatchTransformVideo(image_transform=transforms.ToTensor())
+        self.batch_transform = RLDSBatchTransformVideo(
+            image_transform=transforms.ToTensor()
+        )
         self.collate_fn = CollatorForLatentAction()
 
         self.save_hyperparameters()

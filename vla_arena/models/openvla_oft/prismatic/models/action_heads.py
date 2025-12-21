@@ -19,6 +19,7 @@ import math
 import torch
 import torch.nn as nn
 from diffusers.schedulers.scheduling_ddim import DDIMScheduler
+
 from vla_arena.models.openvla_oft.prismatic.vla.constants import (
     ACTION_DIM,
     NUM_ACTIONS_CHUNK,
@@ -42,14 +43,22 @@ class SinusoidalPositionalEncoding(nn.Module):
     def forward(self, x):
         # x: (batch_size,)
         device = x.device
-        assert self.dim % 2 == 0, f'# dimensions must be even but got {self.dim}'
+        assert (
+            self.dim % 2 == 0
+        ), f'# dimensions must be even but got {self.dim}'
         half_dim = self.dim // 2
         exponent = (
-            torch.arange(half_dim, device=device) * -math.log(10000) / (half_dim - 1)
+            torch.arange(half_dim, device=device)
+            * -math.log(10000)
+            / (half_dim - 1)
         )  # shape: (D/2,)
         emb = torch.exp(exponent)  # shape: (D/2,)
-        emb = x[:, None] * emb[None, :]  # shape: (batch_size, 1) * (1, D/2) -> (batch_size, D/2)
-        emb = torch.cat((emb.sin(), emb.cos()), dim=-1)  # shape: (batch_size, D)
+        emb = (
+            x[:, None] * emb[None, :]
+        )  # shape: (batch_size, 1) * (1, D/2) -> (batch_size, D/2)
+        emb = torch.cat(
+            (emb.sin(), emb.cos()), dim=-1
+        )  # shape: (batch_size, D)
         return emb
 
 
@@ -190,7 +199,8 @@ class DiffusionActionHead(nn.Module):
         )
         self.num_diffusion_steps_train = num_diffusion_steps_train
         self.noise_scheduler = DDIMScheduler(
-            num_train_timesteps=num_diffusion_steps_train, beta_schedule='squaredcos_cap_v2'
+            num_train_timesteps=num_diffusion_steps_train,
+            beta_schedule='squaredcos_cap_v2',
         )
         self.time_encoder = SinusoidalPositionalEncoding(dim=hidden_dim)
 
@@ -225,10 +235,12 @@ class DiffusionActionHead(nn.Module):
 
         # Get diffusion timestep embeddings as well
         diffusion_timestep_embeddings = (
-            self.time_encoder(timesteps).to(noisy_actions.dtype).to(noisy_actions.device)
+            self.time_encoder(timesteps)
+            .to(noisy_actions.dtype)
+            .to(noisy_actions.device)
         )  # (B, llm_dim)
-        diffusion_timestep_embeddings = diffusion_timestep_embeddings.unsqueeze(
-            1
+        diffusion_timestep_embeddings = (
+            diffusion_timestep_embeddings.unsqueeze(1)
         )  # (B, 1, llm_dim)
 
         return_dict = dict(

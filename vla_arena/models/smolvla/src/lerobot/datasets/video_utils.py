@@ -77,9 +77,13 @@ def decode_video_frames(
     if backend is None:
         backend = get_safe_default_codec()
     if backend == 'torchcodec':
-        return decode_video_frames_torchcodec(video_path, timestamps, tolerance_s)
+        return decode_video_frames_torchcodec(
+            video_path, timestamps, tolerance_s
+        )
     elif backend in ['pyav', 'video_reader']:
-        return decode_video_frames_torchvision(video_path, timestamps, tolerance_s, backend)
+        return decode_video_frames_torchvision(
+            video_path, timestamps, tolerance_s, backend
+        )
     else:
         raise ValueError(f'Unsupported video backend: {backend}')
 
@@ -219,7 +223,9 @@ def decode_video_frames_torchcodec(
     # retrieve frames based on indices
     frames_batch = decoder.get_frames_at(indices=frame_indices)
 
-    for frame, pts in zip(frames_batch.data, frames_batch.pts_seconds, strict=False):
+    for frame, pts in zip(
+        frames_batch.data, frames_batch.pts_seconds, strict=False
+    ):
         loaded_frames.append(frame)
         loaded_ts.append(pts.item())
         if log_loaded_timestamps:
@@ -291,7 +297,8 @@ def encode_video_frames(
     # Get input frames
     template = 'frame_' + ('[0-9]' * 6) + '.png'
     input_list = sorted(
-        glob.glob(str(imgs_dir / template)), key=lambda x: int(x.split('_')[-1].split('.')[0])
+        glob.glob(str(imgs_dir / template)),
+        key=lambda x: int(x.split('_')[-1].split('.')[0]),
     )
 
     # Define video output frame size (assuming all input frames are the same size)
@@ -311,7 +318,11 @@ def encode_video_frames(
 
     if fast_decode:
         key = 'svtav1-params' if vcodec == 'libsvtav1' else 'tune'
-        value = f'fast-decode={fast_decode}' if vcodec == 'libsvtav1' else 'fastdecode'
+        value = (
+            f'fast-decode={fast_decode}'
+            if vcodec == 'libsvtav1'
+            else 'fastdecode'
+        )
         video_options[key] = value
 
     # Set logging level
@@ -344,7 +355,9 @@ def encode_video_frames(
         av.logging.restore_default_callback()
 
     if not video_path.exists():
-        raise OSError(f'Video encoding did not work. File not found: {video_path}.')
+        raise OSError(
+            f'Video encoding did not work. File not found: {video_path}.'
+        )
 
 
 @dataclass
@@ -362,7 +375,9 @@ class VideoFrame:
     ```
     """
 
-    pa_type: ClassVar[Any] = pa.struct({'path': pa.string(), 'timestamp': pa.float32()})
+    pa_type: ClassVar[Any] = pa.struct(
+        {'path': pa.string(), 'timestamp': pa.float32()}
+    )
     _type: str = field(default='VideoFrame', init=False, repr=False)
 
     def __call__(self):
@@ -398,7 +413,9 @@ def get_audio_info(video_path: Path | str) -> dict:
         # In an ideal loseless case : bit depth x sample rate x channels = bit rate.
         # In an actual compressed case, the bit rate is set according to the compression level : the lower the bit rate, the more compression is applied.
         audio_info['audio.bit_rate'] = audio_stream.bit_rate
-        audio_info['audio.sample_rate'] = audio_stream.sample_rate  # Number of samples per second
+        audio_info['audio.sample_rate'] = (
+            audio_stream.sample_rate
+        )  # Number of samples per second
         # In an ideal loseless case : fixed number of bits per sample.
         # In an actual compressed case : variable number of bits per sample (often reduced to match a given depth rate).
         audio_info['audio.bit_depth'] = audio_stream.format.bits
@@ -493,11 +510,18 @@ class VideoEncodingManager:
         # Handle any remaining episodes that haven't been batch encoded
         if self.dataset.episodes_since_last_encoding > 0:
             if exc_type is not None:
-                logging.info('Exception occurred. Encoding remaining episodes before exit...')
+                logging.info(
+                    'Exception occurred. Encoding remaining episodes before exit...'
+                )
             else:
-                logging.info('Recording stopped. Encoding remaining episodes...')
+                logging.info(
+                    'Recording stopped. Encoding remaining episodes...'
+                )
 
-            start_ep = self.dataset.num_episodes - self.dataset.episodes_since_last_encoding
+            start_ep = (
+                self.dataset.num_episodes
+                - self.dataset.episodes_since_last_encoding
+            )
             end_ep = self.dataset.num_episodes
             logging.info(
                 f'Encoding remaining {self.dataset.episodes_since_last_encoding} episodes, '
@@ -510,7 +534,9 @@ class VideoEncodingManager:
             interrupted_episode_index = self.dataset.num_episodes
             for key in self.dataset.meta.video_keys:
                 img_dir = self.dataset._get_image_file_path(
-                    episode_index=interrupted_episode_index, image_key=key, frame_index=0
+                    episode_index=interrupted_episode_index,
+                    image_key=key,
+                    frame_index=0,
                 ).parent
                 if img_dir.exists():
                     logging.debug(
@@ -528,6 +554,8 @@ class VideoEncodingManager:
                 shutil.rmtree(img_dir)
                 logging.debug('Cleaned up empty images directory')
         else:
-            logging.debug(f'Images directory is not empty, containing {len(png_files)} PNG files')
+            logging.debug(
+                f'Images directory is not empty, containing {len(png_files)} PNG files'
+            )
 
         return False  # Don't suppress the original exception

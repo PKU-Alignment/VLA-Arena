@@ -17,7 +17,10 @@
 from vla_arena.vla_arena.utils.bddl_generation_utils import (
     get_xy_region_kwargs_list_from_regions_info,
 )
-from vla_arena.vla_arena.utils.mu_utils import InitialSceneTemplates, register_mu
+from vla_arena.vla_arena.utils.mu_utils import (
+    InitialSceneTemplates,
+    register_mu,
+)
 from vla_arena.vla_arena.utils.task_generation_utils import (
     generate_bddl_from_task_info,
     register_task_info,
@@ -110,16 +113,26 @@ class KitchenScene1(InitialSceneTemplates):
             ),
         )
 
-        self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
+        self.xy_region_kwargs_list = (
+            get_xy_region_kwargs_list_from_regions_info(self.regions)
+        )
 
     @property
     def init_states(self):
         return [
-            ('On', 'akita_black_bowl_1', 'main_table_between_plate_ramekin_region'),
+            (
+                'On',
+                'akita_black_bowl_1',
+                'main_table_between_plate_ramekin_region',
+            ),
             ('On', 'akita_black_bowl_2', 'glazed_rim_porcelain_ramekin_1'),
             ('On', 'plate_1', 'main_table_plate_region'),
             ('On', 'cookies_1', 'main_table_box_region'),
-            ('On', 'glazed_rim_porcelain_ramekin_1', 'main_table_ramekin_region'),
+            (
+                'On',
+                'glazed_rim_porcelain_ramekin_1',
+                'main_table_ramekin_region',
+            ),
             ('On', 'wooden_cabinet_1', 'main_table_cabinet_region'),
             ('On', 'flat_stove_1', 'main_table_stove_region'),
             ('On', 'akita_black_bowl_3', 'akita_black_bowl_1'),
@@ -132,7 +145,9 @@ class KitchenScene1(InitialSceneTemplates):
 def main():
     # kitchen_scene_1
     scene_name = 'kitchen_scene1'
-    language = 'Pick the akita black bowl on the ramekin and place it on the plate'
+    language = (
+        'Pick the akita black bowl on the ramekin and place it on the plate'
+    )
     register_task_info(
         language,
         scene_name=scene_name,

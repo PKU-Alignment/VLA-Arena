@@ -62,6 +62,7 @@ import itertools
 
 from lerobot.__version__ import __version__  # noqa: F401
 
+
 # TODO(rcadene): Improve policies and envs. As of now, an item in `available_policies`
 # refers to a yaml file AND a modeling name. Same for `available_envs` which refers to
 # a yaml file AND a environment name. The difference should be more obvious.
@@ -178,7 +179,11 @@ available_real_world_datasets = [
 ]
 
 available_datasets = sorted(
-    set(itertools.chain(*available_datasets_per_env.values(), available_real_world_datasets))
+    set(
+        itertools.chain(
+            *available_datasets_per_env.values(), available_real_world_datasets
+        )
+    )
 )
 
 # lists all available policies from `lerobot/policies`
@@ -214,9 +219,15 @@ available_policies_per_env = {
     'aloha_real': ['act_aloha_real'],
 }
 
-env_task_pairs = [(env, task) for env, tasks in available_tasks_per_env.items() for task in tasks]
+env_task_pairs = [
+    (env, task)
+    for env, tasks in available_tasks_per_env.items()
+    for task in tasks
+]
 env_dataset_pairs = [
-    (env, dataset) for env, datasets in available_datasets_per_env.items() for dataset in datasets
+    (env, dataset)
+    for env, datasets in available_datasets_per_env.items()
+    for dataset in datasets
 ]
 env_dataset_policy_triplets = [
     (env, dataset, policy)

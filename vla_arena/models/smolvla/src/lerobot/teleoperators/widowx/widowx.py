@@ -33,10 +33,15 @@ import time
 
 from lerobot.errors import DeviceAlreadyConnectedError, DeviceNotConnectedError
 from lerobot.motors import Motor, MotorCalibration, MotorNormMode
-from lerobot.motors.dynamixel import DriveMode, DynamixelMotorsBus, OperatingMode
+from lerobot.motors.dynamixel import (
+    DriveMode,
+    DynamixelMotorsBus,
+    OperatingMode,
+)
 
 from ..teleoperator import Teleoperator
 from .config_widowx import WidowXConfig
+
 
 logger = logging.getLogger(__name__)
 
@@ -57,13 +62,25 @@ class WidowX(Teleoperator):
             port=self.config.port,
             motors={
                 'waist': Motor(1, 'xm430-w350', MotorNormMode.RANGE_M100_100),
-                'shoulder': Motor(2, 'xm430-w350', MotorNormMode.RANGE_M100_100),
-                'shoulder_shadow': Motor(3, 'xm430-w350', MotorNormMode.RANGE_M100_100),
+                'shoulder': Motor(
+                    2, 'xm430-w350', MotorNormMode.RANGE_M100_100
+                ),
+                'shoulder_shadow': Motor(
+                    3, 'xm430-w350', MotorNormMode.RANGE_M100_100
+                ),
                 'elbow': Motor(4, 'xm430-w350', MotorNormMode.RANGE_M100_100),
-                'elbow_shadow': Motor(5, 'xm430-w350', MotorNormMode.RANGE_M100_100),
-                'forearm_roll': Motor(6, 'xm430-w350', MotorNormMode.RANGE_M100_100),
-                'wrist_angle': Motor(7, 'xm430-w350', MotorNormMode.RANGE_M100_100),
-                'wrist_rotate': Motor(8, 'xl430-w250', MotorNormMode.RANGE_M100_100),
+                'elbow_shadow': Motor(
+                    5, 'xm430-w350', MotorNormMode.RANGE_M100_100
+                ),
+                'forearm_roll': Motor(
+                    6, 'xm430-w350', MotorNormMode.RANGE_M100_100
+                ),
+                'wrist_angle': Motor(
+                    7, 'xm430-w350', MotorNormMode.RANGE_M100_100
+                ),
+                'wrist_rotate': Motor(
+                    8, 'xl430-w250', MotorNormMode.RANGE_M100_100
+                ),
                 'gripper': Motor(9, 'xc430-w150', MotorNormMode.RANGE_0_100),
             },
         )
@@ -100,21 +117,32 @@ class WidowX(Teleoperator):
         logger.info(f'\nRunning calibration of {self}')
         self.bus.disable_torque()
         for motor in self.bus.motors:
-            self.bus.write('Operating_Mode', motor, OperatingMode.EXTENDED_POSITION.value)
+            self.bus.write(
+                'Operating_Mode', motor, OperatingMode.EXTENDED_POSITION.value
+            )
 
         self.bus.write('Drive_Mode', 'elbow_flex', DriveMode.INVERTED.value)
-        drive_modes = {motor: 1 if motor == 'elbow_flex' else 0 for motor in self.bus.motors}
+        drive_modes = {
+            motor: 1 if motor == 'elbow_flex' else 0
+            for motor in self.bus.motors
+        }
 
-        input('Move robot to the middle of its range of motion and press ENTER....')
+        input(
+            'Move robot to the middle of its range of motion and press ENTER....'
+        )
         homing_offsets = self.bus.set_half_turn_homings()
 
         full_turn_motors = ['shoulder_pan', 'wrist_roll']
-        unknown_range_motors = [motor for motor in self.bus.motors if motor not in full_turn_motors]
+        unknown_range_motors = [
+            motor for motor in self.bus.motors if motor not in full_turn_motors
+        ]
         print(
             f'Move all joints except {full_turn_motors} sequentially through their '
             'entire ranges of motion.\nRecording positions. Press ENTER to stop...'
         )
-        range_mins, range_maxes = self.bus.record_ranges_of_motion(unknown_range_motors)
+        range_mins, range_maxes = self.bus.record_ranges_of_motion(
+            unknown_range_motors
+        )
         for motor in full_turn_motors:
             range_mins[motor] = 0
             range_maxes[motor] = 4095

@@ -35,15 +35,17 @@ from pprint import pformat
 from typing import Deque
 
 import serial
-
 from lerobot.errors import DeviceAlreadyConnectedError, DeviceNotConnectedError
 from lerobot.motors import MotorCalibration
 from lerobot.motors.motors_bus import MotorNormMode
-from lerobot.teleoperators.homunculus.joints_translation import homunculus_glove_to_hope_jr_hand
+from lerobot.teleoperators.homunculus.joints_translation import (
+    homunculus_glove_to_hope_jr_hand,
+)
 from lerobot.utils.utils import enter_pressed, move_cursor_up
 
 from ..teleoperator import Teleoperator
 from .config_homunculus import HomunculusGloveConfig
+
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +107,9 @@ class HomunculusGlove(Teleoperator):
             'pinky_dip': MotorNormMode.RANGE_0_100,
         }
         self.inverted_joints = (
-            RIGHT_HAND_INVERSIONS if config.side == 'right' else LEFT_HAND_INVERSIONS
+            RIGHT_HAND_INVERSIONS
+            if config.side == 'right'
+            else LEFT_HAND_INVERSIONS
         )
 
         n = 10
@@ -113,7 +117,9 @@ class HomunculusGlove(Teleoperator):
         self.n: int = n
         self.alpha: float = 2 / (n + 1)
         # one deque *per joint* so we can inspect raw history if needed
-        self._buffers: dict[str, Deque[int]] = {joint: deque(maxlen=n) for joint in self.joints}
+        self._buffers: dict[str, Deque[int]] = {
+            joint: deque(maxlen=n) for joint in self.joints
+        }
         # running EMA value per joint – lazily initialised on first read
         self._ema: dict[str, float | None] = dict.fromkeys(self._buffers)
 
@@ -148,7 +154,9 @@ class HomunculusGlove(Teleoperator):
 
         # wait for the thread to ramp up & 1st state to be ready
         if not self.new_state_event.wait(timeout=2):
-            raise TimeoutError(f'{self}: Timed out waiting for state after 2s.')
+            raise TimeoutError(
+                f'{self}: Timed out waiting for state after 2s.'
+            )
 
         if not self.is_calibrated and calibrate:
             self.calibrate()
@@ -166,8 +174,12 @@ class HomunculusGlove(Teleoperator):
                 f'\nMove {finger} through its entire range of motion.'
                 '\nRecording positions. Press ENTER to stop...'
             )
-            finger_joints = [joint for joint in self.joints if joint.startswith(finger)]
-            finger_mins, finger_maxes = self._record_ranges_of_motion(finger_joints)
+            finger_joints = [
+                joint for joint in self.joints if joint.startswith(finger)
+            ]
+            finger_mins, finger_maxes = self._record_ranges_of_motion(
+                finger_joints
+            )
             range_mins.update(finger_mins)
             range_maxes.update(finger_maxes)
 
@@ -218,12 +230,20 @@ class HomunculusGlove(Teleoperator):
         user_pressed_enter = False
         while not user_pressed_enter:
             positions = self._read(joints, normalize=False)
-            mins = {joint: int(min(positions[joint], min_)) for joint, min_ in mins.items()}
-            maxes = {joint: int(max(positions[joint], max_)) for joint, max_ in maxes.items()}
+            mins = {
+                joint: int(min(positions[joint], min_))
+                for joint, min_ in mins.items()
+            }
+            maxes = {
+                joint: int(max(positions[joint], max_))
+                for joint, max_ in maxes.items()
+            }
 
             if display_values:
                 print('\n-------------------------------------------')
-                print(f"{'NAME':<{display_len}} | {'MIN':>6} | {'POS':>6} | {'MAX':>6}")
+                print(
+                    f"{'NAME':<{display_len}} | {'MIN':>6} | {'POS':>6} | {'MAX':>6}"
+                )
                 for joint in joints:
                     print(
                         f'{joint:<{display_len}} | {mins[joint]:>6} | {positions[joint]:>6} | {maxes[joint]:>6}'
@@ -236,7 +256,9 @@ class HomunculusGlove(Teleoperator):
                 # Move cursor up to overwrite the previous output
                 move_cursor_up(len(joints) + 3)
 
-        same_min_max = [joint for joint in joints if mins[joint] == maxes[joint]]
+        same_min_max = [
+            joint for joint in joints if mins[joint] == maxes[joint]
+        ]
         if same_min_max:
             raise ValueError(
                 f'Some joints have the same min and max values:\n{pformat(same_min_max)}'
@@ -279,21 +301,28 @@ class HomunculusGlove(Teleoperator):
             if self._ema[joint] is None:
                 self._ema[joint] = float(value)
             else:
-                self._ema[joint] = self.alpha * value + (1 - self.alpha) * self._ema[joint]
+                self._ema[joint] = (
+                    self.alpha * value + (1 - self.alpha) * self._ema[joint]
+                )
 
             # Convert back to int for compatibility with normalization
             smoothed[joint] = int(round(self._ema[joint]))
         return smoothed
 
     def _read(
-        self, joints: list[str] | None = None, normalize: bool = True, timeout: float = 1
+        self,
+        joints: list[str] | None = None,
+        normalize: bool = True,
+        timeout: float = 1,
     ) -> dict[str, int | float]:
         """
         Return the most recent (single) values from self.last_d,
         optionally applying calibration.
         """
         if not self.new_state_event.wait(timeout=timeout):
-            raise TimeoutError(f'{self}: Timed out waiting for state after {timeout}s.')
+            raise TimeoutError(
+                f'{self}: Timed out waiting for state after {timeout}s.'
+            )
 
         with self.state_lock:
             state = self._state
@@ -301,7 +330,9 @@ class HomunculusGlove(Teleoperator):
         self.new_state_event.clear()
 
         if state is None:
-            raise RuntimeError(f'{self} Internal error: Event set but no state available.')
+            raise RuntimeError(
+                f'{self} Internal error: Event set but no state available.'
+            )
 
         if joints is not None:
             state = {k: v for k, v in state.items() if k in joints}
@@ -326,12 +357,18 @@ class HomunculusGlove(Teleoperator):
                 with self.serial_lock:
                     if self.serial.in_waiting > 0:
                         self.serial.flush()
-                        positions = self.serial.readline().decode('utf-8').strip().split(' ')
+                        positions = (
+                            self.serial.readline()
+                            .decode('utf-8')
+                            .strip()
+                            .split(' ')
+                        )
                 if positions is None or len(positions) != len(self.joints):
                     continue
 
                 joint_positions = {
-                    joint: int(pos) for joint, pos in zip(self.joints, positions, strict=True)
+                    joint: int(pos)
+                    for joint, pos in zip(self.joints, positions, strict=True)
                 }
 
                 with self.state_lock:
@@ -339,7 +376,9 @@ class HomunculusGlove(Teleoperator):
                 self.new_state_event.set()
 
             except Exception as e:
-                logger.debug(f'Error reading frame in background thread for {self}: {e}')
+                logger.debug(
+                    f'Error reading frame in background thread for {self}: {e}'
+                )
 
     def get_action(self) -> dict[str, float]:
         joint_positions = self._read()

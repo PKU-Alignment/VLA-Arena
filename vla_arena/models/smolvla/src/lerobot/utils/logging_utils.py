@@ -121,13 +121,17 @@ class MetricsTracker:
         self.episodes = self.samples / self._avg_samples_per_ep
         self.epochs = self.samples / self._num_frames
 
-    def __getattr__(self, name: str) -> int | dict[str, AverageMeter] | AverageMeter | Any:
+    def __getattr__(
+        self, name: str
+    ) -> int | dict[str, AverageMeter] | AverageMeter | Any:
         if name in self.__dict__:
             return self.__dict__[name]
         elif name in self.metrics:
             return self.metrics[name]
         else:
-            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+            raise AttributeError(
+                f"'{self.__class__.__name__}' object has no attribute '{name}'"
+            )
 
     def __setattr__(self, name: str, value: Any) -> None:
         if name in self.__dict__:
@@ -135,7 +139,9 @@ class MetricsTracker:
         elif name in self.metrics:
             self.metrics[name].update(value)
         else:
-            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+            raise AttributeError(
+                f"'{self.__class__.__name__}' object has no attribute '{name}'"
+            )
 
     def step(self) -> None:
         """
@@ -168,7 +174,9 @@ class MetricsTracker:
             'samples': self.samples,
             'episodes': self.episodes,
             'epochs': self.epochs,
-            **{k: m.avg if use_avg else m.val for k, m in self.metrics.items()},
+            **{
+                k: m.avg if use_avg else m.val for k, m in self.metrics.items()
+            },
         }
 
     def reset_averages(self) -> None:

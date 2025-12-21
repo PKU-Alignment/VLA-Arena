@@ -62,7 +62,9 @@ def main() -> None:
     )
     parser.add_argument('path', type=pathlib.Path, help='Folder to process')
     parser.add_argument(
-        '--dry-run', action='store_true', help='Only print files that would be changed',
+        '--dry-run',
+        action='store_true',
+        help='Only print files that would be changed',
     )
     args = parser.parse_args()
 
@@ -72,7 +74,11 @@ def main() -> None:
             processed += 1
 
     print(
-        f'{processed} files updated' if not args.dry_run else f'{processed} files would be updated',
+        (
+            f'{processed} files updated'
+            if not args.dry_run
+            else f'{processed} files would be updated'
+        ),
     )
 
 

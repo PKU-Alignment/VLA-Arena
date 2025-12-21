@@ -20,19 +20,22 @@ to the config assets directory.
 """
 
 import numpy as np
-import tqdm
-import tyro
-
 import openpi.models.model as _model
 import openpi.shared.normalize as normalize
 import openpi.training.config as _config
 import openpi.training.data_loader as _data_loader
 import openpi.transforms as transforms
+import tqdm
+import tyro
 
 
 class RemoveStrings(transforms.DataTransformFn):
     def __call__(self, x: dict) -> dict:
-        return {k: v for k, v in x.items() if not np.issubdtype(np.asarray(v).dtype, np.str_)}
+        return {
+            k: v
+            for k, v in x.items()
+            if not np.issubdtype(np.asarray(v).dtype, np.str_)
+        }
 
 
 def create_torch_dataloader(
@@ -45,7 +48,9 @@ def create_torch_dataloader(
 ) -> tuple[_data_loader.Dataset, int]:
     if data_config.repo_id is None:
         raise ValueError("Data config must have a repo_id")
-    dataset = _data_loader.create_torch_dataset(data_config, action_horizon, model_config)
+    dataset = _data_loader.create_torch_dataset(
+        data_config, action_horizon, model_config
+    )
     dataset = _data_loader.TransformedDataset(
         dataset,
         [
@@ -108,7 +113,10 @@ def main(config_name: str, max_frames: int | None = None):
 
     if data_config.rlds_data_dir is not None:
         data_loader, num_batches = create_rlds_dataloader(
-            data_config, config.model.action_horizon, config.batch_size, max_frames
+            data_config,
+            config.model.action_horizon,
+            config.batch_size,
+            max_frames,
         )
     else:
         data_loader, num_batches = create_torch_dataloader(
@@ -123,7 +131,9 @@ def main(config_name: str, max_frames: int | None = None):
     keys = ["state", "actions"]
     stats = {key: normalize.RunningStats() for key in keys}
 
-    for batch in tqdm.tqdm(data_loader, total=num_batches, desc="Computing stats"):
+    for batch in tqdm.tqdm(
+        data_loader, total=num_batches, desc="Computing stats"
+    ):
         for key in keys:
             stats[key].update(np.asarray(batch[key]))
 

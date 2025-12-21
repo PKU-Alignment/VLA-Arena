@@ -38,7 +38,11 @@ from typing import Any
 from lerobot.errors import DeviceAlreadyConnectedError, DeviceNotConnectedError
 
 from ..teleoperator import Teleoperator
-from .configuration_keyboard import KeyboardEndEffectorTeleopConfig, KeyboardTeleopConfig
+from .configuration_keyboard import (
+    KeyboardEndEffectorTeleopConfig,
+    KeyboardTeleopConfig,
+)
+
 
 PYNPUT_AVAILABLE = True
 try:
@@ -105,14 +109,18 @@ class KeyboardTeleop(Teleoperator):
             )
 
         if PYNPUT_AVAILABLE:
-            logging.info('pynput is available - enabling local keyboard listener.')
+            logging.info(
+                'pynput is available - enabling local keyboard listener.'
+            )
             self.listener = keyboard.Listener(
                 on_press=self._on_press,
                 on_release=self._on_release,
             )
             self.listener.start()
         else:
-            logging.info('pynput not available - skipping local keyboard listener.')
+            logging.info(
+                'pynput not available - skipping local keyboard listener.'
+            )
             self.listener = None
 
     def calibrate(self) -> None:
@@ -185,7 +193,12 @@ class KeyboardEndEffectorTeleop(KeyboardTeleop):
             return {
                 'dtype': 'float32',
                 'shape': (4,),
-                'names': {'delta_x': 0, 'delta_y': 1, 'delta_z': 2, 'gripper': 3},
+                'names': {
+                    'delta_x': 0,
+                    'delta_y': 1,
+                    'delta_z': 2,
+                    'gripper': 3,
+                },
             }
         else:
             return {

@@ -67,7 +67,6 @@ def create_learner_service_stub(
     queue_get_timeout: float = 0.1,
 ):
     import grpc
-
     from lerobot.scripts.rl.learner_service import LearnerService
     from lerobot.transport import services_pb2_grpc  # generated from .proto
 
@@ -85,7 +84,9 @@ def create_learner_service_stub(
     # Create a gRPC server and add our servicer to it.
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=4))
     services_pb2_grpc.add_LearnerServiceServicer_to_server(servicer, server)
-    port = server.add_insecure_port('[::]:0')  # bind to a free port chosen by OS
+    port = server.add_insecure_port(
+        '[::]:0'
+    )  # bind to a free port chosen by OS
     server.start()  # start the server (non-blocking call):contentReference[oaicite:1]{index=1}
 
     # Create a client channel and stub connected to the server's port.
@@ -133,7 +134,8 @@ def test_send_interactions():
             transfer_state=services_pb2.TransferState.TRANSFER_BEGIN, data=b'1'
         ),
         services_pb2.InteractionMessage(
-            transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE, data=b'2'
+            transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE,
+            data=b'2',
         ),
         services_pb2.InteractionMessage(
             transfer_state=services_pb2.TransferState.TRANSFER_END, data=b'3'
@@ -148,7 +150,8 @@ def test_send_interactions():
             transfer_state=services_pb2.TransferState.TRANSFER_BEGIN, data=b'6'
         ),
         services_pb2.InteractionMessage(
-            transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE, data=b'7'
+            transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE,
+            data=b'7',
         ),
         services_pb2.InteractionMessage(
             transfer_state=services_pb2.TransferState.TRANSFER_END, data=b'8'
@@ -196,19 +199,24 @@ def test_send_transitions():
     # Create test transition messages
     list_of_transition_messages = [
         services_pb2.Transition(
-            transfer_state=services_pb2.TransferState.TRANSFER_BEGIN, data=b'transition_1'
+            transfer_state=services_pb2.TransferState.TRANSFER_BEGIN,
+            data=b'transition_1',
         ),
         services_pb2.Transition(
-            transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE, data=b'transition_2'
+            transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE,
+            data=b'transition_2',
         ),
         services_pb2.Transition(
-            transfer_state=services_pb2.TransferState.TRANSFER_END, data=b'transition_3'
+            transfer_state=services_pb2.TransferState.TRANSFER_END,
+            data=b'transition_3',
         ),
         services_pb2.Transition(
-            transfer_state=services_pb2.TransferState.TRANSFER_BEGIN, data=b'batch_1'
+            transfer_state=services_pb2.TransferState.TRANSFER_BEGIN,
+            data=b'batch_1',
         ),
         services_pb2.Transition(
-            transfer_state=services_pb2.TransferState.TRANSFER_END, data=b'batch_2'
+            transfer_state=services_pb2.TransferState.TRANSFER_END,
+            data=b'batch_2',
         ),
     ]
 
@@ -226,7 +234,10 @@ def test_send_transitions():
         transitions.append(transitions_queue.get())
 
     # Should have assembled the chunked data
-    assert transitions == [b'transition_1transition_2transition_3', b'batch_1batch_2']
+    assert transitions == [
+        b'transition_1transition_2transition_3',
+        b'batch_1batch_2',
+    ]
 
 
 @require_package('grpc')
@@ -345,7 +356,12 @@ def test_stream_parameters_with_shutdown():
         queue_get_timeout=queue_get_timeout,
     )
 
-    test_params = [b'param_batch_1', b'stop', b'param_batch_3', b'param_batch_4']
+    test_params = [
+        b'param_batch_1',
+        b'stop',
+        b'param_batch_3',
+        b'param_batch_4',
+    ]
 
     # create a thread that will put the parameters in the queue
     def producer():

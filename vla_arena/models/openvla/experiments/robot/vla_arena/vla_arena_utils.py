@@ -20,7 +20,11 @@ import os
 import imageio
 import numpy as np
 import tensorflow as tf
-from vla_arena.models.openvla.experiments.robot.robot_utils import DATE, DATE_TIME
+
+from vla_arena.models.openvla.experiments.robot.robot_utils import (
+    DATE,
+    DATE_TIME,
+)
 from vla_arena.vla_arena import get_vla_arena_path
 from vla_arena.vla_arena.envs import OffScreenRenderEnv
 
@@ -37,7 +41,10 @@ def get_vla_arena_env(
     """Initializes and returns the VLA-Arena environment, along with the task description."""
     task_description = task.language
     task_bddl_file = os.path.join(
-        get_vla_arena_path('bddl_files'), task.problem_folder, f'level_{task.level}', task.bddl_file
+        get_vla_arena_path('bddl_files'),
+        task.problem_folder,
+        f'level_{task.level}',
+        task.bddl_file,
     )
     env_args = {
         'bddl_file_name': task_bddl_file,
@@ -66,7 +73,9 @@ def resize_image(img, resize_size):
     """
     assert isinstance(resize_size, tuple)
     # Resize to image size expected by model
-    img = tf.image.encode_jpeg(img)  # Encode as JPEG, as done in RLDS dataset builder
+    img = tf.image.encode_jpeg(
+        img
+    )  # Encode as JPEG, as done in RLDS dataset builder
     img = tf.io.decode_image(
         img, expand_animations=False, dtype=tf.uint8
     )  # Immediately decode back
@@ -82,17 +91,24 @@ def get_vla_arena_image(obs, resize_size):
     if isinstance(resize_size, int):
         resize_size = (resize_size, resize_size)
     img = obs['agentview_image']
-    img = img[::-1, ::-1]  # IMPORTANT: rotate 180 degrees to match train preprocessing
+    img = img[
+        ::-1, ::-1
+    ]  # IMPORTANT: rotate 180 degrees to match train preprocessing
     img = resize_image(img, resize_size)
     return img
 
 
-def save_rollout_video(rollout_images, idx, success, task_description, log_file=None, task_level=0):
+def save_rollout_video(
+    rollout_images, idx, success, task_description, log_file=None, task_level=0
+):
     """Saves an MP4 replay of an episode."""
     rollout_dir = f'./rollouts/{DATE}'
     os.makedirs(rollout_dir, exist_ok=True)
     processed_task_description = (
-        task_description.lower().replace(' ', '_').replace('\n', '_').replace('.', '_')[:50]
+        task_description.lower()
+        .replace(' ', '_')
+        .replace('\n', '_')
+        .replace('.', '_')[:50]
     )
     mp4_path = f'{rollout_dir}/{DATE_TIME}--openvla--episode={idx}--success={success}--level={task_level}--task={processed_task_description}.mp4'
     video_writer = imageio.get_writer(mp4_path, fps=30)

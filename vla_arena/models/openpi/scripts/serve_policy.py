@@ -22,6 +22,7 @@ import sys
 
 import tyro
 
+
 # Add openpi src directory to Python path if needed
 _openpi_src = pathlib.Path(__file__).parent / "src"
 if str(_openpi_src) not in sys.path:
@@ -100,17 +101,22 @@ DEFAULT_CHECKPOINT: dict[EnvMode, Checkpoint] = {
         config="pi0_vla_arena_low_mem_finetune",
         # Set OPENPI_VLA_ARENA_CHECKPOINT_PATH environment variable to specify a custom checkpoint path.
         dir=os.getenv(
-            "OPENPI_VLA_ARENA_CHECKPOINT_PATH", "gs://openpi-assets/checkpoints/pi0_base/params"
+            "OPENPI_VLA_ARENA_CHECKPOINT_PATH",
+            "gs://openpi-assets/checkpoints/pi0_base/params",
         ),
     ),
 }
 
 
-def create_default_policy(env: EnvMode, *, default_prompt: str | None = None) -> _policy.Policy:
+def create_default_policy(
+    env: EnvMode, *, default_prompt: str | None = None
+) -> _policy.Policy:
     """Create a default policy for the given environment."""
     if checkpoint := DEFAULT_CHECKPOINT.get(env):
         return _policy_config.create_trained_policy(
-            _config.get_config(checkpoint.config), checkpoint.dir, default_prompt=default_prompt
+            _config.get_config(checkpoint.config),
+            checkpoint.dir,
+            default_prompt=default_prompt,
         )
     raise ValueError(f"Unsupported environment mode: {env}")
 
@@ -125,7 +131,9 @@ def create_policy(args: Args) -> _policy.Policy:
                 default_prompt=args.default_prompt,
             )
         case Default():
-            return create_default_policy(args.env, default_prompt=args.default_prompt)
+            return create_default_policy(
+                args.env, default_prompt=args.default_prompt
+            )
 
 
 def main(args: Args) -> None:

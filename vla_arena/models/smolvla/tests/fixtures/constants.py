@@ -27,6 +27,7 @@
 # limitations under the License.
 from lerobot.constants import HF_LEROBOT_HOME
 
+
 LEROBOT_TEST_DIR = HF_LEROBOT_HOME / '_testing'
 DUMMY_REPO_ID = 'dummy/repo'
 DUMMY_ROBOT_TYPE = 'dummy_robot'
@@ -57,8 +58,16 @@ DUMMY_MOTOR_FEATURES = {
     },
 }
 DUMMY_CAMERA_FEATURES = {
-    'laptop': {'shape': (480, 640, 3), 'names': ['height', 'width', 'channels'], 'info': None},
-    'phone': {'shape': (480, 640, 3), 'names': ['height', 'width', 'channels'], 'info': None},
+    'laptop': {
+        'shape': (480, 640, 3),
+        'names': ['height', 'width', 'channels'],
+        'info': None,
+    },
+    'phone': {
+        'shape': (480, 640, 3),
+        'names': ['height', 'width', 'channels'],
+        'info': None,
+    },
 }
 DEFAULT_FPS = 30
 DUMMY_VIDEO_INFO = {

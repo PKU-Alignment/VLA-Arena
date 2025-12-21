@@ -16,10 +16,9 @@ import functools
 
 import jax
 import jax.numpy as jnp
+import openpi.shared.array_typing as at
 import torch
 import torch.nn.functional as F  # noqa: N812
-
-import openpi.shared.array_typing as at
 
 
 @functools.partial(jax.jit, static_argnums=(1, 2, 3))
@@ -29,7 +28,10 @@ def resize_with_pad(
     height: int,
     width: int,
     method: jax.image.ResizeMethod = jax.image.ResizeMethod.LINEAR,
-) -> at.UInt8[at.Array, "*b {height} {width} c"] | at.Float[at.Array, "*b {height} {width} c"]:
+) -> (
+    at.UInt8[at.Array, "*b {height} {width} c"]
+    | at.Float[at.Array, "*b {height} {width} c"]
+):
     """Replicates tf.image.resize_with_pad. Resizes an image to a target height and width without distortion
     by padding with black. If the image is float32, it must be in the range [-1, 1].
     """
@@ -41,11 +43,15 @@ def resize_with_pad(
     resized_height = int(cur_height / ratio)
     resized_width = int(cur_width / ratio)
     resized_images = jax.image.resize(
-        images, (images.shape[0], resized_height, resized_width, images.shape[3]), method=method
+        images,
+        (images.shape[0], resized_height, resized_width, images.shape[3]),
+        method=method,
     )
     if images.dtype == jnp.uint8:
         # round from float back to uint8
-        resized_images = jnp.round(resized_images).clip(0, 255).astype(jnp.uint8)
+        resized_images = (
+            jnp.round(resized_images).clip(0, 255).astype(jnp.uint8)
+        )
     elif images.dtype == jnp.float32:
         resized_images = resized_images.clip(-1.0, 1.0)
     else:
@@ -113,7 +119,9 @@ def resize_with_pad_torch(
 
     # Handle dtype-specific clipping
     if images.dtype == torch.uint8:
-        resized_images = torch.round(resized_images).clamp(0, 255).to(torch.uint8)
+        resized_images = (
+            torch.round(resized_images).clamp(0, 255).to(torch.uint8)
+        )
     elif images.dtype == torch.float32:
         resized_images = resized_images.clamp(-1.0, 1.0)
     else:
@@ -136,8 +144,12 @@ def resize_with_pad_torch(
 
     # Convert back to original format if needed
     if channels_last:
-        padded_images = padded_images.permute(0, 2, 3, 1)  # [b, c, h, w] -> [b, h, w, c]
+        padded_images = padded_images.permute(
+            0, 2, 3, 1
+        )  # [b, c, h, w] -> [b, h, w, c]
         if batch_size == 1 and images.shape[0] == 1:
-            padded_images = padded_images.squeeze(0)  # Remove batch dimension if it was added
+            padded_images = padded_images.squeeze(
+                0
+            )  # Remove batch dimension if it was added
 
     return padded_images

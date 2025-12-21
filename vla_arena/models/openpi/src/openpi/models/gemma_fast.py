@@ -39,9 +39,9 @@ import flax.linen as nn
 import jax
 import jax.numpy as jnp
 import ml_collections
-
 import openpi.models.lora as lora
 import openpi.shared.array_typing as at
+
 
 Variant = Literal["gemma_2b", "gemma_2b_lora"]
 
@@ -94,7 +94,9 @@ class Einsum(nn.Module):
     @nn.compact
     def __call__(self, eqn, x):
         dtype = x.dtype  # original dtype, could be half-precision
-        w = self.param("w", nn.initializers.zeros_init(), self.shape).astype(dtype)
+        w = self.param("w", nn.initializers.zeros_init(), self.shape).astype(
+            dtype
+        )
         return jnp.einsum(eqn, x, w)
 
 
@@ -103,7 +105,9 @@ class RMSNorm(nn.Module):
     @nn.compact
     def __call__(self, x):
         dtype = x.dtype  # original dtype, could be half-precision
-        scale = self.param("scale", nn.initializers.zeros_init(), (x.shape[-1]))
+        scale = self.param(
+            "scale", nn.initializers.zeros_init(), (x.shape[-1])
+        )
         var = jnp.mean(
             jnp.square(x.astype(jnp.float32)), axis=-1, keepdims=True
         )  # compute variance in float32
@@ -157,26 +161,34 @@ class Attention(nn.Module):
             self.qkv_einsum = lora.Einsum(
                 shape=(3, self.num_heads, self.features, self.head_dim),
                 name="qkv_einsum",
-                init_fn=nn.initializers.lecun_normal(in_axis=-2, out_axis=-1, batch_axis=(0, 1)),
+                init_fn=nn.initializers.lecun_normal(
+                    in_axis=-2, out_axis=-1, batch_axis=(0, 1)
+                ),
                 lora_config=self.lora_config,
             )
         else:
             self.q_einsum = lora.Einsum(
                 shape=(self.num_heads, self.features, self.head_dim),
                 name="q_einsum",
-                init_fn=nn.initializers.lecun_normal(in_axis=-2, out_axis=-1, batch_axis=(0,)),
+                init_fn=nn.initializers.lecun_normal(
+                    in_axis=-2, out_axis=-1, batch_axis=(0,)
+                ),
                 lora_config=self.lora_config,
             )
             self.kv_einsum = lora.Einsum(
                 shape=(2, self.num_kv_heads, self.features, self.head_dim),
                 name="kv_einsum",
-                init_fn=nn.initializers.lecun_normal(in_axis=-2, out_axis=-1, batch_axis=(0, 1)),
+                init_fn=nn.initializers.lecun_normal(
+                    in_axis=-2, out_axis=-1, batch_axis=(0, 1)
+                ),
                 lora_config=self.lora_config,
             )
         self.attn_vec_einsum = lora.Einsum(
             shape=(self.num_heads, self.head_dim, self.features),
             name="attn_vec_einsum",
-            init_fn=nn.initializers.lecun_normal(in_axis=-2, out_axis=-1, batch_axis=(0,)),
+            init_fn=nn.initializers.lecun_normal(
+                in_axis=-2, out_axis=-1, batch_axis=(0,)
+            ),
             lora_config=self.lora_config,
         )
 
@@ -195,8 +207,12 @@ class Attention(nn.Module):
         assert k.shape[1] == 1, "Only support kv-cache updates of length 1"
         indices = (0, idx[0], 0, 0)
         cache_dtype = self.cache_dtype or k.dtype
-        k_new = jax.lax.dynamic_update_slice(k_cache, k.astype(cache_dtype), indices)
-        v_new = jax.lax.dynamic_update_slice(v_cache, v.astype(cache_dtype), indices)
+        k_new = jax.lax.dynamic_update_slice(
+            k_cache, k.astype(cache_dtype), indices
+        )
+        v_new = jax.lax.dynamic_update_slice(
+            v_cache, v.astype(cache_dtype), indices
+        )
         idx_new = idx + 1
         return idx_new, k_new, v_new
 
@@ -220,13 +236,19 @@ class Attention(nn.Module):
             idx, k_cache, v_cache = self._init_cache(k, v, attn_mask.shape[-1])
         else:
             idx, k_cache, v_cache = kv_cache
-            idx, k_cache, v_cache = self._update_cache(k, v, idx, k_cache, v_cache)
+            idx, k_cache, v_cache = self._update_cache(
+                k, v, idx, k_cache, v_cache
+            )
 
         k, v = k_cache, v_cache
         kv_cache = (idx, k_cache, v_cache)
 
-        q = einops.rearrange(q, "B T (K G) H -> B T K G H", K=self.num_kv_heads)
-        logits = jnp.einsum("BTKGH,BSKH->BKGTS", q, k, preferred_element_type=jnp.float32)
+        q = einops.rearrange(
+            q, "B T (K G) H -> B T K G H", K=self.num_kv_heads
+        )
+        logits = jnp.einsum(
+            "BTKGH,BSKH->BKGTS", q, k, preferred_element_type=jnp.float32
+        )
 
         if attn_mask.shape != (q.shape[0], 1, q.shape[1], k.shape[1]):
             raise ValueError(
@@ -289,7 +311,12 @@ class Block(nn.Module):
         x = nn.with_logical_constraint(x, ("act_batch", "act_len", "act_emb"))
         inputs_normalized = self.pre_attention_norm(x)
         attn_output, kv_cache = self.attn(
-            inputs_normalized, positions, attn_mask, kv_cache, decode, deterministic
+            inputs_normalized,
+            positions,
+            attn_mask,
+            kv_cache,
+            decode,
+            deterministic,
         )
         attn_output = self.drop(attn_output, deterministic)
         attn_output += x
@@ -302,7 +329,9 @@ class Block(nn.Module):
 
 
 KVCache: TypeAlias = tuple[
-    at.Int[at.Array, " b"], at.Float[at.Array, "b _t _k _h"], at.Float[at.Array, "b _t _v _h"]
+    at.Int[at.Array, " b"],
+    at.Float[at.Array, "b _t _k _h"],
+    at.Float[at.Array, "b _t _v _h"],
 ]
 
 
@@ -323,7 +352,9 @@ class Module(nn.Module):
     embed_dtype: str
 
     dropout: float = 0.0
-    dropout_bdims: tuple[int, ...] = ()  # Every float is dropped independently.
+    dropout_bdims: tuple[
+        int, ...
+    ] = ()  # Every float is dropped independently.
     cache_dtype: str | None = None
 
     scan: bool = False
@@ -367,7 +398,9 @@ class Module(nn.Module):
         """
         out = {}
 
-        embedder = Embedder(vocab_size=self.vocab_size, embed_dim=self.width, name="embedder")
+        embedder = Embedder(
+            vocab_size=self.vocab_size, embed_dim=self.width, name="embedder"
+        )
 
         if pre_logits is not None:
             x = out["pre_logits"] = pre_logits
@@ -397,7 +430,9 @@ class Module(nn.Module):
         assert positions.shape[1] == x.shape[1], (positions.shape, x.shape)
 
         if mask is None:
-            mask = nn.attention.make_causal_mask(jnp.ones([batch_size, seq_len]))
+            mask = nn.attention.make_causal_mask(
+                jnp.ones([batch_size, seq_len])
+            )
         if mask.ndim == 3:
             mask = mask[:, None, :, :]
         cache_size = max(seq_len, mask.shape[-1])
@@ -441,7 +476,9 @@ class Module(nn.Module):
             )(parent=layers, **block_kw)
         ]
         for block in blocks:
-            x, kv_cache = block(x, kv_cache, positions, mask, decode, deterministic)
+            x, kv_cache = block(
+                x, kv_cache, positions, mask, decode, deterministic
+            )
 
         assert x.dtype == jnp.dtype(self.embed_dtype)  # Sanity check.
         out["encoded"] = x
@@ -463,7 +500,9 @@ class Module(nn.Module):
 
 def _apply_rope(x, *, positions, max_wavelength=10_000):
     """Applies RoPE positions [B, L] to x [B, L, H, D]."""
-    freq_exponents = (2.0 / x.shape[-1]) * jnp.arange(x.shape[-1] // 2, dtype=jnp.float32)
+    freq_exponents = (2.0 / x.shape[-1]) * jnp.arange(
+        x.shape[-1] // 2, dtype=jnp.float32
+    )
     timescale = max_wavelength**freq_exponents
     radians = positions[..., None] / timescale[None, None, :]
     radians = radians[..., None, :]

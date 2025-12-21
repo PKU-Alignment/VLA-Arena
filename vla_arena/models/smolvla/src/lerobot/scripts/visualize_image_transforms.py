@@ -47,8 +47,6 @@ from dataclasses import replace
 from pathlib import Path
 
 import draccus
-from torchvision.transforms import ToPILImage
-
 from lerobot.configs.default import DatasetConfig
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
 from lerobot.datasets.transforms import (
@@ -56,25 +54,33 @@ from lerobot.datasets.transforms import (
     ImageTransformsConfig,
     make_transform_from_config,
 )
+from torchvision.transforms import ToPILImage
+
 
 OUTPUT_DIR = Path('outputs/image_transforms')
 to_pil = ToPILImage()
 
 
-def save_all_transforms(cfg: ImageTransformsConfig, original_frame, output_dir, n_examples):
+def save_all_transforms(
+    cfg: ImageTransformsConfig, original_frame, output_dir, n_examples
+):
     output_dir_all = output_dir / 'all'
     output_dir_all.mkdir(parents=True, exist_ok=True)
 
     tfs = ImageTransforms(cfg)
     for i in range(1, n_examples + 1):
         transformed_frame = tfs(original_frame)
-        to_pil(transformed_frame).save(output_dir_all / f'{i}.png', quality=100)
+        to_pil(transformed_frame).save(
+            output_dir_all / f'{i}.png', quality=100
+        )
 
     print('Combined transforms examples saved to:')
     print(f'    {output_dir_all}')
 
 
-def save_each_transform(cfg: ImageTransformsConfig, original_frame, output_dir, n_examples):
+def save_each_transform(
+    cfg: ImageTransformsConfig, original_frame, output_dir, n_examples
+):
     if not cfg.enable:
         logging.warning(
             'No single transforms will be saved, because `image_transforms.enable=False`. To enable, set `enable` to True in `ImageTransformsConfig` or in the command line with `--image_transforms.enable=True`.'
@@ -90,7 +96,9 @@ def save_each_transform(cfg: ImageTransformsConfig, original_frame, output_dir, 
         tf = make_transform_from_config(tf_cfg)
         for i in range(1, n_examples + 1):
             transformed_frame = tf(original_frame)
-            to_pil(transformed_frame).save(output_dir_single / f'{i}.png', quality=100)
+            to_pil(transformed_frame).save(
+                output_dir_single / f'{i}.png', quality=100
+            )
 
         # Apply min, max, average transformations
         tf_cfg_kwgs_min = deepcopy(tf_cfg.kwargs)
@@ -103,9 +111,15 @@ def save_each_transform(cfg: ImageTransformsConfig, original_frame, output_dir, 
             tf_cfg_kwgs_max[key] = [max_, max_]
             tf_cfg_kwgs_avg[key] = [avg, avg]
 
-        tf_min = make_transform_from_config(replace(tf_cfg, **{'kwargs': tf_cfg_kwgs_min}))
-        tf_max = make_transform_from_config(replace(tf_cfg, **{'kwargs': tf_cfg_kwgs_max}))
-        tf_avg = make_transform_from_config(replace(tf_cfg, **{'kwargs': tf_cfg_kwgs_avg}))
+        tf_min = make_transform_from_config(
+            replace(tf_cfg, **{'kwargs': tf_cfg_kwgs_min})
+        )
+        tf_max = make_transform_from_config(
+            replace(tf_cfg, **{'kwargs': tf_cfg_kwgs_max})
+        )
+        tf_avg = make_transform_from_config(
+            replace(tf_cfg, **{'kwargs': tf_cfg_kwgs_avg})
+        )
 
         tf_frame_min = tf_min(original_frame)
         tf_frame_max = tf_max(original_frame)
@@ -138,8 +152,12 @@ def visualize_image_transforms(
     print('\nOriginal frame saved to:')
     print(f"    {output_dir / 'original_frame.png'}.")
 
-    save_all_transforms(cfg.image_transforms, original_frame, output_dir, n_examples)
-    save_each_transform(cfg.image_transforms, original_frame, output_dir, n_examples)
+    save_all_transforms(
+        cfg.image_transforms, original_frame, output_dir, n_examples
+    )
+    save_each_transform(
+        cfg.image_transforms, original_frame, output_dir, n_examples
+    )
 
 
 if __name__ == '__main__':

@@ -20,14 +20,19 @@ from typing import Any
 
 import numpy as np
 import torch
-from torch import Tensor
-
 from lerobot.configs.types import FeatureType, NormalizationMode, PolicyFeature
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
-from lerobot.processor.pipeline import EnvTransition, ProcessorStepRegistry, TransitionKey
+from lerobot.processor.pipeline import (
+    EnvTransition,
+    ProcessorStepRegistry,
+    TransitionKey,
+)
+from torch import Tensor
 
 
-def _convert_stats_to_tensors(stats: dict[str, dict[str, Any]]) -> dict[str, dict[str, Tensor]]:
+def _convert_stats_to_tensors(
+    stats: dict[str, dict[str, Any]],
+) -> dict[str, dict[str, Tensor]]:
     """Convert numpy arrays and other types to torch tensors."""
     tensor_stats: dict[str, dict[str, Tensor]] = {}
     for key, sub in stats.items():
@@ -112,7 +117,8 @@ class NormalizerProcessor:
             reconstructed_features = {}
             for key, ft_dict in self.features.items():
                 reconstructed_features[key] = PolicyFeature(
-                    type=FeatureType(ft_dict['type']), shape=tuple(ft_dict['shape'])
+                    type=FeatureType(ft_dict['type']),
+                    shape=tuple(ft_dict['shape']),
                 )
             self.features = reconstructed_features
 
@@ -120,7 +126,9 @@ class NormalizerProcessor:
             # norm_map came from JSON - need to reconstruct enum keys and values
             reconstructed_norm_map = {}
             for ft_type_str, norm_mode_str in self.norm_map.items():
-                reconstructed_norm_map[FeatureType(ft_type_str)] = NormalizationMode(norm_mode_str)
+                reconstructed_norm_map[FeatureType(ft_type_str)] = (
+                    NormalizationMode(norm_mode_str)
+                )
             self.norm_map = reconstructed_norm_map
 
         # Convert statistics once so we avoid repeated numpy→Tensor conversions
@@ -130,7 +138,9 @@ class NormalizerProcessor:
 
         # Ensure *normalize_keys* is a set for fast look-ups and compare by
         # value later when returning the configuration.
-        if self.normalize_keys is not None and not isinstance(self.normalize_keys, set):
+        if self.normalize_keys is not None and not isinstance(
+            self.normalize_keys, set
+        ):
             self.normalize_keys = set(self.normalize_keys)
 
     def _normalize_obs(self, observation):
@@ -143,7 +153,9 @@ class NormalizerProcessor:
         else:
             # Use feature map to skip action keys.
             keys_to_norm = {
-                k for k, ft in self.features.items() if ft.type is not FeatureType.ACTION
+                k
+                for k, ft in self.features.items()
+                if ft.type is not FeatureType.ACTION
             }
 
         processed = dict(observation)
@@ -157,14 +169,19 @@ class NormalizerProcessor:
                 if isinstance(orig_val, torch.Tensor)
                 else torch.as_tensor(orig_val, dtype=torch.float32)
             )
-            stats = {k: v.to(tensor.device) for k, v in self._tensor_stats[key].items()}
+            stats = {
+                k: v.to(tensor.device)
+                for k, v in self._tensor_stats[key].items()
+            }
 
             if 'mean' in stats and 'std' in stats:
                 mean, std = stats['mean'], stats['std']
                 processed[key] = (tensor - mean) / (std + self.eps)
             elif 'min' in stats and 'max' in stats:
                 min_val, max_val = stats['min'], stats['max']
-                processed[key] = 2 * (tensor - min_val) / (max_val - min_val + self.eps) - 1
+                processed[key] = (
+                    2 * (tensor - min_val) / (max_val - min_val + self.eps) - 1
+                )
         return processed
 
     def _normalize_action(self, action):
@@ -176,17 +193,24 @@ class NormalizerProcessor:
             if isinstance(action, torch.Tensor)
             else torch.as_tensor(action, dtype=torch.float32)
         )
-        stats = {k: v.to(tensor.device) for k, v in self._tensor_stats['action'].items()}
+        stats = {
+            k: v.to(tensor.device)
+            for k, v in self._tensor_stats['action'].items()
+        }
         if 'mean' in stats and 'std' in stats:
             mean, std = stats['mean'], stats['std']
             return (tensor - mean) / (std + self.eps)
         if 'min' in stats and 'max' in stats:
             min_val, max_val = stats['min'], stats['max']
             return 2 * (tensor - min_val) / (max_val - min_val + self.eps) - 1
-        raise ValueError("Action stats must contain either ('mean','std') or ('min','max')")
+        raise ValueError(
+            "Action stats must contain either ('mean','std') or ('min','max')"
+        )
 
     def __call__(self, transition: EnvTransition) -> EnvTransition:
-        observation = self._normalize_obs(transition.get(TransitionKey.OBSERVATION))
+        observation = self._normalize_obs(
+            transition.get(TransitionKey.OBSERVATION)
+        )
         action = self._normalize_action(transition.get(TransitionKey.ACTION))
 
         # Create a new transition with normalized values
@@ -199,10 +223,12 @@ class NormalizerProcessor:
         config = {
             'eps': self.eps,
             'features': {
-                key: {'type': ft.type.value, 'shape': ft.shape} for key, ft in self.features.items()
+                key: {'type': ft.type.value, 'shape': ft.shape}
+                for key, ft in self.features.items()
             },
             'norm_map': {
-                ft_type.value: norm_mode.value for ft_type, norm_mode in self.norm_map.items()
+                ft_type.value: norm_mode.value
+                for ft_type, norm_mode in self.norm_map.items()
             },
         }
         if self.normalize_keys is not None:
@@ -226,7 +252,9 @@ class NormalizerProcessor:
     def reset(self):
         pass
 
-    def feature_contract(self, features: dict[str, PolicyFeature]) -> dict[str, PolicyFeature]:
+    def feature_contract(
+        self, features: dict[str, PolicyFeature]
+    ) -> dict[str, PolicyFeature]:
         return features
 
 
@@ -254,7 +282,9 @@ class UnnormalizerProcessor:
         features: dict[str, PolicyFeature],
         norm_map: dict[FeatureType, NormalizationMode],
     ) -> UnnormalizerProcessor:
-        return cls(features=features, norm_map=norm_map, stats=dataset.meta.stats)
+        return cls(
+            features=features, norm_map=norm_map, stats=dataset.meta.stats
+        )
 
     def __post_init__(self):
         # Handle deserialization from JSON config
@@ -263,7 +293,8 @@ class UnnormalizerProcessor:
             reconstructed_features = {}
             for key, ft_dict in self.features.items():
                 reconstructed_features[key] = PolicyFeature(
-                    type=FeatureType(ft_dict['type']), shape=tuple(ft_dict['shape'])
+                    type=FeatureType(ft_dict['type']),
+                    shape=tuple(ft_dict['shape']),
                 )
             self.features = reconstructed_features
 
@@ -271,7 +302,9 @@ class UnnormalizerProcessor:
             # norm_map came from JSON - need to reconstruct enum keys and values
             reconstructed_norm_map = {}
             for ft_type_str, norm_mode_str in self.norm_map.items():
-                reconstructed_norm_map[FeatureType(ft_type_str)] = NormalizationMode(norm_mode_str)
+                reconstructed_norm_map[FeatureType(ft_type_str)] = (
+                    NormalizationMode(norm_mode_str)
+                )
             self.norm_map = reconstructed_norm_map
 
         self.stats = self.stats or {}
@@ -280,7 +313,11 @@ class UnnormalizerProcessor:
     def _unnormalize_obs(self, observation):
         if observation is None:
             return None
-        keys = [k for k, ft in self.features.items() if ft.type is not FeatureType.ACTION]
+        keys = [
+            k
+            for k, ft in self.features.items()
+            if ft.type is not FeatureType.ACTION
+        ]
         processed = dict(observation)
         for key in keys:
             if key not in processed or key not in self._tensor_stats:
@@ -291,13 +328,18 @@ class UnnormalizerProcessor:
                 if isinstance(orig_val, torch.Tensor)
                 else torch.as_tensor(orig_val, dtype=torch.float32)
             )
-            stats = {k: v.to(tensor.device) for k, v in self._tensor_stats[key].items()}
+            stats = {
+                k: v.to(tensor.device)
+                for k, v in self._tensor_stats[key].items()
+            }
             if 'mean' in stats and 'std' in stats:
                 mean, std = stats['mean'], stats['std']
                 processed[key] = tensor * std + mean
             elif 'min' in stats and 'max' in stats:
                 min_val, max_val = stats['min'], stats['max']
-                processed[key] = (tensor + 1) / 2 * (max_val - min_val) + min_val
+                processed[key] = (tensor + 1) / 2 * (
+                    max_val - min_val
+                ) + min_val
         return processed
 
     def _unnormalize_action(self, action):
@@ -308,17 +350,24 @@ class UnnormalizerProcessor:
             if isinstance(action, torch.Tensor)
             else torch.as_tensor(action, dtype=torch.float32)
         )
-        stats = {k: v.to(tensor.device) for k, v in self._tensor_stats['action'].items()}
+        stats = {
+            k: v.to(tensor.device)
+            for k, v in self._tensor_stats['action'].items()
+        }
         if 'mean' in stats and 'std' in stats:
             mean, std = stats['mean'], stats['std']
             return tensor * std + mean
         if 'min' in stats and 'max' in stats:
             min_val, max_val = stats['min'], stats['max']
             return (tensor + 1) / 2 * (max_val - min_val) + min_val
-        raise ValueError("Action stats must contain either ('mean','std') or ('min','max')")
+        raise ValueError(
+            "Action stats must contain either ('mean','std') or ('min','max')"
+        )
 
     def __call__(self, transition: EnvTransition) -> EnvTransition:
-        observation = self._unnormalize_obs(transition.get(TransitionKey.OBSERVATION))
+        observation = self._unnormalize_obs(
+            transition.get(TransitionKey.OBSERVATION)
+        )
         action = self._unnormalize_action(transition.get(TransitionKey.ACTION))
 
         # Create a new transition with unnormalized values
@@ -330,10 +379,12 @@ class UnnormalizerProcessor:
     def get_config(self) -> dict[str, Any]:
         return {
             'features': {
-                key: {'type': ft.type.value, 'shape': ft.shape} for key, ft in self.features.items()
+                key: {'type': ft.type.value, 'shape': ft.shape}
+                for key, ft in self.features.items()
             },
             'norm_map': {
-                ft_type.value: norm_mode.value for ft_type, norm_mode in self.norm_map.items()
+                ft_type.value: norm_mode.value
+                for ft_type, norm_mode in self.norm_map.items()
             },
         }
 
@@ -353,5 +404,7 @@ class UnnormalizerProcessor:
     def reset(self):
         pass
 
-    def feature_contract(self, features: dict[str, PolicyFeature]) -> dict[str, PolicyFeature]:
+    def feature_contract(
+        self, features: dict[str, PolicyFeature]
+    ) -> dict[str, PolicyFeature]:
         return features

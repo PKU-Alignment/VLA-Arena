@@ -31,9 +31,14 @@ from dataclasses import dataclass, field
 from typing import Any
 
 import draccus
-
 from lerobot.configs.types import FeatureType, PolicyFeature
-from lerobot.constants import ACTION, OBS_ENV_STATE, OBS_IMAGE, OBS_IMAGES, OBS_STATE
+from lerobot.constants import (
+    ACTION,
+    OBS_ENV_STATE,
+    OBS_IMAGE,
+    OBS_IMAGES,
+    OBS_STATE,
+)
 from lerobot.robots import RobotConfig
 from lerobot.teleoperators.config import TeleoperatorConfig
 
@@ -79,9 +84,13 @@ class AlohaEnv(EnvConfig):
 
     def __post_init__(self):
         if self.obs_type == 'pixels':
-            self.features['top'] = PolicyFeature(type=FeatureType.VISUAL, shape=(480, 640, 3))
+            self.features['top'] = PolicyFeature(
+                type=FeatureType.VISUAL, shape=(480, 640, 3)
+            )
         elif self.obs_type == 'pixels_agent_pos':
-            self.features['agent_pos'] = PolicyFeature(type=FeatureType.STATE, shape=(14,))
+            self.features['agent_pos'] = PolicyFeature(
+                type=FeatureType.STATE, shape=(14,)
+            )
             self.features['pixels/top'] = PolicyFeature(
                 type=FeatureType.VISUAL, shape=(480, 640, 3)
             )
@@ -122,9 +131,13 @@ class PushtEnv(EnvConfig):
 
     def __post_init__(self):
         if self.obs_type == 'pixels_agent_pos':
-            self.features['pixels'] = PolicyFeature(type=FeatureType.VISUAL, shape=(384, 384, 3))
+            self.features['pixels'] = PolicyFeature(
+                type=FeatureType.VISUAL, shape=(384, 384, 3)
+            )
         elif self.obs_type == 'environment_state_agent_pos':
-            self.features['environment_state'] = PolicyFeature(type=FeatureType.ENV, shape=(16,))
+            self.features['environment_state'] = PolicyFeature(
+                type=FeatureType.ENV, shape=(16,)
+            )
 
     @property
     def gym_kwargs(self) -> dict:
@@ -150,7 +163,9 @@ class XarmEnv(EnvConfig):
     features: dict[str, PolicyFeature] = field(
         default_factory=lambda: {
             'action': PolicyFeature(type=FeatureType.ACTION, shape=(4,)),
-            'pixels': PolicyFeature(type=FeatureType.VISUAL, shape=(84, 84, 3)),
+            'pixels': PolicyFeature(
+                type=FeatureType.VISUAL, shape=(84, 84, 3)
+            ),
         }
     )
     features_map: dict[str, str] = field(
@@ -163,7 +178,9 @@ class XarmEnv(EnvConfig):
 
     def __post_init__(self):
         if self.obs_type == 'pixels_agent_pos':
-            self.features['agent_pos'] = PolicyFeature(type=FeatureType.STATE, shape=(4,))
+            self.features['agent_pos'] = PolicyFeature(
+                type=FeatureType.STATE, shape=(4,)
+            )
 
     @property
     def gym_kwargs(self) -> dict:
@@ -252,8 +269,12 @@ class HILEnvConfig(EnvConfig):
     features: dict[str, PolicyFeature] = field(
         default_factory=lambda: {
             'action': PolicyFeature(type=FeatureType.ACTION, shape=(4,)),
-            'observation.image': PolicyFeature(type=FeatureType.VISUAL, shape=(3, 128, 128)),
-            'observation.state': PolicyFeature(type=FeatureType.STATE, shape=(18,)),
+            'observation.image': PolicyFeature(
+                type=FeatureType.VISUAL, shape=(3, 128, 128)
+            ),
+            'observation.state': PolicyFeature(
+                type=FeatureType.STATE, shape=(18,)
+            ),
         }
     )
     features_map: dict[str, str] = field(

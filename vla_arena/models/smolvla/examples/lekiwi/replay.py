@@ -20,12 +20,15 @@ from lerobot.robots.lekiwi.lekiwi_client import LeKiwiClient
 from lerobot.utils.robot_utils import busy_wait
 from lerobot.utils.utils import log_say
 
+
 EPISODE_IDX = 0
 
 robot_config = LeKiwiClientConfig(remote_ip='172.18.134.136', id='lekiwi')
 robot = LeKiwiClient(robot_config)
 
-dataset = LeRobotDataset('<hf_username>/<dataset_repo_id>', episodes=[EPISODE_IDX])
+dataset = LeRobotDataset(
+    '<hf_username>/<dataset_repo_id>', episodes=[EPISODE_IDX]
+)
 actions = dataset.hf_dataset.select_columns('action')
 
 robot.connect()

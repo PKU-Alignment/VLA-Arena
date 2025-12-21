@@ -32,6 +32,7 @@ from omegaconf import DictConfig, ListConfig, OmegaConf
 from PIL import Image
 from torch.utils.data import Dataset
 
+
 # Constants
 Image.MAX_IMAGE_PIXELS = 1000000000
 MAX_NUM_TOKENS = 256
@@ -107,7 +108,9 @@ def process_depth(
         if window_size == 0 and seq_idx == 0:  # single file loader
             depth_ob_ = torch.from_numpy(depth_ob).float()
         else:  # episode loader
-            depth_ob_ = torch.from_numpy(depth_ob[seq_idx : seq_idx + window_size]).float()
+            depth_ob_ = torch.from_numpy(
+                depth_ob[seq_idx : seq_idx + window_size]
+            ).float()
         # we might have different transformations for the different cameras
         if depth_obs_key in transforms:
             depth_ob_ = transforms[depth_obs_key](depth_ob_)
@@ -155,7 +158,9 @@ def process_language(
     return seq_lang
 
 
-def get_state_info_dict(episode: dict[str, np.ndarray]) -> dict[str, dict[str, torch.Tensor]]:
+def get_state_info_dict(
+    episode: dict[str, np.ndarray],
+) -> dict[str, dict[str, torch.Tensor]]:
     """
     Create a dictionary with raw state observations for environment resets.
 
@@ -189,7 +194,9 @@ def load_dataset_statistics(train_dataset_dir, val_dataset_dir, transforms):
     paths = {'train': train_dataset_dir, 'val': val_dataset_dir}
     for dataset_type in ['train', 'val']:
         try:
-            statistics = OmegaConf.load(Path(paths[dataset_type]) / 'statistics.yaml')
+            statistics = OmegaConf.load(
+                Path(paths[dataset_type]) / 'statistics.yaml'
+            )
             # Hack for maintaining two repositories with transforms
             statistics = OmegaConf.create(
                 OmegaConf.to_yaml(statistics).replace('calvin_models.', '')
@@ -204,9 +211,14 @@ def load_dataset_statistics(train_dataset_dir, val_dataset_dir, transforms):
                     for dataset_trans in dataset_transforms:
                         exists = False
                         for i, conf_trans in enumerate(conf_transforms):
-                            if dataset_trans['_target_'] == conf_trans['_target_']:
+                            if (
+                                dataset_trans['_target_']
+                                == conf_trans['_target_']
+                            ):
                                 exists = True
-                                transforms[dataset_type][modality][i] = dataset_trans
+                                transforms[dataset_type][modality][
+                                    i
+                                ] = dataset_trans
                                 break
                         if not exists:
                             transforms[dataset_type][modality] = ListConfig(
@@ -217,7 +229,9 @@ def load_dataset_statistics(train_dataset_dir, val_dataset_dir, transforms):
     return transforms
 
 
-def lookup_naming_pattern(dataset_dir: Path, save_format: str) -> tuple[tuple[Path, str], int]:
+def lookup_naming_pattern(
+    dataset_dir: Path, save_format: str
+) -> tuple[tuple[Path, str], int]:
     """
     Check naming pattern of dataset files.
 
@@ -281,19 +295,29 @@ class RandomShiftsAug(nn.Module):
         x = F.pad(x, padding, 'replicate')
         eps = 1.0 / (h + 2 * self.pad)
         arange = torch.linspace(
-            -1.0 + eps, 1.0 - eps, h + 2 * self.pad, device=x.device, dtype=x.dtype
+            -1.0 + eps,
+            1.0 - eps,
+            h + 2 * self.pad,
+            device=x.device,
+            dtype=x.dtype,
         )[:h]
         arange = arange.unsqueeze(0).repeat(h, 1).unsqueeze(2)
         base_grid = torch.cat([arange, arange.transpose(1, 0)], dim=2)
         base_grid = base_grid.unsqueeze(0).repeat(n, 1, 1, 1)
 
         shift = torch.randint(
-            0, 2 * self.pad + 1, size=(n, 1, 1, 2), device=x.device, dtype=x.dtype
+            0,
+            2 * self.pad + 1,
+            size=(n, 1, 1, 2),
+            device=x.device,
+            dtype=x.dtype,
         )
         shift *= 2.0 / (h + 2 * self.pad)
 
         grid = base_grid + shift
-        return F.grid_sample(x, grid, padding_mode='zeros', align_corners=False)
+        return F.grid_sample(
+            x, grid, padding_mode='zeros', align_corners=False
+        )
 
     def forward_traj(self, x):
         n, t, c, h, w = x.size()
@@ -303,7 +327,11 @@ class RandomShiftsAug(nn.Module):
         x = F.pad(x, padding, 'replicate')
         eps = 1.0 / (h + 2 * self.pad)
         arange = torch.linspace(
-            -1.0 + eps, 1.0 - eps, h + 2 * self.pad, device=x.device, dtype=x.dtype
+            -1.0 + eps,
+            1.0 - eps,
+            h + 2 * self.pad,
+            device=x.device,
+            dtype=x.dtype,
         )[:h]
         arange = arange.unsqueeze(0).repeat(h, 1).unsqueeze(2)
         base_grid = torch.cat([arange, arange.transpose(1, 0)], dim=2)
@@ -311,7 +339,11 @@ class RandomShiftsAug(nn.Module):
         base_grid = base_grid.unsqueeze(1).repeat(1, t, 1, 1, 1)
         base_grid = base_grid.view(n * t, *base_grid.shape[2:])
         shift = torch.randint(
-            1, 2 * self.pad + 1, size=(n * t, 1, 1, 2), device=x.device, dtype=x.dtype
+            1,
+            2 * self.pad + 1,
+            size=(n * t, 1, 1, 2),
+            device=x.device,
+            dtype=x.dtype,
         )
         shift *= 2.0 / (h + 2 * self.pad)
 
@@ -381,7 +413,9 @@ class BaseR2RDataset(Dataset):
         print('*' * 50)
         print(self.transforms)
         self.with_lang = key == 'lang'
-        self.relative_actions = 'rel_actions' in self.observation_space['actions']
+        self.relative_actions = (
+            'rel_actions' in self.observation_space['actions']
+        )
 
         self.pad = pad
         self.batch_size = batch_size
@@ -443,7 +477,9 @@ class BaseR2RDataset(Dataset):
                 # To Square image
                 seq_rgb_obs_ = torch.from_numpy(rgb_obs).byte()
             else:  # episode loader
-                seq_rgb_obs_ = torch.from_numpy(rgb_obs[seq_idx : seq_idx + window_size]).byte()
+                seq_rgb_obs_ = torch.from_numpy(
+                    rgb_obs[seq_idx : seq_idx + window_size]
+                ).byte()
 
             if rgb_obs_key in transforms:
                 seq_rgb_obs_ = transforms[rgb_obs_key](seq_rgb_obs_)
@@ -451,10 +487,14 @@ class BaseR2RDataset(Dataset):
         # shape: N_rgb_obs x (BxHxWxC)
         return {'rgb_obs': seq_rgb_obs_dict}
 
-    def process_language(self, episode: dict[str, np.ndarray], transforms: dict, with_lang: bool):
+    def process_language(
+        self, episode: dict[str, np.ndarray], transforms: dict, with_lang: bool
+    ):
         return {'lang': episode['language']}
 
-    def get_openvla_prompt(self, instruction: str, tokenized_action: str = None) -> str:
+    def get_openvla_prompt(
+        self, instruction: str, tokenized_action: str = None
+    ) -> str:
         # print(tokenized_action)
         return f'In: What action should the robot take to {instruction.lower()}?\nOut:'  # + tokenized_action + "</s>"
 
@@ -462,7 +502,9 @@ class BaseR2RDataset(Dataset):
 
     #     for idx in range(len(self.episode_lookup)):
     #         yield self.process_data(idx)
-    def __getitem__(self, idx: int | tuple[int, int], fixed_seed=False) -> dict:
+    def __getitem__(
+        self, idx: int | tuple[int, int], fixed_seed=False
+    ) -> dict:
         """
         Get sequence of dataset.
 
@@ -502,10 +544,18 @@ class BaseR2RDataset(Dataset):
         goal_image = Image.fromarray(image[-1].astype(np.uint8))
         pixel_values = self.image_transform(image_vla)
 
-        initial_pixel_values_hist_list, target_pixel_values_hist_list = None, None
+        initial_pixel_values_hist_list, target_pixel_values_hist_list = (
+            None,
+            None,
+        )
         if extra_frame_num > 0:
-            assert (self.max_window_size - self.min_window_size) % (self.min_window_size - 1) == 0
-            initial_pixel_values_hist_list, target_pixel_values_hist_list = [], []
+            assert (self.max_window_size - self.min_window_size) % (
+                self.min_window_size - 1
+            ) == 0
+            initial_pixel_values_hist_list, target_pixel_values_hist_list = (
+                [],
+                [],
+            )
             for i in range(0, extra_frame_num, self.min_window_size - 1):
                 hist_frame_prev = Image.fromarray(image[i].astype(np.uint8))
                 hist_frame_goal = Image.fromarray(
@@ -517,15 +567,23 @@ class BaseR2RDataset(Dataset):
                 target_pixel_values_hist = self.image_transform_lam(
                     self.resize_img(hist_frame_goal)
                 )
-                initial_pixel_values_hist_list.append(initial_pixel_values_hist)
+                initial_pixel_values_hist_list.append(
+                    initial_pixel_values_hist
+                )
                 target_pixel_values_hist_list.append(target_pixel_values_hist)
 
-        initial_pixel_values = self.image_transform_lam(self.resize_img(image_vla))
-        target_pixel_values = self.image_transform_lam(self.resize_img(goal_image))
+        initial_pixel_values = self.image_transform_lam(
+            self.resize_img(image_vla)
+        )
+        target_pixel_values = self.image_transform_lam(
+            self.resize_img(goal_image)
+        )
 
         # # tgt_action = normalized_action[pred_actions:]
         if extra_frame_num > 0:
-            action = sequence['actions'][extra_frame_num : extra_frame_num + self.min_window_size]
+            action = sequence['actions'][
+                extra_frame_num : extra_frame_num + self.min_window_size
+            ]
         else:
             action = sequence['actions'][:window_size]
 
@@ -544,7 +602,9 @@ class BaseR2RDataset(Dataset):
             lang=instruction,
         )
 
-    def _get_sequences(self, idx: int, window_size: int, head: bool = False) -> dict:
+    def _get_sequences(
+        self, idx: int, window_size: int, head: bool = False
+    ) -> dict:
         """
         Load sequence of length window_size.
 
@@ -558,10 +618,14 @@ class BaseR2RDataset(Dataset):
 
         episode = self._load_episode(idx, window_size)
 
-        seq_rgb_obs = self.process_rgb(episode, self.observation_space, self.transforms)
+        seq_rgb_obs = self.process_rgb(
+            episode, self.observation_space, self.transforms
+        )
         seq_acts = process_actions(episode, 'actions', self.transforms)
 
-        seq_lang = self.process_language(episode, self.transforms, self.with_lang)
+        seq_lang = self.process_language(
+            episode, self.transforms, self.with_lang
+        )
         seq_dict = {
             **seq_rgb_obs,
             **seq_acts,
@@ -571,7 +635,9 @@ class BaseR2RDataset(Dataset):
 
         return seq_dict
 
-    def _load_episode(self, idx: int, window_size: int) -> dict[str, np.ndarray]:
+    def _load_episode(
+        self, idx: int, window_size: int
+    ) -> dict[str, np.ndarray]:
         raise NotImplementedError
 
     def _get_window_size(self, idx: int) -> int:
@@ -587,8 +653,13 @@ class BaseR2RDataset(Dataset):
         window_diff = self.max_window_size - self.min_window_size
         if len(self.episode_lookup) <= idx + window_diff:
             # last episode
-            max_window = self.min_window_size + len(self.episode_lookup) - idx - 1
-        elif self.episode_lookup[idx + window_diff] != self.episode_lookup[idx] + window_diff:
+            max_window = (
+                self.min_window_size + len(self.episode_lookup) - idx - 1
+            )
+        elif (
+            self.episode_lookup[idx + window_diff]
+            != self.episode_lookup[idx] + window_diff
+        ):
             # less than max_episode steps until next episode
             steps_to_next_episode = int(
                 np.nonzero(
@@ -597,14 +668,17 @@ class BaseR2RDataset(Dataset):
                 )[0][0]
             )
             max_window = min(
-                self.max_window_size, (self.min_window_size + steps_to_next_episode - 1)
+                self.max_window_size,
+                (self.min_window_size + steps_to_next_episode - 1),
             )
         else:
             max_window = self.max_window_size
 
         if self.validation:
             # in validation step, repeat the window sizes for each epoch.
-            return get_validation_window_size(idx, self.min_window_size, max_window)
+            return get_validation_window_size(
+                idx, self.min_window_size, max_window
+            )
         else:
             return np.random.randint(self.min_window_size, max_window + 1)
 
@@ -627,7 +701,9 @@ class BaseR2RDataset(Dataset):
         """
         return self.max_window_size - len(sequence['actions'])
 
-    def _pad_sequence(self, seq: dict, pad_size: int, head: bool = False) -> dict:
+    def _pad_sequence(
+        self, seq: dict, pad_size: int, head: bool = False
+    ) -> dict:
         """
         Pad a sequence by repeating the last frame.
 
@@ -661,7 +737,13 @@ class BaseR2RDataset(Dataset):
                 seq_acts = self._pad_with_zeros(seq['actions'], pad_size, head)
             else:
                 # repeat action for world coordinates action space
-                seq.update({'actions': self._pad_with_repetition(seq['actions'], pad_size, head)})
+                seq.update(
+                    {
+                        'actions': self._pad_with_repetition(
+                            seq['actions'], pad_size, head
+                        )
+                    }
+                )
         else:
             # for relative actions zero pad all but the last action dims and repeat last action dim (gripper action)
             if head:
@@ -669,8 +751,12 @@ class BaseR2RDataset(Dataset):
             else:
                 seq_acts = torch.cat(
                     [
-                        self._pad_with_zeros(seq['actions'][..., :-1], pad_size, head),
-                        self._pad_with_repetition(seq['actions'][..., -1:], pad_size, head),
+                        self._pad_with_zeros(
+                            seq['actions'][..., :-1], pad_size, head
+                        ),
+                        self._pad_with_repetition(
+                            seq['actions'][..., -1:], pad_size, head
+                        ),
                     ],
                     dim=-1,
                 )
@@ -701,12 +787,16 @@ class BaseR2RDataset(Dataset):
         """
         if head:
             last_repeated = torch.repeat_interleave(
-                torch.unsqueeze(input_tensor[0], dim=0), repeats=pad_size, dim=0
+                torch.unsqueeze(input_tensor[0], dim=0),
+                repeats=pad_size,
+                dim=0,
             )
             padded = torch.vstack((last_repeated, input_tensor))
         else:
             last_repeated = torch.repeat_interleave(
-                torch.unsqueeze(input_tensor[-1], dim=0), repeats=pad_size, dim=0
+                torch.unsqueeze(input_tensor[-1], dim=0),
+                repeats=pad_size,
+                dim=0,
             )
             padded = torch.vstack((input_tensor, last_repeated))
         return padded
@@ -751,7 +841,8 @@ class BaseR2RDataset(Dataset):
             return info
         use_for_aux_lang_loss = (
             idx + self.aux_lang_loss_window >= len(self.lang_lookup)
-            or self.lang_lookup[idx] < self.lang_lookup[idx + self.aux_lang_loss_window]
+            or self.lang_lookup[idx]
+            < self.lang_lookup[idx + self.aux_lang_loss_window]
         )
         info['use_for_aux_lang_loss'] = use_for_aux_lang_loss
         return info
@@ -823,9 +914,11 @@ class DiskR2RDataset(BaseR2RDataset):
                 self.lang_ann,
             ) = self._build_file_indices_lang(self.abs_datasets_dir)
         else:
-            self.episode_lookup, self.episode_lookup_end_idx, self.episode_start_idx = (
-                self._build_file_indices(self.abs_datasets_dir)
-            )
+            (
+                self.episode_lookup,
+                self.episode_lookup_end_idx,
+                self.episode_start_idx,
+            ) = self._build_file_indices(self.abs_datasets_dir)
 
         self.naming_pattern, self.n_digits = lookup_naming_pattern(
             self.abs_datasets_dir, self.save_format
@@ -839,9 +932,13 @@ class DiskR2RDataset(BaseR2RDataset):
         Returns:
             Path to file.
         """
-        return Path(f'{self.naming_pattern[0]}{file_idx:0{self.n_digits}d}{self.naming_pattern[1]}')
+        return Path(
+            f'{self.naming_pattern[0]}{file_idx:0{self.n_digits}d}{self.naming_pattern[1]}'
+        )
 
-    def _load_episode(self, idx: int, window_size: int) -> dict[str, np.ndarray]:
+    def _load_episode(
+        self, idx: int, window_size: int
+    ) -> dict[str, np.ndarray]:
         """
         Load consecutive frames saved as individual files on disk and combine to episode dict.
         Args:
@@ -857,7 +954,9 @@ class DiskR2RDataset(BaseR2RDataset):
             extra_frame_num = self.max_window_size - self.min_window_size
         else:
             start_idx = self.episode_lookup[idx]
-            end_idx = start_idx + window_size  # * self.sampling_step + self.sampling_step
+            end_idx = (
+                start_idx + window_size
+            )  # * self.sampling_step + self.sampling_step
 
         keys = list(chain(*self.observation_space.values()))
         keys.remove('language')
@@ -871,9 +970,12 @@ class DiskR2RDataset(BaseR2RDataset):
         len_episodes = len(episodes)
         if self.padding_sequence and len_episodes < window_size:
             # print("**", start_idx, self.episode_start_idx[idx], self.min_window_size)
-            if self.min_window_size < self.max_window_size and start_idx < self.episode_start_idx[
-                idx
-            ] + (self.max_window_size - self.min_window_size + 1):
+            if (
+                self.min_window_size < self.max_window_size
+                and start_idx
+                < self.episode_start_idx[idx]
+                + (self.max_window_size - self.min_window_size + 1)
+            ):
                 pad_idx = list(range(start_idx))[-extra_frame_num:]
                 if len(pad_idx) < extra_frame_num:
                     pad_idx = [self.episode_start_idx[idx]] * (
@@ -885,7 +987,9 @@ class DiskR2RDataset(BaseR2RDataset):
                 ]
                 # TODO: action->0!!
                 episodes = pad + episodes
-                seq_idx = pad_idx + list(range(start_idx, end_idx, self.sampling_step))
+                seq_idx = pad_idx + list(
+                    range(start_idx, end_idx, self.sampling_step)
+                )
                 # print("seq_idx:", seq_idx)
             else:
                 episodes += [
@@ -900,13 +1004,17 @@ class DiskR2RDataset(BaseR2RDataset):
         if start_idx < self.episode_start_idx[idx] + self.min_window_size:
             for i in range(window_size - len_episodes):
                 if seq_idx[i + 1] == seq_idx[i]:
-                    episode['actions'][i] = np.zeros_like(episode['actions'][i])
+                    episode['actions'][i] = np.zeros_like(
+                        episode['actions'][i]
+                    )
 
         if self.with_lang:
             episode['language'] = self.lang_ann[self.lang_lookup[idx]]
             if self.text_aug:
                 task = self.lang_task[self.lang_lookup[idx]]
-                enrich_lang = random.choice(self.enrich_lang[task] + [episode['language']])
+                enrich_lang = random.choice(
+                    self.enrich_lang[task] + [episode['language']]
+                )
                 episode['language'] = enrich_lang
         return episode
 
@@ -940,10 +1048,14 @@ class DiskR2RDataset(BaseR2RDataset):
                 'Exception, trying to load lang data from: ',
                 abs_datasets_dir / 'auto_lang_ann.npy',
             )
-            lang_data = np.load(abs_datasets_dir / 'auto_lang_ann.npy', allow_pickle=True).item()
+            lang_data = np.load(
+                abs_datasets_dir / 'auto_lang_ann.npy', allow_pickle=True
+            ).item()
 
         ep_start_end_ids = lang_data['indx']  # each of them are 64
-        lang_ann = lang_data['language']['ann']  # length total number of annotations
+        lang_ann = lang_data['language'][
+            'ann'
+        ]  # length total number of annotations
         lang_lookup = []
 
         total_eps = len(ep_start_end_ids)
@@ -952,7 +1064,10 @@ class DiskR2RDataset(BaseR2RDataset):
             if self.pretrain:
                 start_idx = max(
                     start_idx,
-                    end_idx + 1 - self.min_window_size - self.aux_lang_loss_window,
+                    end_idx
+                    + 1
+                    - self.min_window_size
+                    - self.aux_lang_loss_window,
                 )
             assert end_idx >= self.max_window_size
             cnt = 0
@@ -966,25 +1081,35 @@ class DiskR2RDataset(BaseR2RDataset):
                         if cnt % self.skip_frames == 0:
                             lang_lookup.append(i)
                             episode_lookup.append(idx)
-                            episode_lookup_end_idx.append(idx + self.min_window_size)
+                            episode_lookup_end_idx.append(
+                                idx + self.min_window_size
+                            )
                             episode_start_idx.append(start_idx)
                         cnt += 1
 
                     for idx in range(start_idx, end_idx - extra_frame_num):
                         if cnt % self.skip_frames == 0:
-                            if self.padding_aug and end_idx + 1 < idx + self.max_window_size:
+                            if (
+                                self.padding_aug
+                                and end_idx + 1 < idx + self.max_window_size
+                            ):
                                 for i in range(5):
                                     lang_lookup.append(i)
                                     episode_lookup.append(idx)
                                     episode_lookup_end_idx.append(
-                                        min(idx + self.max_window_size, end_idx + 1)
+                                        min(
+                                            idx + self.max_window_size,
+                                            end_idx + 1,
+                                        )
                                     )
                                     episode_start_idx.append(start_idx)
                             else:
                                 lang_lookup.append(i)
                                 episode_lookup.append(idx)
                                 episode_lookup_end_idx.append(
-                                    min(idx + self.max_window_size, end_idx + 1)
+                                    min(
+                                        idx + self.max_window_size, end_idx + 1
+                                    )
                                 )
                                 episode_start_idx.append(start_idx)
                         cnt += 1
@@ -1010,7 +1135,9 @@ class DiskR2RDataset(BaseR2RDataset):
                         cnt += 1
 
             else:
-                for idx in range(start_idx, end_idx + 1 - self.min_window_size):
+                for idx in range(
+                    start_idx, end_idx + 1 - self.min_window_size
+                ):
                     if cnt % self.skip_frames == 0:
                         lang_lookup.append(i)
                         episode_lookup.append(idx)
@@ -1040,7 +1167,9 @@ class DiskR2RDataset(BaseR2RDataset):
         episode_start_idx = []
 
         ep_start_end_ids = np.load(abs_datasets_dir / 'ep_start_end_ids.npy')
-        print(f'Found "ep_start_end_ids.npy" with {len(ep_start_end_ids)} episodes.')
+        print(
+            f'Found "ep_start_end_ids.npy" with {len(ep_start_end_ids)} episodes.'
+        )
 
         for start_idx, end_idx in ep_start_end_ids:
             assert end_idx > self.max_window_size
@@ -1053,11 +1182,15 @@ class DiskR2RDataset(BaseR2RDataset):
 
                 for idx in range(start_idx, end_idx - extra_frame_num):
                     episode_lookup.append(idx)
-                    episode_lookup_end_idx.append(min(idx + window_size, end_idx + 1))
+                    episode_lookup_end_idx.append(
+                        min(idx + window_size, end_idx + 1)
+                    )
                     episode_start_idx.append(start_idx)
 
             else:
-                for idx in range(start_idx, end_idx + 1 - self.min_window_size):
+                for idx in range(
+                    start_idx, end_idx + 1 - self.min_window_size
+                ):
                     episode_lookup.append(idx)
 
         return (

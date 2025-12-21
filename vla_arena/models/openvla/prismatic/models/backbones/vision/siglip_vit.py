@@ -16,7 +16,10 @@
 siglip_vit.py
 """
 
-from vla_arena.models.openvla.prismatic.models.backbones.vision.base_vision import TimmViTBackbone
+from vla_arena.models.openvla.prismatic.models.backbones.vision.base_vision import (
+    TimmViTBackbone,
+)
+
 
 # Registry =>> Supported SigLIP Vision Backbones (from TIMM) =>> Note:: Using SigLIP w/ Patch = 14 (but SO400M Arch)
 SIGLIP_VISION_BACKBONES = {
@@ -30,7 +33,10 @@ SIGLIP_VISION_BACKBONES = {
 
 class SigLIPViTBackbone(TimmViTBackbone):
     def __init__(
-        self, vision_backbone_id: str, image_resize_strategy: str, default_image_size: int = 224
+        self,
+        vision_backbone_id: str,
+        image_resize_strategy: str,
+        default_image_size: int = 224,
     ) -> None:
         super().__init__(
             vision_backbone_id,

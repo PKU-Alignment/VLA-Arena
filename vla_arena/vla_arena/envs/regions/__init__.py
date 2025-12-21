@@ -35,19 +35,27 @@ REGION_SAMPLERS = {
     'floor_manipulation': {'floor': TableRegionSampler},
     'marble_floor_manipulation': {'floor': TableRegionSampler},
     'coffee_table_manipulation': {'coffee_table': TableRegionSampler},
-    'living_room_tabletop_manipulation': {'living_room_table': TableRegionSampler},
+    'living_room_tabletop_manipulation': {
+        'living_room_table': TableRegionSampler
+    },
     'study_tabletop_manipulation': {'study_table': TableRegionSampler},
     'kitchen_tabletop_manipulation': {'kitchen_table': TableRegionSampler},
     'libero_tabletop_manipulation': {'table': TableRegionSampler},
     'libero_coffee_table_manipulation': {'coffee_table': TableRegionSampler},
-    'libero_living_room_tabletop_manipulation': {'living_room_table': TableRegionSampler},
+    'libero_living_room_tabletop_manipulation': {
+        'living_room_table': TableRegionSampler
+    },
     'libero_study_tabletop_manipulation': {'study_table': TableRegionSampler},
-    'libero_kitchen_tabletop_manipulation': {'kitchen_table': TableRegionSampler},
+    'libero_kitchen_tabletop_manipulation': {
+        'kitchen_table': TableRegionSampler
+    },
     'libero_floor_manipulation': {'floor': TableRegionSampler},
 }
 
 
-def update_region_samplers(problem_name, region_sampler_name, region_sampler_class_name):
+def update_region_samplers(
+    problem_name, region_sampler_name, region_sampler_class_name
+):
     """
     This is for registering customized region samplers without adding to / modifying original codebase.
     """

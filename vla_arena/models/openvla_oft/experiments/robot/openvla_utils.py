@@ -30,12 +30,20 @@ import tensorflow as tf
 import torch
 from huggingface_hub import HfApi, hf_hub_download
 from PIL import Image
-from transformers import AutoConfig, AutoImageProcessor, AutoModelForVision2Seq, AutoProcessor
+from transformers import (
+    AutoConfig,
+    AutoImageProcessor,
+    AutoModelForVision2Seq,
+    AutoProcessor,
+)
+
 
 # Apply JSON numpy patch for serialization
 json_numpy.patch()
 
-from vla_arena.models.openvla_oft.prismatic.extern.hf.configuration_prismatic import OpenVLAConfig
+from vla_arena.models.openvla_oft.prismatic.extern.hf.configuration_prismatic import (
+    OpenVLAConfig,
+)
 from vla_arena.models.openvla_oft.prismatic.extern.hf.modeling_prismatic import (
     OpenVLAForActionPrediction,
 )
@@ -62,10 +70,15 @@ from vla_arena.models.openvla_oft.prismatic.vla.datasets.rlds.utils.data_utils i
     NormalizationType,
 )
 
+
 # Initialize important constants
 DATE = time.strftime('%Y_%m_%d')
 DATE_TIME = time.strftime('%Y_%m_%d-%H_%M_%S')
-DEVICE = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
+DEVICE = (
+    torch.device('cuda:0')
+    if torch.cuda.is_available()
+    else torch.device('cpu')
+)
 OPENVLA_IMAGE_SIZE = 224  # Standard image size expected by OpenVLA
 
 # Configure NumPy print settings
@@ -102,9 +115,13 @@ def update_auto_map(pretrained_checkpoint: str) -> None:
 
     # Create timestamped backup
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    backup_path = os.path.join(pretrained_checkpoint, f'config.json.back.{timestamp}')
+    backup_path = os.path.join(
+        pretrained_checkpoint, f'config.json.back.{timestamp}'
+    )
     shutil.copy2(config_path, backup_path)
-    print(f'Created backup of original config at: {os.path.abspath(backup_path)}')
+    print(
+        f'Created backup of original config at: {os.path.abspath(backup_path)}'
+    )
 
     # Read and update the config
     with open(config_path) as f:
@@ -150,7 +167,9 @@ def check_identical_files(path1: str | Path, path2: str | Path) -> bool:
     return filecmp.cmp(path1, path2, shallow=False)
 
 
-def _handle_file_sync(curr_filepath: str, checkpoint_filepath: str, file_type: str) -> None:
+def _handle_file_sync(
+    curr_filepath: str, checkpoint_filepath: str, file_type: str
+) -> None:
     """
     Handle syncing of files between current directory and checkpoint.
 
@@ -177,7 +196,9 @@ def _handle_file_sync(curr_filepath: str, checkpoint_filepath: str, file_type: s
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             backup_path = f'{checkpoint_filepath}.back.{timestamp}'
             shutil.copy2(checkpoint_filepath, backup_path)
-            print(f'Created backup of original checkpoint file at: {os.path.abspath(backup_path)}')
+            print(
+                f'Created backup of original checkpoint file at: {os.path.abspath(backup_path)}'
+            )
 
             # Copy current version to checkpoint directory
             shutil.copy2(curr_filepath, checkpoint_filepath)
@@ -229,7 +250,9 @@ def check_model_logic_mismatch(pretrained_checkpoint: str) -> None:
     # Check and handle each file
     for filename, curr_filepath in curr_files.items():
         if curr_filepath is None:
-            print(f'WARNING: `{filename}` is not found anywhere in the current directory.')
+            print(
+                f'WARNING: `{filename}` is not found anywhere in the current directory.'
+            )
             continue
 
         checkpoint_filepath = os.path.join(pretrained_checkpoint, filename)
@@ -312,7 +335,9 @@ def get_vla(cfg: Any) -> torch.nn.Module:
         AutoConfig.register('openvla', OpenVLAConfig)
         AutoImageProcessor.register(OpenVLAConfig, PrismaticImageProcessor)
         AutoProcessor.register(OpenVLAConfig, PrismaticProcessor)
-        AutoModelForVision2Seq.register(OpenVLAConfig, OpenVLAForActionPrediction)
+        AutoModelForVision2Seq.register(
+            OpenVLAConfig, OpenVLAForActionPrediction
+        )
 
         # Update config.json and sync model files
         update_auto_map(cfg.pretrained_checkpoint)
@@ -379,7 +404,9 @@ def _apply_film_to_vla(vla: torch.nn.Module, cfg: Any) -> torch.nn.Module:
     vla.model.vision_backbone = new_vision_backbone
 
     # Load vision backbone checkpoint
-    checkpoint_path = find_checkpoint_file(cfg.pretrained_checkpoint, 'vision_backbone')
+    checkpoint_path = find_checkpoint_file(
+        cfg.pretrained_checkpoint, 'vision_backbone'
+    )
     state_dict = torch.load(checkpoint_path, weights_only=True)
     vla.model.vision_backbone.load_state_dict(state_dict)
 
@@ -405,7 +432,9 @@ def _load_dataset_stats(vla: torch.nn.Module, checkpoint_path: str) -> None:
             filename='dataset_statistics.json',
         )
     else:
-        dataset_statistics_path = os.path.join(checkpoint_path, 'dataset_statistics.json')
+        dataset_statistics_path = os.path.join(
+            checkpoint_path, 'dataset_statistics.json'
+        )
     if os.path.isfile(dataset_statistics_path):
         with open(dataset_statistics_path) as f:
             norm_stats = json.load(f)
@@ -428,10 +457,14 @@ def get_processor(cfg: Any) -> AutoProcessor:
     Returns:
         AutoProcessor: The model's processor
     """
-    return AutoProcessor.from_pretrained(cfg.pretrained_checkpoint, trust_remote_code=True)
+    return AutoProcessor.from_pretrained(
+        cfg.pretrained_checkpoint, trust_remote_code=True
+    )
 
 
-def get_proprio_projector(cfg: Any, llm_dim: int, proprio_dim: int) -> ProprioProjector:
+def get_proprio_projector(
+    cfg: Any, llm_dim: int, proprio_dim: int
+) -> ProprioProjector:
     """
     Get proprioception projector for the VLA model.
 
@@ -460,17 +493,24 @@ def get_proprio_projector(cfg: Any, llm_dim: int, proprio_dim: int) -> ProprioPr
             'moojink/openvla-7b-oft-finetuned-libero-10': 'proprio_projector--150000_checkpoint.pt',
             'moojink/openvla-7b-oft-finetuned-libero-spatial-object-goal-10': 'proprio_projector--300000_checkpoint.pt',
         }
-        if cfg.pretrained_checkpoint not in model_path_to_proprio_projector_name.keys():
+        if (
+            cfg.pretrained_checkpoint
+            not in model_path_to_proprio_projector_name.keys()
+        ):
             raise ValueError('Unsupported HF Hub pretrained checkpoint found!')
         # Download proprio projector directly from HF Hub
         proprio_projector_path = hf_hub_download(
             repo_id=cfg.pretrained_checkpoint,
-            filename=model_path_to_proprio_projector_name[cfg.pretrained_checkpoint],
+            filename=model_path_to_proprio_projector_name[
+                cfg.pretrained_checkpoint
+            ],
         )
         state_dict = load_component_state_dict(proprio_projector_path)
         proprio_projector.load_state_dict(state_dict)
     else:
-        checkpoint_path = find_checkpoint_file(cfg.pretrained_checkpoint, 'proprio_projector')
+        checkpoint_path = find_checkpoint_file(
+            cfg.pretrained_checkpoint, 'proprio_projector'
+        )
         state_dict = load_component_state_dict(checkpoint_path)
         proprio_projector.load_state_dict(state_dict)
 
@@ -492,18 +532,24 @@ def get_noisy_action_projector(cfg: Any, llm_dim: int) -> NoisyActionProjector:
     noisy_action_projector = NoisyActionProjector(
         llm_dim=llm_dim,
     ).to(DEVICE)
-    noisy_action_projector = noisy_action_projector.to(torch.bfloat16).to(DEVICE)
+    noisy_action_projector = noisy_action_projector.to(torch.bfloat16).to(
+        DEVICE
+    )
     noisy_action_projector.eval()
 
     # Find and load checkpoint
-    checkpoint_path = find_checkpoint_file(cfg.pretrained_checkpoint, 'noisy_action_projector')
+    checkpoint_path = find_checkpoint_file(
+        cfg.pretrained_checkpoint, 'noisy_action_projector'
+    )
     state_dict = load_component_state_dict(checkpoint_path)
     noisy_action_projector.load_state_dict(state_dict)
 
     return noisy_action_projector
 
 
-def get_action_head(cfg: Any, llm_dim: int) -> L1RegressionActionHead | DiffusionActionHead:
+def get_action_head(
+    cfg: Any, llm_dim: int
+) -> L1RegressionActionHead | DiffusionActionHead:
     """
     Get action head for continuous value prediction.
 
@@ -534,9 +580,13 @@ def get_action_head(cfg: Any, llm_dim: int) -> L1RegressionActionHead | Diffusio
             num_diffusion_steps_train=cfg.num_diffusion_steps_train,
         )
         # Set number of diffusion steps for inference
-        action_head.noise_scheduler.set_timesteps(cfg.num_diffusion_steps_inference)
+        action_head.noise_scheduler.set_timesteps(
+            cfg.num_diffusion_steps_inference
+        )
     else:
-        raise ValueError('Either use_l1_regression or use_diffusion must be True')
+        raise ValueError(
+            'Either use_l1_regression or use_diffusion must be True'
+        )
 
     action_head = action_head.to(torch.bfloat16).to(DEVICE)
     action_head.eval()
@@ -550,7 +600,10 @@ def get_action_head(cfg: Any, llm_dim: int) -> L1RegressionActionHead | Diffusio
             'moojink/openvla-7b-oft-finetuned-libero-10': 'action_head--150000_checkpoint.pt',
             'moojink/openvla-7b-oft-finetuned-libero-spatial-object-goal-10': 'action_head--300000_checkpoint.pt',
         }
-        if cfg.pretrained_checkpoint not in model_path_to_action_head_name.keys():
+        if (
+            cfg.pretrained_checkpoint
+            not in model_path_to_action_head_name.keys()
+        ):
             raise ValueError('Unsupported HF Hub pretrained checkpoint found!')
         # Download proprio projector directly from HF Hub
         action_head_path = hf_hub_download(
@@ -560,14 +613,18 @@ def get_action_head(cfg: Any, llm_dim: int) -> L1RegressionActionHead | Diffusio
         state_dict = load_component_state_dict(action_head_path)
         action_head.load_state_dict(state_dict)
     else:
-        checkpoint_path = find_checkpoint_file(cfg.pretrained_checkpoint, 'action_head')
+        checkpoint_path = find_checkpoint_file(
+            cfg.pretrained_checkpoint, 'action_head'
+        )
         state_dict = load_component_state_dict(checkpoint_path)
         action_head.load_state_dict(state_dict)
 
     return action_head
 
 
-def resize_image_for_policy(img: np.ndarray, resize_size: int | tuple[int, int]) -> np.ndarray:
+def resize_image_for_policy(
+    img: np.ndarray, resize_size: int | tuple[int, int]
+) -> np.ndarray:
     """
     Resize an image to match the policy's expected input size.
 
@@ -586,14 +643,18 @@ def resize_image_for_policy(img: np.ndarray, resize_size: int | tuple[int, int])
 
     # Resize using the same pipeline as in RLDS dataset builder
     img = tf.image.encode_jpeg(img)  # Encode as JPEG
-    img = tf.io.decode_image(img, expand_animations=False, dtype=tf.uint8)  # Decode back
+    img = tf.io.decode_image(
+        img, expand_animations=False, dtype=tf.uint8
+    )  # Decode back
     img = tf.image.resize(img, resize_size, method='lanczos3', antialias=True)
     img = tf.cast(tf.clip_by_value(tf.round(img), 0, 255), tf.uint8)
 
     return img.numpy()
 
 
-def crop_and_resize(image: tf.Tensor, crop_scale: float, batch_size: int) -> tf.Tensor:
+def crop_and_resize(
+    image: tf.Tensor, crop_scale: float, batch_size: int
+) -> tf.Tensor:
     """
     Center-crop an image and resize it back to original dimensions.
 
@@ -615,8 +676,12 @@ def crop_and_resize(image: tf.Tensor, crop_scale: float, batch_size: int) -> tf.
         expanded_dims = True
 
     # Calculate crop dimensions (note: we use sqrt(crop_scale) for h/w)
-    new_heights = tf.reshape(tf.clip_by_value(tf.sqrt(crop_scale), 0, 1), shape=(batch_size,))
-    new_widths = tf.reshape(tf.clip_by_value(tf.sqrt(crop_scale), 0, 1), shape=(batch_size,))
+    new_heights = tf.reshape(
+        tf.clip_by_value(tf.sqrt(crop_scale), 0, 1), shape=(batch_size,)
+    )
+    new_widths = tf.reshape(
+        tf.clip_by_value(tf.sqrt(crop_scale), 0, 1), shape=(batch_size,)
+    )
 
     # Create bounding box for the crop
     height_offsets = (1 - new_heights) / 2
@@ -633,7 +698,10 @@ def crop_and_resize(image: tf.Tensor, crop_scale: float, batch_size: int) -> tf.
 
     # Apply crop and resize
     image = tf.image.crop_and_resize(
-        image, bounding_boxes, tf.range(batch_size), (OPENVLA_IMAGE_SIZE, OPENVLA_IMAGE_SIZE)
+        image,
+        bounding_boxes,
+        tf.range(batch_size),
+        (OPENVLA_IMAGE_SIZE, OPENVLA_IMAGE_SIZE),
     )
 
     # Remove batch dimension if it was added
@@ -696,7 +764,9 @@ def check_image_format(image: Any) -> None:
     )
 
 
-def normalize_proprio(proprio: np.ndarray, norm_stats: dict[str, Any]) -> np.ndarray:
+def normalize_proprio(
+    proprio: np.ndarray, norm_stats: dict[str, Any]
+) -> np.ndarray:
     """
     Normalize proprioception data to match training distribution.
 
@@ -708,18 +778,29 @@ def normalize_proprio(proprio: np.ndarray, norm_stats: dict[str, Any]) -> np.nda
         np.ndarray: Normalized proprioception data
     """
     if ACTION_PROPRIO_NORMALIZATION_TYPE == NormalizationType.BOUNDS:
-        mask = norm_stats.get('mask', np.ones_like(norm_stats['min'], dtype=bool))
-        proprio_high, proprio_low = np.array(norm_stats['max']), np.array(norm_stats['min'])
+        mask = norm_stats.get(
+            'mask', np.ones_like(norm_stats['min'], dtype=bool)
+        )
+        proprio_high, proprio_low = np.array(norm_stats['max']), np.array(
+            norm_stats['min']
+        )
     elif ACTION_PROPRIO_NORMALIZATION_TYPE == NormalizationType.BOUNDS_Q99:
-        mask = norm_stats.get('mask', np.ones_like(norm_stats['q01'], dtype=bool))
-        proprio_high, proprio_low = np.array(norm_stats['q99']), np.array(norm_stats['q01'])
+        mask = norm_stats.get(
+            'mask', np.ones_like(norm_stats['q01'], dtype=bool)
+        )
+        proprio_high, proprio_low = np.array(norm_stats['q99']), np.array(
+            norm_stats['q01']
+        )
     else:
-        raise ValueError('Unsupported action/proprio normalization type detected!')
+        raise ValueError(
+            'Unsupported action/proprio normalization type detected!'
+        )
 
     normalized_proprio = np.clip(
         np.where(
             mask,
-            2 * (proprio - proprio_low) / (proprio_high - proprio_low + 1e-8) - 1,
+            2 * (proprio - proprio_low) / (proprio_high - proprio_low + 1e-8)
+            - 1,
             proprio,
         ),
         a_min=-1.0,
@@ -729,7 +810,9 @@ def normalize_proprio(proprio: np.ndarray, norm_stats: dict[str, Any]) -> np.nda
     return normalized_proprio
 
 
-def prepare_images_for_vla(images: list[np.ndarray], cfg: Any) -> list[Image.Image]:
+def prepare_images_for_vla(
+    images: list[np.ndarray], cfg: Any
+) -> list[Image.Image]:
     """
     Prepare images for VLA input by resizing and cropping as needed.
 
@@ -807,7 +890,9 @@ def get_vla_action(
         prompt = f'In: What action should the robot take to {task_label.lower()}?\nOut:'
 
         # Process primary image
-        inputs = processor(prompt, primary_image).to(DEVICE, dtype=torch.bfloat16)
+        inputs = processor(prompt, primary_image).to(
+            DEVICE, dtype=torch.bfloat16
+        )
 
         # Process additional wrist images if any
         if all_images:
@@ -818,7 +903,8 @@ def get_vla_action(
             # Concatenate all images
             primary_pixel_values = inputs['pixel_values']
             all_wrist_pixel_values = [
-                wrist_inputs['pixel_values'] for wrist_inputs in all_wrist_inputs
+                wrist_inputs['pixel_values']
+                for wrist_inputs in all_wrist_inputs
             ]
             inputs['pixel_values'] = torch.cat(
                 [primary_pixel_values] + all_wrist_pixel_values, dim=1
@@ -835,7 +921,9 @@ def get_vla_action(
         # Generate action
         if action_head is None:
             # Standard VLA output (single-image inputs, discrete actions)
-            action, _ = vla.predict_action(**inputs, unnorm_key=cfg.unnorm_key, do_sample=False)
+            action, _ = vla.predict_action(
+                **inputs, unnorm_key=cfg.unnorm_key, do_sample=False
+            )
         else:
             # Custom action head for continuous actions
             action, _ = vla.predict_action(
@@ -854,7 +942,8 @@ def get_vla_action(
 
 
 def get_action_from_server(
-    observation: dict[str, Any], server_endpoint: str = 'http://0.0.0.0:8777/act'
+    observation: dict[str, Any],
+    server_endpoint: str = 'http://0.0.0.0:8777/act',
 ) -> dict[str, Any]:
     """
     Get VLA action from remote inference server.

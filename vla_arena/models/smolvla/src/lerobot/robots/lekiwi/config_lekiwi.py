@@ -65,7 +65,9 @@ class LeKiwiConfig(RobotConfig):
     # the number of motors in your follower arms.
     max_relative_target: int | None = None
 
-    cameras: dict[str, CameraConfig] = field(default_factory=lekiwi_cameras_config)
+    cameras: dict[str, CameraConfig] = field(
+        default_factory=lekiwi_cameras_config
+    )
 
     # Set to `True` for backward compatibility with previous policies/dataset
     use_degrees: bool = False
@@ -112,7 +114,9 @@ class LeKiwiClientConfig(RobotConfig):
         }
     )
 
-    cameras: dict[str, CameraConfig] = field(default_factory=lekiwi_cameras_config)
+    cameras: dict[str, CameraConfig] = field(
+        default_factory=lekiwi_cameras_config
+    )
 
     polling_timeout_ms: int = 15
     connect_timeout_s: int = 5

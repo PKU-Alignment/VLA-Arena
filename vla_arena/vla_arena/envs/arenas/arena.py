@@ -36,7 +36,9 @@ class Arena(MujocoXML):
         self.floor = self.worldbody.find("./geom[@name='floor']")
 
         # Add mocap bodies to self.root for mocap control in mjviewer UI for robot control
-        mocap_body_1 = new_body(name='left_eef_target', pos='0 0 -1', mocap=True)
+        mocap_body_1 = new_body(
+            name='left_eef_target', pos='0 0 -1', mocap=True
+        )
         mocap_body_1_geom = new_geom(
             name='left_eef_target_box',
             type='box',
@@ -56,7 +58,9 @@ class Arena(MujocoXML):
             contype='0',
             group='2',
         )
-        mocap_body_2 = new_body(name='right_eef_target', pos='0 0 -1', mocap=True)
+        mocap_body_2 = new_body(
+            name='right_eef_target', pos='0 0 -1', mocap=True
+        )
         mocap_body_2_geom = new_geom(
             name='right_eef_target_box',
             type='box',
@@ -92,7 +96,9 @@ class Arena(MujocoXML):
         recolor_collision_geoms(
             root=self.worldbody,
             rgba=ENVIRONMENT_COLLISION_COLOR,
-            exclude=lambda e: True if e.get('name', None) == 'floor' else False,
+            exclude=lambda e: (
+                True if e.get('name', None) == 'floor' else False
+            ),
         )
 
     def set_origin(self, offset):
@@ -109,7 +115,12 @@ class Arena(MujocoXML):
             node.set('pos', array_to_string(new_pos))
 
     def set_camera(
-        self, camera_name, pos=None, pos_offset=[0, 0, 0], quat=None, camera_attribs=None,
+        self,
+        camera_name,
+        pos=None,
+        pos_offset=[0, 0, 0],
+        quat=None,
+        camera_attribs=None,
     ):
         """
         Sets a camera with @camera_name. If the camera already exists, then this overwrites its pos and quat values.
@@ -124,14 +135,19 @@ class Arena(MujocoXML):
         """
         # Determine if camera already exists
         camera = find_elements(
-            root=self.worldbody, tags='camera', attribs={'name': camera_name}, return_first=True,
+            root=self.worldbody,
+            tags='camera',
+            attribs={'name': camera_name},
+            return_first=True,
         )
 
         # Compose attributes
         if camera_attribs is None:
             camera_attribs = {}
         if pos:
-            camera_attribs['pos'] = array_to_string(np.array(pos) + np.array(pos_offset))
+            camera_attribs['pos'] = array_to_string(
+                np.array(pos) + np.array(pos_offset)
+            )
         elif pos_offset != [0, 0, 0]:
             camera_attribs['pos'] = array_to_string(
                 string_to_array(camera.get('pos')) + np.array(pos_offset),
@@ -141,7 +157,9 @@ class Arena(MujocoXML):
 
         if camera is None:
             # If camera doesn't exist, then add a new camera with the specified attributes
-            self.worldbody.append(new_element(tag='camera', name=camera_name, **camera_attribs))
+            self.worldbody.append(
+                new_element(tag='camera', name=camera_name, **camera_attribs)
+            )
         else:
             # Otherwise, we edit all specified attributes in that camera
             for attrib, value in camera_attribs.items():

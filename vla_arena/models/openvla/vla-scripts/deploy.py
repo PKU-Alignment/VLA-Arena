@@ -46,6 +46,7 @@ import os.path
 # ruff: noqa: E402
 import json_numpy
 
+
 json_numpy.patch()
 import json
 import logging
@@ -61,6 +62,7 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from PIL import Image
 from transformers import AutoModelForVision2Seq, AutoProcessor
+
 
 # === Utilities ===
 SYSTEM_PROMPT = (
@@ -79,18 +81,29 @@ def get_openvla_prompt(instruction: str, openvla_path: str | Path) -> str:
 # === Server Interface ===
 class OpenVLAServer:
     def __init__(
-        self, openvla_path: str | Path, attn_implementation: str | None = 'flash_attention_2'
+        self,
+        openvla_path: str | Path,
+        attn_implementation: str | None = 'flash_attention_2',
     ) -> Path:
         """
         A simple server for OpenVLA models; exposes `/act` to predict an action for a given image + instruction.
             => Takes in {"image": np.ndarray, "instruction": str, "unnorm_key": Optional[str]}
             => Returns  {"action": np.ndarray}
         """
-        self.openvla_path, self.attn_implementation = openvla_path, attn_implementation
-        self.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
+        self.openvla_path, self.attn_implementation = (
+            openvla_path,
+            attn_implementation,
+        )
+        self.device = (
+            torch.device('cuda:0')
+            if torch.cuda.is_available()
+            else torch.device('cpu')
+        )
 
         # Load VLA Model using HF AutoClasses
-        self.processor = AutoProcessor.from_pretrained(self.openvla_path, trust_remote_code=True)
+        self.processor = AutoProcessor.from_pretrained(
+            self.openvla_path, trust_remote_code=True
+        )
         self.vla = AutoModelForVision2Seq.from_pretrained(
             self.openvla_path,
             attn_implementation=attn_implementation,
@@ -101,7 +114,9 @@ class OpenVLAServer:
 
         # [Hacky] Load Dataset Statistics from Disk (if passing a path to a fine-tuned model)
         if os.path.isdir(self.openvla_path):
-            with open(Path(self.openvla_path) / 'dataset_statistics.json') as f:
+            with open(
+                Path(self.openvla_path) / 'dataset_statistics.json'
+            ) as f:
                 self.vla.norm_stats = json.load(f)
 
     def predict_action(self, payload: dict[str, Any]) -> str:
@@ -117,10 +132,12 @@ class OpenVLAServer:
 
             # Run VLA Inference
             prompt = get_openvla_prompt(instruction, self.openvla_path)
-            inputs = self.processor(prompt, Image.fromarray(image).convert('RGB')).to(
-                self.device, dtype=torch.bfloat16
+            inputs = self.processor(
+                prompt, Image.fromarray(image).convert('RGB')
+            ).to(self.device, dtype=torch.bfloat16)
+            action = self.vla.predict_action(
+                **inputs, unnorm_key=unnorm_key, do_sample=False
             )
-            action = self.vla.predict_action(**inputs, unnorm_key=unnorm_key, do_sample=False)
             if double_encode:
                 return JSONResponse(json_numpy.dumps(action))
             else:

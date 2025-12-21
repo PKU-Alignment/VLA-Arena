@@ -20,8 +20,16 @@ import numpy as np
 import torch
 import torch.nn as nn
 from PIL import Image
-from transformers import AutoConfig, AutoImageProcessor, AutoModelForVision2Seq, AutoProcessor
-from vla_arena.models.univla.prismatic.extern.hf.configuration_prismatic import OpenVLAConfig
+from transformers import (
+    AutoConfig,
+    AutoImageProcessor,
+    AutoModelForVision2Seq,
+    AutoProcessor,
+)
+
+from vla_arena.models.univla.prismatic.extern.hf.configuration_prismatic import (
+    OpenVLAConfig,
+)
 from vla_arena.models.univla.prismatic.extern.hf.modeling_prismatic import (
     OpenVLAForActionPrediction,
 )
@@ -30,11 +38,16 @@ from vla_arena.models.univla.prismatic.extern.hf.processing_prismatic import (
     PrismaticProcessor,
 )
 
+
 # Initialize important constants and pretty-printing mode in NumPy.
 ACTION_DIM = 7
 DATE = time.strftime('%Y_%m_%d')
 DATE_TIME = time.strftime('%Y_%m_%d-%H_%M_%S')
-DEVICE = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
+DEVICE = (
+    torch.device('cuda:0')
+    if torch.cuda.is_available()
+    else torch.device('cpu')
+)
 np.set_printoptions(formatter={'float': lambda x: f'{x:0.3f}'})
 
 
@@ -61,7 +74,9 @@ def get_vla(pretrained_checkpoint: str):
     )
 
     # Load dataset stats used during finetuning (for action un-normalization).
-    dataset_statistics_path = os.path.join(pretrained_checkpoint, 'dataset_statistics.json')
+    dataset_statistics_path = os.path.join(
+        pretrained_checkpoint, 'dataset_statistics.json'
+    )
     if os.path.isfile(dataset_statistics_path):
         with open(dataset_statistics_path) as f:
             norm_stats = json.load(f)
@@ -78,20 +93,30 @@ def get_vla(pretrained_checkpoint: str):
 
 def get_processor(pretrained_checkpoint: str):
     """Get VLA model's Hugging Face processor."""
-    processor = AutoProcessor.from_pretrained(pretrained_checkpoint, trust_remote_code=True)
+    processor = AutoProcessor.from_pretrained(
+        pretrained_checkpoint, trust_remote_code=True
+    )
     return processor
 
 
-from vla_arena.models.univla.prismatic.models.policy.transformer_utils import MAPBlock
+from vla_arena.models.univla.prismatic.models.policy.transformer_utils import (
+    MAPBlock,
+)
 
 
 class ActionDecoderHead(torch.nn.Module):
     def __init__(self, window_size=5):
         super().__init__()
-        self.attn_pool = MAPBlock(n_latents=1, vis_dim=4096, embed_dim=512, n_heads=8)
-        self.visual_pool = MAPBlock(n_latents=1, vis_dim=4096, embed_dim=512, n_heads=8)
+        self.attn_pool = MAPBlock(
+            n_latents=1, vis_dim=4096, embed_dim=512, n_heads=8
+        )
+        self.visual_pool = MAPBlock(
+            n_latents=1, vis_dim=4096, embed_dim=512, n_heads=8
+        )
 
-        self.proprio_proj = nn.Sequential(nn.Linear(7, 512), nn.GELU(), nn.Linear(512, 512))
+        self.proprio_proj = nn.Sequential(
+            nn.Linear(7, 512), nn.GELU(), nn.Linear(512, 512)
+        )
 
         self.proj = nn.Sequential(
             nn.Linear(1024, 7 * window_size),
@@ -106,7 +131,13 @@ class ActionDecoderHead(torch.nn.Module):
         visual_embed = self.visual_pool(visual_embed)
         action = self.proj(
             torch.cat(
-                [self.attn_pool(latent_action_tokens, init_embed=visual_embed), proprio], dim=-1
+                [
+                    self.attn_pool(
+                        latent_action_tokens, init_embed=visual_embed
+                    ),
+                    proprio,
+                ],
+                dim=-1,
             )
         )
 
@@ -121,33 +152,50 @@ class ActionDecoder(nn.Module):
         self.temporal_size = window_size
         self.temporal_size = 8
         self.temporal_mask = torch.flip(
-            torch.triu(torch.ones(self.temporal_size, self.temporal_size, dtype=torch.bool)),
+            torch.triu(
+                torch.ones(
+                    self.temporal_size, self.temporal_size, dtype=torch.bool
+                )
+            ),
             dims=[1],
         ).numpy()
 
-        self.action_buffer = np.zeros((self.temporal_mask.shape[0], self.temporal_mask.shape[0], 7))
+        self.action_buffer = np.zeros(
+            (self.temporal_mask.shape[0], self.temporal_mask.shape[0], 7)
+        )
         self.action_buffer_mask = np.zeros(
-            (self.temporal_mask.shape[0], self.temporal_mask.shape[0]), dtype=np.bool_
+            (self.temporal_mask.shape[0], self.temporal_mask.shape[0]),
+            dtype=np.bool_,
         )
 
         # Action chunking with temporal aggregation
         balancing_factor = 0.1
         self.temporal_weights = np.array(
-            [np.exp(-1 * balancing_factor * i) for i in range(self.temporal_size)]
+            [
+                np.exp(-1 * balancing_factor * i)
+                for i in range(self.temporal_size)
+            ]
         )[:, None]
 
     def reset(self):
-        self.action_buffer = np.zeros((self.temporal_mask.shape[0], self.temporal_mask.shape[0], 7))
+        self.action_buffer = np.zeros(
+            (self.temporal_mask.shape[0], self.temporal_mask.shape[0], 7)
+        )
         self.action_buffer_mask = np.zeros(
-            (self.temporal_mask.shape[0], self.temporal_mask.shape[0]), dtype=np.bool_
+            (self.temporal_mask.shape[0], self.temporal_mask.shape[0]),
+            dtype=np.bool_,
         )
 
     def forward(self, latent_actions, visual_embed, proprio=None):
         # Forward action decoder
         # NOTE: We take the last 8 actions in an action chunk for non-blocking controller to tackle possible mismatch led by model latency
         pred_action = self.net(
-            latent_actions.to(torch.float), visual_embed.to(torch.float), proprio
-        ).reshape(-1, self.window_size, 7)[:, self.window_size - self.temporal_size :]
+            latent_actions.to(torch.float),
+            visual_embed.to(torch.float),
+            proprio,
+        ).reshape(-1, self.window_size, 7)[
+            :, self.window_size - self.temporal_size :
+        ]
         pred_action = np.array(pred_action.tolist())
 
         # Shift action buffer
@@ -159,11 +207,15 @@ class ActionDecoder(nn.Module):
 
         # Add to action buffer
         self.action_buffer[0] = pred_action
-        self.action_buffer_mask[0] = np.array([True] * self.temporal_mask.shape[0], dtype=np.bool_)
+        self.action_buffer_mask[0] = np.array(
+            [True] * self.temporal_mask.shape[0], dtype=np.bool_
+        )
 
         # Ensemble temporally to predict action
         action_prediction = np.sum(
-            self.action_buffer[:, 0, :] * self.action_buffer_mask[:, 0:1] * self.temporal_weights,
+            self.action_buffer[:, 0, :]
+            * self.action_buffer_mask[:, 0:1]
+            * self.temporal_weights,
             axis=0,
         ) / np.sum(self.action_buffer_mask[:, 0:1] * self.temporal_weights)
 
@@ -224,7 +276,12 @@ class UniVLAInference:
         self.prev_hist_action = ['']
 
     def step(
-        self, image: np.ndarray, task_description: str | None = None, proprio=None, *args, **kwargs
+        self,
+        image: np.ndarray,
+        task_description: str | None = None,
+        proprio=None,
+        *args,
+        **kwargs,
     ) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray]]:
         """
         Input:
@@ -238,7 +295,12 @@ class UniVLAInference:
             if task_description != self.task_description:
                 self.reset(task_description)
 
-        image = (image.squeeze().permute(1, 2, 0) * 255).cpu().numpy().astype(np.uint8)
+        image = (
+            (image.squeeze().permute(1, 2, 0) * 255)
+            .cpu()
+            .numpy()
+            .astype(np.uint8)
+        )
 
         image: Image.Image = Image.fromarray(image)
 
@@ -248,15 +310,25 @@ class UniVLAInference:
             prompt = f'In: What action should the robot take to {task_description.lower()}?\nOut:'
 
         # predict action (7-dof; un-normalize for bridgev2)
-        inputs = self.processor(prompt, image).to('cuda:0', dtype=torch.bfloat16)
-        latent_action, visual_embed, generated_ids = self.vla.predict_latent_action(
-            **inputs, unnorm_key=self.unnorm_key, do_sample=True, temperature=0.75, top_p=0.9
+        inputs = self.processor(prompt, image).to(
+            'cuda:0', dtype=torch.bfloat16
+        )
+        latent_action, visual_embed, generated_ids = (
+            self.vla.predict_latent_action(
+                **inputs,
+                unnorm_key=self.unnorm_key,
+                do_sample=True,
+                temperature=0.75,
+                top_p=0.9,
+            )
         )
 
         latent_action_detokenize = [f'<ACT_{i}>' for i in range(32)]
         hist_action = ''
         for latent_action_ids in generated_ids[0]:
-            hist_action += latent_action_detokenize[latent_action_ids.item() - 32001]
+            hist_action += latent_action_detokenize[
+                latent_action_ids.item() - 32001
+            ]
         self.prev_hist_action.append(hist_action)
         action = self.action_decoder(latent_action, visual_embed, proprio)
 

@@ -25,9 +25,16 @@ from pathlib import Path
 import torch
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim import AdamW
-from transformers.optimization import get_constant_schedule, get_cosine_schedule_with_warmup
+from transformers.optimization import (
+    get_constant_schedule,
+    get_cosine_schedule_with_warmup,
+)
+
 from vla_arena.models.openvla.prismatic.overwatch import initialize_overwatch
-from vla_arena.models.openvla.prismatic.training.strategies.base_strategy import TrainingStrategy
+from vla_arena.models.openvla.prismatic.training.strategies.base_strategy import (
+    TrainingStrategy,
+)
+
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)
@@ -44,12 +51,18 @@ class DDPStrategy(TrainingStrategy):
         only_trainable: bool = True,
     ) -> None:
         """Save a checkpoint to the `run_dir` only containing the state_dicts for trainable parameters by default."""
-        assert isinstance(self.vlm, DDP), 'save_checkpoint assumes VLM is already wrapped in DDP!'
+        assert isinstance(
+            self.vlm, DDP
+        ), 'save_checkpoint assumes VLM is already wrapped in DDP!'
 
         # Splinter State Dictionary by Top-Level Submodules (or subset, if `only_trainable`)
         model_state_dicts = {
             mkey: getattr(self.vlm.module, mkey).state_dict()
-            for mkey in (self.trainable_module_keys if only_trainable else self.all_module_keys)
+            for mkey in (
+                self.trainable_module_keys
+                if only_trainable
+                else self.all_module_keys
+            )
         }
         optimizer_state_dict = self.optimizer.state_dict()
 
@@ -57,7 +70,8 @@ class DDPStrategy(TrainingStrategy):
         checkpoint_dir = run_dir / 'checkpoints'
         if train_loss is None:
             checkpoint_path = (
-                checkpoint_dir / f'step-{global_step:06d}-epoch-{epoch:02d}-loss=inf.pt'
+                checkpoint_dir
+                / f'step-{global_step:06d}-epoch-{epoch:02d}-loss=inf.pt'
             )
         else:
             checkpoint_path = (
@@ -66,7 +80,10 @@ class DDPStrategy(TrainingStrategy):
             )
 
         # Save Checkpoint & Copy Latest to `latest-checkpoint.pt`
-        torch.save({'model': model_state_dicts, 'optimizer': optimizer_state_dict}, checkpoint_path)
+        torch.save(
+            {'model': model_state_dicts, 'optimizer': optimizer_state_dict},
+            checkpoint_path,
+        )
         shutil.copy(checkpoint_path, checkpoint_dir / 'latest-checkpoint.pt')
 
     def run_setup(self, run_dir: Path, n_train_examples: int) -> None:
@@ -82,7 +99,9 @@ class DDPStrategy(TrainingStrategy):
             #
             # Additional Reference (to better understand gradient checkpointing in PyTorch writ large)
             #   => github.com/prigoyal/pytorch_memonger/blob/master/tutorial/Checkpointing_for_PyTorch_models.ipynb
-            overwatch.info('Enabling Gradient Checkpointing on LLM Backbone', ctx_level=1)
+            overwatch.info(
+                'Enabling Gradient Checkpointing on LLM Backbone', ctx_level=1
+            )
             self.vlm.llm_backbone.gradient_checkpointing_enable()
 
         # Move to Device =>> Note parameters are in full precision (*mixed precision* will only autocast as appropriate)
@@ -96,14 +115,22 @@ class DDPStrategy(TrainingStrategy):
         #   => Note: By default, wrapping naively with DDP(self.vlm) will initialize a *separate* buffer on GPU that
         #            is the same size/dtype as the model parameters; this will *double* GPU memory!
         # - stackoverflow.com/questions/68949954/model-takes-twice-the-memory-footprint-with-distributed-data-parallel
-        overwatch.info('Wrapping VLM with Distributed Data Parallel', ctx_level=1)
-        self.vlm = DDP(self.vlm, device_ids=[self.device_id], gradient_as_bucket_view=True)
+        overwatch.info(
+            'Wrapping VLM with Distributed Data Parallel', ctx_level=1
+        )
+        self.vlm = DDP(
+            self.vlm, device_ids=[self.device_id], gradient_as_bucket_view=True
+        )
 
         # Create Optimizer and LR Scheduler =>> note that most of the LR Schedulers we use require `max_steps/epochs`
         #   => Optimizer should only operate on parameters that are *unfrozen* / trainable!
-        trainable_params = [param for param in self.vlm.parameters() if param.requires_grad]
+        trainable_params = [
+            param for param in self.vlm.parameters() if param.requires_grad
+        ]
         if self.max_steps is None:
-            num_training_steps = (n_train_examples * self.epochs) // self.global_batch_size
+            num_training_steps = (
+                n_train_examples * self.epochs
+            ) // self.global_batch_size
         else:
             num_training_steps = self.max_steps
 
@@ -115,7 +142,9 @@ class DDPStrategy(TrainingStrategy):
                 self.weight_decay == 0
             ), 'DDP training does not currently support `weight_decay` > 0!'
             self.optimizer = AdamW(
-                trainable_params, lr=self.learning_rate, weight_decay=self.weight_decay
+                trainable_params,
+                lr=self.learning_rate,
+                weight_decay=self.weight_decay,
             )
             self.lr_scheduler = get_cosine_schedule_with_warmup(
                 self.optimizer, num_warmup_steps, num_training_steps
@@ -130,7 +159,9 @@ class DDPStrategy(TrainingStrategy):
                 self.weight_decay == 0
             ), 'DDP training does not currently support `weight_decay` > 0!'
             self.optimizer = AdamW(
-                trainable_params, lr=self.learning_rate, weight_decay=self.weight_decay
+                trainable_params,
+                lr=self.learning_rate,
+                weight_decay=self.weight_decay,
             )
             self.lr_scheduler = get_constant_schedule(self.optimizer)
 
@@ -157,4 +188,6 @@ class DDPStrategy(TrainingStrategy):
         )
 
     def clip_grad_norm(self) -> None:
-        torch.nn.utils.clip_grad_norm_(self.vlm.parameters(), max_norm=self.max_grad_norm)
+        torch.nn.utils.clip_grad_norm_(
+            self.vlm.parameters(), max_norm=self.max_grad_norm
+        )

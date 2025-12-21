@@ -39,7 +39,9 @@ from tests.fixtures.constants import DUMMY_REPO_ID
 from tests.utils import require_package
 
 
-def _find_and_replace(text: str, finds_and_replaces: list[tuple[str, str]]) -> str:
+def _find_and_replace(
+    text: str, finds_and_replaces: list[tuple[str, str]]
+) -> str:
     for f, r in finds_and_replaces:
         assert f in text
         text = text.replace(f, r)
@@ -72,7 +74,9 @@ def test_example_1(tmp_path, lerobot_dataset_factory):
         ],
     )
     exec(file_contents, {})
-    assert Path('outputs/examples/1_load_lerobot_dataset/episode_0.mp4').exists()
+    assert Path(
+        'outputs/examples/1_load_lerobot_dataset/episode_0.mp4'
+    ).exists()
 
 
 @pytest.mark.skip('TODO Fix and remove subprocess / excec calls')
@@ -102,7 +106,9 @@ def test_examples_basic2_basic3_advanced1():
     exec(file_contents, {})
 
     for file_name in ['model.safetensors', 'config.json']:
-        assert Path(f'outputs/train/example_pusht_diffusion/{file_name}').exists()
+        assert Path(
+            f'outputs/train/example_pusht_diffusion/{file_name}'
+        ).exists()
 
     ### Test example 2
     file_contents = _read_file('examples/2_evaluate_pretrained_policy.py')
@@ -129,7 +135,9 @@ def test_examples_basic2_basic3_advanced1():
     assert Path('outputs/eval/example_pusht_diffusion/rollout.mp4').exists()
 
     ## Test example 4
-    file_contents = _read_file('examples/advanced/2_calculate_validation_loss.py')
+    file_contents = _read_file(
+        'examples/advanced/2_calculate_validation_loss.py'
+    )
 
     # Run on a single example from the last episode, use CPU, and use the local model.
     file_contents = _find_and_replace(
@@ -143,8 +151,14 @@ def test_examples_basic2_basic3_advanced1():
                 '# pretrained_policy_path = Path("outputs/train/example_pusht_diffusion")',
                 'pretrained_policy_path = Path("outputs/train/example_pusht_diffusion")',
             ),
-            ('train_episodes = episodes[:num_train_episodes]', 'train_episodes = [0]'),
-            ('val_episodes = episodes[num_train_episodes:]', 'val_episodes = [1]'),
+            (
+                'train_episodes = episodes[:num_train_episodes]',
+                'train_episodes = [0]',
+            ),
+            (
+                'val_episodes = episodes[num_train_episodes:]',
+                'val_episodes = [1]',
+            ),
             ('num_workers=4', 'num_workers=0'),
             ('device = torch.device("cuda")', 'device = torch.device("cpu")'),
             ('batch_size=64', 'batch_size=1'),

@@ -31,7 +31,6 @@ import logging
 from pprint import pformat
 
 import torch
-
 from lerobot.configs.policies import PreTrainedConfig
 from lerobot.configs.train import TrainPipelineConfig
 from lerobot.datasets.lerobot_dataset import (
@@ -40,6 +39,7 @@ from lerobot.datasets.lerobot_dataset import (
     MultiLeRobotDataset,
 )
 from lerobot.datasets.transforms import ImageTransforms
+
 
 IMAGENET_STATS = {
     'mean': [[[0.485]], [[0.456]], [[0.406]]],  # (c,1,1)
@@ -68,11 +68,20 @@ def resolve_delta_timestamps(
     delta_timestamps = {}
     for key in ds_meta.features:
         if key == 'next.reward' and cfg.reward_delta_indices is not None:
-            delta_timestamps[key] = [i / ds_meta.fps for i in cfg.reward_delta_indices]
+            delta_timestamps[key] = [
+                i / ds_meta.fps for i in cfg.reward_delta_indices
+            ]
         if key == 'action' and cfg.action_delta_indices is not None:
-            delta_timestamps[key] = [i / ds_meta.fps for i in cfg.action_delta_indices]
-        if key.startswith('observation.') and cfg.observation_delta_indices is not None:
-            delta_timestamps[key] = [i / ds_meta.fps for i in cfg.observation_delta_indices]
+            delta_timestamps[key] = [
+                i / ds_meta.fps for i in cfg.action_delta_indices
+            ]
+        if (
+            key.startswith('observation.')
+            and cfg.observation_delta_indices is not None
+        ):
+            delta_timestamps[key] = [
+                i / ds_meta.fps for i in cfg.observation_delta_indices
+            ]
 
     if len(delta_timestamps) == 0:
         delta_timestamps = None
@@ -80,7 +89,9 @@ def resolve_delta_timestamps(
     return delta_timestamps
 
 
-def make_dataset(cfg: TrainPipelineConfig) -> LeRobotDataset | MultiLeRobotDataset:
+def make_dataset(
+    cfg: TrainPipelineConfig,
+) -> LeRobotDataset | MultiLeRobotDataset:
     """Handles the logic of setting up delta timestamps and image transforms before creating a dataset.
 
     Args:
@@ -100,7 +111,9 @@ def make_dataset(cfg: TrainPipelineConfig) -> LeRobotDataset | MultiLeRobotDatas
 
     if isinstance(cfg.dataset.repo_id, str):
         ds_meta = LeRobotDatasetMetadata(
-            cfg.dataset.repo_id, root=cfg.dataset.root, revision=cfg.dataset.revision
+            cfg.dataset.repo_id,
+            root=cfg.dataset.root,
+            revision=cfg.dataset.revision,
         )
         delta_timestamps = resolve_delta_timestamps(cfg.policy, ds_meta)
         dataset = LeRobotDataset(
@@ -113,7 +126,9 @@ def make_dataset(cfg: TrainPipelineConfig) -> LeRobotDataset | MultiLeRobotDatas
             video_backend=cfg.dataset.video_backend,
         )
     else:
-        raise NotImplementedError("The MultiLeRobotDataset isn't supported for now.")
+        raise NotImplementedError(
+            "The MultiLeRobotDataset isn't supported for now."
+        )
         dataset = MultiLeRobotDataset(
             cfg.dataset.repo_id,
             # TODO(aliberts): add proper support for multi dataset
@@ -129,6 +144,8 @@ def make_dataset(cfg: TrainPipelineConfig) -> LeRobotDataset | MultiLeRobotDatas
     if cfg.dataset.use_imagenet_stats:
         for key in dataset.meta.camera_keys:
             for stats_type, stats in IMAGENET_STATS.items():
-                dataset.meta.stats[key][stats_type] = torch.tensor(stats, dtype=torch.float32)
+                dataset.meta.stats[key][stats_type] = torch.tensor(
+                    stats, dtype=torch.float32
+                )
 
     return dataset

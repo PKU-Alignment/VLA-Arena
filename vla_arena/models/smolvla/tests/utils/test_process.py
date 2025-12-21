@@ -35,7 +35,6 @@ import threading
 from unittest.mock import patch
 
 import pytest
-
 from lerobot.utils.process import ProcessSignalHandler
 
 
@@ -45,7 +44,12 @@ def reset_globals_and_handlers():
     # Store original signal handlers
     original_handlers = {
         sig: signal.getsignal(sig)
-        for sig in [signal.SIGINT, signal.SIGTERM, signal.SIGHUP, signal.SIGQUIT]
+        for sig in [
+            signal.SIGINT,
+            signal.SIGTERM,
+            signal.SIGHUP,
+            signal.SIGQUIT,
+        ]
         if hasattr(signal, sig.name)
     }
 
@@ -60,7 +64,9 @@ def test_setup_process_handlers_event_with_threads():
     """Test that setup_process_handlers returns the correct event type."""
     handler = ProcessSignalHandler(use_threads=True)
     shutdown_event = handler.shutdown_event
-    assert isinstance(shutdown_event, threading.Event), 'Should be a threading.Event'
+    assert isinstance(
+        shutdown_event, threading.Event
+    ), 'Should be a threading.Event'
     assert not shutdown_event.is_set(), 'Event should initially be unset'
 
 
@@ -83,7 +89,9 @@ def test_setup_process_handlers_event_with_processes():
         # SIGHUP and SIGQUIT are not reliably available on all platforms (e.g. Windows)
         pytest.param(
             signal.SIGHUP,
-            marks=pytest.mark.skipif(not hasattr(signal, 'SIGHUP'), reason='SIGHUP not available'),
+            marks=pytest.mark.skipif(
+                not hasattr(signal, 'SIGHUP'), reason='SIGHUP not available'
+            ),
         ),
         pytest.param(
             signal.SIGQUIT,
@@ -105,7 +113,9 @@ def test_signal_handler_sets_event(use_threads, sig):
     # In some environments, the signal might take a moment to be handled.
     shutdown_event.wait(timeout=1.0)
 
-    assert shutdown_event.is_set(), f'Event should be set after receiving signal {sig}'
+    assert (
+        shutdown_event.is_set()
+    ), f'Event should be set after receiving signal {sig}'
 
     # Ensure the internal counter was incremented
     assert handler.counter == 1

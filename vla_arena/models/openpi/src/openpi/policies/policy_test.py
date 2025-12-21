@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from openpi_client import action_chunk_broker
 import pytest
-
 from openpi.policies import aloha_policy
 from openpi.policies import policy_config as _policy_config
 from openpi.training import config as _config
+from openpi_client import action_chunk_broker
 
 
 @pytest.mark.manual

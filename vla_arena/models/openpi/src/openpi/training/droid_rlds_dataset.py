@@ -19,15 +19,13 @@ Thus, we provide a data loader example here that uses the RLDS data format.
 The data loader also applies a few DROID-specific data filters / transformations.
 """
 
-from enum import Enum
-from enum import auto
 import json
 import logging
+from enum import Enum, auto
 from pathlib import Path
 
-import tqdm
-
 import openpi.shared.download as download
+import tqdm
 
 
 class DroidActionSpace(Enum):
@@ -64,13 +62,17 @@ class DroidRldsDataset:
 
         builder = tfds.builder("droid", data_dir=data_dir, version="1.0.1")
         dataset = dl.DLataset.from_rlds(
-            builder, split="train", shuffle=shuffle, num_parallel_reads=num_parallel_reads
+            builder,
+            split="train",
+            shuffle=shuffle,
+            num_parallel_reads=num_parallel_reads,
         )
 
         # Filter out any unsuccessful trajectories -- we use the file name to check this
         dataset = dataset.filter(
             lambda traj: tf.strings.regex_full_match(
-                traj["traj_metadata"]["episode_metadata"]["file_path"][0], ".*success.*"
+                traj["traj_metadata"]["episode_metadata"]["file_path"][0],
+                ".*success.*",
             )
         )
 
@@ -89,7 +91,9 @@ class DroidRldsDataset:
             with Path(cached_filter_dict_path).open("r") as f:
                 filter_dict = json.load(f)
 
-            logging.info(f"Using filter dictionary with {len(filter_dict)} episodes")
+            logging.info(
+                f"Using filter dictionary with {len(filter_dict)} episodes"
+            )
 
             keys_tensor = []
             values_tensor = []
@@ -103,12 +107,16 @@ class DroidRldsDataset:
                         keys_tensor.append(frame_key)
                         values_tensor.append(True)
             self.filter_table = tf.lookup.StaticHashTable(
-                tf.lookup.KeyValueTensorInitializer(keys_tensor, values_tensor), default_value=False
+                tf.lookup.KeyValueTensorInitializer(
+                    keys_tensor, values_tensor
+                ),
+                default_value=False,
             )
             logging.info("Filter hash table initialized")
         else:
             self.filter_table = tf.lookup.StaticHashTable(
-                tf.lookup.KeyValueTensorInitializer([""], [True]), default_value=True
+                tf.lookup.KeyValueTensorInitializer([""], [True]),
+                default_value=True,
             )
 
         def restructure(traj):
@@ -150,7 +158,9 @@ class DroidRldsDataset:
             # and each step's time step index. This will index into the filter hash table, and if it returns true,
             # then the frame passes the filter.
             step_id = (
-                traj["traj_metadata"]["episode_metadata"]["recording_folderpath"]
+                traj["traj_metadata"]["episode_metadata"][
+                    "recording_folderpath"
+                ]
                 + "--"
                 + traj["traj_metadata"]["episode_metadata"]["file_path"]
                 + "--"
@@ -164,7 +174,9 @@ class DroidRldsDataset:
                     "image": exterior_img,
                     "wrist_image": wrist_img,
                     "joint_position": traj["observation"]["joint_position"],
-                    "gripper_position": traj["observation"]["gripper_position"],
+                    "gripper_position": traj["observation"][
+                        "gripper_position"
+                    ],
                 },
                 "prompt": instruction,
                 "step_id": step_id,
@@ -188,7 +200,9 @@ class DroidRldsDataset:
 
             # Cap to length of the sequence --> final chunks will repeat the last action
             # This makes sense, since we are using absolute joint + gripper position actions
-            action_chunk_indices = tf.minimum(action_chunk_indices, traj_len - 1)
+            action_chunk_indices = tf.minimum(
+                action_chunk_indices, traj_len - 1
+            )
 
             # Gather the actions for each chunk
             traj["actions"] = tf.gather(traj["actions"], action_chunk_indices)
@@ -215,10 +229,14 @@ class DroidRldsDataset:
         # Decode images: RLDS saves encoded images, only decode now for efficiency
         def decode_images(traj):
             traj["observation"]["image"] = tf.io.decode_image(
-                traj["observation"]["image"], expand_animations=False, dtype=tf.uint8
+                traj["observation"]["image"],
+                expand_animations=False,
+                dtype=tf.uint8,
             )
             traj["observation"]["wrist_image"] = tf.io.decode_image(
-                traj["observation"]["wrist_image"], expand_animations=False, dtype=tf.uint8
+                traj["observation"]["wrist_image"],
+                expand_animations=False,
+                dtype=tf.uint8,
             )
             return traj
 

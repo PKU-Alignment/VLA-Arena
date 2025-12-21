@@ -12,7 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .models import available_model_names, available_models, get_model_description, load
+from .models import (
+    available_model_names,
+    available_models,
+    get_model_description,
+    load,
+)
+
 
 __version__ = '0.0.1'
 __project__ = 'OmniEmbodiment'

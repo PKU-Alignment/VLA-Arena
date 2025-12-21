@@ -18,6 +18,7 @@ import logging
 import jax
 import numpy as np
 
+
 BATCH_AXIS = "batch"
 FSDP_AXIS = "fsdp"
 # In FSDP, we shard the data across both the batch and FSDP axes.
@@ -56,7 +57,9 @@ def activation_sharding_constraint(pytree):
         return pytree
     return jax.lax.with_sharding_constraint(
         pytree,
-        jax.sharding.NamedSharding(_MeshState.active_mesh, jax.sharding.PartitionSpec(DATA_AXIS)),
+        jax.sharding.NamedSharding(
+            _MeshState.active_mesh, jax.sharding.PartitionSpec(DATA_AXIS)
+        ),
     )
 
 
@@ -85,15 +88,25 @@ def fsdp_sharding(
     def _shard_arr(kp, array: jax.ShapeDtypeStruct):
         # if fsdp is not actually going to be used, replicate everything to avoid extraneous logging
         if mesh.shape[FSDP_AXIS] == 1:
-            return jax.sharding.NamedSharding(mesh, jax.sharding.PartitionSpec())
+            return jax.sharding.NamedSharding(
+                mesh, jax.sharding.PartitionSpec()
+            )
         # replicate scalar and vector arrays
         if not hasattr(array, "shape"):
-            return jax.sharding.NamedSharding(mesh, jax.sharding.PartitionSpec())
+            return jax.sharding.NamedSharding(
+                mesh, jax.sharding.PartitionSpec()
+            )
         if len(array.shape) < 2:
-            return jax.sharding.NamedSharding(mesh, jax.sharding.PartitionSpec())
+            return jax.sharding.NamedSharding(
+                mesh, jax.sharding.PartitionSpec()
+            )
         # replicate small arrays
-        if (arr_size := np.prod(array.shape) * np.dtype(array.dtype).itemsize) < min_size_bytes:
-            return jax.sharding.NamedSharding(mesh, jax.sharding.PartitionSpec())
+        if (
+            arr_size := np.prod(array.shape) * np.dtype(array.dtype).itemsize
+        ) < min_size_bytes:
+            return jax.sharding.NamedSharding(
+                mesh, jax.sharding.PartitionSpec()
+            )
 
         # shard matrices and larger tensors along the largest axis that is divisible by the fsdp dimension
         axes = np.argsort(array.shape)[::-1]
@@ -105,7 +118,9 @@ def fsdp_sharding(
                         f"Sharding {jax.tree_util.keystr(kp)} of shape {array.shape} ({arr_size / 2**20:.2f} MiB) along axis {i}"
                     )
                 spec[i] = FSDP_AXIS
-                return jax.sharding.NamedSharding(mesh, jax.sharding.PartitionSpec(*spec))
+                return jax.sharding.NamedSharding(
+                    mesh, jax.sharding.PartitionSpec(*spec)
+                )
 
         # replicate if no valid sharding was found
         if log:

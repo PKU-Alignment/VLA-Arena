@@ -537,9 +537,15 @@ class ModelRegistry(Enum):
     EXP_SIGLIP_384PX_RESIZE_NAIVE = Exp_7B_SigLIP_ViT_SO_p14_384px_Resize_Naive
 
     EXP_DINOCLIP_336PX_LETTERBOX = Exp_7B_DINOCLIP_ViT_L_p14_336px_Letterbox
-    EXP_DINOCLIP_336PX_RESIZE_NAIVE = Exp_7B_DINOCLIP_ViT_L_p14_336px_Resize_Naive
-    EXP_DINOSIGLIP_384PX_LETTERBOX = Exp_7B_DINOSigLIP_ViT_L_p14_384px_Letterbox
-    EXP_DINOSIGLIP_384PX_RESIZE_NAIVE = Exp_7B_DINOSigLIP_ViT_L_p14_384px_Resize_Naive
+    EXP_DINOCLIP_336PX_RESIZE_NAIVE = (
+        Exp_7B_DINOCLIP_ViT_L_p14_336px_Resize_Naive
+    )
+    EXP_DINOSIGLIP_384PX_LETTERBOX = (
+        Exp_7B_DINOSigLIP_ViT_L_p14_384px_Letterbox
+    )
+    EXP_DINOSIGLIP_384PX_RESIZE_NAIVE = (
+        Exp_7B_DINOSigLIP_ViT_L_p14_384px_Resize_Naive
+    )
 
     # === Section 4.3 :: Language Models ===
     EXP_LLAMA2_7B = Exp_7B_Llama2
@@ -583,7 +589,9 @@ class ModelRegistry(Enum):
     PRISM_DINOSIGLIP_13B = Prism_13B_DINOSigLIP
 
     # === Inference Optimized :: 224px Prisms ===
-    OPT_DINOSIGLIP_224PX_RESIZE_NAIVE = Opt_7B_DINOSigLIP_ViT_SO_p14_224px_Resize_Naive
+    OPT_DINOSIGLIP_224PX_RESIZE_NAIVE = (
+        Opt_7B_DINOSigLIP_ViT_SO_p14_224px_Resize_Naive
+    )
     PRISM_DINOSIGLIP_224PX_CONTROLLED_7B = Prism_7B_DINOSigLIP_224px_Controlled
     PRISM_DINOSIGLIP_224PX_7B = Prism_7B_DINOSigLIP_224px
 

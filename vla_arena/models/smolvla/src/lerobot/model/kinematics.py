@@ -61,10 +61,16 @@ class RobotKinematics:
         self.target_frame_name = target_frame_name
 
         # Set joint names
-        self.joint_names = list(self.robot.joint_names()) if joint_names is None else joint_names
+        self.joint_names = (
+            list(self.robot.joint_names())
+            if joint_names is None
+            else joint_names
+        )
 
         # Initialize frame task for IK
-        self.tip_frame = self.solver.add_frame_task(self.target_frame_name, np.eye(4))
+        self.tip_frame = self.solver.add_frame_task(
+            self.target_frame_name, np.eye(4)
+        )
 
     def forward_kinematics(self, joint_pos_deg):
         """
@@ -91,7 +97,11 @@ class RobotKinematics:
         return self.robot.get_T_world_frame(self.target_frame_name)
 
     def inverse_kinematics(
-        self, current_joint_pos, desired_ee_pose, position_weight=1.0, orientation_weight=0.01
+        self,
+        current_joint_pos,
+        desired_ee_pose,
+        position_weight=1.0,
+        orientation_weight=0.01,
     ):
         """
         Compute inverse kinematics using placo solver.
@@ -107,7 +117,9 @@ class RobotKinematics:
         """
 
         # Convert current joint positions to radians for initial guess
-        current_joint_rad = np.deg2rad(current_joint_pos[: len(self.joint_names)])
+        current_joint_rad = np.deg2rad(
+            current_joint_pos[: len(self.joint_names)]
+        )
 
         # Set current joint positions as initial guess
         for i, joint_name in enumerate(self.joint_names):
@@ -138,7 +150,9 @@ class RobotKinematics:
         if len(current_joint_pos) > len(self.joint_names):
             result = np.zeros_like(current_joint_pos)
             result[: len(self.joint_names)] = joint_pos_deg
-            result[len(self.joint_names) :] = current_joint_pos[len(self.joint_names) :]
+            result[len(self.joint_names) :] = current_joint_pos[
+                len(self.joint_names) :
+            ]
             return result
         else:
             return joint_pos_deg

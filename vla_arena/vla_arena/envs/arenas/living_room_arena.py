@@ -38,21 +38,27 @@ class LivingRoomTableArena(Arena):
         self.table_friction = table_friction
         self.table_offset = table_offset
         self.center_pos = (
-            self.bottom_pos + np.array([0, 0, -self.table_half_size[2]]) + self.table_offset
+            self.bottom_pos
+            + np.array([0, 0, -self.table_half_size[2]])
+            + self.table_offset
         )
 
-        self.living_room_table_body = self.worldbody.find("./body[@name='living_room_table']")
+        self.living_room_table_body = self.worldbody.find(
+            "./body[@name='living_room_table']"
+        )
 
         texplane = self.asset.find("./texture[@name='texplane']")
         plane_file = texplane.get('file')
         plane_file = '/'.join(
-            plane_file.split('/')[:-1] + [get_texture_filename(type='floor', style=floor_style)],
+            plane_file.split('/')[:-1]
+            + [get_texture_filename(type='floor', style=floor_style)],
         )
         texplane.set('file', plane_file)
 
         texwall = self.asset.find("./texture[@name='tex-wall']")
         wall_file = texwall.get('file')
         wall_file = '/'.join(
-            wall_file.split('/')[:-1] + [get_texture_filename(type='wall', style=wall_style)],
+            wall_file.split('/')[:-1]
+            + [get_texture_filename(type='wall', style=wall_style)],
         )
         texwall.set('file', wall_file)

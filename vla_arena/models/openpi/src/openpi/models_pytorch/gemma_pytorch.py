@@ -17,8 +17,7 @@ from typing import Literal
 import pytest
 import torch
 from torch import nn
-from transformers import GemmaForCausalLM
-from transformers import PaliGemmaForConditionalGeneration
+from transformers import GemmaForCausalLM, PaliGemmaForConditionalGeneration
 from transformers.models.auto import CONFIG_MAPPING
 from transformers.models.gemma import modeling_gemma
 
@@ -48,7 +47,9 @@ class PaliGemmaWithExpertModel(nn.Module):
         vlm_config_hf.text_config.torch_dtype = "float32"
         vlm_config_hf.text_config.vocab_size = 257152
         vlm_config_hf.text_config.use_adarms = use_adarms[0]
-        vlm_config_hf.text_config.adarms_cond_dim = vlm_config.width if use_adarms[0] else None
+        vlm_config_hf.text_config.adarms_cond_dim = (
+            vlm_config.width if use_adarms[0] else None
+        )
         vlm_config_hf.vision_config.intermediate_size = 4304
         vlm_config_hf.vision_config.projection_dim = 2048
         vlm_config_hf.vision_config.projector_hidden_act = "gelu_fast"
@@ -65,10 +66,14 @@ class PaliGemmaWithExpertModel(nn.Module):
             hidden_activation="gelu_pytorch_tanh",
             torch_dtype="float32",
             use_adarms=use_adarms[1],
-            adarms_cond_dim=action_expert_config.width if use_adarms[1] else None,
+            adarms_cond_dim=(
+                action_expert_config.width if use_adarms[1] else None
+            ),
         )
 
-        self.paligemma = PaliGemmaForConditionalGeneration(config=vlm_config_hf)
+        self.paligemma = PaliGemmaForConditionalGeneration(
+            config=vlm_config_hf
+        )
         self.gemma_expert = GemmaForCausalLM(config=action_expert_config_hf)
         self.gemma_expert.model.embed_tokens = None
 
@@ -122,7 +127,9 @@ class PaliGemmaWithExpertModel(nn.Module):
                 position_ids=position_ids,
                 past_key_values=past_key_values,
                 use_cache=use_cache,
-                adarms_cond=adarms_cond[0] if adarms_cond is not None else None,
+                adarms_cond=(
+                    adarms_cond[0] if adarms_cond is not None else None
+                ),
             )
             prefix_past_key_values = prefix_output.past_key_values
             prefix_output = prefix_output.last_hidden_state
@@ -134,7 +141,9 @@ class PaliGemmaWithExpertModel(nn.Module):
                 position_ids=position_ids,
                 past_key_values=past_key_values,
                 use_cache=use_cache,
-                adarms_cond=adarms_cond[1] if adarms_cond is not None else None,
+                adarms_cond=(
+                    adarms_cond[1] if adarms_cond is not None else None
+                ),
             )
             suffix_output = suffix_output.last_hidden_state
             prefix_output = None
@@ -155,15 +164,24 @@ class PaliGemmaWithExpertModel(nn.Module):
             )
 
             # Force enable gradient checkpointing if we're in training mode and the model supports it
-            if self.training and hasattr(self.gemma_expert.model, "gradient_checkpointing"):
+            if self.training and hasattr(
+                self.gemma_expert.model, "gradient_checkpointing"
+            ):
                 if not self.gemma_expert.model.gradient_checkpointing:
-                    print("Forcing gradient checkpointing to be enabled for Gemma expert model")
+                    print(
+                        "Forcing gradient checkpointing to be enabled for Gemma expert model"
+                    )
                     self.gemma_expert.model.gradient_checkpointing = True
                 use_gradient_checkpointing = True
 
             # Debug gradient checkpointing status
-            if hasattr(self, "_debug_gc_printed") and not self._debug_gc_printed:
-                print(f"Gemma expert model gradient checkpointing: {use_gradient_checkpointing}")
+            if (
+                hasattr(self, "_debug_gc_printed")
+                and not self._debug_gc_printed
+            ):
+                print(
+                    f"Gemma expert model gradient checkpointing: {use_gradient_checkpointing}"
+                )
                 print(f"Model training mode: {self.training}")
                 print(
                     f"Gemma expert model has gradient_checkpointing attr: {hasattr(self.gemma_expert.model, 'gradient_checkpointing')}"
@@ -176,9 +194,16 @@ class PaliGemmaWithExpertModel(nn.Module):
 
             # Define the complete layer computation function for gradient checkpointing
             def compute_layer_complete(
-                layer_idx, inputs_embeds, attention_mask, position_ids, adarms_cond
+                layer_idx,
+                inputs_embeds,
+                attention_mask,
+                position_ids,
+                adarms_cond,
             ):
-                models = [self.paligemma.language_model, self.gemma_expert.model]
+                models = [
+                    self.paligemma.language_model,
+                    self.gemma_expert.model,
+                ]
 
                 query_states = []
                 key_states = []
@@ -194,13 +219,19 @@ class PaliGemmaWithExpertModel(nn.Module):
                     input_shape = hidden_states.shape[:-1]
                     hidden_shape = (*input_shape, -1, layer.self_attn.head_dim)
                     query_state = (
-                        layer.self_attn.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)
+                        layer.self_attn.q_proj(hidden_states)
+                        .view(hidden_shape)
+                        .transpose(1, 2)
                     )
                     key_state = (
-                        layer.self_attn.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)
+                        layer.self_attn.k_proj(hidden_states)
+                        .view(hidden_shape)
+                        .transpose(1, 2)
                     )
                     value_state = (
-                        layer.self_attn.v_proj(hidden_states).view(hidden_shape).transpose(1, 2)
+                        layer.self_attn.v_proj(hidden_states)
+                        .view(hidden_shape)
+                        .transpose(1, 2)
                     )
 
                     query_states.append(query_state)
@@ -227,7 +258,9 @@ class PaliGemmaWithExpertModel(nn.Module):
                 )
 
                 batch_size = query_states.shape[0]
-                scaling = self.paligemma.language_model.layers[layer_idx].self_attn.scaling
+                scaling = self.paligemma.language_model.layers[
+                    layer_idx
+                ].self_attn.scaling
 
                 # Attention computation
                 att_output, _ = modeling_gemma.eager_attention_forward(
@@ -239,8 +272,12 @@ class PaliGemmaWithExpertModel(nn.Module):
                     scaling,
                 )
                 # Get head_dim from the current layer, not from the model
-                head_dim = self.paligemma.language_model.layers[layer_idx].self_attn.head_dim
-                att_output = att_output.reshape(batch_size, -1, 1 * 8 * head_dim)
+                head_dim = self.paligemma.language_model.layers[
+                    layer_idx
+                ].self_attn.head_dim
+                att_output = att_output.reshape(
+                    batch_size, -1, 1 * 8 * head_dim
+                )
 
                 # Process layer outputs
                 outputs_embeds = []
@@ -250,15 +287,21 @@ class PaliGemmaWithExpertModel(nn.Module):
                     end_pos = start_pos + hidden_states.shape[1]
 
                     if att_output.dtype != layer.self_attn.o_proj.weight.dtype:
-                        att_output = att_output.to(layer.self_attn.o_proj.weight.dtype)
-                    out_emb = layer.self_attn.o_proj(att_output[:, start_pos:end_pos])
+                        att_output = att_output.to(
+                            layer.self_attn.o_proj.weight.dtype
+                        )
+                    out_emb = layer.self_attn.o_proj(
+                        att_output[:, start_pos:end_pos]
+                    )
 
                     # first residual
                     out_emb = modeling_gemma._gated_residual(
                         hidden_states, out_emb, gates[i]
                     )
                     after_first_residual = out_emb.clone()
-                    out_emb, gate = layer.post_attention_layernorm(out_emb, cond=adarms_cond[i])
+                    out_emb, gate = layer.post_attention_layernorm(
+                        out_emb, cond=adarms_cond[i]
+                    )
                     # Convert to bfloat16 if the next layer (mlp) uses bfloat16
                     if layer.mlp.up_proj.weight.dtype == torch.bfloat16:
                         out_emb = out_emb.to(dtype=torch.bfloat16)
@@ -288,7 +331,11 @@ class PaliGemmaWithExpertModel(nn.Module):
                     )
                 else:
                     inputs_embeds = compute_layer_complete(
-                        layer_idx, inputs_embeds, attention_mask, position_ids, adarms_cond
+                        layer_idx,
+                        inputs_embeds,
+                        attention_mask,
+                        position_ids,
+                        adarms_cond,
                     )
 
                 # Old code removed - now using compute_layer_complete function above
@@ -298,7 +345,9 @@ class PaliGemmaWithExpertModel(nn.Module):
             def compute_final_norms(inputs_embeds, adarms_cond):
                 outputs_embeds = []
                 for i, hidden_states in enumerate(inputs_embeds):
-                    out_emb, _ = models[i].norm(hidden_states, cond=adarms_cond[i])
+                    out_emb, _ = models[i].norm(
+                        hidden_states, cond=adarms_cond[i]
+                    )
                     outputs_embeds.append(out_emb)
                 return outputs_embeds
 
@@ -312,7 +361,9 @@ class PaliGemmaWithExpertModel(nn.Module):
                     preserve_rng_state=False,
                 )
             else:
-                outputs_embeds = compute_final_norms(inputs_embeds, adarms_cond)
+                outputs_embeds = compute_final_norms(
+                    inputs_embeds, adarms_cond
+                )
 
             prefix_output = outputs_embeds[0]
             suffix_output = outputs_embeds[1]

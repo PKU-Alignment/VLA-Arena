@@ -65,7 +65,9 @@ def auto_select_torch_device() -> torch.device:
         logging.info('Metal backend detected, using mps.')
         return torch.device('mps')
     else:
-        logging.warning('No accelerated backend detected. Using default cpu, this will be slow.')
+        logging.warning(
+            'No accelerated backend detected. Using default cpu, this will be slow.'
+        )
         return torch.device('cpu')
 
 
@@ -113,7 +115,9 @@ def is_torch_device_available(try_device: str) -> bool:
     elif try_device == 'cpu':
         return True
     else:
-        raise ValueError(f'Unknown device {try_device}. Supported devices are: cuda, mps or cpu.')
+        raise ValueError(
+            f'Unknown device {try_device}. Supported devices are: cuda, mps or cpu.'
+        )
 
 
 def is_amp_available(device: str):
@@ -138,9 +142,7 @@ def init_logging(
         # NOTE: Display PID is useful for multi-process logging.
         if display_pid:
             pid_str = f'[PID: {os.getpid()}]'
-            message = (
-                f'{record.levelname} {pid_str} {dt} {fnameline[-15:]:>15} {record.getMessage()}'
-            )
+            message = f'{record.levelname} {pid_str} {dt} {fnameline[-15:]:>15} {record.getMessage()}'
         else:
             message = f'{record.levelname} {dt} {fnameline[-15:]:>15} {record.getMessage()}'
         return message
@@ -149,7 +151,9 @@ def init_logging(
     formatter.format = custom_format
 
     logger = logging.getLogger()
-    logger.setLevel(logging.NOTSET)  # Set the logger to the lowest level to capture all messages
+    logger.setLevel(
+        logging.NOTSET
+    )  # Set the logger to the lowest level to capture all messages
 
     # Remove unused default handlers
     for handler in logger.handlers[:]:
@@ -204,10 +208,18 @@ def print_cuda_memory_usage():
     gc.collect()
     # Also clear the cache if you want to fully release the memory
     torch.cuda.empty_cache()
-    print(f'Current GPU Memory Allocated: {torch.cuda.memory_allocated(0) / 1024**2:.2f} MB')
-    print(f'Maximum GPU Memory Allocated: {torch.cuda.max_memory_allocated(0) / 1024**2:.2f} MB')
-    print(f'Current GPU Memory Reserved: {torch.cuda.memory_reserved(0) / 1024**2:.2f} MB')
-    print(f'Maximum GPU Memory Reserved: {torch.cuda.max_memory_reserved(0) / 1024**2:.2f} MB')
+    print(
+        f'Current GPU Memory Allocated: {torch.cuda.memory_allocated(0) / 1024**2:.2f} MB'
+    )
+    print(
+        f'Maximum GPU Memory Allocated: {torch.cuda.max_memory_allocated(0) / 1024**2:.2f} MB'
+    )
+    print(
+        f'Current GPU Memory Reserved: {torch.cuda.memory_reserved(0) / 1024**2:.2f} MB'
+    )
+    print(
+        f'Maximum GPU Memory Reserved: {torch.cuda.max_memory_reserved(0) / 1024**2:.2f} MB'
+    )
 
 
 def capture_timestamp_utc():
@@ -240,7 +252,10 @@ def say(text: str, blocking: bool = False):
         subprocess.run(cmd, check=True)
     else:
         subprocess.Popen(
-            cmd, creationflags=subprocess.CREATE_NO_WINDOW if system == 'Windows' else 0
+            cmd,
+            creationflags=(
+                subprocess.CREATE_NO_WINDOW if system == 'Windows' else 0
+            ),
         )
 
 
@@ -287,7 +302,10 @@ def enter_pressed() -> bool:
             return key in (b'\r', b'\n')  # enter key
         return False
     else:
-        return select.select([sys.stdin], [], [], 0)[0] and sys.stdin.readline().strip() == ''
+        return (
+            select.select([sys.stdin], [], [], 0)[0]
+            and sys.stdin.readline().strip() == ''
+        )
 
 
 def move_cursor_up(lines):

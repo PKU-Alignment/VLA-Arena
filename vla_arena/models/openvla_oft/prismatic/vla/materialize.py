@@ -23,10 +23,19 @@ from pathlib import Path
 
 from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizerBase
-from vla_arena.models.openvla_oft.prismatic.models.backbones.llm.prompting import PromptBuilder
-from vla_arena.models.openvla_oft.prismatic.models.backbones.vision import ImageTransform
-from vla_arena.models.openvla_oft.prismatic.util.data_utils import PaddedCollatorForActionPrediction
-from vla_arena.models.openvla_oft.prismatic.vla.action_tokenizer import ActionTokenizer
+
+from vla_arena.models.openvla_oft.prismatic.models.backbones.llm.prompting import (
+    PromptBuilder,
+)
+from vla_arena.models.openvla_oft.prismatic.models.backbones.vision import (
+    ImageTransform,
+)
+from vla_arena.models.openvla_oft.prismatic.util.data_utils import (
+    PaddedCollatorForActionPrediction,
+)
+from vla_arena.models.openvla_oft.prismatic.vla.action_tokenizer import (
+    ActionTokenizer,
+)
 from vla_arena.models.openvla_oft.prismatic.vla.datasets import (
     EpisodicRLDSDataset,
     RLDSBatchTransform,
@@ -58,7 +67,9 @@ def get_vla_dataset_and_collator(
         predict_stop_token=predict_stop_token,
     )
     collator = PaddedCollatorForActionPrediction(
-        tokenizer.model_max_length, tokenizer.pad_token_id, padding_side=padding_side
+        tokenizer.model_max_length,
+        tokenizer.pad_token_id,
+        padding_side=padding_side,
     )
 
     # Build RLDS Iterable Dataset

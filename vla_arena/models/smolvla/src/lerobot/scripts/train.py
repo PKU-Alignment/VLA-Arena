@@ -34,10 +34,6 @@ from pprint import pformat
 from typing import Any
 
 import torch
-from termcolor import colored
-from torch.amp import GradScaler
-from torch.optim import Optimizer
-
 from lerobot.configs import parser
 from lerobot.configs.train import TrainPipelineConfig
 from lerobot.datasets.factory import make_dataset
@@ -58,8 +54,16 @@ from lerobot.utils.train_utils import (
     save_checkpoint,
     update_last_checkpoint,
 )
-from lerobot.utils.utils import format_big_number, get_safe_torch_device, has_method, init_logging
+from lerobot.utils.utils import (
+    format_big_number,
+    get_safe_torch_device,
+    has_method,
+    init_logging,
+)
 from lerobot.utils.wandb_utils import WandBLogger
+from termcolor import colored
+from torch.amp import GradScaler
+from torch.optim import Optimizer
 
 
 def update_policy(
@@ -123,7 +127,9 @@ def train(cfg: TrainPipelineConfig):
         wandb_logger = WandBLogger(cfg)
     else:
         wandb_logger = None
-        logging.info(colored('Logs will be saved locally.', 'yellow', attrs=['bold']))
+        logging.info(
+            colored('Logs will be saved locally.', 'yellow', attrs=['bold'])
+        )
 
     if cfg.seed is not None:
         set_seed(cfg.seed)
@@ -143,7 +149,9 @@ def train(cfg: TrainPipelineConfig):
     if cfg.eval_freq > 0 and cfg.env is not None:
         logging.info('Creating env')
         eval_env = make_env(
-            cfg.env, n_envs=cfg.eval.batch_size, use_async_envs=cfg.eval.use_async_envs
+            cfg.env,
+            n_envs=cfg.eval.batch_size,
+            use_async_envs=cfg.eval.use_async_envs,
         )
 
     logging.info('Creating policy')
@@ -163,17 +171,27 @@ def train(cfg: TrainPipelineConfig):
             cfg.checkpoint_path, optimizer, lr_scheduler
         )
 
-    num_learnable_params = sum(p.numel() for p in policy.parameters() if p.requires_grad)
+    num_learnable_params = sum(
+        p.numel() for p in policy.parameters() if p.requires_grad
+    )
     num_total_params = sum(p.numel() for p in policy.parameters())
 
-    logging.info(colored('Output dir:', 'yellow', attrs=['bold']) + f' {cfg.output_dir}')
+    logging.info(
+        colored('Output dir:', 'yellow', attrs=['bold']) + f' {cfg.output_dir}'
+    )
     if cfg.env is not None:
         logging.info(f'{cfg.env.task=}')
     logging.info(f'{cfg.steps=} ({format_big_number(cfg.steps)})')
-    logging.info(f'{dataset.num_frames=} ({format_big_number(dataset.num_frames)})')
+    logging.info(
+        f'{dataset.num_frames=} ({format_big_number(dataset.num_frames)})'
+    )
     logging.info(f'{dataset.num_episodes=}')
-    logging.info(f'{num_learnable_params=} ({format_big_number(num_learnable_params)})')
-    logging.info(f'{num_total_params=} ({format_big_number(num_total_params)})')
+    logging.info(
+        f'{num_learnable_params=} ({format_big_number(num_learnable_params)})'
+    )
+    logging.info(
+        f'{num_total_params=} ({format_big_number(num_total_params)})'
+    )
 
     # create dataloader for offline training
     if hasattr(cfg.policy, 'drop_n_last_frames'):
@@ -209,7 +227,11 @@ def train(cfg: TrainPipelineConfig):
     }
 
     train_tracker = MetricsTracker(
-        cfg.batch_size, dataset.num_frames, dataset.num_episodes, train_metrics, initial_step=step
+        cfg.batch_size,
+        dataset.num_frames,
+        dataset.num_episodes,
+        train_metrics,
+        initial_step=step,
     )
 
     logging.info('Start offline training on a fixed dataset')
@@ -220,7 +242,9 @@ def train(cfg: TrainPipelineConfig):
 
         for key in batch:
             if isinstance(batch[key], torch.Tensor):
-                batch[key] = batch[key].to(device, non_blocking=device.type == 'cuda')
+                batch[key] = batch[key].to(
+                    device, non_blocking=device.type == 'cuda'
+                )
 
         train_tracker, output_dict = update_policy(
             train_tracker,
@@ -252,8 +276,12 @@ def train(cfg: TrainPipelineConfig):
 
         if cfg.save_checkpoint and is_saving_step:
             logging.info(f'Checkpoint policy after step {step}')
-            checkpoint_dir = get_step_checkpoint_dir(cfg.output_dir, cfg.steps, step)
-            save_checkpoint(checkpoint_dir, step, cfg, policy, optimizer, lr_scheduler)
+            checkpoint_dir = get_step_checkpoint_dir(
+                cfg.output_dir, cfg.steps, step
+            )
+            save_checkpoint(
+                checkpoint_dir, step, cfg, policy, optimizer, lr_scheduler
+            )
             update_last_checkpoint(checkpoint_dir)
             if wandb_logger:
                 wandb_logger.log_policy(checkpoint_dir)
@@ -263,13 +291,19 @@ def train(cfg: TrainPipelineConfig):
             logging.info(f'Eval policy at step {step}')
             with (
                 torch.no_grad(),
-                torch.autocast(device_type=device.type) if cfg.policy.use_amp else nullcontext(),
+                (
+                    torch.autocast(device_type=device.type)
+                    if cfg.policy.use_amp
+                    else nullcontext()
+                ),
             ):
                 eval_info = eval_policy(
                     eval_env,
                     policy,
                     cfg.eval.n_episodes,
-                    videos_dir=cfg.output_dir / 'eval' / f'videos_step_{step_id}',
+                    videos_dir=cfg.output_dir
+                    / 'eval'
+                    / f'videos_step_{step_id}',
                     max_episodes_rendered=4,
                     start_seed=cfg.seed,
                 )
@@ -287,13 +321,17 @@ def train(cfg: TrainPipelineConfig):
                 initial_step=step,
             )
             eval_tracker.eval_s = eval_info['aggregated'].pop('eval_s')
-            eval_tracker.avg_sum_reward = eval_info['aggregated'].pop('avg_sum_reward')
+            eval_tracker.avg_sum_reward = eval_info['aggregated'].pop(
+                'avg_sum_reward'
+            )
             eval_tracker.pc_success = eval_info['aggregated'].pop('pc_success')
             logging.info(eval_tracker)
             if wandb_logger:
                 wandb_log_dict = {**eval_tracker.to_dict(), **eval_info}
                 wandb_logger.log_dict(wandb_log_dict, step, mode='eval')
-                wandb_logger.log_video(eval_info['video_paths'][0], step, mode='eval')
+                wandb_logger.log_video(
+                    eval_info['video_paths'][0], step, mode='eval'
+                )
 
     if eval_env:
         eval_env.close()

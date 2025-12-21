@@ -13,7 +13,9 @@
 # limitations under the License.
 
 import numpy as np
-from robosuite.models.robots.manipulators.manipulator_model import ManipulatorModel
+from robosuite.models.robots.manipulators.manipulator_model import (
+    ManipulatorModel,
+)
 from robosuite.utils.mjcf_utils import xml_path_completion
 
 
@@ -27,11 +29,14 @@ class LiberoOnTheGroundPanda(ManipulatorModel):
     arms = ['right']
 
     def __init__(self, idn=0):
-        super().__init__(xml_path_completion('robots/panda/robot.xml'), idn=idn)
+        super().__init__(
+            xml_path_completion('robots/panda/robot.xml'), idn=idn
+        )
 
         # Set joint damping
         self.set_joint_attribute(
-            attrib='damping', values=np.array((0.1, 0.1, 0.1, 0.1, 0.1, 0.01, 0.01)),
+            attrib='damping',
+            values=np.array((0.1, 0.1, 0.1, 0.1, 0.1, 0.01, 0.01)),
         )
 
     @property
@@ -52,7 +57,17 @@ class LiberoOnTheGroundPanda(ManipulatorModel):
 
     @property
     def init_qpos(self):
-        return np.array([0, -1.61037389e-01, 0.00, -2.44459747e00, 0.00, 2.22675220e00, np.pi / 4])
+        return np.array(
+            [
+                0,
+                -1.61037389e-01,
+                0.00,
+                -2.44459747e00,
+                0.00,
+                2.22675220e00,
+                np.pi / 4,
+            ]
+        )
 
     @property
     def base_xpos_offset(self):
@@ -60,7 +75,11 @@ class LiberoOnTheGroundPanda(ManipulatorModel):
             'bins': (-0.5, -0.1, 0),
             'empty': (-0.6, 0, 0),
             'table': lambda table_length: (-0.16 - table_length / 2, 0, 0),
-            'coffee_table': lambda table_length: (-0.16 - table_length / 2, 0, 0.41),
+            'coffee_table': lambda table_length: (
+                -0.16 - table_length / 2,
+                0,
+                0.41,
+            ),
             'living_room_table': lambda table_length: (
                 -0.16 - table_length / 2,
                 0,

@@ -15,10 +15,14 @@
 import time
 
 from lerobot.robots.lekiwi import LeKiwiClient, LeKiwiClientConfig
-from lerobot.teleoperators.keyboard.teleop_keyboard import KeyboardTeleop, KeyboardTeleopConfig
+from lerobot.teleoperators.keyboard.teleop_keyboard import (
+    KeyboardTeleop,
+    KeyboardTeleopConfig,
+)
 from lerobot.teleoperators.so100_leader import SO100Leader, SO100LeaderConfig
 from lerobot.utils.robot_utils import busy_wait
 from lerobot.utils.visualization_utils import _init_rerun, log_rerun_data
+
 
 FPS = 30
 
@@ -40,7 +44,11 @@ keyboard.connect()
 
 _init_rerun(session_name='lekiwi_teleop')
 
-if not robot.is_connected or not leader_arm.is_connected or not keyboard.is_connected:
+if (
+    not robot.is_connected
+    or not leader_arm.is_connected
+    or not keyboard.is_connected
+):
     raise ValueError('Robot, leader arm of keyboard is not connected!')
 
 while True:
@@ -56,7 +64,9 @@ while True:
 
     log_rerun_data(observation, {**arm_action, **base_action})
 
-    action = {**arm_action, **base_action} if len(base_action) > 0 else arm_action
+    action = (
+        {**arm_action, **base_action} if len(base_action) > 0 else arm_action
+    )
 
     robot.send_action(action)
 

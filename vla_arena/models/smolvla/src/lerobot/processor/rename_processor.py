@@ -31,7 +31,10 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from lerobot.configs.types import PolicyFeature
-from lerobot.processor.pipeline import ObservationProcessor, ProcessorStepRegistry
+from lerobot.processor.pipeline import (
+    ObservationProcessor,
+    ProcessorStepRegistry,
+)
 
 
 @dataclass
@@ -54,7 +57,9 @@ class RenameProcessor(ObservationProcessor):
     def get_config(self) -> dict[str, Any]:
         return {'rename_map': self.rename_map}
 
-    def feature_contract(self, features: dict[str, PolicyFeature]) -> dict[str, PolicyFeature]:
+    def feature_contract(
+        self, features: dict[str, PolicyFeature]
+    ) -> dict[str, PolicyFeature]:
         """Transforms:
         - Each key in the observation that appears in `rename_map` is renamed to its value.
         - Keys not in `rename_map` remain unchanged.

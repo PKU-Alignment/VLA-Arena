@@ -21,6 +21,7 @@ individual functions for clear control flow.
 
 
 from transformers import PreTrainedTokenizerBase
+
 from vla_arena.models.openvla.prismatic.models.backbones.llm import (
     LLaMa2LLMBackbone,
     LLMBackbone,
@@ -38,6 +39,7 @@ from vla_arena.models.openvla.prismatic.models.backbones.vision import (
     VisionBackbone,
 )
 from vla_arena.models.openvla.prismatic.models.vlms import PrismaticVLM
+
 
 # === Registries =>> Maps ID --> {cls(), kwargs} :: Different Registries for Vision Backbones, LLM Backbones, VLMs ===
 # fmt: off
@@ -105,7 +107,9 @@ def get_vision_backbone_and_transform(
         return vision_backbone, image_transform
 
     else:
-        raise ValueError(f'Vision Backbone `{vision_backbone_id}` is not supported!')
+        raise ValueError(
+            f'Vision Backbone `{vision_backbone_id}` is not supported!'
+        )
 
 
 def get_llm_backbone_and_tokenizer(

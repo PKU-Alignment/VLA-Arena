@@ -181,7 +181,10 @@ class TDMPCConfig(PreTrainedConfig):
             raise ValueError(
                 f'The number of gaussian samples for CEM should be non-zero. Got `{self.n_gaussian_samples=}`'
             )
-        if self.normalization_mapping['ACTION'] is not NormalizationMode.MIN_MAX:
+        if (
+            self.normalization_mapping['ACTION']
+            is not NormalizationMode.MIN_MAX
+        ):
             raise ValueError(
                 'TD-MPC assumes the action space dimensions to all be in [-1, 1]. Therefore it is strongly '
                 f'advised that you stick with the default. See {self.__class__.__name__} docstring for more '
@@ -197,9 +200,13 @@ class TDMPCConfig(PreTrainedConfig):
                     'If `n_action_steps > 1`, `n_action_repeats` must be left to its default value of 1.'
                 )
             if not self.use_mpc:
-                raise ValueError('If `n_action_steps > 1`, `use_mpc` must be set to `True`.')
+                raise ValueError(
+                    'If `n_action_steps > 1`, `use_mpc` must be set to `True`.'
+                )
             if self.n_action_steps > self.horizon:
-                raise ValueError('`n_action_steps` must be less than or equal to `horizon`.')
+                raise ValueError(
+                    '`n_action_steps` must be less than or equal to `horizon`.'
+                )
 
     def get_optimizer_preset(self) -> AdamConfig:
         return AdamConfig(lr=self.optimizer_lr)

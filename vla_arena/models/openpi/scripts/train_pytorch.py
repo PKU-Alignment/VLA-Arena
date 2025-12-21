@@ -47,6 +47,11 @@ import time
 
 import jax
 import numpy as np
+import openpi.models.pi0_config
+import openpi.models_pytorch.pi0_pytorch
+import openpi.shared.normalize as _normalize
+import openpi.training.config as _config
+import openpi.training.data_loader as _data
 import safetensors.torch
 import torch
 import torch.distributed as dist
@@ -54,19 +59,21 @@ import torch.nn.parallel
 import tqdm
 import wandb
 
-import openpi.models.pi0_config
-import openpi.models_pytorch.pi0_pytorch
-import openpi.shared.normalize as _normalize
-import openpi.training.config as _config
-import openpi.training.data_loader as _data
-
 
 def init_logging():
-    level_mapping = {"DEBUG": "D", "INFO": "I", "WARNING": "W", "ERROR": "E", "CRITICAL": "C"}
+    level_mapping = {
+        "DEBUG": "D",
+        "INFO": "I",
+        "WARNING": "W",
+        "ERROR": "E",
+        "CRITICAL": "C",
+    }
 
     class CustomFormatter(logging.Formatter):
         def format(self, record):
-            record.levelname = level_mapping.get(record.levelname, record.levelname)
+            record.levelname = level_mapping.get(
+                record.levelname, record.levelname
+            )
             return super().format(record)
 
     formatter = CustomFormatter(
@@ -83,7 +90,9 @@ def init_logging():
         logger.handlers[0].setFormatter(formatter)
 
 
-def init_wandb(config: _config.TrainConfig, *, resuming: bool, enabled: bool = True):
+def init_wandb(
+    config: _config.TrainConfig, *, resuming: bool, enabled: bool = True
+):
     """Initialize wandb logging."""
     if not enabled:
         wandb.init(mode="disabled")
@@ -91,7 +100,9 @@ def init_wandb(config: _config.TrainConfig, *, resuming: bool, enabled: bool = T
 
     ckpt_dir = config.checkpoint_dir
     if not ckpt_dir.exists():
-        raise FileNotFoundError(f"Checkpoint directory {ckpt_dir} does not exist.")
+        raise FileNotFoundError(
+            f"Checkpoint directory {ckpt_dir} does not exist."
+        )
 
     if resuming:
         run_id = (ckpt_dir / "wandb_id.txt").read_text().strip()
@@ -110,14 +121,18 @@ def setup_ddp():
     use_ddp = world_size > 1
     if use_ddp and not torch.distributed.is_initialized():
         backend = "nccl" if torch.cuda.is_available() else "gloo"
-        torch.distributed.init_process_group(backend=backend, init_method="env://")
+        torch.distributed.init_process_group(
+            backend=backend, init_method="env://"
+        )
 
         # Set up debugging environment variables for DDP issues
         if os.environ.get("TORCH_DISTRIBUTED_DEBUG") is None:
             os.environ["TORCH_DISTRIBUTED_DEBUG"] = "INFO"
 
     local_rank = int(os.environ.get("LOCAL_RANK", os.environ.get("RANK", "0")))
-    device = torch.device(f"cuda:{local_rank}" if torch.cuda.is_available() else "cpu")
+    device = torch.device(
+        f"cuda:{local_rank}" if torch.cuda.is_available() else "cpu"
+    )
     if torch.cuda.is_available():
         torch.cuda.set_device(device)
     return use_ddp, local_rank, device
@@ -138,7 +153,9 @@ def set_seed(seed: int, local_rank: int):
 
 def build_datasets(config: _config.TrainConfig):
     # Use the unified data loader with PyTorch framework
-    data_loader = _data.create_data_loader(config, framework="pytorch", shuffle=True)
+    data_loader = _data.create_data_loader(
+        config, framework="pytorch", shuffle=True
+    )
     return data_loader, data_loader.data_config()
 
 
@@ -160,7 +177,9 @@ def get_model_parameters(model):
     )
 
 
-def save_checkpoint(model, optimizer, global_step, config, is_main, data_config):
+def save_checkpoint(
+    model, optimizer, global_step, config, is_main, data_config
+):
     """Save a checkpoint with model state, optimizer state, and metadata."""
     if not is_main:
         return
@@ -180,9 +199,13 @@ def save_checkpoint(model, optimizer, global_step, config, is_main, data_config)
 
         # Save model state using safetensors (handle shared tensors)
         model_to_save = (
-            model.module if isinstance(model, torch.nn.parallel.DistributedDataParallel) else model
+            model.module
+            if isinstance(model, torch.nn.parallel.DistributedDataParallel)
+            else model
         )
-        safetensors.torch.save_model(model_to_save, tmp_ckpt_dir / "model.safetensors")
+        safetensors.torch.save_model(
+            model_to_save, tmp_ckpt_dir / "model.safetensors"
+        )
 
         # Save optimizer state using PyTorch format
         torch.save(optimizer.state_dict(), tmp_ckpt_dir / "optimizer.pt")
@@ -198,14 +221,18 @@ def save_checkpoint(model, optimizer, global_step, config, is_main, data_config)
         # save norm stats
         norm_stats = data_config.norm_stats
         if norm_stats is not None and data_config.asset_id is not None:
-            _normalize.save(tmp_ckpt_dir / "assets" / data_config.asset_id, norm_stats)
+            _normalize.save(
+                tmp_ckpt_dir / "assets" / data_config.asset_id, norm_stats
+            )
 
         # Atomically move temp directory to final location
         if final_ckpt_dir.exists():
             shutil.rmtree(final_ckpt_dir)
         tmp_ckpt_dir.rename(final_ckpt_dir)
 
-        logging.info(f"Saved checkpoint at step {global_step} -> {final_ckpt_dir}")
+        logging.info(
+            f"Saved checkpoint at step {global_step} -> {final_ckpt_dir}"
+        )
 
         # Log checkpoint to wandb
         if config.wandb_enabled:
@@ -243,7 +270,9 @@ def load_checkpoint(model, optimizer, checkpoint_dir, device):
                 if isinstance(model, torch.nn.parallel.DistributedDataParallel)
                 else model
             )
-            safetensors.torch.load_model(model_to_load, safetensors_path, device=str(device))
+            safetensors.torch.load_model(
+                model_to_load, safetensors_path, device=str(device)
+            )
             logging.info("Loaded model state from safetensors format")
         else:
             raise FileNotFoundError(f"No model checkpoint found at {ckpt_dir}")
@@ -262,7 +291,9 @@ def load_checkpoint(model, optimizer, checkpoint_dir, device):
             )
             logging.info("Loaded optimizer state from pt format")
         else:
-            raise FileNotFoundError(f"No optimizer checkpoint found at {ckpt_dir}")
+            raise FileNotFoundError(
+                f"No optimizer checkpoint found at {ckpt_dir}"
+            )
 
         optimizer.load_state_dict(optimizer_state_dict)
         del optimizer_state_dict
@@ -272,14 +303,18 @@ def load_checkpoint(model, optimizer, checkpoint_dir, device):
 
         # Load metadata
         logging.info("Loading metadata...")
-        metadata = torch.load(ckpt_dir / "metadata.pt", map_location=device, weights_only=False)
+        metadata = torch.load(
+            ckpt_dir / "metadata.pt", map_location=device, weights_only=False
+        )
         global_step = metadata.get("global_step", latest_step)
         del metadata
         torch.cuda.empty_cache()
         gc.collect()
         log_memory_usage(device, latest_step, "after_loading_metadata")
 
-        logging.info(f"Successfully loaded all checkpoint components from step {latest_step}")
+        logging.info(
+            f"Successfully loaded all checkpoint components from step {latest_step}"
+        )
         return global_step
 
     except RuntimeError as e:
@@ -287,7 +322,9 @@ def load_checkpoint(model, optimizer, checkpoint_dir, device):
             # Clear memory and provide detailed error message
             torch.cuda.empty_cache()
             gc.collect()
-            logging.error(f"Out of memory error while loading checkpoint: {e!s}")
+            logging.error(
+                f"Out of memory error while loading checkpoint: {e!s}"
+            )
             log_memory_usage(device, latest_step, "after_oom_error")
             raise RuntimeError(
                 "Out of memory while loading checkpoint. Try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True"
@@ -312,12 +349,16 @@ def log_memory_usage(device, step, phase="unknown"):
 
     memory_allocated = torch.cuda.memory_allocated(device) / 1e9
     memory_reserved = torch.cuda.memory_reserved(device) / 1e9
-    memory_free = torch.cuda.memory_reserved(device) - torch.cuda.memory_allocated(device)
+    memory_free = torch.cuda.memory_reserved(
+        device
+    ) - torch.cuda.memory_allocated(device)
     memory_free = memory_free / 1e9
 
     # Get more detailed memory info
     memory_stats = torch.cuda.memory_stats(device)
-    max_memory_allocated = memory_stats.get("allocated_bytes.all.peak", 0) / 1e9
+    max_memory_allocated = (
+        memory_stats.get("allocated_bytes.all.peak", 0) / 1e9
+    )
     max_memory_reserved = memory_stats.get("reserved_bytes.all.peak", 0) / 1e9
 
     # Get DDP info if available
@@ -358,17 +399,23 @@ def train_loop(config: _config.TrainConfig):
             )
     elif config.overwrite and config.checkpoint_dir.exists():
         shutil.rmtree(config.checkpoint_dir)
-        logging.info(f"Overwriting checkpoint directory: {config.checkpoint_dir}")
+        logging.info(
+            f"Overwriting checkpoint directory: {config.checkpoint_dir}"
+        )
 
     # Create checkpoint directory with experiment name
     if not resuming:
         # For new runs, create experiment-specific checkpoint directory
         exp_checkpoint_dir = config.checkpoint_dir
         exp_checkpoint_dir.mkdir(parents=True, exist_ok=True)
-        logging.info(f"Created experiment checkpoint directory: {exp_checkpoint_dir}")
+        logging.info(
+            f"Created experiment checkpoint directory: {exp_checkpoint_dir}"
+        )
     else:
         # For resume, checkpoint_dir is already set to the experiment directory
-        logging.info(f"Using existing experiment checkpoint directory: {config.checkpoint_dir}")
+        logging.info(
+            f"Using existing experiment checkpoint directory: {config.checkpoint_dir}"
+        )
 
     # Initialize wandb (only on main process)
     if is_main:
@@ -389,7 +436,9 @@ def train_loop(config: _config.TrainConfig):
     # Log sample images to wandb on first batch
     if is_main and config.wandb_enabled and not resuming:
         # Create a separate data loader for sample batch to avoid consuming the main loader
-        sample_data_loader = _data.create_data_loader(config, framework="pytorch", shuffle=False)
+        sample_data_loader = _data.create_data_loader(
+            config, framework="pytorch", shuffle=False
+        )
         sample_batch = next(iter(sample_data_loader))
         # Convert observation and actions to torch tensors
         observation, actions = sample_batch
@@ -404,7 +453,11 @@ def train_loop(config: _config.TrainConfig):
             # Concatenate all camera views horizontally for this batch item
             # Convert from NCHW to NHWC format for wandb
             img_concatenated = torch.cat(
-                [img[i].permute(1, 2, 0) for img in sample_batch["image"].values()], axis=1
+                [
+                    img[i].permute(1, 2, 0)
+                    for img in sample_batch["image"].values()
+                ],
+                axis=1,
             )
             img_concatenated = img_concatenated.cpu().numpy()
             images_to_log.append(wandb.Image(img_concatenated))
@@ -427,14 +480,20 @@ def train_loop(config: _config.TrainConfig):
             action_dim=config.model.action_dim,
             action_horizon=config.model.action_horizon,
             max_token_len=config.model.max_token_len,
-            paligemma_variant=getattr(config.model, "paligemma_variant", "gemma_2b"),
-            action_expert_variant=getattr(config.model, "action_expert_variant", "gemma_300m"),
+            paligemma_variant=getattr(
+                config.model, "paligemma_variant", "gemma_2b"
+            ),
+            action_expert_variant=getattr(
+                config.model, "action_expert_variant", "gemma_300m"
+            ),
             pi05=getattr(config.model, "pi05", False),
         )
     else:
         model_cfg = config.model
         # Update dtype to match pytorch_training_precision
-        object.__setattr__(model_cfg, "dtype", config.pytorch_training_precision)
+        object.__setattr__(
+            model_cfg, "dtype", config.pytorch_training_precision
+        )
 
     model = openpi.models_pytorch.pi0_pytorch.PI0Pytorch(model_cfg).to(device)
 
@@ -456,7 +515,9 @@ def train_loop(config: _config.TrainConfig):
         torch.backends.cuda.matmul.allow_tf32 = True
         torch.backends.cudnn.allow_tf32 = True
         # Set memory allocation configuration
-        os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128,expandable_segments:True"
+        os.environ["PYTORCH_CUDA_ALLOC_CONF"] = (
+            "max_split_size_mb:128,expandable_segments:True"
+        )
         logging.info("Enabled memory optimizations for 8+ GPU training")
 
     if use_ddp:
@@ -472,7 +533,9 @@ def train_loop(config: _config.TrainConfig):
     if config.pytorch_weight_path is not None:
         logging.info(f"Loading weights from: {config.pytorch_weight_path}")
 
-        model_path = os.path.join(config.pytorch_weight_path, "model.safetensors")
+        model_path = os.path.join(
+            config.pytorch_weight_path, "model.safetensors"
+        )
         safetensors.torch.load_model(
             (
                 model.module
@@ -481,7 +544,9 @@ def train_loop(config: _config.TrainConfig):
             ),
             model_path,
         )
-        logging.info(f"Loaded PyTorch weights from {config.pytorch_weight_path}")
+        logging.info(
+            f"Loaded PyTorch weights from {config.pytorch_weight_path}"
+        )
 
     # Optimizer + learning rate schedule from config
     warmup_steps = config.lr_schedule.warmup_steps
@@ -501,7 +566,9 @@ def train_loop(config: _config.TrainConfig):
     # Load checkpoint if resuming
     global_step = 0
     if resuming:
-        global_step = load_checkpoint(model, optim, config.checkpoint_dir, device)
+        global_step = load_checkpoint(
+            model, optim, config.checkpoint_dir, device
+        )
         logging.info(f"Resumed training from step {global_step}")
 
     def lr_schedule(step: int):
@@ -510,7 +577,9 @@ def train_loop(config: _config.TrainConfig):
             init_lr = peak_lr / (warmup_steps + 1)
             return init_lr + (peak_lr - init_lr) * step / warmup_steps
         # cosine decay
-        progress = min(1.0, (step - warmup_steps) / max(1, decay_steps - warmup_steps))
+        progress = min(
+            1.0, (step - warmup_steps) / max(1, decay_steps - warmup_steps)
+        )
         cos = 0.5 * (1 + np.cos(np.pi * progress))
         return end_lr + (peak_lr - end_lr) * cos
 
@@ -539,7 +608,10 @@ def train_loop(config: _config.TrainConfig):
     # Training loop - iterate until we reach num_train_steps
     pbar = (
         tqdm.tqdm(
-            total=config.num_train_steps, initial=global_step, desc="Training", disable=not is_main
+            total=config.num_train_steps,
+            initial=global_step,
+            desc="Training",
+            disable=not is_main,
         )
         if is_main
         else None
@@ -556,7 +628,9 @@ def train_loop(config: _config.TrainConfig):
                 break
 
             # The unified data loader returns (observation, actions) tuple
-            observation = jax.tree.map(lambda x: x.to(device), observation)  # noqa: PLW2901
+            observation = jax.tree.map(
+                lambda x: x.to(device), observation
+            )  # noqa: PLW2901
             actions = actions.to(torch.float32)  # noqa: PLW2901
             actions = actions.to(device)  # noqa: PLW2901
 
@@ -570,7 +644,9 @@ def train_loop(config: _config.TrainConfig):
             if isinstance(losses, list | tuple):
                 losses = torch.stack(losses)
             elif not isinstance(losses, torch.Tensor):
-                losses = torch.tensor(losses, device=device, dtype=torch.float32)
+                losses = torch.tensor(
+                    losses, device=device, dtype=torch.float32
+                )
 
             loss = losses.mean()
 
@@ -583,7 +659,8 @@ def train_loop(config: _config.TrainConfig):
 
             # Gradient clipping
             grad_norm = torch.nn.utils.clip_grad_norm_(
-                model.parameters(), max_norm=config.optimizer.clip_gradient_norm
+                model.parameters(),
+                max_norm=config.optimizer.clip_gradient_norm,
             )
 
             # Optimizer step
@@ -603,7 +680,9 @@ def train_loop(config: _config.TrainConfig):
                         "loss": loss.item(),
                         "learning_rate": optim.param_groups[0]["lr"],
                         "grad_norm": (
-                            float(grad_norm) if isinstance(grad_norm, torch.Tensor) else grad_norm
+                            float(grad_norm)
+                            if isinstance(grad_norm, torch.Tensor)
+                            else grad_norm
                         ),
                     }
                 )
@@ -613,14 +692,17 @@ def train_loop(config: _config.TrainConfig):
 
                 # Average stats over log interval
                 avg_loss = sum(info["loss"] for info in infos) / len(infos)
-                avg_lr = sum(info["learning_rate"] for info in infos) / len(infos)
+                avg_lr = sum(info["learning_rate"] for info in infos) / len(
+                    infos
+                )
 
                 avg_grad_norm = None
                 if any("grad_norm" in info for info in infos):
                     vals = [
                         info["grad_norm"]
                         for info in infos
-                        if "grad_norm" in info and info["grad_norm"] is not None
+                        if "grad_norm" in info
+                        and info["grad_norm"] is not None
                     ]
                     if len(vals) > 0:
                         avg_grad_norm = sum(vals) / len(vals)
@@ -647,7 +729,9 @@ def train_loop(config: _config.TrainConfig):
 
             global_step += 1
             # Save checkpoint using the new mechanism
-            save_checkpoint(model, optim, global_step, config, is_main, data_config)
+            save_checkpoint(
+                model, optim, global_step, config, is_main, data_config
+            )
 
             # Update progress bar
             if pbar is not None:

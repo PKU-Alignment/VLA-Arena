@@ -31,11 +31,14 @@
 import logging
 from functools import cached_property
 
-from lerobot.teleoperators.so100_leader.config_so100_leader import SO100LeaderConfig
+from lerobot.teleoperators.so100_leader.config_so100_leader import (
+    SO100LeaderConfig,
+)
 from lerobot.teleoperators.so100_leader.so100_leader import SO100Leader
 
 from ..teleoperator import Teleoperator
 from .config_bi_so100_leader import BiSO100LeaderConfig
+
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +73,9 @@ class BiSO100Leader(Teleoperator):
 
     @cached_property
     def action_features(self) -> dict[str, type]:
-        return {f'left_{motor}.pos': float for motor in self.left_arm.bus.motors} | {
+        return {
+            f'left_{motor}.pos': float for motor in self.left_arm.bus.motors
+        } | {
             f'right_{motor}.pos': float for motor in self.right_arm.bus.motors
         }
 
@@ -107,11 +112,15 @@ class BiSO100Leader(Teleoperator):
 
         # Add "left_" prefix
         left_action = self.left_arm.get_action()
-        action_dict.update({f'left_{key}': value for key, value in left_action.items()})
+        action_dict.update(
+            {f'left_{key}': value for key, value in left_action.items()}
+        )
 
         # Add "right_" prefix
         right_action = self.right_arm.get_action()
-        action_dict.update({f'right_{key}': value for key, value in right_action.items()})
+        action_dict.update(
+            {f'right_{key}': value for key, value in right_action.items()}
+        )
 
         return action_dict
 

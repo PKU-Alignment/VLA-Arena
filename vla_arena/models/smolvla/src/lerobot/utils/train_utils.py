@@ -30,10 +30,6 @@
 import logging
 from pathlib import Path
 
-from termcolor import colored
-from torch.optim import Optimizer
-from torch.optim.lr_scheduler import LRScheduler
-
 from lerobot.configs.train import TrainPipelineConfig
 from lerobot.constants import (
     CHECKPOINTS_DIR,
@@ -47,10 +43,15 @@ from lerobot.optim.optimizers import load_optimizer_state, save_optimizer_state
 from lerobot.optim.schedulers import load_scheduler_state, save_scheduler_state
 from lerobot.policies.pretrained import PreTrainedPolicy
 from lerobot.utils.random_utils import load_rng_state, save_rng_state
+from termcolor import colored
+from torch.optim import Optimizer
+from torch.optim.lr_scheduler import LRScheduler
 
 
 def log_output_dir(out_dir):
-    logging.info(colored('Output dir:', 'yellow', attrs=['bold']) + f' {out_dir}')
+    logging.info(
+        colored('Output dir:', 'yellow', attrs=['bold']) + f' {out_dir}'
+    )
 
 
 def get_step_identifier(step: int, total_steps: int) -> str:
@@ -58,7 +59,9 @@ def get_step_identifier(step: int, total_steps: int) -> str:
     return f'{step:0{num_digits}d}'
 
 
-def get_step_checkpoint_dir(output_dir: Path, total_steps: int, step: int) -> Path:
+def get_step_checkpoint_dir(
+    output_dir: Path, total_steps: int, step: int
+) -> Path:
     """Returns the checkpoint sub-directory corresponding to the step number."""
     step_identifier = get_step_identifier(step, total_steps)
     return output_dir / CHECKPOINTS_DIR / step_identifier

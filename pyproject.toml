@@ -252,7 +252,7 @@ eager-resources = ["*"]
 # --- Tool Configurations (Integrated from File B) ---
 
 [tool.black]
-line-length = 100
+line-length = 79
 skip-string-normalization = true
 target-version = ["py311"]
 

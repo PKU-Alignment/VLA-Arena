@@ -23,15 +23,22 @@ import torch
 import torch.distributed as dist
 import torchvision.transforms as transforms
 import yaml
+
 from vla_arena.models.univla.prismatic.conf import VLAConfig, VLARegistry
 from vla_arena.models.univla.prismatic.models import load, load_vla
 from vla_arena.models.univla.prismatic.overwatch import initialize_overwatch
-from vla_arena.models.univla.prismatic.training import VLAMetrics, get_train_strategy
+from vla_arena.models.univla.prismatic.training import (
+    VLAMetrics,
+    get_train_strategy,
+)
 from vla_arena.models.univla.prismatic.util import set_global_seed
-from vla_arena.models.univla.prismatic.vla import get_latent_vla_dataset_and_collator
+from vla_arena.models.univla.prismatic.vla import (
+    get_latent_vla_dataset_and_collator,
+)
 from vla_arena.models.univla.prismatic.vla.datasets.rlds.utils.data_utils import (
     save_dataset_statistics,
 )
+
 
 # Sane Defaults
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
@@ -144,7 +151,10 @@ def train(cfg: TrainConfig) -> None:
     # Save Configuration =>> additionally save a JSON version for later HF Integration
     if overwatch.is_rank_zero():
         draccus.dump(cfg, open(run_dir / 'config.yaml', 'w'))
-        with open(run_dir / 'config.yaml') as f_yaml, open(run_dir / 'config.json', 'w') as f_json:
+        with (
+            open(run_dir / 'config.yaml') as f_yaml,
+            open(run_dir / 'config.json', 'w') as f_json,
+        ):
             yaml_cfg = yaml.safe_load(f_yaml)
             json.dump(yaml_cfg, f_json, indent=2)
 
@@ -156,11 +166,19 @@ def train(cfg: TrainConfig) -> None:
         #   =>> Note :: We make developers pass in `resume_*` arguments as an extra sanity check!
         if cfg.is_resume:
             assert (
-                int(re.search('step-(.+?)-', cfg.pretrained_checkpoint.name).group(1))
+                int(
+                    re.search(
+                        'step-(.+?)-', cfg.pretrained_checkpoint.name
+                    ).group(1)
+                )
                 == cfg.resume_step
             )
             assert (
-                int(re.search('epoch-(.+?)-', cfg.pretrained_checkpoint.name).group(1))
+                int(
+                    re.search(
+                        'epoch-(.+?)-', cfg.pretrained_checkpoint.name
+                    ).group(1)
+                )
                 == cfg.resume_epoch
             )
 
@@ -173,12 +191,17 @@ def train(cfg: TrainConfig) -> None:
 
     else:
         vlm = load(
-            cfg.pretrain_vlm, hf_token=hf_token, load_for_training=True, cache_dir=cfg.pretrain_vlm
+            cfg.pretrain_vlm,
+            hf_token=hf_token,
+            load_for_training=True,
+            cache_dir=cfg.pretrain_vlm,
         )
 
     # [Validate] Model should be in Full Precision!
     for param in vlm.parameters():
-        assert param.dtype == torch.float32, f'Loaded VLM parameter not in full precision: {param}'
+        assert (
+            param.dtype == torch.float32
+        ), f'Loaded VLM parameter not in full precision: {param}'
 
     # Determine training "stage" based on frozen vs unfrozen parameters --> supports different fine-tuning schemes!
     if not cfg.vla.freeze_vision_backbone and not cfg.vla.freeze_llm_backbone:
@@ -191,7 +214,9 @@ def train(cfg: TrainConfig) -> None:
         ), 'You should unfreeze at least the last layer of your LLM!'
         stage = 'vla-sandwich-train'  # Fine-tuning vision encoder, projector, and LLM last layer
     elif cfg.vla.freeze_vision_backbone and cfg.vla.freeze_llm_backbone:
-        assert cfg.vla.unfreeze_last_llm_layer, 'Need to unfreeze at least last LLM layer to train!'
+        assert (
+            cfg.vla.unfreeze_last_llm_layer
+        ), 'Need to unfreeze at least last LLM layer to train!'
         stage = 'vla-last-layer-train'  # Fine-tuning LLM last layer only
     else:
         raise ValueError(
@@ -202,17 +227,23 @@ def train(cfg: TrainConfig) -> None:
         )
 
     # [Explicit] Call to `freeze_backbones` here for clarity =>> will log exactly what is/is not frozen
-    overwatch.info(f'Invoking `VLM.freeze_backbones()` for `{vla_id}` => Stage: `{stage}`')
+    overwatch.info(
+        f'Invoking `VLM.freeze_backbones()` for `{vla_id}` => Stage: `{stage}`'
+    )
     vlm.freeze_backbones(stage)
 
     # Print number of total/trainable model parameters
     num_params = sum(p.numel() for p in vlm.parameters())
-    num_trainable_params = sum(p.numel() for p in vlm.parameters() if p.requires_grad)
+    num_trainable_params = sum(
+        p.numel() for p in vlm.parameters() if p.requires_grad
+    )
     overwatch.info(
         f'# Parameters (in millions): {num_params / 10**6:.3f} Total, {num_trainable_params / 10**6:.3f} Trainable'
     )
 
-    from latent_action_model.genie.modules.lam import ControllableDINOLatentActionModel
+    from latent_action_model.genie.modules.lam import (
+        ControllableDINOLatentActionModel,
+    )
 
     latent_action_model = ControllableDINOLatentActionModel(
         in_dim=3,
@@ -235,22 +266,28 @@ def train(cfg: TrainConfig) -> None:
     latent_action_model = latent_action_model.to(device_id).eval()
 
     # Get VLA Dataset & Collator
-    overwatch.info(f'Creating VLA Open-X Dataset with Mixture `{cfg.vla.data_mix}`')
-    vla_dataset, action_tokenizer, collator = get_latent_vla_dataset_and_collator(
-        cfg.data_root_dir,
-        cfg.vla.data_mix,
-        image_transform=vlm.vision_backbone.get_image_transform(),
-        image_transform_lam=transforms.ToTensor(),
-        latent_action_tokenizer=latent_action_model,
-        tokenizer=vlm.llm_backbone.get_tokenizer(),
-        prompt_builder_fn=vlm.llm_backbone.prompt_builder_fn,
-        default_image_resolution=vlm.vision_backbone.default_image_resolution,
-        shuffle_buffer_size=cfg.vla.shuffle_buffer_size,
-        image_aug=cfg.image_aug,
+    overwatch.info(
+        f'Creating VLA Open-X Dataset with Mixture `{cfg.vla.data_mix}`'
+    )
+    vla_dataset, action_tokenizer, collator = (
+        get_latent_vla_dataset_and_collator(
+            cfg.data_root_dir,
+            cfg.vla.data_mix,
+            image_transform=vlm.vision_backbone.get_image_transform(),
+            image_transform_lam=transforms.ToTensor(),
+            latent_action_tokenizer=latent_action_model,
+            tokenizer=vlm.llm_backbone.get_tokenizer(),
+            prompt_builder_fn=vlm.llm_backbone.prompt_builder_fn,
+            default_image_resolution=vlm.vision_backbone.default_image_resolution,
+            shuffle_buffer_size=cfg.vla.shuffle_buffer_size,
+            image_aug=cfg.image_aug,
+        )
     )
 
     special_tokens_dict = {
-        'additional_special_tokens': [f'<ACT_{i}>' for i in range(cfg.codebook_size)]
+        'additional_special_tokens': [
+            f'<ACT_{i}>' for i in range(cfg.codebook_size)
+        ]
     }
     num_added_toks = action_tokenizer.add_special_tokens(special_tokens_dict)
 
@@ -279,10 +316,14 @@ def train(cfg: TrainConfig) -> None:
         reduce_in_full_precision=cfg.vla.reduce_in_full_precision,
         worker_init_fn=worker_init_fn,
     )
-    train_strategy.run_setup(run_dir=run_dir, n_train_examples=len(vla_dataset))
+    train_strategy.run_setup(
+        run_dir=run_dir, n_train_examples=len(vla_dataset)
+    )
 
     # Create Metrics =>> Handles on the fly tracking, logging to specified trackers (e.g., JSONL, Weights & Biases)
-    overwatch.info(f'Creating Metrics with Active Trackers => `{cfg.trackers}`')
+    overwatch.info(
+        f'Creating Metrics with Active Trackers => `{cfg.trackers}`'
+    )
     metrics = VLAMetrics(
         cfg.trackers,
         cfg.run_id,

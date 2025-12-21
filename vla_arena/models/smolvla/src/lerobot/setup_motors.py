@@ -41,7 +41,6 @@ lerobot-setup-motors \
 from dataclasses import dataclass
 
 import draccus
-
 from lerobot.robots import (  # noqa: F401
     RobotConfig,
     koch_follower,
@@ -57,6 +56,7 @@ from lerobot.teleoperators import (  # noqa: F401
     so100_leader,
     so101_leader,
 )
+
 
 COMPATIBLE_DEVICES = [
     'koch_follower',

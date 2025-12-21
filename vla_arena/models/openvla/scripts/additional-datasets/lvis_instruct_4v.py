@@ -37,14 +37,14 @@ import random
 from pathlib import Path
 
 from tqdm import tqdm
+
 from vla_arena.models.openvla.vla_arena.models.openvla.prismatic.preprocessing.download import (
     download_with_progress,
 )
 
+
 # === Constants ===
-DATA_URL = (
-    'https://huggingface.co/datasets/X2FD/LVIS-Instruct4V/resolve/main/lvis_instruct4v_220k.json'
-)
+DATA_URL = 'https://huggingface.co/datasets/X2FD/LVIS-Instruct4V/resolve/main/lvis_instruct4v_220k.json'
 DOWNLOAD_DIR = Path('data/download/llava-v1.5-instruct')
 RAW_JSON_FILE = DOWNLOAD_DIR / 'lvis_instruct4v_220k.json'
 
@@ -70,9 +70,13 @@ def build_lvis_instruct_4v() -> None:
         data = json.load(f)
 
     # Iterate & Verify
-    for example in tqdm(data, desc='[*] Verifying all Images in LVIS Instruct4V'):
+    for example in tqdm(
+        data, desc='[*] Verifying all Images in LVIS Instruct4V'
+    ):
         image_path = example['image']
-        assert (DOWNLOAD_DIR / image_path).exists(), f'Missing Image `{image_path}`'
+        assert (
+            DOWNLOAD_DIR / image_path
+        ).exists(), f'Missing Image `{image_path}`'
 
     # Create Stacked Dataset =>> Shuffle for Good Measure!
     print('[*] Loading LLaVa v1.5 Data!')

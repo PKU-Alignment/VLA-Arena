@@ -20,7 +20,6 @@ a float "sampling weight"
 """
 
 
-
 # fmt: off
 OXE_NAMED_MIXTURES: dict[str, list[tuple[str, float]]] = {
     # === Bridge V2 Dataset ===

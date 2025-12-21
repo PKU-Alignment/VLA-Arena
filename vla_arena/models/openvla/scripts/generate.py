@@ -29,11 +29,12 @@ import draccus
 import requests
 import torch
 from PIL import Image
+from prismatic import load
+
 from vla_arena.models.openvla.vla_arena.models.openvla.prismatic.overwatch import (
     initialize_overwatch,
 )
 
-from prismatic import load
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)
@@ -64,20 +65,28 @@ class GenerateConfig:
 
 @draccus.wrap()
 def generate(cfg: GenerateConfig) -> None:
-    overwatch.info(f'Initializing Generation Playground with Prismatic Model `{cfg.model_path}`')
+    overwatch.info(
+        f'Initializing Generation Playground with Prismatic Model `{cfg.model_path}`'
+    )
     hf_token = (
         cfg.hf_token.read_text().strip()
         if isinstance(cfg.hf_token, Path)
         else os.environ[cfg.hf_token]
     )
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    device = (
+        torch.device('cuda')
+        if torch.cuda.is_available()
+        else torch.device('cpu')
+    )
 
     # Load the pretrained VLM --> uses default `load()` function
     vlm = load(cfg.model_path, hf_token=hf_token)
     vlm.to(device, dtype=torch.bfloat16)
 
     # Initial Setup
-    image = Image.open(requests.get(DEFAULT_IMAGE_URL, stream=True).raw).convert('RGB')
+    image = Image.open(
+        requests.get(DEFAULT_IMAGE_URL, stream=True).raw
+    ).convert('RGB')
     prompt_builder = vlm.get_prompt_builder()
     system_prompt = prompt_builder.system_prompt
 
@@ -103,8 +112,12 @@ def generate(cfg: GenerateConfig) -> None:
         elif user_input.lower().startswith('i'):
             # Note => a new image starts a _new_ conversation (for now)
             url = input('\n|=>> Enter Image URL: ')
-            image = Image.open(requests.get(url, stream=True).raw).convert('RGB')
-            prompt_builder = vlm.get_prompt_builder(system_prompt=system_prompt)
+            image = Image.open(requests.get(url, stream=True).raw).convert(
+                'RGB'
+            )
+            prompt_builder = vlm.get_prompt_builder(
+                system_prompt=system_prompt
+            )
 
         elif user_input.lower().startswith('p'):
             if system_prompt is None:
@@ -113,14 +126,18 @@ def generate(cfg: GenerateConfig) -> None:
 
             # Note => a new system prompt starts a _new_ conversation
             system_prompt = input('\n|=>> Enter New System Prompt: ')
-            prompt_builder = vlm.get_prompt_builder(system_prompt=system_prompt)
+            prompt_builder = vlm.get_prompt_builder(
+                system_prompt=system_prompt
+            )
             print(
                 '\n[*] Set New System Prompt:\n'
                 f"    => Prompt Template:\n{prompt_builder.get_potential_prompt('<INSERT PROMPT HERE>')}\n\n"
             )
 
         else:
-            print('\n[*] Entering Chat Session - CTRL-C to start afresh!\n===\n')
+            print(
+                '\n[*] Entering Chat Session - CTRL-C to start afresh!\n===\n'
+            )
             try:
                 while True:
                     message = input('|=>> Enter Prompt: ')

@@ -32,11 +32,13 @@ from dataclasses import dataclass
 import einops
 import numpy as np
 import torch
-from torch import Tensor
-
 from lerobot.configs.types import PolicyFeature
 from lerobot.constants import OBS_ENV_STATE, OBS_IMAGE, OBS_IMAGES, OBS_STATE
-from lerobot.processor.pipeline import ObservationProcessor, ProcessorStepRegistry
+from lerobot.processor.pipeline import (
+    ObservationProcessor,
+    ProcessorStepRegistry,
+)
+from torch import Tensor
 
 
 @dataclass
@@ -70,13 +72,19 @@ class VanillaObservationProcessor(ObservationProcessor):
         # Validate image format
         _, h, w, c = img_tensor.shape
         if not (c < h and c < w):
-            raise ValueError(f'Expected channel-last images, but got shape {img_tensor.shape}')
+            raise ValueError(
+                f'Expected channel-last images, but got shape {img_tensor.shape}'
+            )
 
         if img_tensor.dtype != torch.uint8:
-            raise ValueError(f'Expected torch.uint8 images, but got {img_tensor.dtype}')
+            raise ValueError(
+                f'Expected torch.uint8 images, but got {img_tensor.dtype}'
+            )
 
         # Convert to channel-first format
-        img_tensor = einops.rearrange(img_tensor, 'b h w c -> b c h w').contiguous()
+        img_tensor = einops.rearrange(
+            img_tensor, 'b h w c -> b c h w'
+        ).contiguous()
 
         # Convert to float32 and normalize to [0, 1]
         img_tensor = img_tensor.type(torch.float32) / 255.0
@@ -94,7 +102,9 @@ class VanillaObservationProcessor(ObservationProcessor):
             pixels = processed_obs.pop('pixels')
 
             if isinstance(pixels, dict):
-                imgs = {f'{OBS_IMAGES}.{key}': img for key, img in pixels.items()}
+                imgs = {
+                    f'{OBS_IMAGES}.{key}': img for key, img in pixels.items()
+                }
             else:
                 imgs = {OBS_IMAGE: pixels}
 
@@ -120,7 +130,9 @@ class VanillaObservationProcessor(ObservationProcessor):
     def observation(self, observation):
         return self._process_observation(observation)
 
-    def feature_contract(self, features: dict[str, PolicyFeature]) -> dict[str, PolicyFeature]:
+    def feature_contract(
+        self, features: dict[str, PolicyFeature]
+    ) -> dict[str, PolicyFeature]:
         """Transforms feature keys to a standardized contract.
 
         This method handles several renaming patterns:

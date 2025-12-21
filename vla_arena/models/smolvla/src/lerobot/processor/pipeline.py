@@ -42,9 +42,8 @@ from typing import Any, Protocol, TypedDict
 import torch
 from huggingface_hub import ModelHubMixin, hf_hub_download
 from huggingface_hub.errors import HfHubHTTPError
-from safetensors.torch import load_file, save_file
-
 from lerobot.configs.types import PolicyFeature
+from safetensors.torch import load_file, save_file
 
 
 class TransitionKey(str, Enum):
@@ -93,7 +92,9 @@ class ProcessorStepRegistry:
         """
 
         def decorator(step_class: type) -> type:
-            registration_name = name if name is not None else step_class.__name__
+            registration_name = (
+                name if name is not None else step_class.__name__
+            )
 
             if registration_name in cls._registry:
                 raise ValueError(
@@ -188,10 +189,14 @@ class ProcessorStep(Protocol):
 
     def reset(self) -> None: ...
 
-    def feature_contract(self, features: dict[str, PolicyFeature]) -> dict[str, PolicyFeature]: ...
+    def feature_contract(
+        self, features: dict[str, PolicyFeature]
+    ) -> dict[str, PolicyFeature]: ...
 
 
-def _default_batch_to_transition(batch: dict[str, Any]) -> EnvTransition:  # noqa: D401
+def _default_batch_to_transition(
+    batch: dict[str, Any],
+) -> EnvTransition:  # noqa: D401
     """Convert a *batch* dict coming from Learobot replay/dataset code into an
     ``EnvTransition`` dictionary.
 
@@ -212,13 +217,17 @@ def _default_batch_to_transition(batch: dict[str, Any]) -> EnvTransition:  # noq
     """
 
     # Extract observation keys
-    observation_keys = {k: v for k, v in batch.items() if k.startswith('observation.')}
+    observation_keys = {
+        k: v for k, v in batch.items() if k.startswith('observation.')
+    }
     observation = observation_keys if observation_keys else None
 
     # Extract padding and task keys for complementary data
     pad_keys = {k: v for k, v in batch.items() if '_is_pad' in k}
     task_key = {'task': batch['task']} if 'task' in batch else {}
-    complementary_data = {**pad_keys, **task_key} if pad_keys or task_key else {}
+    complementary_data = (
+        {**pad_keys, **task_key} if pad_keys or task_key else {}
+    )
 
     transition: EnvTransition = {
         TransitionKey.OBSERVATION: observation,
@@ -232,7 +241,9 @@ def _default_batch_to_transition(batch: dict[str, Any]) -> EnvTransition:  # noq
     return transition
 
 
-def _default_transition_to_batch(transition: EnvTransition) -> dict[str, Any]:  # noqa: D401
+def _default_transition_to_batch(
+    transition: EnvTransition,
+) -> dict[str, Any]:  # noqa: D401
     """Inverse of :pyfunc:`_default_batch_to_transition`. Returns a dict with
     the canonical field names used throughout *LeRobot*.
     """
@@ -248,7 +259,9 @@ def _default_transition_to_batch(transition: EnvTransition) -> dict[str, Any]:  
     # Add padding and task data from complementary_data
     complementary_data = transition.get(TransitionKey.COMPLEMENTARY_DATA)
     if complementary_data:
-        pad_data = {k: v for k, v in complementary_data.items() if '_is_pad' in k}
+        pad_data = {
+            k: v for k, v in complementary_data.items() if '_is_pad' in k
+        }
         batch.update(pad_data)
 
         if 'task' in complementary_data:
@@ -306,8 +319,8 @@ class RobotProcessor(ModelHubMixin):
     to_transition: Callable[[dict[str, Any]], EnvTransition] = field(
         default_factory=lambda: _default_batch_to_transition, repr=False
     )
-    to_output: Callable[[EnvTransition], dict[str, Any] | EnvTransition] = field(
-        default_factory=lambda: _default_transition_to_batch, repr=False
+    to_output: Callable[[EnvTransition], dict[str, Any] | EnvTransition] = (
+        field(default_factory=lambda: _default_transition_to_batch, repr=False)
     )
 
     # Processor-level hooks for observation/monitoring
@@ -360,7 +373,11 @@ class RobotProcessor(ModelHubMixin):
                 hook(idx, current_transition)
 
         # Convert back to original format if needed
-        return self.to_output(current_transition) if called_with_batch else current_transition
+        return (
+            self.to_output(current_transition)
+            if called_with_batch
+            else current_transition
+        )
 
     def _prepare_transition(
         self, data: EnvTransition | dict[str, Any]
@@ -377,7 +394,9 @@ class RobotProcessor(ModelHubMixin):
             ValueError: If the transition is not a valid EnvTransition format.
         """
         # Check if data is already an EnvTransition or needs conversion
-        if isinstance(data, dict) and not all(isinstance(k, TransitionKey) for k in data.keys()):
+        if isinstance(data, dict) and not all(
+            isinstance(k, TransitionKey) for k in data.keys()
+        ):
             # It's a batch dict, convert it
             called_with_batch = True
             transition = self.to_transition(data)
@@ -388,11 +407,15 @@ class RobotProcessor(ModelHubMixin):
 
         # Basic validation
         if not isinstance(transition, dict):
-            raise ValueError(f'EnvTransition must be a dictionary. Got {type(transition).__name__}')
+            raise ValueError(
+                f'EnvTransition must be a dictionary. Got {type(transition).__name__}'
+            )
 
         return transition, called_with_batch
 
-    def step_through(self, data: EnvTransition | dict[str, Any]) -> Iterable[EnvTransition]:
+    def step_through(
+        self, data: EnvTransition | dict[str, Any]
+    ) -> Iterable[EnvTransition]:
         """Yield the intermediate results after each processor step.
 
         This is a low-level method that does NOT apply hooks. It simply executes each step
@@ -426,7 +449,10 @@ class RobotProcessor(ModelHubMixin):
         self.save_pretrained(save_directory, config_filename=config_filename)
 
     def save_pretrained(
-        self, save_directory: str | Path, config_filename: str | None = None, **kwargs
+        self,
+        save_directory: str | Path,
+        config_filename: str | None = None,
+        **kwargs,
     ):
         """Serialize the processor definition and parameters to *save_directory*.
 
@@ -454,7 +480,9 @@ class RobotProcessor(ModelHubMixin):
 
         for step_index, processor_step in enumerate(self.steps):
             # Check if step was registered
-            registry_name = getattr(processor_step.__class__, '_registry_name', None)
+            registry_name = getattr(
+                processor_step.__class__, '_registry_name', None
+            )
 
             step_entry: dict[str, Any] = {}
             if registry_name:
@@ -487,18 +515,23 @@ class RobotProcessor(ModelHubMixin):
                     # Include pipeline name and step index to ensure unique filenames
                     # This prevents conflicts when multiple processors are saved in the same directory
                     if registry_name:
-                        state_filename = (
-                            f'{sanitized_name}_step_{step_index}_{registry_name}.safetensors'
-                        )
+                        state_filename = f'{sanitized_name}_step_{step_index}_{registry_name}.safetensors'
                     else:
-                        state_filename = f'{sanitized_name}_step_{step_index}.safetensors'
+                        state_filename = (
+                            f'{sanitized_name}_step_{step_index}.safetensors'
+                        )
 
-                    save_file(cloned_state, os.path.join(str(save_directory), state_filename))
+                    save_file(
+                        cloned_state,
+                        os.path.join(str(save_directory), state_filename),
+                    )
                     step_entry['state_file'] = state_filename
 
             config['steps'].append(step_entry)
 
-        with open(os.path.join(str(save_directory), config_filename), 'w') as file_pointer:
+        with open(
+            os.path.join(str(save_directory), config_filename), 'w'
+        ) as file_pointer:
             json.dump(config, file_pointer, indent=2)
 
     @classmethod
@@ -584,7 +617,9 @@ class RobotProcessor(ModelHubMixin):
                 # Look for any .json file in the directory
                 json_files = list(base_path.glob('*.json'))
                 if len(json_files) == 0:
-                    raise FileNotFoundError(f'No .json configuration files found in {source}')
+                    raise FileNotFoundError(
+                        f'No .json configuration files found in {source}'
+                    )
                 elif len(json_files) > 1:
                     raise ValueError(
                         f'Multiple .json files found in {source}: {[f.name for f in json_files]}. '
@@ -666,7 +701,9 @@ class RobotProcessor(ModelHubMixin):
             if 'registry_name' in step_entry:
                 # Load from registry
                 try:
-                    step_class = ProcessorStepRegistry.get(step_entry['registry_name'])
+                    step_class = ProcessorStepRegistry.get(
+                        step_entry['registry_name']
+                    )
                     step_key = step_entry['registry_name']
                 except KeyError as e:
                     raise ImportError(
@@ -702,14 +739,18 @@ class RobotProcessor(ModelHubMixin):
                     override_keys.discard(step_key)
 
             except Exception as e:
-                step_name = step_entry.get('registry_name', step_entry.get('class', 'Unknown'))
+                step_name = step_entry.get(
+                    'registry_name', step_entry.get('class', 'Unknown')
+                )
                 raise ValueError(
                     f"Failed to instantiate processor step '{step_name}' with config: {step_entry.get('config', {})}. "
                     f'Error: {str(e)}'
                 ) from e
 
             # Load state if available
-            if 'state_file' in step_entry and hasattr(step_instance, 'load_state_dict'):
+            if 'state_file' in step_entry and hasattr(
+                step_instance, 'load_state_dict'
+            ):
                 if Path(source).is_dir():
                     # Local path - read directly
                     state_path = str(base_path / step_entry['state_file'])
@@ -764,11 +805,15 @@ class RobotProcessor(ModelHubMixin):
             return RobotProcessor(self.steps[idx], self.name)
         return self.steps[idx]
 
-    def register_before_step_hook(self, fn: Callable[[int, EnvTransition], None]):
+    def register_before_step_hook(
+        self, fn: Callable[[int, EnvTransition], None]
+    ):
         """Attach fn to be executed before every processor step."""
         self.before_step_hooks.append(fn)
 
-    def unregister_before_step_hook(self, fn: Callable[[int, EnvTransition], None]):
+    def unregister_before_step_hook(
+        self, fn: Callable[[int, EnvTransition], None]
+    ):
         """Remove a previously registered before_step hook.
 
         Args:
@@ -784,11 +829,15 @@ class RobotProcessor(ModelHubMixin):
                 f'Hook {fn} not found in before_step_hooks. Make sure to pass the exact same function reference.'
             ) from None
 
-    def register_after_step_hook(self, fn: Callable[[int, EnvTransition], None]):
+    def register_after_step_hook(
+        self, fn: Callable[[int, EnvTransition], None]
+    ):
         """Attach fn to be executed after every processor step."""
         self.after_step_hooks.append(fn)
 
-    def unregister_after_step_hook(self, fn: Callable[[int, EnvTransition], None]):
+    def unregister_after_step_hook(
+        self, fn: Callable[[int, EnvTransition], None]
+    ):
         """Remove a previously registered after_step hook.
 
         Args:
@@ -820,7 +869,9 @@ class RobotProcessor(ModelHubMixin):
             steps_repr = f"steps={len(step_names)}: [{', '.join(step_names)}]"
         else:
             # Show first 2 and last 1 with ellipsis for long lists
-            displayed = f'{step_names[0]}, {step_names[1]}, ..., {step_names[-1]}'
+            displayed = (
+                f'{step_names[0]}, {step_names[1]}, ..., {step_names[-1]}'
+            )
             steps_repr = f'steps={len(step_names)}: [{displayed}]'
 
         parts = [f"name='{self.name}'", steps_repr]
@@ -914,7 +965,9 @@ class ObservationProcessor:
     def reset(self) -> None:
         pass
 
-    def feature_contract(self, features: dict[str, PolicyFeature]) -> dict[str, PolicyFeature]:
+    def feature_contract(
+        self, features: dict[str, PolicyFeature]
+    ) -> dict[str, PolicyFeature]:
         return features
 
 
@@ -974,7 +1027,9 @@ class ActionProcessor:
     def reset(self) -> None:
         pass
 
-    def feature_contract(self, features: dict[str, PolicyFeature]) -> dict[str, PolicyFeature]:
+    def feature_contract(
+        self, features: dict[str, PolicyFeature]
+    ) -> dict[str, PolicyFeature]:
         return features
 
 
@@ -1033,7 +1088,9 @@ class RewardProcessor:
     def reset(self) -> None:
         pass
 
-    def feature_contract(self, features: dict[str, PolicyFeature]) -> dict[str, PolicyFeature]:
+    def feature_contract(
+        self, features: dict[str, PolicyFeature]
+    ) -> dict[str, PolicyFeature]:
         return features
 
 
@@ -1097,7 +1154,9 @@ class DoneProcessor:
     def reset(self) -> None:
         pass
 
-    def feature_contract(self, features: dict[str, PolicyFeature]) -> dict[str, PolicyFeature]:
+    def feature_contract(
+        self, features: dict[str, PolicyFeature]
+    ) -> dict[str, PolicyFeature]:
         return features
 
 
@@ -1157,7 +1216,9 @@ class TruncatedProcessor:
     def reset(self) -> None:
         pass
 
-    def feature_contract(self, features: dict[str, PolicyFeature]) -> dict[str, PolicyFeature]:
+    def feature_contract(
+        self, features: dict[str, PolicyFeature]
+    ) -> dict[str, PolicyFeature]:
         return features
 
 
@@ -1222,7 +1283,9 @@ class InfoProcessor:
     def reset(self) -> None:
         pass
 
-    def feature_contract(self, features: dict[str, PolicyFeature]) -> dict[str, PolicyFeature]:
+    def feature_contract(
+        self, features: dict[str, PolicyFeature]
+    ) -> dict[str, PolicyFeature]:
         return features
 
 
@@ -1250,10 +1313,14 @@ class ComplementaryDataProcessor:
         if complementary_data is None:
             return transition
 
-        processed_complementary_data = self.complementary_data(complementary_data)
+        processed_complementary_data = self.complementary_data(
+            complementary_data
+        )
         # Create a new transition dict with the processed complementary data
         new_transition = transition.copy()
-        new_transition[TransitionKey.COMPLEMENTARY_DATA] = processed_complementary_data
+        new_transition[TransitionKey.COMPLEMENTARY_DATA] = (
+            processed_complementary_data
+        )
         return new_transition
 
     def get_config(self) -> dict[str, Any]:
@@ -1268,7 +1335,9 @@ class ComplementaryDataProcessor:
     def reset(self) -> None:
         pass
 
-    def feature_contract(self, features: dict[str, PolicyFeature]) -> dict[str, PolicyFeature]:
+    def feature_contract(
+        self, features: dict[str, PolicyFeature]
+    ) -> dict[str, PolicyFeature]:
         return features
 
 
@@ -1290,5 +1359,7 @@ class IdentityProcessor:
     def reset(self) -> None:
         pass
 
-    def feature_contract(self, features: dict[str, PolicyFeature]) -> dict[str, PolicyFeature]:
+    def feature_contract(
+        self, features: dict[str, PolicyFeature]
+    ) -> dict[str, PolicyFeature]:
         return features

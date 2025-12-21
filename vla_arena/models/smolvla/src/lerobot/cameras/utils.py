@@ -35,10 +35,13 @@ from typing import TypeAlias
 from .camera import Camera
 from .configs import CameraConfig, Cv2Rotation
 
+
 IndexOrPath: TypeAlias = int | Path
 
 
-def make_cameras_from_configs(camera_configs: dict[str, CameraConfig]) -> dict[str, Camera]:
+def make_cameras_from_configs(
+    camera_configs: dict[str, CameraConfig],
+) -> dict[str, Camera]:
     cameras = {}
 
     for key, cfg in camera_configs.items():

@@ -28,8 +28,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from datasets import Dataset
-
-from lerobot.datasets.push_dataset_to_hub.utils import calculate_episode_data_index
+from lerobot.datasets.push_dataset_to_hub.utils import (
+    calculate_episode_data_index,
+)
 from lerobot.datasets.sampler import EpisodeAwareSampler
 from lerobot.datasets.utils import hf_transform_to_torch
 
@@ -76,7 +77,9 @@ def test_episode_indices_to_use():
     )
     dataset.set_transform(hf_transform_to_torch)
     episode_data_index = calculate_episode_data_index(dataset)
-    sampler = EpisodeAwareSampler(episode_data_index, episode_indices_to_use=[0, 2])
+    sampler = EpisodeAwareSampler(
+        episode_data_index, episode_indices_to_use=[0, 2]
+    )
     assert sampler.indices == [0, 1, 3, 4, 5]
     assert len(sampler) == 5
     assert list(sampler) == [0, 1, 3, 4, 5]

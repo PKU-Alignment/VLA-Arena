@@ -12,15 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from flax import nnx
 import jax
 import pytest
-
+from flax import nnx
 from openpi.models import model as _model
-from openpi.models import pi0_config
-from openpi.models import pi0_fast
-from openpi.shared import download
-from openpi.shared import nnx_utils
+from openpi.models import pi0_config, pi0_fast
+from openpi.shared import download, nnx_utils
 
 
 def test_pi0_model():
@@ -34,8 +31,14 @@ def test_pi0_model():
     loss = nnx_utils.module_jit(model.compute_loss)(key, obs, act)
     assert loss.shape == (batch_size, config.action_horizon)
 
-    actions = nnx_utils.module_jit(model.sample_actions)(key, obs, num_steps=10)
-    assert actions.shape == (batch_size, model.action_horizon, model.action_dim)
+    actions = nnx_utils.module_jit(model.sample_actions)(
+        key, obs, num_steps=10
+    )
+    assert actions.shape == (
+        batch_size,
+        model.action_horizon,
+        model.action_dim,
+    )
 
 
 def test_pi0_lora_model():
@@ -49,8 +52,14 @@ def test_pi0_lora_model():
     loss = nnx_utils.module_jit(model.compute_loss)(key, obs, act)
     assert loss.shape == (batch_size, config.action_horizon)
 
-    actions = nnx_utils.module_jit(model.sample_actions)(key, obs, num_steps=10)
-    assert actions.shape == (batch_size, model.action_horizon, model.action_dim)
+    actions = nnx_utils.module_jit(model.sample_actions)(
+        key, obs, num_steps=10
+    )
+    assert actions.shape == (
+        batch_size,
+        model.action_horizon,
+        model.action_dim,
+    )
 
 
 def test_pi0_fast_model():
@@ -99,7 +108,9 @@ def test_model_restore():
 
     model = config.load(
         _model.restore_params(
-            download.maybe_download("gs://openpi-assets/checkpoints/pi0_base/params")
+            download.maybe_download(
+                "gs://openpi-assets/checkpoints/pi0_base/params"
+            )
         )
     )
 
@@ -107,4 +118,8 @@ def test_model_restore():
     assert loss.shape == (batch_size, config.action_horizon)
 
     actions = model.sample_actions(key, obs, num_steps=10)
-    assert actions.shape == (batch_size, model.action_horizon, model.action_dim)
+    assert actions.shape == (
+        batch_size,
+        model.action_horizon,
+        model.action_dim,
+    )

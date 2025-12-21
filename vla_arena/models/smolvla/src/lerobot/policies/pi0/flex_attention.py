@@ -30,6 +30,7 @@ import torch
 import torch.nn.functional as F  # noqa: N812
 from packaging.version import Version
 
+
 if Version(torch.__version__) > Version('2.5.0'):
     # Ffex attention is only available from torch 2.5 onwards
     from torch.nn.attention.flex_attention import (
@@ -62,18 +63,32 @@ def flex_attention_forward(
 
     key_states = key_states[:, :, :, None, :]
     key_states = key_states.expand(
-        batch_size, key_states.shape[1], num_key_value_heads, num_key_value_groups, head_dim
+        batch_size,
+        key_states.shape[1],
+        num_key_value_heads,
+        num_key_value_groups,
+        head_dim,
     )
     key_states = key_states.reshape(
-        batch_size, key_states.shape[1], num_key_value_heads * num_key_value_groups, head_dim
+        batch_size,
+        key_states.shape[1],
+        num_key_value_heads * num_key_value_groups,
+        head_dim,
     )
 
     value_states = value_states[:, :, :, None, :]
     value_states = value_states.expand(
-        batch_size, value_states.shape[1], num_key_value_heads, num_key_value_groups, head_dim
+        batch_size,
+        value_states.shape[1],
+        num_key_value_heads,
+        num_key_value_groups,
+        head_dim,
     )
     value_states = value_states.reshape(
-        batch_size, value_states.shape[1], num_key_value_heads * num_key_value_groups, head_dim
+        batch_size,
+        value_states.shape[1],
+        num_key_value_heads * num_key_value_groups,
+        head_dim,
     )
 
     query_states = query_states.transpose(1, 2)
@@ -91,7 +106,9 @@ def flex_attention_forward(
         if causal_mask.shape[1] == 1 and query_states.shape[1] > 1:
             causal_mask = causal_mask.expand(-1, query_states.shape[1], -1, -1)
 
-    def precomputed_mask_factory(precomputed_mask: torch.Tensor) -> _mask_mod_signature:
+    def precomputed_mask_factory(
+        precomputed_mask: torch.Tensor,
+    ) -> _mask_mod_signature:
         def mask_mod(b, h, q_idx, kv_idx):
             # Danger zone: if b,h,q_idx,kv_idx exceed the shape, device-side assert occurs.
             return precomputed_mask[b][h][q_idx][kv_idx]
@@ -146,7 +163,9 @@ def flex_attention_forward(
     )
 
     attn_output = attn_output.to(dtype=original_dtype)
-    attn_output = attn_output.transpose(1, 2).contiguous()  # [B, Q_LEN, H, head_dim]
+    attn_output = attn_output.transpose(
+        1, 2
+    ).contiguous()  # [B, Q_LEN, H, head_dim]
     attn_output = attn_output.reshape(
         batch_size,
         -1,

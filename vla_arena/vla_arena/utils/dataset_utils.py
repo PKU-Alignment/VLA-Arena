@@ -25,7 +25,12 @@ def get_dataset_info(dataset_path, filter_key=None, verbose=True):
     if filter_key is not None:
         # use the demonstrations from the filter key instead
         print(f'NOTE: using filter key {filter_key}')
-        demos = sorted([elem.decode('utf-8') for elem in np.array(f[f'mask/{filter_key}'])])
+        demos = sorted(
+            [
+                elem.decode('utf-8')
+                for elem in np.array(f[f'mask/{filter_key}'])
+            ]
+        )
     else:
         # use all demonstrations
         demos = sorted(list(f['data'].keys()))
@@ -34,7 +39,12 @@ def get_dataset_info(dataset_path, filter_key=None, verbose=True):
         if 'mask' in f:
             all_filter_keys = {}
             for fk in f['mask']:
-                fk_demos = sorted([elem.decode('utf-8') for elem in np.array(f[f'mask/{fk}'])])
+                fk_demos = sorted(
+                    [
+                        elem.decode('utf-8')
+                        for elem in np.array(f[f'mask/{fk}'])
+                    ]
+                )
                 all_filter_keys[fk] = fk_demos
 
     # put demonstration list in increasing episode order
@@ -88,13 +98,19 @@ def get_dataset_info(dataset_path, filter_key=None, verbose=True):
 
     print('==== Dataset Structure ====')
     for ep in demos:
-        print('episode {} with {} transitions'.format(ep, f[f'data/{ep}'].attrs['num_samples']))
+        print(
+            'episode {} with {} transitions'.format(
+                ep, f[f'data/{ep}'].attrs['num_samples']
+            )
+        )
         for k in f[f'data/{ep}']:
             if k in ['obs', 'next_obs']:
                 print(f'    key: {k}')
                 for obs_k in f[f'data/{ep}/{k}']:
                     shape = f[f'data/{ep}/{k}/{obs_k}'].shape
-                    print(f'        observation key {obs_k} with shape {shape}')
+                    print(
+                        f'        observation key {obs_k} with shape {shape}'
+                    )
             elif isinstance(f[f'data/{ep}/{k}'], h5py.Dataset):
                 key_shape = f[f'data/{ep}/{k}'].shape
                 print(f'    key: {k} with shape {key_shape}')

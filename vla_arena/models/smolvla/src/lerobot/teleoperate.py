@@ -72,9 +72,12 @@ from pprint import pformat
 
 import draccus
 import rerun as rr
-
-from lerobot.cameras.opencv.configuration_opencv import OpenCVCameraConfig  # noqa: F401
-from lerobot.cameras.realsense.configuration_realsense import RealSenseCameraConfig  # noqa: F401
+from lerobot.cameras.opencv.configuration_opencv import (  # noqa: F401
+    OpenCVCameraConfig,
+)
+from lerobot.cameras.realsense.configuration_realsense import (  # noqa: F401
+    RealSenseCameraConfig,
+)
 from lerobot.robots import (  # noqa: F401
     Robot,
     RobotConfig,
@@ -162,7 +165,11 @@ def teleoperate(cfg: TeleoperateConfig):
 
     try:
         teleop_loop(
-            teleop, robot, cfg.fps, display_data=cfg.display_data, duration=cfg.teleop_time_s
+            teleop,
+            robot,
+            cfg.fps,
+            display_data=cfg.display_data,
+            duration=cfg.teleop_time_s,
         )
     except KeyboardInterrupt:
         pass

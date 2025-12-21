@@ -20,16 +20,11 @@ from typing import Any
 
 import etils.epath as epath
 import flax.nnx as nnx
-from flax.training import common_utils
 import flax.traverse_util as traverse_util
 import jax
 import jax.experimental
 import jax.numpy as jnp
 import numpy as np
-import optax
-import tqdm_loggable.auto as tqdm
-import wandb
-
 import openpi.models.model as _model
 import openpi.shared.array_typing as at
 import openpi.shared.nnx_utils as nnx_utils
@@ -40,15 +35,27 @@ import openpi.training.optimizer as _optimizer
 import openpi.training.sharding as sharding
 import openpi.training.utils as training_utils
 import openpi.training.weight_loaders as _weight_loaders
+import optax
+import tqdm_loggable.auto as tqdm
+import wandb
+from flax.training import common_utils
 
 
 def init_logging():
     """Custom logging format for better readability."""
-    level_mapping = {"DEBUG": "D", "INFO": "I", "WARNING": "W", "ERROR": "E", "CRITICAL": "C"}
+    level_mapping = {
+        "DEBUG": "D",
+        "INFO": "I",
+        "WARNING": "W",
+        "ERROR": "E",
+        "CRITICAL": "C",
+    }
 
     class CustomFormatter(logging.Formatter):
         def format(self, record):
-            record.levelname = level_mapping.get(record.levelname, record.levelname)
+            record.levelname = level_mapping.get(
+                record.levelname, record.levelname
+            )
             return super().format(record)
 
     formatter = CustomFormatter(
@@ -62,7 +69,11 @@ def init_logging():
 
 
 def init_wandb(
-    config: _config.TrainConfig, *, resuming: bool, log_code: bool = False, enabled: bool = True
+    config: _config.TrainConfig,
+    *,
+    resuming: bool,
+    log_code: bool = False,
+    enabled: bool = True,
 ):
     if not enabled:
         wandb.init(mode="disabled")
@@ -70,7 +81,9 @@ def init_wandb(
 
     ckpt_dir = config.checkpoint_dir
     if not ckpt_dir.exists():
-        raise FileNotFoundError(f"Checkpoint directory {ckpt_dir} does not exist.")
+        raise FileNotFoundError(
+            f"Checkpoint directory {ckpt_dir} does not exist."
+        )
     if resuming:
         run_id = (ckpt_dir / "wandb_id.txt").read_text().strip()
         wandb.init(id=run_id, resume="must", project=config.project_name)
@@ -92,7 +105,10 @@ def _load_weights_and_validate(
     """Loads and validates the weights. Returns a loaded subset of the weights."""
     loaded_params = loader.load(params_shape)
     at.check_pytree_equality(
-        expected=params_shape, got=loaded_params, check_shapes=True, check_dtypes=True
+        expected=params_shape,
+        got=loaded_params,
+        check_shapes=True,
+        check_dtypes=True,
     )
 
     # Remove jax.ShapeDtypeStruct from the loaded params. This makes sure that only the loaded params are returned.
@@ -107,9 +123,15 @@ def _load_weights_and_validate(
 
 @at.typecheck
 def init_train_state(
-    config: _config.TrainConfig, init_rng: at.KeyArrayLike, mesh: jax.sharding.Mesh, *, resume: bool
+    config: _config.TrainConfig,
+    init_rng: at.KeyArrayLike,
+    mesh: jax.sharding.Mesh,
+    *,
+    resume: bool,
 ) -> tuple[training_utils.TrainState, Any]:
-    tx = _optimizer.create_optimizer(config.optimizer, config.lr_schedule, weight_decay_mask=None)
+    tx = _optimizer.create_optimizer(
+        config.optimizer, config.lr_schedule, weight_decay_mask=None
+    )
 
     def init(
         rng: at.KeyArrayLike, partial_params: at.Params | None = None
@@ -128,7 +150,9 @@ def init_train_state(
         params = nnx.state(model)
         # Convert frozen params to bfloat16.
         params = nnx_utils.state_map(
-            params, config.freeze_filter, lambda p: p.replace(p.value.astype(jnp.bfloat16))
+            params,
+            config.freeze_filter,
+            lambda p: p.replace(p.value.astype(jnp.bfloat16)),
         )
 
         return training_utils.TrainState(
@@ -150,7 +174,9 @@ def init_train_state(
     partial_params = _load_weights_and_validate(
         config.weight_loader, train_state_shape.params.to_pure_dict()
     )
-    replicated_sharding = jax.sharding.NamedSharding(mesh, jax.sharding.PartitionSpec())
+    replicated_sharding = jax.sharding.NamedSharding(
+        mesh, jax.sharding.PartitionSpec()
+    )
 
     # Initialize the train state and mix in the partial params.
     train_state = jax.jit(
@@ -180,7 +206,9 @@ def train_step(
         observation: _model.Observation,
         actions: _model.Actions,
     ):
-        chunked_loss = model.compute_loss(rng, observation, actions, train=True)
+        chunked_loss = model.compute_loss(
+            rng, observation, actions, train=True
+        )
         return jnp.mean(chunked_loss)
 
     train_rng = jax.random.fold_in(rng, state.step)
@@ -207,7 +235,8 @@ def train_step(
         new_state = dataclasses.replace(
             new_state,
             ema_params=jax.tree.map(
-                lambda old, new: state.ema_decay * old + (1 - state.ema_decay) * new,
+                lambda old, new: state.ema_decay * old
+                + (1 - state.ema_decay) * new,
                 state.ema_params,
                 new_params,
             ),
@@ -218,7 +247,11 @@ def train_step(
         model,
         nnx.All(
             nnx.Param,
-            nnx.Not(nnx_utils.PathRegex(".*/(bias|scale|pos_embedding|input_embedding)")),
+            nnx.Not(
+                nnx_utils.PathRegex(
+                    ".*/(bias|scale|pos_embedding|input_embedding)"
+                )
+            ),
             lambda _, x: x.value.ndim > 1,
         ),
     )
@@ -239,14 +272,21 @@ def main(config: _config.TrainConfig):
             f"Batch size {config.batch_size} must be divisible by the number of devices {jax.device_count()}."
         )
 
-    jax.config.update("jax_compilation_cache_dir", str(epath.Path("~/.cache/jax").expanduser()))
+    jax.config.update(
+        "jax_compilation_cache_dir",
+        str(epath.Path("~/.cache/jax").expanduser()),
+    )
 
     rng = jax.random.key(config.seed)
     train_rng, init_rng = jax.random.split(rng)
 
     mesh = sharding.make_mesh(config.fsdp_devices)
-    data_sharding = jax.sharding.NamedSharding(mesh, jax.sharding.PartitionSpec(sharding.DATA_AXIS))
-    replicated_sharding = jax.sharding.NamedSharding(mesh, jax.sharding.PartitionSpec())
+    data_sharding = jax.sharding.NamedSharding(
+        mesh, jax.sharding.PartitionSpec(sharding.DATA_AXIS)
+    )
+    replicated_sharding = jax.sharding.NamedSharding(
+        mesh, jax.sharding.PartitionSpec()
+    )
 
     checkpoint_manager, resuming = _checkpoints.initialize_checkpoint_dir(
         config.checkpoint_dir,
@@ -263,27 +303,41 @@ def main(config: _config.TrainConfig):
     )
     data_iter = iter(data_loader)
     batch = next(data_iter)
-    logging.info(f"Initialized data loader:\n{training_utils.array_tree_to_info(batch)}")
+    logging.info(
+        f"Initialized data loader:\n{training_utils.array_tree_to_info(batch)}"
+    )
 
     # Log images from first batch to sanity check.
     images_to_log = [
-        wandb.Image(np.concatenate([np.array(img[i]) for img in batch[0].images.values()], axis=1))
+        wandb.Image(
+            np.concatenate(
+                [np.array(img[i]) for img in batch[0].images.values()], axis=1
+            )
+        )
         for i in range(min(5, len(next(iter(batch[0].images.values())))))
     ]
     wandb.log({"camera_views": images_to_log}, step=0)
 
-    train_state, train_state_sharding = init_train_state(config, init_rng, mesh, resume=resuming)
+    train_state, train_state_sharding = init_train_state(
+        config, init_rng, mesh, resume=resuming
+    )
     jax.block_until_ready(train_state)
     logging.info(
         f"Initialized train state:\n{training_utils.array_tree_to_info(train_state.params)}"
     )
 
     if resuming:
-        train_state = _checkpoints.restore_state(checkpoint_manager, train_state, data_loader)
+        train_state = _checkpoints.restore_state(
+            checkpoint_manager, train_state, data_loader
+        )
 
     ptrain_step = jax.jit(
         functools.partial(train_step, config),
-        in_shardings=(replicated_sharding, train_state_sharding, data_sharding),
+        in_shardings=(
+            replicated_sharding,
+            train_state_sharding,
+            data_sharding,
+        ),
         out_shardings=(train_state_sharding, replicated_sharding),
         donate_argnums=(1,),
     )
@@ -303,8 +357,12 @@ def main(config: _config.TrainConfig):
         infos.append(info)
         if step % config.log_interval == 0:
             stacked_infos = common_utils.stack_forest(infos)
-            reduced_info = jax.device_get(jax.tree.map(jnp.mean, stacked_infos))
-            info_str = ", ".join(f"{k}={v:.4f}" for k, v in reduced_info.items())
+            reduced_info = jax.device_get(
+                jax.tree.map(jnp.mean, stacked_infos)
+            )
+            info_str = ", ".join(
+                f"{k}={v:.4f}" for k, v in reduced_info.items()
+            )
             pbar.write(f"Step {step}: {info_str}")
             wandb.log(reduced_info, step=step)
             infos = []
@@ -313,7 +371,9 @@ def main(config: _config.TrainConfig):
         if (
             step % config.save_interval == 0 and step > start_step
         ) or step == config.num_train_steps - 1:
-            _checkpoints.save_state(checkpoint_manager, train_state, data_loader, step)
+            _checkpoints.save_state(
+                checkpoint_manager, train_state, data_loader, step
+            )
 
     logging.info("Waiting for checkpoint manager to finish")
     checkpoint_manager.wait_until_finished()

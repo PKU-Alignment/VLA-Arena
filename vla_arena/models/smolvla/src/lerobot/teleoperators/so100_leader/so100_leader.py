@@ -38,6 +38,7 @@ from lerobot.motors.feetech import FeetechMotorsBus, OperatingMode
 from ..teleoperator import Teleoperator
 from .config_so100_leader import SO100LeaderConfig
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -55,11 +56,21 @@ class SO100Leader(Teleoperator):
         self.bus = FeetechMotorsBus(
             port=self.config.port,
             motors={
-                'shoulder_pan': Motor(1, 'sts3215', MotorNormMode.RANGE_M100_100),
-                'shoulder_lift': Motor(2, 'sts3215', MotorNormMode.RANGE_M100_100),
-                'elbow_flex': Motor(3, 'sts3215', MotorNormMode.RANGE_M100_100),
-                'wrist_flex': Motor(4, 'sts3215', MotorNormMode.RANGE_M100_100),
-                'wrist_roll': Motor(5, 'sts3215', MotorNormMode.RANGE_M100_100),
+                'shoulder_pan': Motor(
+                    1, 'sts3215', MotorNormMode.RANGE_M100_100
+                ),
+                'shoulder_lift': Motor(
+                    2, 'sts3215', MotorNormMode.RANGE_M100_100
+                ),
+                'elbow_flex': Motor(
+                    3, 'sts3215', MotorNormMode.RANGE_M100_100
+                ),
+                'wrist_flex': Motor(
+                    4, 'sts3215', MotorNormMode.RANGE_M100_100
+                ),
+                'wrist_roll': Motor(
+                    5, 'sts3215', MotorNormMode.RANGE_M100_100
+                ),
                 'gripper': Motor(6, 'sts3215', MotorNormMode.RANGE_0_100),
             },
             calibration=self.calibration,
@@ -111,18 +122,26 @@ class SO100Leader(Teleoperator):
         logger.info(f'\nRunning calibration of {self}')
         self.bus.disable_torque()
         for motor in self.bus.motors:
-            self.bus.write('Operating_Mode', motor, OperatingMode.POSITION.value)
+            self.bus.write(
+                'Operating_Mode', motor, OperatingMode.POSITION.value
+            )
 
-        input(f'Move {self} to the middle of its range of motion and press ENTER....')
+        input(
+            f'Move {self} to the middle of its range of motion and press ENTER....'
+        )
         homing_offsets = self.bus.set_half_turn_homings()
 
         full_turn_motor = 'wrist_roll'
-        unknown_range_motors = [motor for motor in self.bus.motors if motor != full_turn_motor]
+        unknown_range_motors = [
+            motor for motor in self.bus.motors if motor != full_turn_motor
+        ]
         print(
             f"Move all joints except '{full_turn_motor}' sequentially through their "
             'entire ranges of motion.\nRecording positions. Press ENTER to stop...'
         )
-        range_mins, range_maxes = self.bus.record_ranges_of_motion(unknown_range_motors)
+        range_mins, range_maxes = self.bus.record_ranges_of_motion(
+            unknown_range_motors
+        )
         range_mins[full_turn_motor] = 0
         range_maxes[full_turn_motor] = 4095
 
@@ -144,11 +163,15 @@ class SO100Leader(Teleoperator):
         self.bus.disable_torque()
         self.bus.configure_motors()
         for motor in self.bus.motors:
-            self.bus.write('Operating_Mode', motor, OperatingMode.POSITION.value)
+            self.bus.write(
+                'Operating_Mode', motor, OperatingMode.POSITION.value
+            )
 
     def setup_motors(self) -> None:
         for motor in reversed(self.bus.motors):
-            input(f"Connect the controller board to the '{motor}' motor only and press enter.")
+            input(
+                f"Connect the controller board to the '{motor}' motor only and press enter."
+            )
             self.bus.setup_motor(motor)
             print(f"'{motor}' motor id set to {self.bus.motors[motor].id}")
 

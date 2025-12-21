@@ -39,7 +39,6 @@ import draccus
 from huggingface_hub import hf_hub_download
 from huggingface_hub.constants import CONFIG_NAME
 from huggingface_hub.errors import HfHubHTTPError
-
 from lerobot.configs.types import FeatureType, NormalizationMode, PolicyFeature
 from lerobot.constants import ACTION, OBS_STATE
 from lerobot.optim.optimizers import OptimizerConfig
@@ -50,6 +49,7 @@ from lerobot.utils.utils import (
     is_amp_available,
     is_torch_device_available,
 )
+
 
 T = TypeVar('T', bound='PreTrainedConfig')
 
@@ -71,7 +71,9 @@ class PreTrainedConfig(draccus.ChoiceRegistry, HubMixin, abc.ABC):
     """
 
     n_obs_steps: int = 1
-    normalization_mapping: dict[str, NormalizationMode] = field(default_factory=dict)
+    normalization_mapping: dict[str, NormalizationMode] = field(
+        default_factory=dict
+    )
 
     input_features: dict[str, PolicyFeature] = field(default_factory=dict)
     output_features: dict[str, PolicyFeature] = field(default_factory=dict)
@@ -154,7 +156,11 @@ class PreTrainedConfig(draccus.ChoiceRegistry, HubMixin, abc.ABC):
 
     @property
     def image_features(self) -> dict[str, PolicyFeature]:
-        return {key: ft for key, ft in self.input_features.items() if ft.type is FeatureType.VISUAL}
+        return {
+            key: ft
+            for key, ft in self.input_features.items()
+            if ft.type is FeatureType.VISUAL
+        }
 
     @property
     def action_feature(self) -> PolicyFeature | None:
@@ -164,7 +170,10 @@ class PreTrainedConfig(draccus.ChoiceRegistry, HubMixin, abc.ABC):
         return None
 
     def _save_pretrained(self, save_directory: Path) -> None:
-        with open(save_directory / CONFIG_NAME, 'w') as f, draccus.config_type('json'):
+        with (
+            open(save_directory / CONFIG_NAME, 'w') as f,
+            draccus.config_type('json'),
+        ):
             draccus.dump(self, f, indent=4)
 
     @classmethod
@@ -224,4 +233,6 @@ class PreTrainedConfig(draccus.ChoiceRegistry, HubMixin, abc.ABC):
 
             cli_overrides = policy_kwargs.pop('cli_overrides', [])
             with draccus.config_type('json'):
-                return draccus.parse(orig_config.__class__, config_file, args=cli_overrides)
+                return draccus.parse(
+                    orig_config.__class__, config_file, args=cli_overrides
+                )

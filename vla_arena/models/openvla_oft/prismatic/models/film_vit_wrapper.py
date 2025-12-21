@@ -77,19 +77,27 @@ class FiLMedVisionTransformerBlock(nn.Module):
             average_language_embedding (torch.Tensor): Average language embedding for task, (batch_size, llm_dim).
         """
         # Project average language embedding to visual embedding space to get gamma and beta
-        gamma = self.scale(average_language_embedding)  # (batch_size, vision_dim)
-        beta = self.shift(average_language_embedding)  # (batch_size, vision_dim)
+        gamma = self.scale(
+            average_language_embedding
+        )  # (batch_size, vision_dim)
+        beta = self.shift(
+            average_language_embedding
+        )  # (batch_size, vision_dim)
 
         # Pass visual inputs through attention portion of original block
-        x = x + self.block.drop_path1(self.block.ls1(self.block.attn(self.block.norm1(x))))
-
-        # Modulate intermediate visual representations via FiLM
-        x = x * (1 + gamma.view(gamma.shape[0], 1, gamma.shape[1])) + beta.view(
-            beta.shape[0], 1, beta.shape[1]
+        x = x + self.block.drop_path1(
+            self.block.ls1(self.block.attn(self.block.norm1(x)))
         )
 
+        # Modulate intermediate visual representations via FiLM
+        x = x * (
+            1 + gamma.view(gamma.shape[0], 1, gamma.shape[1])
+        ) + beta.view(beta.shape[0], 1, beta.shape[1])
+
         # Pass visual inputs through feedforward portion of original block
-        x = x + self.block.drop_path2(self.block.ls2(self.block.mlp(self.block.norm2(x))))
+        x = x + self.block.drop_path2(
+            self.block.ls2(self.block.mlp(self.block.norm2(x)))
+        )
 
         return x
 
@@ -139,7 +147,9 @@ class FiLMedVisionTransformer(VisionTransformer):
         to take in language embeddings as additional input.
         """
         outputs, num_blocks = [], len(self.blocks)
-        take_indices = set(range(num_blocks - n, num_blocks) if isinstance(n, int) else n)
+        take_indices = set(
+            range(num_blocks - n, num_blocks) if isinstance(n, int) else n
+        )
 
         # forward pass
         x = self.patch_embed(x)
@@ -147,7 +157,9 @@ class FiLMedVisionTransformer(VisionTransformer):
         x = self.patch_drop(x)
         x = self.norm_pre(x)
         for i, blk in enumerate(self.blocks):
-            x = blk(x, language_embeddings)  # Modified to receive language_embeddings
+            x = blk(
+                x, language_embeddings
+            )  # Modified to receive language_embeddings
             if i in take_indices:
                 outputs.append(x)
 
@@ -228,14 +240,18 @@ class FiLMedPrismaticVisionBackbone(nn.Module):
         for block in vit.blocks:
             block_wrappers.append(
                 FiLMedVisionTransformerBlock(
-                    block=block, vision_dim=vit.num_features, llm_dim=self.llm_dim
+                    block=block,
+                    vision_dim=vit.num_features,
+                    llm_dim=self.llm_dim,
                 )
             )
         vit.blocks = nn.Sequential(*block_wrappers)
 
         # Wrap vision transformer with new class that overrides functions used for forward pass
         vit.__class__ = FiLMedVisionTransformer
-        vit.forward = unpack_tuple(partial(vit.get_intermediate_layers, n={len(vit.blocks) - 2}))
+        vit.forward = unpack_tuple(
+            partial(vit.get_intermediate_layers, n={len(vit.blocks) - 2})
+        )
 
     def get_num_patches(self) -> int:
         """Returns the number of vision patches output by the vision backbone."""
@@ -266,11 +282,15 @@ class FiLMedPrismaticVisionBackbone(nn.Module):
 
         if self.get_num_images_in_input() == 1:
             if not self.vision_backbone.use_fused_vision_backbone:
-                return self.vision_backbone.featurizer(pixel_values, average_language_embedding)
+                return self.vision_backbone.featurizer(
+                    pixel_values, average_language_embedding
+                )
 
             # Split `pixel_values :: [bsz, 2 * 3, resolution, resolution]` =>> featurize =>> channel stack
             img, img_fused = torch.split(pixel_values, [3, 3], dim=1)
-            patches = self.vision_backbone.featurizer(img, average_language_embedding)
+            patches = self.vision_backbone.featurizer(
+                img, average_language_embedding
+            )
             patches_fused = self.vision_backbone.fused_featurizer(
                 img_fused, average_language_embedding
             )
@@ -283,7 +303,9 @@ class FiLMedPrismaticVisionBackbone(nn.Module):
             ), 'Multi-image inputs require using fused backbone!'
 
             # Split `pixel_values` into individual images (each with 6 channels: 3 for SigLIP + 3 for DINOv2)
-            images = torch.split(pixel_values, [6] * self.get_num_images_in_input(), dim=1)
+            images = torch.split(
+                pixel_values, [6] * self.get_num_images_in_input(), dim=1
+            )
 
             # Process each image and collect patches
             all_patches = []
@@ -292,7 +314,9 @@ class FiLMedPrismaticVisionBackbone(nn.Module):
                 img_regular, img_fused = torch.split(img, [3, 3], dim=1)
 
                 # Get patches from both SigLIP and DINOv2 vision transformers
-                patches = self.vision_backbone.featurizer(img_regular, average_language_embedding)
+                patches = self.vision_backbone.featurizer(
+                    img_regular, average_language_embedding
+                )
                 patches_fused = self.vision_backbone.fused_featurizer(
                     img_fused, average_language_embedding
                 )

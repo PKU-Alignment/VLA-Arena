@@ -70,7 +70,9 @@ class SiteObject:
     def __str__(self):
         return f'Object {self.name} : \n geom type: {self.site_type} \n size: {self.size}'
 
-    def under(self, this_position, this_mat, other_position, other_height=0.10):
+    def under(
+        self, this_position, this_mat, other_position, other_height=0.10
+    ):
         """
         Checks whether an object is on this SiteObject.
         Useful for when the CompositeObject has holes and the object should
@@ -85,6 +87,8 @@ class SiteObject:
         delta_position = this_mat @ (other_position - this_position)
         # print(total_size, " | ", delta_position)
         # print(total_size[2] < delta_position[2] < total_size[2] + other_height, np.all(np.abs(delta_position[:2]) < total_size[:2]))
-        return total_size[2] - 0.005 < delta_position[2] < total_size[2] + other_height and np.all(
+        return total_size[2] - 0.005 < delta_position[2] < total_size[
+            2
+        ] + other_height and np.all(
             np.abs(delta_position[:2]) < total_size[:2],
         )

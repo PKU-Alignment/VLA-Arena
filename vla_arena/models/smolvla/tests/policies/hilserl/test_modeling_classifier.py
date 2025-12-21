@@ -29,10 +29,14 @@
 # limitations under the License.
 
 import torch
-
 from lerobot.configs.types import FeatureType, NormalizationMode, PolicyFeature
-from lerobot.policies.sac.reward_model.configuration_classifier import RewardClassifierConfig
-from lerobot.policies.sac.reward_model.modeling_classifier import ClassifierOutput
+from lerobot.policies.sac.reward_model.configuration_classifier import (
+    RewardClassifierConfig,
+)
+from lerobot.policies.sac.reward_model.modeling_classifier import (
+    ClassifierOutput,
+)
+
 from tests.utils import require_package
 
 
@@ -51,11 +55,15 @@ def test_classifier_output():
 
 @require_package('transformers')
 def test_binary_classifier_with_default_params():
-    from lerobot.policies.sac.reward_model.modeling_classifier import Classifier
+    from lerobot.policies.sac.reward_model.modeling_classifier import (
+        Classifier,
+    )
 
     config = RewardClassifierConfig()
     config.input_features = {
-        'observation.image': PolicyFeature(type=FeatureType.VISUAL, shape=(3, 224, 224)),
+        'observation.image': PolicyFeature(
+            type=FeatureType.VISUAL, shape=(3, 224, 224)
+        ),
     }
     config.output_features = {
         'next.reward': PolicyFeature(type=FeatureType.REWARD, shape=(1,)),
@@ -71,7 +79,9 @@ def test_binary_classifier_with_default_params():
 
     input = {
         'observation.image': torch.rand((batch_size, 3, 128, 128)),
-        'next.reward': torch.randint(low=0, high=2, size=(batch_size,)).float(),
+        'next.reward': torch.randint(
+            low=0, high=2, size=(batch_size,)
+        ).float(),
     }
 
     images, labels = classifier.extract_images_and_labels(input)
@@ -85,22 +95,32 @@ def test_binary_classifier_with_default_params():
     assert output.logits.size() == torch.Size([batch_size])
     assert not torch.isnan(output.logits).any(), 'Tensor contains NaN values'
     assert output.probabilities.shape == torch.Size([batch_size])
-    assert not torch.isnan(output.probabilities).any(), 'Tensor contains NaN values'
+    assert not torch.isnan(
+        output.probabilities
+    ).any(), 'Tensor contains NaN values'
     assert output.hidden_states.shape == torch.Size([batch_size, 256])
-    assert not torch.isnan(output.hidden_states).any(), 'Tensor contains NaN values'
+    assert not torch.isnan(
+        output.hidden_states
+    ).any(), 'Tensor contains NaN values'
 
 
 @require_package('transformers')
 def test_multiclass_classifier():
-    from lerobot.policies.sac.reward_model.modeling_classifier import Classifier
+    from lerobot.policies.sac.reward_model.modeling_classifier import (
+        Classifier,
+    )
 
     num_classes = 5
     config = RewardClassifierConfig()
     config.input_features = {
-        'observation.image': PolicyFeature(type=FeatureType.VISUAL, shape=(3, 224, 224)),
+        'observation.image': PolicyFeature(
+            type=FeatureType.VISUAL, shape=(3, 224, 224)
+        ),
     }
     config.output_features = {
-        'next.reward': PolicyFeature(type=FeatureType.REWARD, shape=(num_classes,)),
+        'next.reward': PolicyFeature(
+            type=FeatureType.REWARD, shape=(num_classes,)
+        ),
     }
     config.num_cameras = 1
     config.num_classes = num_classes
@@ -124,14 +144,20 @@ def test_multiclass_classifier():
     assert output.logits.shape == torch.Size([batch_size, num_classes])
     assert not torch.isnan(output.logits).any(), 'Tensor contains NaN values'
     assert output.probabilities.shape == torch.Size([batch_size, num_classes])
-    assert not torch.isnan(output.probabilities).any(), 'Tensor contains NaN values'
+    assert not torch.isnan(
+        output.probabilities
+    ).any(), 'Tensor contains NaN values'
     assert output.hidden_states.shape == torch.Size([batch_size, 256])
-    assert not torch.isnan(output.hidden_states).any(), 'Tensor contains NaN values'
+    assert not torch.isnan(
+        output.hidden_states
+    ).any(), 'Tensor contains NaN values'
 
 
 @require_package('transformers')
 def test_default_device():
-    from lerobot.policies.sac.reward_model.modeling_classifier import Classifier
+    from lerobot.policies.sac.reward_model.modeling_classifier import (
+        Classifier,
+    )
 
     config = RewardClassifierConfig()
     assert config.device == 'cpu'
@@ -143,7 +169,9 @@ def test_default_device():
 
 @require_package('transformers')
 def test_explicit_device_setup():
-    from lerobot.policies.sac.reward_model.modeling_classifier import Classifier
+    from lerobot.policies.sac.reward_model.modeling_classifier import (
+        Classifier,
+    )
 
     config = RewardClassifierConfig(device='cpu')
     assert config.device == 'cpu'

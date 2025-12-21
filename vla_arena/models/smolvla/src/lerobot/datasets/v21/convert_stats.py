@@ -29,11 +29,14 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import numpy as np
-from tqdm import tqdm
-
-from lerobot.datasets.compute_stats import aggregate_stats, get_feature_stats, sample_indices
+from lerobot.datasets.compute_stats import (
+    aggregate_stats,
+    get_feature_stats,
+    sample_indices,
+)
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
 from lerobot.datasets.utils import write_episode_stats
+from tqdm import tqdm
 
 
 def sample_episode_video_frames(
@@ -41,7 +44,9 @@ def sample_episode_video_frames(
 ) -> np.ndarray:
     ep_len = dataset.meta.episodes[episode_index]['length']
     sampled_indices = sample_indices(ep_len)
-    query_timestamps = dataset._get_query_timestamps(0.0, {ft_key: sampled_indices})
+    query_timestamps = dataset._get_query_timestamps(
+        0.0, {ft_key: sampled_indices}
+    )
     video_frames = dataset._query_videos(query_timestamps, episode_index)
     return video_frames[ft_key].numpy()
 
@@ -60,12 +65,17 @@ def convert_episode_stats(dataset: LeRobotDataset, ep_idx: int):
             ep_ft_data = np.array(ep_data[key])
 
         axes_to_reduce = (0, 2, 3) if ft['dtype'] in ['image', 'video'] else 0
-        keepdims = True if ft['dtype'] in ['image', 'video'] else ep_ft_data.ndim == 1
-        ep_stats[key] = get_feature_stats(ep_ft_data, axis=axes_to_reduce, keepdims=keepdims)
+        keepdims = (
+            True if ft['dtype'] in ['image', 'video'] else ep_ft_data.ndim == 1
+        )
+        ep_stats[key] = get_feature_stats(
+            ep_ft_data, axis=axes_to_reduce, keepdims=keepdims
+        )
 
         if ft['dtype'] in ['image', 'video']:  # remove batch dim
             ep_stats[key] = {
-                k: v if k == 'count' else np.squeeze(v, axis=0) for k, v in ep_stats[key].items()
+                k: v if k == 'count' else np.squeeze(v, axis=0)
+                for k, v in ep_stats[key].items()
             }
 
     dataset.meta.episodes_stats[ep_idx] = ep_stats
@@ -88,7 +98,9 @@ def convert_stats(dataset: LeRobotDataset, num_workers: int = 0):
             convert_episode_stats(dataset, ep_idx)
 
     for ep_idx in tqdm(range(total_episodes)):
-        write_episode_stats(ep_idx, dataset.meta.episodes_stats[ep_idx], dataset.root)
+        write_episode_stats(
+            ep_idx, dataset.meta.episodes_stats[ep_idx], dataset.root
+        )
 
 
 def check_aggregate_stats(
@@ -111,5 +123,9 @@ def check_aggregate_stats(
             if key in reference_stats and stat in reference_stats[key]:
                 err_msg = f"feature='{key}' stats='{stat}'"
                 np.testing.assert_allclose(
-                    val, reference_stats[key][stat], rtol=rtol, atol=atol, err_msg=err_msg
+                    val,
+                    reference_stats[key][stat],
+                    rtol=rtol,
+                    atol=atol,
+                    err_msg=err_msg,
                 )

@@ -24,9 +24,15 @@ import numpy as np
 import torch
 from PIL import Image
 from transformers import LlamaTokenizerFast
-from vla_arena.models.openvla.prismatic.models.vlms.prismatic import PrismaticVLM
+
+from vla_arena.models.openvla.prismatic.models.vlms.prismatic import (
+    PrismaticVLM,
+)
 from vla_arena.models.openvla.prismatic.overwatch import initialize_overwatch
-from vla_arena.models.openvla.prismatic.vla.action_tokenizer import ActionTokenizer
+from vla_arena.models.openvla.prismatic.vla.action_tokenizer import (
+    ActionTokenizer,
+)
+
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)
@@ -46,7 +52,11 @@ class OpenVLA(PrismaticVLM):
 
     @torch.inference_mode()
     def predict_action(
-        self, image: Image, instruction: str, unnorm_key: str | None = None, **kwargs: str
+        self,
+        image: Image,
+        instruction: str,
+        unnorm_key: str | None = None,
+        **kwargs: str,
     ) -> np.ndarray:
         """
         Core function for VLA inference; maps input image and task instruction to continuous action (de-tokenizes).
@@ -66,14 +76,15 @@ class OpenVLA(PrismaticVLM):
         # Build VLA Prompt
         prompt_builder = self.get_prompt_builder()
         prompt_builder.add_turn(
-            role='human', message=f'What action should the robot take to {instruction.lower()}?'
+            role='human',
+            message=f'What action should the robot take to {instruction.lower()}?',
         )
         prompt_text = prompt_builder.get_prompt()
 
         # Prepare Inputs
-        input_ids = tokenizer(prompt_text, truncation=True, return_tensors='pt').input_ids.to(
-            self.device
-        )
+        input_ids = tokenizer(
+            prompt_text, truncation=True, return_tensors='pt'
+        ).input_ids.to(self.device)
         if isinstance(tokenizer, LlamaTokenizerFast):
             # If the special empty token ('') does not already appear after the colon (':') token in the prompt
             # (after "OUT:" or "ASSISTANT:"), insert it to match the inputs seen at training time
@@ -81,26 +92,37 @@ class OpenVLA(PrismaticVLM):
                 input_ids = torch.cat(
                     (
                         input_ids,
-                        torch.unsqueeze(torch.Tensor([29871]).long(), dim=0).to(input_ids.device),
+                        torch.unsqueeze(
+                            torch.Tensor([29871]).long(), dim=0
+                        ).to(input_ids.device),
                     ),
                     dim=1,
                 )
         else:
-            raise ValueError(f'Unsupported `tokenizer` type = {type(tokenizer)}')
+            raise ValueError(
+                f'Unsupported `tokenizer` type = {type(tokenizer)}'
+            )
 
         # Preprocess Image
         pixel_values = image_transform(image)
         if isinstance(pixel_values, torch.Tensor):
             pixel_values = pixel_values[None, ...].to(self.device)
         elif isinstance(pixel_values, dict):
-            pixel_values = {k: v[None, ...].to(self.device) for k, v in pixel_values.items()}
+            pixel_values = {
+                k: v[None, ...].to(self.device)
+                for k, v in pixel_values.items()
+            }
         else:
-            raise ValueError(f'Unsupported `pixel_values` type = {type(pixel_values)}')
+            raise ValueError(
+                f'Unsupported `pixel_values` type = {type(pixel_values)}'
+            )
 
         # Invoke super().generate --> taps into `GenerationMixin` which (redirects) to `forward()`
         autocast_dtype = self.llm_backbone.half_precision_dtype
         with torch.autocast(
-            'cuda', dtype=autocast_dtype, enabled=self.enable_mixed_precision_training
+            'cuda',
+            dtype=autocast_dtype,
+            enabled=self.enable_mixed_precision_training,
         ):
             # fmt: off
             generated_ids = super(PrismaticVLM, self).generate(
@@ -112,20 +134,25 @@ class OpenVLA(PrismaticVLM):
             # fmt: on
 
         # Extract predicted action tokens and translate into (normalized) continuous actions
-        predicted_action_token_ids = generated_ids[0, -self.get_action_dim(unnorm_key) :]
+        predicted_action_token_ids = generated_ids[
+            0, -self.get_action_dim(unnorm_key) :
+        ]
         normalized_actions = self.action_tokenizer.decode_token_ids_to_actions(
             predicted_action_token_ids.cpu().numpy()
         )
 
         # Un-normalize Actions
         action_norm_stats = self.get_action_stats(unnorm_key)
-        mask = action_norm_stats.get('mask', np.ones_like(action_norm_stats['q01'], dtype=bool))
+        mask = action_norm_stats.get(
+            'mask', np.ones_like(action_norm_stats['q01'], dtype=bool)
+        )
         action_high, action_low = np.array(action_norm_stats['q99']), np.array(
             action_norm_stats['q01']
         )
         actions = np.where(
             mask,
-            0.5 * (normalized_actions + 1) * (action_high - action_low) + action_low,
+            0.5 * (normalized_actions + 1) * (action_high - action_low)
+            + action_low,
             normalized_actions,
         )
 

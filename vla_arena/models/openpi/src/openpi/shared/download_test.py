@@ -14,9 +14,8 @@
 
 import pathlib
 
-import pytest
-
 import openpi.shared.download as download
+import pytest
 
 
 @pytest.fixture(scope="session", autouse=True)

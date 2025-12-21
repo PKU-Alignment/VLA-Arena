@@ -23,7 +23,12 @@ import torch.distributed as dist
 import tqdm
 import wandb
 from accelerate import PartialState
-from peft import LoraConfig, PeftModel, get_peft_model, prepare_model_for_kbit_training
+from peft import (
+    LoraConfig,
+    PeftModel,
+    get_peft_model,
+    prepare_model_for_kbit_training,
+)
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
@@ -35,7 +40,10 @@ from transformers import (
     BitsAndBytesConfig,
 )
 from transformers.modeling_outputs import CausalLMOutputWithPast
-from vla_arena.models.openvla.prismatic.extern.hf.configuration_prismatic import OpenVLAConfig
+
+from vla_arena.models.openvla.prismatic.extern.hf.configuration_prismatic import (
+    OpenVLAConfig,
+)
 from vla_arena.models.openvla.prismatic.extern.hf.modeling_prismatic import (
     OpenVLAForActionPrediction,
 )
@@ -49,12 +57,20 @@ from vla_arena.models.openvla.prismatic.models.backbones.llm.prompting import (
     PurePromptBuilder,
     VicunaV15ChatPromptBuilder,
 )
-from vla_arena.models.openvla.prismatic.util.data_utils import PaddedCollatorForActionPrediction
-from vla_arena.models.openvla.prismatic.vla.action_tokenizer import ActionTokenizer
-from vla_arena.models.openvla.prismatic.vla.datasets import RLDSBatchTransform, RLDSDataset
+from vla_arena.models.openvla.prismatic.util.data_utils import (
+    PaddedCollatorForActionPrediction,
+)
+from vla_arena.models.openvla.prismatic.vla.action_tokenizer import (
+    ActionTokenizer,
+)
+from vla_arena.models.openvla.prismatic.vla.datasets import (
+    RLDSBatchTransform,
+    RLDSDataset,
+)
 from vla_arena.models.openvla.prismatic.vla.datasets.rlds.utils.data_utils import (
     save_dataset_statistics,
 )
+
 
 os.environ['WANDB_ENABLED'] = 'false'
 # Sane Defaults
@@ -112,7 +128,9 @@ def main(config: FinetuneConfig | str | Path) -> None:
         print(f'Loading configuration from {config_path}...')
 
         # Fix: Use config_path
-        cfg = draccus.parse(FinetuneConfig, config_path=str(config_path), args=[])
+        cfg = draccus.parse(
+            FinetuneConfig, config_path=str(config_path), args=[]
+        )
 
     elif isinstance(config, FinetuneConfig):
         cfg = config
@@ -124,10 +142,14 @@ def main(config: FinetuneConfig | str | Path) -> None:
     # ... subsequent logic
 
     # Test print to ensure configuration is loaded
-    print(f'Config loaded successfully. Dataset: {cfg.dataset_name}, Max Steps: {cfg.max_steps}')
+    print(
+        f'Config loaded successfully. Dataset: {cfg.dataset_name}, Max Steps: {cfg.max_steps}'
+    )
 
     # [Validate] Ensure GPU Available & Set Device / Distributed Context
-    assert torch.cuda.is_available(), 'Fine-tuning assumes at least one GPU is available!'
+    assert (
+        torch.cuda.is_available()
+    ), 'Fine-tuning assumes at least one GPU is available!'
     distributed_state = PartialState()
     torch.cuda.set_device(device_id := distributed_state.local_process_index)
     torch.cuda.empty_cache()
@@ -148,15 +170,22 @@ def main(config: FinetuneConfig | str | Path) -> None:
         exp_id += '--image_aug'
 
     # Start =>> Build Directories
-    run_dir, adapter_dir = cfg.run_root_dir / exp_id, cfg.adapter_tmp_dir / exp_id
+    run_dir, adapter_dir = (
+        cfg.run_root_dir / exp_id,
+        cfg.adapter_tmp_dir / exp_id,
+    )
     os.makedirs(run_dir, exist_ok=True)
 
     # Quantization Config =>> only if LoRA fine-tuning
     quantization_config = None
     if cfg.use_quantization:
-        assert cfg.use_lora, 'Quantized training only supported for LoRA fine-tuning!'
+        assert (
+            cfg.use_lora
+        ), 'Quantized training only supported for LoRA fine-tuning!'
         quantization_config = BitsAndBytesConfig(
-            load_in_4bit=True, bnb_4bit_compute_dtype=torch.bfloat16, bnb_4bit_quant_type='nf4'
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_quant_type='nf4',
         )
 
     # Register OpenVLA model to HF Auto Classes (not needed if the model is on HF Hub)
@@ -166,7 +195,9 @@ def main(config: FinetuneConfig | str | Path) -> None:
     AutoModelForVision2Seq.register(OpenVLAConfig, OpenVLAForActionPrediction)
 
     # Load OpenVLA Processor and Model using HF AutoClasses
-    processor = AutoProcessor.from_pretrained(cfg.vla_path, trust_remote_code=True)
+    processor = AutoProcessor.from_pretrained(
+        cfg.vla_path, trust_remote_code=True
+    )
     vla = OpenVLAForActionPrediction.from_pretrained(
         cfg.vla_path,
         torch_dtype=torch.bfloat16,
@@ -195,11 +226,16 @@ def main(config: FinetuneConfig | str | Path) -> None:
 
     # Wrap VLA in PyTorch DDP Wrapper for Multi-GPU Training
     vla = DDP(
-        vla, device_ids=[device_id], find_unused_parameters=True, gradient_as_bucket_view=True
+        vla,
+        device_ids=[device_id],
+        find_unused_parameters=True,
+        gradient_as_bucket_view=True,
     )
 
     # Create Optimizer =>> note that we default to a simple constant learning rate!
-    trainable_params = [param for param in vla.parameters() if param.requires_grad]
+    trainable_params = [
+        param for param in vla.parameters() if param.requires_grad
+    ]
     optimizer = AdamW(trainable_params, lr=cfg.learning_rate)
 
     # Create Action Tokenizer
@@ -210,7 +246,9 @@ def main(config: FinetuneConfig | str | Path) -> None:
         processor.tokenizer,
         image_transform=processor.image_processor.apply_transform,
         prompt_builder_fn=(
-            PurePromptBuilder if 'v01' not in cfg.vla_path else VicunaV15ChatPromptBuilder
+            PurePromptBuilder
+            if 'v01' not in cfg.vla_path
+            else VicunaV15ChatPromptBuilder
         ),
     )
     vla_dataset = RLDSDataset(
@@ -228,7 +266,9 @@ def main(config: FinetuneConfig | str | Path) -> None:
 
     # Create Collator and DataLoader
     collator = PaddedCollatorForActionPrediction(
-        processor.tokenizer.model_max_length, processor.tokenizer.pad_token_id, padding_side='right'
+        processor.tokenizer.model_max_length,
+        processor.tokenizer.pad_token_id,
+        padding_side='right',
     )
     dataloader = DataLoader(
         vla_dataset,
@@ -240,7 +280,11 @@ def main(config: FinetuneConfig | str | Path) -> None:
 
     # Initialize Logging =>> W&B
     if distributed_state.is_main_process:
-        wandb.init(entity=cfg.wandb_entity, project=cfg.wandb_project, name=f'ft+{exp_id}')
+        wandb.init(
+            entity=cfg.wandb_entity,
+            project=cfg.wandb_project,
+            name=f'ft+{exp_id}',
+        )
 
     # Deque to store recent train metrics (used for computing smoothened metrics for gradient accumulation)
     recent_losses = deque(maxlen=cfg.grad_accumulation_steps)
@@ -256,7 +300,9 @@ def main(config: FinetuneConfig | str | Path) -> None:
                 output: CausalLMOutputWithPast = vla(
                     input_ids=batch['input_ids'].to(device_id),
                     attention_mask=batch['attention_mask'].to(device_id),
-                    pixel_values=batch['pixel_values'].to(torch.bfloat16).to(device_id),
+                    pixel_values=batch['pixel_values']
+                    .to(torch.bfloat16)
+                    .to(device_id),
                     labels=batch['labels'],
                 )
                 loss = output.loss
@@ -269,7 +315,8 @@ def main(config: FinetuneConfig | str | Path) -> None:
 
             # Compute Accuracy and L1 Loss for Logging
             action_logits = output.logits[
-                :, vla.module.vision_backbone.featurizer.patch_embed.num_patches : -1
+                :,
+                vla.module.vision_backbone.featurizer.patch_embed.num_patches : -1,
             ]
             action_preds = action_logits.argmax(dim=2)
             action_gt = batch['labels'][:, 1:].to(action_preds.device)
@@ -281,10 +328,14 @@ def main(config: FinetuneConfig | str | Path) -> None:
 
             # Compute L1 Loss on Predicted (Continuous) Actions
             continuous_actions_pred = torch.tensor(
-                action_tokenizer.decode_token_ids_to_actions(action_preds[mask].cpu().numpy())
+                action_tokenizer.decode_token_ids_to_actions(
+                    action_preds[mask].cpu().numpy()
+                )
             )
             continuous_actions_gt = torch.tensor(
-                action_tokenizer.decode_token_ids_to_actions(action_gt[mask].cpu().numpy())
+                action_tokenizer.decode_token_ids_to_actions(
+                    action_gt[mask].cpu().numpy()
+                )
             )
             action_l1_loss = torch.nn.functional.l1_loss(
                 continuous_actions_pred, continuous_actions_gt
@@ -306,7 +357,10 @@ def main(config: FinetuneConfig | str | Path) -> None:
             smoothened_l1_loss = sum(recent_l1_losses) / len(recent_l1_losses)
 
             # Push Metrics to W&B (every 10 gradient steps)
-            if distributed_state.is_main_process and gradient_step_idx % 10 == 0:
+            if (
+                distributed_state.is_main_process
+                and gradient_step_idx % 10 == 0
+            ):
                 wandb.log(
                     {
                         'train_loss': smoothened_loss,
@@ -323,9 +377,14 @@ def main(config: FinetuneConfig | str | Path) -> None:
                 progress.update()
 
             # Save Model Checkpoint
-            if gradient_step_idx > 0 and gradient_step_idx % cfg.save_steps == 0:
+            if (
+                gradient_step_idx > 0
+                and gradient_step_idx % cfg.save_steps == 0
+            ):
                 if distributed_state.is_main_process:
-                    print(f'Saving Model Checkpoint for Step {gradient_step_idx}')
+                    print(
+                        f'Saving Model Checkpoint for Step {gradient_step_idx}'
+                    )
                     save_dir = adapter_dir if cfg.use_lora else run_dir
                     processor.save_pretrained(run_dir)
                     vla.module.save_pretrained(save_dir)
@@ -340,7 +399,9 @@ def main(config: FinetuneConfig | str | Path) -> None:
                         low_cpu_mem_usage=True,
                         trust_remote_code=True,
                     )
-                    merged_vla = PeftModel.from_pretrained(base_vla, adapter_dir)
+                    merged_vla = PeftModel.from_pretrained(
+                        base_vla, adapter_dir
+                    )
                     merged_vla = merged_vla.merge_and_unload()
                     if distributed_state.is_main_process:
                         if cfg.save_latest_checkpoint_only:
@@ -349,9 +410,13 @@ def main(config: FinetuneConfig | str | Path) -> None:
                                 f'Saved Model Checkpoint for Step {gradient_step_idx} at: {run_dir}'
                             )
                         else:
-                            checkpoint_dir = Path(str(run_dir) + f'--{gradient_step_idx}_chkpt')
+                            checkpoint_dir = Path(
+                                str(run_dir) + f'--{gradient_step_idx}_chkpt'
+                            )
                             os.makedirs(checkpoint_dir, exist_ok=True)
-                            save_dataset_statistics(vla_dataset.dataset_statistics, checkpoint_dir)
+                            save_dataset_statistics(
+                                vla_dataset.dataset_statistics, checkpoint_dir
+                            )
                             processor.save_pretrained(checkpoint_dir)
                             merged_vla.save_pretrained(checkpoint_dir)
                             print(
@@ -362,7 +427,9 @@ def main(config: FinetuneConfig | str | Path) -> None:
 
             # Stop training
             if gradient_step_idx == cfg.max_steps:
-                print(f'Max step {cfg.max_steps} reached! Stopping training...')
+                print(
+                    f'Max step {cfg.max_steps} reached! Stopping training...'
+                )
                 break
 
 
@@ -373,7 +440,12 @@ if __name__ == '__main__':
 
     # Use argparse to parse --config parameter passed by Launcher
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, required=True, help='Path to the config yaml file')
+    parser.add_argument(
+        '--config',
+        type=str,
+        required=True,
+        help='Path to the config yaml file',
+    )
     # This allows compatibility with other possible parameters (though currently only config is needed)
     args, unknown = parser.parse_known_args()
 

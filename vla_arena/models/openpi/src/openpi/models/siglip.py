@@ -34,7 +34,6 @@ import flax.linen as nn
 import jax
 import jax.numpy as jnp
 import numpy as np
-
 import openpi.training.sharding as sharding
 
 
@@ -47,7 +46,9 @@ def posemb_sincos_2d(h, w, width, temperature=10_000.0, dtype=jnp.float32):
     omega = 1.0 / (temperature**omega)
     y = jnp.einsum("m,d->md", y.flatten(), omega)
     x = jnp.einsum("m,d->md", x.flatten(), omega)
-    pe = jnp.concatenate([jnp.sin(x), jnp.cos(x), jnp.sin(y), jnp.cos(y)], axis=1)
+    pe = jnp.concatenate(
+        [jnp.sin(x), jnp.cos(x), jnp.sin(y), jnp.cos(y)], axis=1
+    )
     return jnp.asarray(pe, dtype)[None, :, :]
 
 
@@ -142,7 +143,9 @@ class Encoder(nn.Module):
                 Encoder1DBlock,
                 prevent_cse=False,
                 static_argnums=(2,),  # 0=self, 2=deterministic
-                policy=getattr(jax.checkpoint_policies, self.remat_policy, None),
+                policy=getattr(
+                    jax.checkpoint_policies, self.remat_policy, None
+                ),
             )
             x, scan_out = nn.scan(
                 block,
@@ -160,7 +163,9 @@ class Encoder(nn.Module):
                 x, deterministic
             )
             for lyr in range(self.depth):
-                out[f"block{lyr:02d}"] = jax.tree.map(lambda o, lyr=lyr: o[lyr], scan_out)
+                out[f"block{lyr:02d}"] = jax.tree.map(
+                    lambda o, lyr=lyr: o[lyr], scan_out
+                )
         else:
             # Input Encoder
             for lyr in range(self.depth):
@@ -172,7 +177,9 @@ class Encoder(nn.Module):
                     dropout=self.dropout,
                 )
                 x, out[f"block{lyr:02d}"] = block_cur(x, deterministic)
-            out["pre_ln"] = x  # Alias for last block, but without the number in it.
+            out["pre_ln"] = (
+                x  # Alias for last block, but without the number in it.
+            )
 
         return nn.LayerNorm(name="encoder_norm", dtype=self.dtype_mm)(x), out
 
@@ -187,7 +194,9 @@ class MAPHead(nn.Module):
     @nn.compact
     def __call__(self, x):
         n, _, d = x.shape  # n,l,d
-        probe = self.param("probe", nn.initializers.xavier_uniform(), (1, 1, d), x.dtype)
+        probe = self.param(
+            "probe", nn.initializers.xavier_uniform(), (1, 1, d), x.dtype
+        )
         probe = jnp.tile(probe, [n, 1, 1])
 
         x = nn.MultiHeadDotProductAttention(
@@ -300,15 +309,23 @@ class _Module(nn.Module):
         out["pre_logits"] = x
 
         if self.num_classes:
-            kw = {"kernel_init": nn.initializers.zeros} if self.head_zeroinit else {}
-            head = nn.Dense(self.num_classes, dtype=self.dtype_mm, name="head", **kw)
+            kw = (
+                {"kernel_init": nn.initializers.zeros}
+                if self.head_zeroinit
+                else {}
+            )
+            head = nn.Dense(
+                self.num_classes, dtype=self.dtype_mm, name="head", **kw
+            )
             x_2d = out["logits_2d"] = head(x_2d)
             x = out["logits"] = head(x)
 
         return x, out
 
 
-def Module(num_classes=None, *, variant=None, **kw):  # pylint: disable=invalid-name  # noqa: N802
+def Module(
+    num_classes=None, *, variant=None, **kw
+):  # pylint: disable=invalid-name  # noqa: N802
     """Factory function, because linen really don't like what I'm doing!"""
     return _Module(num_classes, **{**decode_variant(variant), **kw})
 

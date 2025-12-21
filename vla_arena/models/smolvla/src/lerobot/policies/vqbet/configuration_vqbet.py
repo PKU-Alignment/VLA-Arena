@@ -182,11 +182,16 @@ class VQBeTConfig(PreTrainedConfig):
         # Note: this check was previously performed inside VQBeTRgbEncoder in the form of
         # assert len(image_keys) == 1
         if not len(self.image_features) == 1:
-            raise ValueError('You must provide only one image among the inputs.')
+            raise ValueError(
+                'You must provide only one image among the inputs.'
+            )
 
         if self.crop_shape is not None:
             for key, image_ft in self.image_features.items():
-                if self.crop_shape[0] > image_ft.shape[1] or self.crop_shape[1] > image_ft.shape[2]:
+                if (
+                    self.crop_shape[0] > image_ft.shape[1]
+                    or self.crop_shape[1] > image_ft.shape[2]
+                ):
                     raise ValueError(
                         f'`crop_shape` should fit within the images shapes. Got {self.crop_shape} '
                         f'for `crop_shape` and {image_ft.shape} for '
@@ -194,7 +199,9 @@ class VQBeTConfig(PreTrainedConfig):
                     )
 
         # Check that all input images have the same shape.
-        first_image_key, first_image_ft = next(iter(self.image_features.items()))
+        first_image_key, first_image_ft = next(
+            iter(self.image_features.items())
+        )
         for key, image_ft in self.image_features.items():
             if image_ft.shape != first_image_ft.shape:
                 raise ValueError(
@@ -208,7 +215,10 @@ class VQBeTConfig(PreTrainedConfig):
     @property
     def action_delta_indices(self) -> list:
         return list(
-            range(1 - self.n_obs_steps, self.n_action_pred_token + self.action_chunk_size - 1)
+            range(
+                1 - self.n_obs_steps,
+                self.n_action_pred_token + self.action_chunk_size - 1,
+            )
         )
 
     @property

@@ -35,7 +35,9 @@ from rich.progress import (
     TransferSpeedColumn,
 )
 from tqdm import tqdm
+
 from vla_arena.models.univla.prismatic.overwatch import initialize_overwatch
+
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)
@@ -148,10 +150,13 @@ def convert_to_jpg(image_dir: Path) -> None:
             raise ValueError(f'Unexpected image format `{image_fn.suffix}`')
 
 
-def download_with_progress(url: str, download_dir: Path, chunk_size_bytes: int = 1024) -> Path:
+def download_with_progress(
+    url: str, download_dir: Path, chunk_size_bytes: int = 1024
+) -> Path:
     """Utility function for downloading files from the internet, with a handy Rich-based progress bar."""
     overwatch.info(
-        f'Downloading {(dest_path := download_dir / Path(url).name)} from `{url}`', ctx_level=1
+        f'Downloading {(dest_path := download_dir / Path(url).name)} from `{url}`',
+        ctx_level=1,
     )
     if dest_path.exists():
         return dest_path
@@ -184,11 +189,18 @@ def download_with_progress(url: str, download_dir: Path, chunk_size_bytes: int =
 
 
 def extract_with_progress(
-    archive_path: Path, download_dir: Path, extract_type: str, cleanup: bool = False
+    archive_path: Path,
+    download_dir: Path,
+    extract_type: str,
+    cleanup: bool = False,
 ) -> Path:
     """Utility function for extracting compressed archives, with a handy Rich-based progress bar."""
-    assert archive_path.suffix == '.zip', 'Only `.zip` compressed archives are supported for now!'
-    overwatch.info(f'Extracting {archive_path.name} to `{download_dir}`', ctx_level=1)
+    assert (
+        archive_path.suffix == '.zip'
+    ), 'Only `.zip` compressed archives are supported for now!'
+    overwatch.info(
+        f'Extracting {archive_path.name} to `{download_dir}`', ctx_level=1
+    )
 
     # Extract w/ Progress
     with Progress(
@@ -201,7 +213,9 @@ def extract_with_progress(
     ) as ext_progress:
         with ZipFile(archive_path) as zf:
             ext_tid = ext_progress.add_task(
-                'Extracting', aname=archive_path.name, total=len(members := zf.infolist())
+                'Extracting',
+                aname=archive_path.name,
+                total=len(members := zf.infolist()),
             )
             extract_path = Path(zf.extract(members[0], download_dir))
             if extract_type == 'file':
@@ -226,16 +240,24 @@ def extract_with_progress(
 
 def download_extract(dataset_id: str, root_dir: Path) -> None:
     """Download all files for a given dataset (querying registry above), extracting archives if necessary."""
-    os.makedirs(download_dir := root_dir / 'download' / dataset_id, exist_ok=True)
+    os.makedirs(
+        download_dir := root_dir / 'download' / dataset_id, exist_ok=True
+    )
 
     # Download Files => Single-Threaded, with Progress Bar
-    dl_tasks = [d for d in DATASET_REGISTRY[dataset_id] if not (download_dir / d['name']).exists()]
+    dl_tasks = [
+        d
+        for d in DATASET_REGISTRY[dataset_id]
+        if not (download_dir / d['name']).exists()
+    ]
     for dl_task in dl_tasks:
         dl_path = download_with_progress(dl_task['url'], download_dir)
 
         # Extract Files (if specified) --> Note (assumes ".zip" ONLY!)
         if dl_task['extract']:
-            dl_path = extract_with_progress(dl_path, download_dir, dl_task['extract_type'])
+            dl_path = extract_with_progress(
+                dl_path, download_dir, dl_task['extract_type']
+            )
             dl_path = dl_path.parent if dl_path.is_file() else dl_path
 
         # Rename Path --> dl_task["name"]

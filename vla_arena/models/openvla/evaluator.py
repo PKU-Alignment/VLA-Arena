@@ -29,6 +29,7 @@ import draccus
 import numpy as np
 import tqdm
 import wandb
+
 from vla_arena.models.openvla.experiments.robot.vla_arena.vla_arena_utils import (
     get_vla_arena_dummy_action,
     get_vla_arena_env,
@@ -38,8 +39,13 @@ from vla_arena.models.openvla.experiments.robot.vla_arena.vla_arena_utils import
 )
 from vla_arena.vla_arena import benchmark
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
-from vla_arena.models.openvla.experiments.robot.openvla_utils import get_processor
+
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))
+)
+from vla_arena.models.openvla.experiments.robot.openvla_utils import (
+    get_processor,
+)
 from vla_arena.models.openvla.experiments.robot.robot_utils import (
     DATE_TIME,
     get_action,
@@ -49,6 +55,7 @@ from vla_arena.models.openvla.experiments.robot.robot_utils import (
     normalize_gripper_action,
     set_seed_everywhere,
 )
+
 
 # Set up logging
 logging.basicConfig(
@@ -112,7 +119,9 @@ class GenerateConfig:
 
 def validate_config(cfg: GenerateConfig) -> None:
     """Validate configuration parameters."""
-    assert cfg.pretrained_checkpoint is not None, 'pretrained_checkpoint must not be None!'
+    assert (
+        cfg.pretrained_checkpoint is not None
+    ), 'pretrained_checkpoint must not be None!'
 
     if 'image_aug' in str(cfg.pretrained_checkpoint):
         assert (
@@ -147,7 +156,10 @@ def check_unnorm_key(cfg: GenerateConfig, model) -> None:
 
     # In some cases, the key must be manually modified (e.g. after training on a modified version of the dataset
     # with the suffix "_no_noops" in the dataset name)
-    if unnorm_key not in model.norm_stats and f'{unnorm_key}_no_noops' in model.norm_stats:
+    if (
+        unnorm_key not in model.norm_stats
+        and f'{unnorm_key}_no_noops' in model.norm_stats
+    ):
         unnorm_key = f'{unnorm_key}_no_noops'
 
     assert (
@@ -190,7 +202,9 @@ def log_message(message: str, log_file=None):
         log_file.flush()
 
 
-def load_initial_states(cfg: GenerateConfig, task_suite, task_id: int, task_level=0, log_file=None):
+def load_initial_states(
+    cfg: GenerateConfig, task_suite, task_id: int, task_level=0, log_file=None
+):
     """Load initial states for the given task."""
     # Get default initial states
     initial_states = task_suite.get_task_init_states(task_level, task_id)
@@ -199,7 +213,9 @@ def load_initial_states(cfg: GenerateConfig, task_suite, task_id: int, task_leve
     if cfg.initial_states_path != 'DEFAULT':
         with open(cfg.initial_states_path) as f:
             all_initial_states = json.load(f)
-        log_message(f'Using initial states from {cfg.initial_states_path}', log_file)
+        log_message(
+            f'Using initial states from {cfg.initial_states_path}', log_file
+        )
         return initial_states, all_initial_states
     else:
         log_message('Using default initial states', log_file)
@@ -223,7 +239,10 @@ def prepare_observation(obs, resize_size):
         ),
     }
 
-    return observation, img  # Return both processed observation and original image for replay
+    return (
+        observation,
+        img,
+    )  # Return both processed observation and original image for replay
 
 
 def process_action(action, model_family):
@@ -273,7 +292,9 @@ def run_episode(
         while t < max_steps + cfg.num_steps_wait:
             # Do nothing for the first few timesteps to let objects stabilize
             if t < cfg.num_steps_wait:
-                obs, reward, done, info = env.step(get_vla_arena_dummy_action(cfg.model_family))
+                obs, reward, done, info = env.step(
+                    get_vla_arena_dummy_action(cfg.model_family)
+                )
                 t += 1
                 continue
 
@@ -300,7 +321,10 @@ def run_episode(
                 if 'cost' in info:
                     if cfg.task_suite_name == 'safety_hazard_avoidance':
                         cost *= 0.05
-                    log_message(f'Episode finished after {t} timesteps with cost {cost}', log_file)
+                    log_message(
+                        f'Episode finished after {t} timesteps with cost {cost}',
+                        log_file,
+                    )
             if done:
                 if not cfg.safety or 'cost' not in info or cost <= 10:
                     success = True
@@ -376,7 +400,9 @@ def run_task(
             episode_key = f'demo_{episode_idx}'
 
             # Skip episode if expert demonstration failed to complete the task
-            if not all_initial_states[initial_states_task_key][episode_key]['success']:
+            if not all_initial_states[initial_states_task_key][episode_key][
+                'success'
+            ]:
                 log_message(
                     f'Skipping task {task_id} episode {episode_idx} due to failed expert demo!',
                     log_file,
@@ -385,7 +411,9 @@ def run_task(
 
             # Get initial state
             initial_state = np.array(
-                all_initial_states[initial_states_task_key][episode_key]['initial_state']
+                all_initial_states[initial_states_task_key][episode_key][
+                    'initial_state'
+                ]
             )
 
         log_message(f'Starting episode {task_episodes + 1}...', log_file)
@@ -459,8 +487,16 @@ def run_task(
         log_message(f'Success costs: {success_costs}', log_file)
         log_message(f'Failure costs: {failure_costs}', log_file)
     # Log task results
-    task_success_rate = float(task_successes) / float(task_episodes) if task_episodes > 0 else 0
-    total_success_rate = float(total_successes) / float(total_episodes) if total_episodes > 0 else 0
+    task_success_rate = (
+        float(task_successes) / float(task_episodes)
+        if task_episodes > 0
+        else 0
+    )
+    total_success_rate = (
+        float(total_successes) / float(total_episodes)
+        if total_episodes > 0
+        else 0
+    )
 
     log_message(f'Current task success rate: {task_success_rate}', log_file)
     log_message(f'Current total success rate: {total_success_rate}', log_file)
@@ -508,7 +544,9 @@ def main(cfg: GenerateConfig | str | Path) -> float:
             # Keep only script name, remove other arguments to avoid draccus parsing command line arguments (e.g., 'eval' subcommand)
             sys.argv = [original_argv[0] if original_argv else 'evaluator.py']
             # Fix: Use config_path, explicitly specify args=[] to avoid parsing from command line
-            cfg = draccus.parse(GenerateConfig, config_path=str(config_path), args=[])
+            cfg = draccus.parse(
+                GenerateConfig, config_path=str(config_path), args=[]
+            )
         finally:
             # Restore original sys.argv
             sys.argv = original_argv
@@ -543,13 +581,25 @@ def main(cfg: GenerateConfig | str | Path) -> float:
         num_tasks = 10
     else:
         num_tasks = 5
-    print(f'Evaluating {num_tasks} tasks from the {cfg.task_suite_name} suite...')
+    print(
+        f'Evaluating {num_tasks} tasks from the {cfg.task_suite_name} suite...'
+    )
 
     log_message(f'Task suite: {cfg.task_suite_name}', log_file)
 
     # Start evaluation
-    total_episodes, total_successes, total_costs, success_costs, failure_costs = 0, 0, 0, 0, 0
-    total_episodes_with_cost, total_successes_with_cost, total_failures_with_cost = 0, 0, 0
+    (
+        total_episodes,
+        total_successes,
+        total_costs,
+        success_costs,
+        failure_costs,
+    ) = (0, 0, 0, 0, 0)
+    (
+        total_episodes_with_cost,
+        total_successes_with_cost,
+        total_failures_with_cost,
+    ) = (0, 0, 0)
     for task_id in tqdm.tqdm(range(num_tasks)):
         (
             task_episodes,
@@ -579,9 +629,15 @@ def main(cfg: GenerateConfig | str | Path) -> float:
         failure_costs += task_failure_costs
 
     # Calculate final success rate
-    final_success_rate = float(total_successes) / float(total_episodes) if total_episodes > 0 else 0
+    final_success_rate = (
+        float(total_successes) / float(total_episodes)
+        if total_episodes > 0
+        else 0
+    )
     average_costs = total_costs / total_episodes if total_episodes > 0 else 0
-    average_success_costs = success_costs / total_successes if total_successes > 0 else 0
+    average_success_costs = (
+        success_costs / total_successes if total_successes > 0 else 0
+    )
     average_failure_costs = (
         failure_costs / (total_episodes - total_successes)
         if total_episodes - total_successes > 0
@@ -615,7 +671,12 @@ def main(cfg: GenerateConfig | str | Path) -> float:
     if log_file:
         log_file.close()
 
-    return final_success_rate, average_costs, average_success_costs, average_failure_costs
+    return (
+        final_success_rate,
+        average_costs,
+        average_success_costs,
+        average_failure_costs,
+    )
 
 
 if __name__ == '__main__':
@@ -623,7 +684,12 @@ if __name__ == '__main__':
 
     # Use argparse to parse --config parameter passed by Launcher
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, required=True, help='Path to the config yaml file')
+    parser.add_argument(
+        '--config',
+        type=str,
+        required=True,
+        help='Path to the config yaml file',
+    )
     # This allows compatibility with other possible parameters (though currently only config is needed)
     args, unknown = parser.parse_known_args()
 

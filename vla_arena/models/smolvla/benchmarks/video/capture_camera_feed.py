@@ -38,6 +38,7 @@ from pathlib import Path
 import cv2
 import rerun as rr
 
+
 # see https://rerun.io/docs/howto/visualization/limit-ram
 RERUN_MEMORY_LIMIT = os.getenv('LEROBOT_RERUN_MEMORY_LIMIT', '5%')
 

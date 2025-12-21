@@ -35,10 +35,9 @@ from typing import Any
 
 import numpy as np
 import torch
-from safetensors.torch import load_file, save_file
-
 from lerobot.constants import RNG_STATE
 from lerobot.datasets.utils import flatten_dict, unflatten_dict
+from safetensors.torch import load_file, save_file
 
 
 def serialize_python_rng_state() -> dict[str, torch.Tensor]:
@@ -53,7 +52,9 @@ def serialize_python_rng_state() -> dict[str, torch.Tensor]:
     }
 
 
-def deserialize_python_rng_state(rng_state_dict: dict[str, torch.Tensor]) -> None:
+def deserialize_python_rng_state(
+    rng_state_dict: dict[str, torch.Tensor],
+) -> None:
     """
     Restores the rng state for `random` from a dictionary produced by `serialize_python_rng_state()`.
     """
@@ -77,11 +78,15 @@ def serialize_numpy_rng_state() -> dict[str, torch.Tensor]:
         'np_rng_state_values': torch.tensor(np_state[1], dtype=torch.int64),
         'np_rng_state_index': torch.tensor([np_state[2]], dtype=torch.int64),
         'np_rng_has_gauss': torch.tensor([np_state[3]], dtype=torch.int64),
-        'np_rng_cached_gaussian': torch.tensor([np_state[4]], dtype=torch.float32),
+        'np_rng_cached_gaussian': torch.tensor(
+            [np_state[4]], dtype=torch.float32
+        ),
     }
 
 
-def deserialize_numpy_rng_state(rng_state_dict: dict[str, torch.Tensor]) -> None:
+def deserialize_numpy_rng_state(
+    rng_state_dict: dict[str, torch.Tensor],
+) -> None:
     """
     Restores the rng state for `numpy` from a dictionary produced by `serialize_numpy_rng_state()`.
     """
@@ -102,11 +107,15 @@ def serialize_torch_rng_state() -> dict[str, torch.Tensor]:
     """
     torch_rng_state_dict = {'torch_rng_state': torch.get_rng_state()}
     if torch.cuda.is_available():
-        torch_rng_state_dict['torch_cuda_rng_state'] = torch.cuda.get_rng_state()
+        torch_rng_state_dict['torch_cuda_rng_state'] = (
+            torch.cuda.get_rng_state()
+        )
     return torch_rng_state_dict
 
 
-def deserialize_torch_rng_state(rng_state_dict: dict[str, torch.Tensor]) -> None:
+def deserialize_torch_rng_state(
+    rng_state_dict: dict[str, torch.Tensor],
+) -> None:
     """
     Restores the rng state for `torch` from a dictionary produced by `serialize_torch_rng_state()`.
     """
@@ -136,9 +145,15 @@ def deserialize_rng_state(rng_state_dict: dict[str, torch.Tensor]) -> None:
     Restores the rng state for `random`, `numpy`, and `torch` from a dictionary produced by
     `serialize_rng_state()`.
     """
-    py_rng_state_dict = {k: v for k, v in rng_state_dict.items() if k.startswith('py')}
-    np_rng_state_dict = {k: v for k, v in rng_state_dict.items() if k.startswith('np')}
-    torch_rng_state_dict = {k: v for k, v in rng_state_dict.items() if k.startswith('torch')}
+    py_rng_state_dict = {
+        k: v for k, v in rng_state_dict.items() if k.startswith('py')
+    }
+    np_rng_state_dict = {
+        k: v for k, v in rng_state_dict.items() if k.startswith('np')
+    }
+    torch_rng_state_dict = {
+        k: v for k, v in rng_state_dict.items() if k.startswith('torch')
+    }
 
     deserialize_python_rng_state(py_rng_state_dict)
     deserialize_numpy_rng_state(np_rng_state_dict)
@@ -165,7 +180,9 @@ def get_rng_state() -> dict[str, Any]:
         'torch_random_state': torch.random.get_rng_state(),
     }
     if torch.cuda.is_available():
-        random_state_dict['torch_cuda_random_state'] = torch.cuda.random.get_rng_state()
+        random_state_dict['torch_cuda_random_state'] = (
+            torch.cuda.random.get_rng_state()
+        )
     return random_state_dict
 
 
@@ -179,7 +196,9 @@ def set_rng_state(random_state_dict: dict[str, Any]):
     np.random.set_state(random_state_dict['numpy_random_state'])
     torch.random.set_rng_state(random_state_dict['torch_random_state'])
     if torch.cuda.is_available():
-        torch.cuda.random.set_rng_state(random_state_dict['torch_cuda_random_state'])
+        torch.cuda.random.set_rng_state(
+            random_state_dict['torch_cuda_random_state']
+        )
 
 
 def set_seed(seed) -> None:

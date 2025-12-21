@@ -16,15 +16,15 @@
 import torch
 import torch.nn as nn
 from einops import rearrange, repeat
-from torch import Tensor
-from torchvision import transforms
-from transformers import T5EncoderModel, T5Tokenizer
-
 from latent_action_model.genie.modules.blocks import (
     SpatioTemporalTransformer,
     SpatioTransformer,
     VectorQuantizer,
 )
+from torch import Tensor
+from torchvision import transforms
+from transformers import T5EncoderModel, T5Tokenizer
+
 
 # Use timm's names
 IMAGENET_DEFAULT_MEAN = (0.485, 0.456, 0.406)
@@ -56,7 +56,9 @@ class UncontrolledDINOLatentActionModel(nn.Module):
         self.dino_transform = transforms.Normalize(
             mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD
         )
-        self.dino_encoder = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitb14_reg')
+        self.dino_encoder = torch.hub.load(
+            'facebookresearch/dinov2', 'dinov2_vitb14_reg'
+        )
         self.dino_encoder.requires_grad_(False)
 
         dino_dim = 768
@@ -105,7 +107,9 @@ class UncontrolledDINOLatentActionModel(nn.Module):
 
     def encode_text(self, lang: list):
         # Tokenize the batch with padding to the longest sequence
-        encoding = self.tokenizer(lang, return_tensors='pt', padding=True).to(self.device)
+        encoding = self.tokenizer(lang, return_tensors='pt', padding=True).to(
+            self.device
+        )
 
         # Access the input IDs and attention masks
         input_ids = encoding['input_ids']
@@ -113,7 +117,9 @@ class UncontrolledDINOLatentActionModel(nn.Module):
 
         # Get encoder outputs
         with torch.no_grad():
-            encoder_outputs = self.text_encoder(input_ids=input_ids, attention_mask=attention_mask)
+            encoder_outputs = self.text_encoder(
+                input_ids=input_ids, attention_mask=attention_mask
+            )
 
         # Access the last hidden states
         last_hidden_states = encoder_outputs.last_hidden_state
@@ -121,13 +127,18 @@ class UncontrolledDINOLatentActionModel(nn.Module):
         return last_hidden_states, attention_mask
 
     def vq_encode(
-        self, videos: Tensor, lang_embed: Tensor = None, attention_mask: Tensor = None
+        self,
+        videos: Tensor,
+        lang_embed: Tensor = None,
+        attention_mask: Tensor = None,
     ) -> dict:
         # Preprocess videos
         B, T = videos.shape[:2]
         videos = rearrange(videos, 'b T c h w -> (b T) c h w')
         videos = self.dino_transform(videos)
-        dion_features = self.dino_encoder.forward_features(videos)['x_norm_patchtokens']
+        dion_features = self.dino_encoder.forward_features(videos)[
+            'x_norm_patchtokens'
+        ]
         dion_features = rearrange(dion_features, '(b T) l d -> b T l d', T=2)
 
         action_pad = self.action_latent.expand(B, T, -1, -1)
@@ -156,11 +167,15 @@ class UncontrolledDINOLatentActionModel(nn.Module):
         B, T = batch['videos'].shape[:2]
         H, W = batch['videos'].shape[3:5]
 
-        lang_embed, attention_mask = self.encode_text(batch['task_instruction'])
+        lang_embed, attention_mask = self.encode_text(
+            batch['task_instruction']
+        )
         lang_embed = self.lang_proj(lang_embed)
         attention_mask = torch.cat(
             [
-                torch.ones((B, self.num_codes + (H // self.patch_size) ** 2)).to(self.device),
+                torch.ones(
+                    (B, self.num_codes + (H // self.patch_size) ** 2)
+                ).to(self.device),
                 attention_mask,
             ],
             dim=-1,
@@ -173,13 +188,21 @@ class UncontrolledDINOLatentActionModel(nn.Module):
         )
         video_patches = self.patch_up(outputs['patches'][:, :-1])
         action_patches = self.action_up(outputs['z_q'])
-        video_action_patches = torch.cat([action_patches, video_patches], dim=2)
+        video_action_patches = torch.cat(
+            [action_patches, video_patches], dim=2
+        )
 
         # Decode
-        video_recon = self.decoder(video_action_patches, lang_embed.unsqueeze(1), attention_mask)
-        video_recon = video_recon[:, :, self.num_codes : self.num_codes + video_patches.shape[2]]
+        video_recon = self.decoder(
+            video_action_patches, lang_embed.unsqueeze(1), attention_mask
+        )
+        video_recon = video_recon[
+            :, :, self.num_codes : self.num_codes + video_patches.shape[2]
+        ]
 
-        outputs.update({'recon': video_recon, 'target': outputs['patches'][:, [-1]]})
+        outputs.update(
+            {'recon': video_recon, 'target': outputs['patches'][:, [-1]]}
+        )
         return outputs
 
     @property
@@ -212,7 +235,9 @@ class ControllableDINOLatentActionModel(nn.Module):
         self.dino_transform = transforms.Normalize(
             mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD
         )
-        self.dino_encoder = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitb14_reg')
+        self.dino_encoder = torch.hub.load(
+            'facebookresearch/dinov2', 'dinov2_vitb14_reg'
+        )
         self.dino_encoder.requires_grad_(False)
 
         dino_dim = 768
@@ -258,43 +283,66 @@ class ControllableDINOLatentActionModel(nn.Module):
             latent_dim=latent_dim,
             code_restart=True,
         )
-        self.action_latent_controllable = nn.Parameter(torch.empty(1, 1, self.num_codes, dino_dim))
+        self.action_latent_controllable = nn.Parameter(
+            torch.empty(1, 1, self.num_codes, dino_dim)
+        )
         nn.init.uniform_(self.action_latent_controllable, a=-1, b=1)
 
         # we only optimize the new tack-centric codebook in stage-2
         self.vq.requires_grad_(False)
 
     def vq_encode(
-        self, videos: Tensor, lang_embed: Tensor = None, attention_mask: Tensor = None
+        self,
+        videos: Tensor,
+        lang_embed: Tensor = None,
+        attention_mask: Tensor = None,
     ) -> dict:
         # Preprocess videos
         B, T = videos.shape[:2]
         videos = rearrange(videos, 'b T c h w -> (b T) c h w')
         videos = self.dino_transform(videos)
-        dion_features = self.dino_encoder.forward_features(videos)['x_norm_patchtokens']
+        dion_features = self.dino_encoder.forward_features(videos)[
+            'x_norm_patchtokens'
+        ]
         dion_features = rearrange(dion_features, '(b T) l d -> b T l d', T=2)
 
         action_pad = self.action_latent.expand(B, T, -1, -1)
         padded_patches = torch.cat([action_pad, dion_features], dim=2)
-        action_pad_controllable = self.action_latent_controllable.expand(B, T, -1, -1)
-        padded_patches = torch.cat([action_pad_controllable, padded_patches], dim=2)
+        action_pad_controllable = self.action_latent_controllable.expand(
+            B, T, -1, -1
+        )
+        padded_patches = torch.cat(
+            [action_pad_controllable, padded_patches], dim=2
+        )
 
         # Encode
         z = self.encoder(padded_patches)
 
         # Get 'uncotrollable' latent action for all future frames
-        z_uncontrol = self.to_codebook_uncontrol(z[:, 1:, self.num_codes : self.num_codes * 2])
+        z_uncontrol = self.to_codebook_uncontrol(
+            z[:, 1:, self.num_codes : self.num_codes * 2]
+        )
 
         # Vector quantize
-        z_uncontrol = z_uncontrol.reshape(B * (T - 1), self.num_codes, self.latent_dim)
-        z_q_uncontrol, z_uncontrol, emb_uncontrol, indices_uncontrol = self.vq(z_uncontrol)
-        z_q_uncontrol = z_q_uncontrol.reshape(B, T - 1, self.num_codes, self.latent_dim)
+        z_uncontrol = z_uncontrol.reshape(
+            B * (T - 1), self.num_codes, self.latent_dim
+        )
+        z_q_uncontrol, z_uncontrol, emb_uncontrol, indices_uncontrol = self.vq(
+            z_uncontrol
+        )
+        z_q_uncontrol = z_q_uncontrol.reshape(
+            B, T - 1, self.num_codes, self.latent_dim
+        )
 
         # Get 'cotrollable' latent action for all future frames
-        z_action = self.to_codebook(z[:, 1:, : self.num_codes])  # (B, T-1, n, E)
+        z_action = self.to_codebook(
+            z[:, 1:, : self.num_codes]
+        )  # (B, T-1, n, E)
 
         # Vector quantize
-        z_action = z_action.reshape(B * (T - 1), self.num_codes, self.latent_dim)
+        z_action = z_action.reshape(
+            B * (T - 1), self.num_codes, self.latent_dim
+        )
         z_q, z, emb, indices = self.vq_action(z_action)
         z_q = z_q.reshape(B, T - 1, self.num_codes, self.latent_dim)
 
@@ -330,7 +378,9 @@ class ControllableDINOLatentActionModel(nn.Module):
         video_recon = self.decoder(video_action_patches)
         video_recon = video_recon[:, :, -video_patches.shape[2] :]
 
-        outputs.update({'recon': video_recon, 'target': outputs['patches'][:, [-1]]})
+        outputs.update(
+            {'recon': video_recon, 'target': outputs['patches'][:, [-1]]}
+        )
         return outputs
 
     @property

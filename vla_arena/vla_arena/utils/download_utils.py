@@ -38,7 +38,6 @@ except ImportError:
     HUGGINGFACE_AVAILABLE = False
 
 
-
 class DownloadProgressBar(tqdm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -94,12 +93,18 @@ def download_url(url, download_dir, check_overwrite=True, is_zipfile=True):
     # we ask the user to verify that they want to overwrite the file
     user_response = None
     if check_overwrite and os.path.exists(file_to_write):
-        user_response = input(f'Warning: file {file_to_write} already exists. Overwrite? y/n\n')
+        user_response = input(
+            f'Warning: file {file_to_write} already exists. Overwrite? y/n\n'
+        )
         # assert user_response.lower() in {"yes", "y"}, f"Did not receive confirmation. Aborting download."
 
     if user_response is None or user_response.lower() in {'yes', 'y'}:
-        with DownloadProgressBar(unit='B', unit_scale=True, miniters=1, desc=fname) as t:
-            urllib.request.urlretrieve(url, filename=file_to_write, reporthook=t.update_to)
+        with DownloadProgressBar(
+            unit='B', unit_scale=True, miniters=1, desc=fname
+        ) as t:
+            urllib.request.urlretrieve(
+                url, filename=file_to_write, reporthook=t.update_to
+            )
     if is_zipfile:
         with zipfile.ZipFile(file_to_write, 'r') as archive:
             archive.extractall(path=download_dir)
@@ -117,7 +122,9 @@ DATASET_LINKS = {
 HF_REPO_ID = 'yifengzhu-hf/LIBERO-datasets'
 
 
-def download_from_huggingface(dataset_name, download_dir, check_overwrite=True):
+def download_from_huggingface(
+    dataset_name, download_dir, check_overwrite=True
+):
     """
     Download a specific LIBERO dataset from Hugging Face.
 
@@ -161,13 +168,21 @@ def download_from_huggingface(dataset_name, download_dir, check_overwrite=True):
 
     # Verify downloaded files
     file_count = sum(
-        [len(files) for _, _, files in os.walk(os.path.join(download_dir, dataset_name))],
+        [
+            len(files)
+            for _, _, files in os.walk(
+                os.path.join(download_dir, dataset_name)
+            )
+        ],
     )
     print(f'Downloaded {file_count} files for {dataset_name}')
 
 
 def vla_arena_dataset_download(
-    datasets='all', download_dir=None, check_overwrite=True, use_huggingface=False,
+    datasets='all',
+    download_dir=None,
+    check_overwrite=True,
+    use_huggingface=False,
 ):
     """Download vla_arena datasets
 
@@ -250,7 +265,9 @@ def check_vla_arena_dataset(download_dir=None):
             ):
                 dataset_status = True
                 info_str = colored(
-                    f'[X] Dataset {dataset_name} is complete', 'green', attrs=['bold'],
+                    f'[X] Dataset {dataset_name} is complete',
+                    'green',
+                    attrs=['bold'],
                 )
             else:
                 colored(
@@ -259,7 +276,11 @@ def check_vla_arena_dataset(download_dir=None):
                     attrs=['bold'],
                 )
         else:
-            info_str = colored(f'[ ] Dataset {dataset_name} not found!!!', 'red', attrs=['bold'])
+            info_str = colored(
+                f'[ ] Dataset {dataset_name} not found!!!',
+                'red',
+                attrs=['bold'],
+            )
 
         print(info_str)
         check_result = check_result and dataset_status

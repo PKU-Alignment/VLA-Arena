@@ -74,7 +74,11 @@ def rand_swap_exterior_images(img1, img2):
     """
     Randomly swaps the two exterior images (for training with single exterior input).
     """
-    return tf.cond(tf.random.uniform(shape=[]) > 0.5, lambda: (img1, img2), lambda: (img2, img1))
+    return tf.cond(
+        tf.random.uniform(shape=[]) > 0.5,
+        lambda: (img1, img2),
+        lambda: (img2, img1),
+    )
 
 
 def droid_baseact_transform(trajectory: dict[str, Any]) -> dict[str, Any]:
@@ -192,7 +196,12 @@ def zero_action_filter(traj: dict) -> bool:
         ]
     )
     DROID_NORM_0_ACT = (
-        2 * (tf.zeros_like(traj['action'][:, :6]) - DROID_Q01) / (DROID_Q99 - DROID_Q01 + 1e-8) - 1
+        2
+        * (tf.zeros_like(traj['action'][:, :6]) - DROID_Q01)
+        / (DROID_Q99 - DROID_Q01 + 1e-8)
+        - 1
     )
 
-    return tf.reduce_any(tf.math.abs(traj['action'][:, :6] - DROID_NORM_0_ACT) > 1e-5)
+    return tf.reduce_any(
+        tf.math.abs(traj['action'][:, :6] - DROID_NORM_0_ACT) > 1e-5
+    )

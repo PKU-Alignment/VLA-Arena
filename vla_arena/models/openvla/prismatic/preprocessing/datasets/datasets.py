@@ -30,9 +30,19 @@ from pathlib import Path
 import torch
 from PIL import Image
 from torch.utils.data import Dataset
-from transformers import CodeGenTokenizerFast, LlamaTokenizerFast, PreTrainedTokenizerBase
-from vla_arena.models.openvla.prismatic.models.backbones.llm.prompting import PromptBuilder
-from vla_arena.models.openvla.prismatic.models.backbones.vision import ImageTransform
+from transformers import (
+    CodeGenTokenizerFast,
+    LlamaTokenizerFast,
+    PreTrainedTokenizerBase,
+)
+
+from vla_arena.models.openvla.prismatic.models.backbones.llm.prompting import (
+    PromptBuilder,
+)
+from vla_arena.models.openvla.prismatic.models.backbones.vision import (
+    ImageTransform,
+)
+
 
 # HuggingFace Default / LLaMa-2 IGNORE_INDEX (for labels)
 IGNORE_INDEX = -100
@@ -86,7 +96,9 @@ class AlignDataset(Dataset[dict[str, torch.Tensor]]):
         ), 'Unexpected text!'
 
         # Format Caption --> {caption}{eos_token}
-        caption = self.prompt_template.format(caption=conversation[-1]['value'].strip())
+        caption = self.prompt_template.format(
+            caption=conversation[-1]['value'].strip()
+        )
 
         # We treat image patches as "tokens = [p1 p2 p3, ...]"; we need to specify ordering of text/patch tokens.
         #   => Critically, we find that inserting *after* the BOS token leads to the strongest performance!
@@ -94,18 +106,26 @@ class AlignDataset(Dataset[dict[str, torch.Tensor]]):
         #       - labels = "IGNORE IGNORE ..." (copy `input_ids` replacing <s> and p{1...K} with IGNORE)
         #
         # IMPORTANT => IF WE'RE USING HF LLM.forward(... labels=labels), SHIFTING HAPPENS _INSIDE_ MODEL!
-        input_ids = self.tokenizer(caption, truncation=True, return_tensors='pt').input_ids[0]
+        input_ids = self.tokenizer(
+            caption, truncation=True, return_tensors='pt'
+        ).input_ids[0]
         labels = copy.deepcopy(input_ids)
 
         # Set the <BOS> token's label to IGNORE_INDEX (since we're inserting the image patches right after)
         labels[0] = IGNORE_INDEX
 
         # Process Image --> get "pixel_values" (will either be a torch.Tensor OR a Dict[str,torch.Tensor])
-        pixel_values = self.image_transform(Image.open(self.image_dir / image_path).convert('RGB'))
+        pixel_values = self.image_transform(
+            Image.open(self.image_dir / image_path).convert('RGB')
+        )
 
-        return dict(pixel_values=pixel_values, input_ids=input_ids, labels=labels)
+        return dict(
+            pixel_values=pixel_values, input_ids=input_ids, labels=labels
+        )
 
-    def get_modality_lengths(self, n_image_patches: int) -> list[tuple[bool, int]]:
+    def get_modality_lengths(
+        self, n_image_patches: int
+    ) -> list[tuple[bool, int]]:
         """Get a list of modalities (unimodal / text-only vs. multimodal) and length of conversations per example."""
         modality_lengths = []
         for example in self.examples:
@@ -117,7 +137,10 @@ class AlignDataset(Dataset[dict[str, torch.Tensor]]):
                 ]
             )
             modality_lengths.append(
-                (is_multimodal, (n_image_patches + n_words) if is_multimodal else n_words)
+                (
+                    is_multimodal,
+                    (n_image_patches + n_words) if is_multimodal else n_words,
+                )
             )
         return modality_lengths
 
@@ -160,7 +183,11 @@ class FinetuneDataset(Dataset[dict[str, torch.Tensor]]):
         conversation = self.examples[idx]['conversations']
 
         # Create Prompt Builder --> add each message sequentially
-        prompt_builder, input_ids, labels = self.prompt_builder_fn(model_family='prismatic'), [], []
+        prompt_builder, input_ids, labels = (
+            self.prompt_builder_fn(model_family='prismatic'),
+            [],
+            [],
+        )
         for turn_idx, turn in enumerate(conversation):
             # Get "effective" string added to prompt --> handle whitespace for tokenizer type!
             msg = prompt_builder.add_turn(turn['from'], turn['value'])
@@ -179,7 +206,9 @@ class FinetuneDataset(Dataset[dict[str, torch.Tensor]]):
                 )
 
             # Tokenize Input IDs
-            turn_input_ids = self.tokenizer(msg, add_special_tokens=turn_idx == 0).input_ids
+            turn_input_ids = self.tokenizer(
+                msg, add_special_tokens=turn_idx == 0
+            ).input_ids
 
             # [CRITICAL] We do not want to take the loss for the "USER: <msg>" prompts =>> just the responses!
             turn_labels = (
@@ -214,7 +243,9 @@ class FinetuneDataset(Dataset[dict[str, torch.Tensor]]):
                 Image.open(self.image_dir / image_path).convert('RGB')
             )
 
-            return dict(pixel_values=pixel_values, input_ids=input_ids, labels=labels)
+            return dict(
+                pixel_values=pixel_values, input_ids=input_ids, labels=labels
+            )
 
         else:
             # No image --> return `pixel_values` = None; Collator will do the smart batch handling for us!
@@ -225,7 +256,12 @@ class FinetuneDataset(Dataset[dict[str, torch.Tensor]]):
         modality_lengths = []
         for example in self.examples:
             is_multimodal = 'image' in example
-            n_words = sum([len(turn['value'].split()) for turn in example['conversations']])
+            n_words = sum(
+                [
+                    len(turn['value'].split())
+                    for turn in example['conversations']
+                ]
+            )
             modality_lengths.append((is_multimodal, n_words))
         return modality_lengths
 

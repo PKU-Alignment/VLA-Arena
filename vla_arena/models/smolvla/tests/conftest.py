@@ -31,10 +31,11 @@
 import traceback
 
 import pytest
+from lerobot.configs.types import FeatureType, PolicyFeature
 from serial import SerialException
 
-from lerobot.configs.types import FeatureType, PolicyFeature
 from tests.utils import DEVICE
+
 
 # Import fixture modules as plugins
 pytest_plugins = [
@@ -49,7 +50,9 @@ def pytest_collection_finish():
     print(f'\nTesting with {DEVICE=}')
 
 
-def _check_component_availability(component_type, available_components, make_component):
+def _check_component_availability(
+    component_type, available_components, make_component
+):
     """Generic helper to check if a hardware component is available"""
     if component_type not in available_components:
         raise ValueError(

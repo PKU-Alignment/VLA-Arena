@@ -31,12 +31,13 @@
 import logging
 
 import torch
-from torch import Tensor, nn
-
 from lerobot.constants import OBS_IMAGE, REWARD
 from lerobot.policies.normalize import Normalize, Unnormalize
 from lerobot.policies.pretrained import PreTrainedPolicy
-from lerobot.policies.sac.reward_model.configuration_classifier import RewardClassifierConfig
+from lerobot.policies.sac.reward_model.configuration_classifier import (
+    RewardClassifierConfig,
+)
+from torch import Tensor, nn
 
 
 class ClassifierOutput:
@@ -77,9 +78,13 @@ class SpatialLearnedEmbeddings(nn.Module):
         self.channel = channel
         self.num_features = num_features
 
-        self.kernel = nn.Parameter(torch.empty(channel, height, width, num_features))
+        self.kernel = nn.Parameter(
+            torch.empty(channel, height, width, num_features)
+        )
 
-        nn.init.kaiming_normal_(self.kernel, mode='fan_in', nonlinearity='linear')
+        nn.init.kaiming_normal_(
+            self.kernel, mode='fan_in', nonlinearity='linear'
+        )
 
     def forward(self, features):
         """
@@ -101,7 +106,9 @@ class SpatialLearnedEmbeddings(nn.Module):
         kernel_expanded = self.kernel.unsqueeze(0)  # [1, H, W, C, F]
 
         # Element-wise multiplication and spatial reduction
-        output = (features_expanded * kernel_expanded).sum(dim=(2, 3))  # Sum H,W
+        output = (features_expanded * kernel_expanded).sum(
+            dim=(2, 3)
+        )  # Sum H,W
 
         # Reshape to combine channel and feature dimensions
         output = output.view(output.size(0), -1)  # [B, C*F]
@@ -141,10 +148,14 @@ class Classifier(PreTrainedPolicy):
         )
 
         # Set up encoder
-        encoder = AutoModel.from_pretrained(self.config.model_name, trust_remote_code=True)
+        encoder = AutoModel.from_pretrained(
+            self.config.model_name, trust_remote_code=True
+        )
         # Extract vision model if we're given a multimodal model
         if hasattr(encoder, 'vision_model'):
-            logging.info('Multimodal model detected - using vision encoder only')
+            logging.info(
+                'Multimodal model detected - using vision encoder only'
+            )
             self.encoder = encoder.vision_model
             self.vision_config = encoder.config.vision_config
         else:
@@ -162,7 +173,9 @@ class Classifier(PreTrainedPolicy):
 
         # Extract image keys from input_features
         self.image_keys = [
-            key.replace('.', '_') for key in config.input_features if key.startswith(OBS_IMAGE)
+            key.replace('.', '_')
+            for key in config.input_features
+            if key.startswith(OBS_IMAGE)
         ]
 
         if self.is_cnn:
@@ -179,7 +192,9 @@ class Classifier(PreTrainedPolicy):
             self.feature_dim = self.encoder.fc.in_features
             self.encoder = nn.Sequential(*list(self.encoder.children())[:-1])
         elif hasattr(self.encoder.config, 'hidden_sizes'):
-            self.feature_dim = self.encoder.config.hidden_sizes[-1]  # Last channel dimension
+            self.feature_dim = self.encoder.config.hidden_sizes[
+                -1
+            ]  # Last channel dimension
         else:
             raise ValueError('Unsupported CNN architecture')
 
@@ -199,7 +214,8 @@ class Classifier(PreTrainedPolicy):
             ),
             nn.Dropout(self.config.dropout_rate),
             nn.Linear(
-                self.feature_dim * self.config.image_embedding_pooling_dim, self.config.latent_dim
+                self.feature_dim * self.config.image_embedding_pooling_dim,
+                self.config.latent_dim,
             ),
             nn.LayerNorm(self.config.latent_dim),
             nn.Tanh(),
@@ -221,7 +237,9 @@ class Classifier(PreTrainedPolicy):
                 )
 
         self.classifier_head = nn.Sequential(
-            nn.Linear(input_dim * self.config.num_cameras, self.config.hidden_dim),
+            nn.Linear(
+                input_dim * self.config.num_cameras, self.config.hidden_dim
+            ),
             nn.Dropout(self.config.dropout_rate),
             nn.LayerNorm(self.config.hidden_dim),
             nn.ReLU(),
@@ -231,7 +249,9 @@ class Classifier(PreTrainedPolicy):
             ),
         )
 
-    def _get_encoder_output(self, x: torch.Tensor, image_key: str) -> torch.Tensor:
+    def _get_encoder_output(
+        self, x: torch.Tensor, image_key: str
+    ) -> torch.Tensor:
         """Extract the appropriate output from the encoder."""
         with torch.no_grad():
             if self.is_cnn:
@@ -242,10 +262,16 @@ class Classifier(PreTrainedPolicy):
                 outputs = self.encoder(x)
                 return outputs.last_hidden_state[:, 0, :]
 
-    def extract_images_and_labels(self, batch: dict[str, Tensor]) -> tuple[list, Tensor]:
+    def extract_images_and_labels(
+        self, batch: dict[str, Tensor]
+    ) -> tuple[list, Tensor]:
         """Extract image tensors and label tensors from batch."""
         # Check for both OBS_IMAGE and OBS_IMAGES prefixes
-        images = [batch[key] for key in self.config.input_features if key.startswith(OBS_IMAGE)]
+        images = [
+            batch[key]
+            for key in self.config.input_features
+            if key.startswith(OBS_IMAGE)
+        ]
         labels = batch[REWARD]
 
         return images, labels
@@ -267,10 +293,14 @@ class Classifier(PreTrainedPolicy):
             probabilities = torch.softmax(logits, dim=-1)
 
         return ClassifierOutput(
-            logits=logits, probabilities=probabilities, hidden_states=encoder_outputs
+            logits=logits,
+            probabilities=probabilities,
+            hidden_states=encoder_outputs,
         )
 
-    def forward(self, batch: dict[str, Tensor]) -> tuple[Tensor, dict[str, Tensor]]:
+    def forward(
+        self, batch: dict[str, Tensor]
+    ) -> tuple[Tensor, dict[str, Tensor]]:
         """Standard forward pass for training compatible with train.py."""
         # Normalize inputs if needed
         batch = self.normalize_inputs(batch)
@@ -285,7 +315,9 @@ class Classifier(PreTrainedPolicy):
         # Calculate loss
         if self.config.num_classes == 2:
             # Binary classification
-            loss = nn.functional.binary_cross_entropy_with_logits(outputs.logits, labels)
+            loss = nn.functional.binary_cross_entropy_with_logits(
+                outputs.logits, labels
+            )
             predictions = (torch.sigmoid(outputs.logits) > 0.5).float()
         else:
             # Multi-class classification
@@ -313,7 +345,11 @@ class Classifier(PreTrainedPolicy):
         batch = self.normalize_targets(batch)
 
         # Extract images from batch dict
-        images = [batch[key] for key in self.config.input_features if key.startswith(OBS_IMAGE)]
+        images = [
+            batch[key]
+            for key in self.config.input_features
+            if key.startswith(OBS_IMAGE)
+        ]
 
         if self.config.num_classes == 2:
             probs = self.predict(images).probabilities
@@ -338,7 +374,9 @@ class Classifier(PreTrainedPolicy):
         This method is required by PreTrainedPolicy but not used for reward classifiers.
         The reward classifier is not an actor and does not produce action chunks.
         """
-        raise NotImplementedError('Reward classifiers do not predict action chunks')
+        raise NotImplementedError(
+            'Reward classifiers do not predict action chunks'
+        )
 
     def reset(self):
         """

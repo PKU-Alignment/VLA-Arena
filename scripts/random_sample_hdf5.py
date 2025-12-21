@@ -71,7 +71,9 @@ def sample_hdf5_file(input_file, output_file, sample_ratio, random_seed=None):
             data_group = f_in['data']
 
             # Get all demo names
-            demo_names = [key for key in data_group.keys() if key.startswith('demo_')]
+            demo_names = [
+                key for key in data_group.keys() if key.startswith('demo_')
+            ]
             demo_names.sort()  # Ensure consistent order
 
             if not demo_names:
@@ -166,7 +168,12 @@ def main():
         required=True,
         help='Sampling ratio (0.0 - 1.0), e.g., 0.5 means sample 50%%',
     )
-    parser.add_argument('--seed', type=int, default=None, help='Random seed for reproducibility')
+    parser.add_argument(
+        '--seed',
+        type=int,
+        default=None,
+        help='Random seed for reproducibility',
+    )
     parser.add_argument(
         '--input-dir',
         type=str,
@@ -180,10 +187,15 @@ def main():
         help='Output directory, used together with --input-dir',
     )
     parser.add_argument(
-        '--pattern', type=str, default='*.hdf5', help='Filename pattern (default: *.hdf5)',
+        '--pattern',
+        type=str,
+        default='*.hdf5',
+        help='Filename pattern (default: *.hdf5)',
     )
     parser.add_argument(
-        '--not-recursive', action='store_true', help='Do not recursively search subdirectories',
+        '--not-recursive',
+        action='store_true',
+        help='Do not recursively search subdirectories',
     )
 
     args = parser.parse_args()
@@ -196,7 +208,9 @@ def main():
     # Batch processing mode
     if args.input_dir:
         if not args.output_dir:
-            print('Error: --output-dir must be specified when using --input-dir')
+            print(
+                'Error: --output-dir must be specified when using --input-dir'
+            )
             return
 
         input_dir = Path(args.input_dir)
@@ -209,7 +223,9 @@ def main():
             demo_files = list(input_dir.rglob(args.pattern))
 
         if not demo_files:
-            print(f'No files matching {args.pattern} found in {args.input_dir}')
+            print(
+                f'No files matching {args.pattern} found in {args.input_dir}'
+            )
             return
 
         print(f'Found {len(demo_files)} files to process\n')
@@ -222,15 +238,22 @@ def main():
 
             # If output filename is same as input, add suffix
             if output_file == demo_file:
-                output_file = output_file.parent / f'{output_file.stem}_sampled{output_file.suffix}'
+                output_file = (
+                    output_file.parent
+                    / f'{output_file.stem}_sampled{output_file.suffix}'
+                )
 
             output_file.parent.mkdir(parents=True, exist_ok=True)
 
-            if sample_hdf5_file(str(demo_file), str(output_file), args.ratio, args.seed):
+            if sample_hdf5_file(
+                str(demo_file), str(output_file), args.ratio, args.seed
+            ):
                 success_count += 1
             print()
 
-        print(f'Processing complete: {success_count}/{len(demo_files)} files succeeded')
+        print(
+            f'Processing complete: {success_count}/{len(demo_files)} files succeeded'
+        )
 
     # Single file processing mode
     else:
@@ -243,9 +266,14 @@ def main():
             output_file = args.output_file
         else:
             input_path = Path(args.input_file)
-            output_file = str(input_path.parent / f'{input_path.stem}_sampled{input_path.suffix}')
+            output_file = str(
+                input_path.parent
+                / f'{input_path.stem}_sampled{input_path.suffix}'
+            )
 
-        success = sample_hdf5_file(args.input_file, output_file, args.ratio, args.seed)
+        success = sample_hdf5_file(
+            args.input_file, output_file, args.ratio, args.seed
+        )
         if success:
             print('\nProcessing complete!')
         else:

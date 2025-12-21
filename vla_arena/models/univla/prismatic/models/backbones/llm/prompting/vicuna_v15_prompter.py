@@ -25,6 +25,7 @@ from vla_arena.models.univla.prismatic.models.backbones.llm.prompting.base_promp
     PromptBuilder,
 )
 
+
 # Default System Prompt for LLaVa Models
 SYS_PROMPTS = {
     'prismatic': (
@@ -39,10 +40,14 @@ SYS_PROMPTS = {
 
 
 class VicunaV15ChatPromptBuilder(PromptBuilder):
-    def __init__(self, model_family: str, system_prompt: str | None = None) -> None:
+    def __init__(
+        self, model_family: str, system_prompt: str | None = None
+    ) -> None:
         super().__init__(model_family, system_prompt)
         self.system_prompt = (
-            SYS_PROMPTS[self.model_family] if system_prompt is None else system_prompt
+            SYS_PROMPTS[self.model_family]
+            if system_prompt is None
+            else system_prompt
         ).strip() + ' '
 
         # LLaMa-2 Specific
@@ -56,7 +61,11 @@ class VicunaV15ChatPromptBuilder(PromptBuilder):
         self.prompt, self.turn_count = '', 0
 
     def add_turn(self, role: str, message: str) -> str:
-        assert (role == 'human') if (self.turn_count % 2 == 0) else (role == 'gpt')
+        assert (
+            (role == 'human')
+            if (self.turn_count % 2 == 0)
+            else (role == 'gpt')
+        )
         message = message.replace('<image>', '').strip()
 
         # Special Handling for "system" prompt (turn_count == 0)

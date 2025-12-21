@@ -28,19 +28,33 @@ from pathlib import Path
 
 import torch
 import torch.distributed as dist
-from torch.utils.data import DataLoader, Dataset, DistributedSampler, IterableDataset
+from torch.utils.data import (
+    DataLoader,
+    Dataset,
+    DistributedSampler,
+    IterableDataset,
+)
 from tqdm import tqdm
 from transformers.modeling_outputs import CausalLMOutputWithPast
+
 from vla_arena.models.openvla.prismatic.models.vlms import PrismaticVLM
 from vla_arena.models.openvla.prismatic.overwatch import initialize_overwatch
-from vla_arena.models.openvla.prismatic.training.metrics import Metrics, VLAMetrics
+from vla_arena.models.openvla.prismatic.training.metrics import (
+    Metrics,
+    VLAMetrics,
+)
 from vla_arena.models.openvla.prismatic.util import check_bloat16_supported
-from vla_arena.models.openvla.prismatic.util.batching_utils import SplitModalitySampler
+from vla_arena.models.openvla.prismatic.util.batching_utils import (
+    SplitModalitySampler,
+)
 from vla_arena.models.openvla.prismatic.util.data_utils import (
     PaddedCollatorForActionPrediction,
     PaddedCollatorForLanguageModeling,
 )
-from vla_arena.models.openvla.prismatic.vla.action_tokenizer import ActionTokenizer
+from vla_arena.models.openvla.prismatic.vla.action_tokenizer import (
+    ActionTokenizer,
+)
+
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)
@@ -76,7 +90,9 @@ class TrainingStrategy(ABC):
             self.vlm.all_module_keys,
             self.vlm.trainable_module_keys,
         )
-        self.llm_transformer_layer_cls = self.vlm.llm_backbone.transformer_layer_cls
+        self.llm_transformer_layer_cls = (
+            self.vlm.llm_backbone.transformer_layer_cls
+        )
 
         # Optimization Parameters
         self.epochs, self.max_steps = epochs, max_steps
@@ -90,7 +106,10 @@ class TrainingStrategy(ABC):
             weight_decay,
             max_grad_norm,
         )
-        self.lr_scheduler_type, self.warmup_ratio = lr_scheduler_type, warmup_ratio
+        self.lr_scheduler_type, self.warmup_ratio = (
+            lr_scheduler_type,
+            warmup_ratio,
+        )
 
         # Generic Strategy Parameters
         self.enable_gradient_checkpointing = enable_gradient_checkpointing
@@ -109,7 +128,9 @@ class TrainingStrategy(ABC):
             self.global_batch_size % self.per_device_batch_size == 0
         ), 'Per-device batch size must evenly divide global batch size!'
         self.grad_accumulation_steps = (
-            self.global_batch_size // self.per_device_batch_size // overwatch.world_size()
+            self.global_batch_size
+            // self.per_device_batch_size
+            // overwatch.world_size()
         )
         if self.enable_mixed_precision_training:
             assert (
@@ -145,7 +166,10 @@ class TrainingStrategy(ABC):
         seed: int = 7,
     ) -> None:
         """Run the training loop for the given `dataset` and `collator`; log losses, results to `metrics`"""
-        if 'finetune' in stage and batch_construction_strategy == 'split-modality':
+        if (
+            'finetune' in stage
+            and batch_construction_strategy == 'split-modality'
+        ):
             # Instantiate the split-modality sampler; if you want to extend with other batch construction schemes,
             #   (e.g., grouping by length) =>> can easily add them here!
             modality_lengths = dataset.get_modality_lengths()
@@ -189,7 +213,10 @@ class TrainingStrategy(ABC):
         status = metrics.get_status()
         with tqdm(
             total=(
-                (self.epochs * (len(dataloader) // self.grad_accumulation_steps))
+                (
+                    self.epochs
+                    * (len(dataloader) // self.grad_accumulation_steps)
+                )
                 if self.max_steps is None
                 else self.max_steps
             ),
@@ -260,9 +287,15 @@ class TrainingStrategy(ABC):
                         status = metrics.push()
 
                         # Check for Termination & Save Final Checkpoint (in case `max_steps` is not None)
-                        if self.max_steps is not None and metrics.global_step >= self.max_steps:
+                        if (
+                            self.max_steps is not None
+                            and metrics.global_step >= self.max_steps
+                        ):
                             self.save_checkpoint(
-                                metrics.run_dir, metrics.global_step, epoch, loss.item()
+                                metrics.run_dir,
+                                metrics.global_step,
+                                epoch,
+                                loss.item(),
                             )
                             dist.barrier()
 
@@ -274,7 +307,9 @@ class TrainingStrategy(ABC):
 
             # Save checkpoint at end each epoch (if `self.max_steps` is None)
             if self.max_steps is None:
-                self.save_checkpoint(metrics.run_dir, metrics.global_step, epoch, loss.item())
+                self.save_checkpoint(
+                    metrics.run_dir, metrics.global_step, epoch, loss.item()
+                )
                 dist.barrier()
 
     # === VLA Training ===
@@ -289,7 +324,9 @@ class TrainingStrategy(ABC):
         save_full_model: bool = True,
     ) -> None:
         """Run the VLA training loop for the given `dataset` and `collator`; log losses, action metrics to `metrics`."""
-        assert isinstance(vla_dataset, IterableDataset), 'VLA training expects an IterableDataset!'
+        assert isinstance(
+            vla_dataset, IterableDataset
+        ), 'VLA training expects an IterableDataset!'
         assert (
             self.grad_accumulation_steps == 1
         ), 'VLA training does not support gradient accumulation!'
@@ -307,7 +344,11 @@ class TrainingStrategy(ABC):
         # === Train ===
         status = metrics.get_status()
         with tqdm(
-            total=(self.epochs * len(dataloader)) if self.max_steps is None else self.max_steps,
+            total=(
+                (self.epochs * len(dataloader))
+                if self.max_steps is None
+                else self.max_steps
+            ),
             desc=status,
             leave=False,
             disable=not overwatch.is_rank_zero(),
@@ -352,22 +393,28 @@ class TrainingStrategy(ABC):
                 #   2) Compute boolean "mask" where "labels > 2" (where 2 is ID for `EOS_TOKEN`)
                 #           => If masking out EOS, then it's just "labels != -100 (IGNORE_INDEX)
                 #   3) Compute masked accuracy as `(preds == logits) & mask` --> sum/divide by # unmasked!
-                action_preds = output.logits[:, self.vlm.vision_backbone.num_patches : -1].argmax(
-                    dim=2
-                )
+                action_preds = output.logits[
+                    :, self.vlm.vision_backbone.num_patches : -1
+                ].argmax(dim=2)
                 action_gt = batch['labels'][:, 1:].to(action_preds.device)
                 mask = action_gt > action_tokenizer.action_token_begin_idx
 
                 # Compute Accuracy
                 correct_preds = (action_preds == action_gt) & mask
-                action_accuracy = correct_preds.sum().float() / mask.sum().float()
+                action_accuracy = (
+                    correct_preds.sum().float() / mask.sum().float()
+                )
 
                 # Compute L1 Loss on Predicted (Continuous) Actions
                 continuous_actions_pred = torch.tensor(
-                    action_tokenizer.decode_token_ids_to_actions(action_preds[mask].cpu().numpy())
+                    action_tokenizer.decode_token_ids_to_actions(
+                        action_preds[mask].cpu().numpy()
+                    )
                 )
                 continuous_actions_gt = torch.tensor(
-                    action_tokenizer.decode_token_ids_to_actions(action_gt[mask].cpu().numpy())
+                    action_tokenizer.decode_token_ids_to_actions(
+                        action_gt[mask].cpu().numpy()
+                    )
                 )
                 action_l1_loss = torch.nn.functional.l1_loss(
                     continuous_actions_pred, continuous_actions_gt
@@ -375,7 +422,9 @@ class TrainingStrategy(ABC):
 
                 # Commit Metrics
                 metrics.commit(
-                    action_accuracy=action_accuracy, l1_loss=action_l1_loss, update_step_time=True
+                    action_accuracy=action_accuracy,
+                    l1_loss=action_l1_loss,
+                    update_step_time=True,
                 )
 
                 # Compute metrics per dataset --> only on rank_zero since we don't log them on other workers anyways
@@ -383,22 +432,30 @@ class TrainingStrategy(ABC):
                     datasets = set(batch['dataset_names'])
                     if len(datasets) > 1:
                         for ds in datasets:
-                            ds_mask = torch.tensor([elem == ds for elem in batch['dataset_names']])
+                            ds_mask = torch.tensor(
+                                [elem == ds for elem in batch['dataset_names']]
+                            )
                             action_accuracy_ds = (
-                                correct_preds[ds_mask].sum().float() / mask[ds_mask].sum().float()
+                                correct_preds[ds_mask].sum().float()
+                                / mask[ds_mask].sum().float()
                             )
                             continuous_actions_pred_ds = torch.tensor(
                                 action_tokenizer.decode_token_ids_to_actions(
-                                    action_preds[ds_mask][mask[ds_mask]].cpu().numpy()
+                                    action_preds[ds_mask][mask[ds_mask]]
+                                    .cpu()
+                                    .numpy()
                                 )
                             )
                             continuous_actions_gt_ds = torch.tensor(
                                 action_tokenizer.decode_token_ids_to_actions(
-                                    action_gt[ds_mask][mask[ds_mask]].cpu().numpy()
+                                    action_gt[ds_mask][mask[ds_mask]]
+                                    .cpu()
+                                    .numpy()
                                 )
                             )
                             action_l1_loss_ds = torch.nn.functional.l1_loss(
-                                continuous_actions_pred_ds, continuous_actions_gt_ds
+                                continuous_actions_pred_ds,
+                                continuous_actions_gt_ds,
                             )
                             metrics.commit_for_dataset(
                                 dataset_name=ds.decode(),
@@ -417,7 +474,9 @@ class TrainingStrategy(ABC):
                 self.optimizer.zero_grad()
 
                 # Compute epoch value using number of completed gradient steps
-                epoch = (metrics.global_step + 1) // (len(vla_dataset) // self.global_batch_size)
+                epoch = (metrics.global_step + 1) // (
+                    len(vla_dataset) // self.global_batch_size
+                )
 
                 # Push Metrics
                 metrics.commit(
@@ -430,7 +489,8 @@ class TrainingStrategy(ABC):
                 # Check for Save Interval or Max Steps & Save Checkpoint
                 if (
                     terminate := (
-                        self.max_steps is not None and metrics.global_step >= self.max_steps
+                        self.max_steps is not None
+                        and metrics.global_step >= self.max_steps
                     )
                 ) or ((metrics.global_step % save_interval) == 0):
                     self.save_checkpoint(

@@ -15,7 +15,6 @@
 import flax.linen as nn
 import jax
 import jax.numpy as jnp
-
 import openpi.models.lora as lora
 
 
@@ -23,7 +22,9 @@ def test_lora_einsum_params_shape():
     shape = (3, 8, 32, 4)  # (3KDH)
     einsum = lora.Einsum(shape)
     lora0 = lora.Einsum(shape, lora_config=lora.LoRAConfig(rank=2))
-    lora1 = lora.Einsum(shape, lora_config=lora.LoRAConfig(rank=2, axes=(1, 2)))
+    lora1 = lora.Einsum(
+        shape, lora_config=lora.LoRAConfig(rank=2, axes=(1, 2))
+    )
 
     key = jax.random.key(0)
     x = jax.random.normal(key, (8, 64, 32))  # (BSD)
@@ -49,7 +50,8 @@ def test_lora_einsum_same_output():
     shape = (3, 8, 32, 4)  # (3KDH)
     einsum = lora.Einsum(shape)
     einsum_lora = lora.Einsum(
-        shape, lora_config=lora.LoRAConfig(rank=2, init_fn=nn.initializers.zeros)
+        shape,
+        lora_config=lora.LoRAConfig(rank=2, init_fn=nn.initializers.zeros),
     )
 
     key = jax.random.key(0)

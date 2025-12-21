@@ -42,6 +42,7 @@ from ..robot import Robot
 from ..utils import ensure_safe_goal_position
 from .config_so100_follower import SO100FollowerConfig
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -57,7 +58,9 @@ class SO100Follower(Robot):
         super().__init__(config)
         self.config = config
         norm_mode_body = (
-            MotorNormMode.DEGREES if config.use_degrees else MotorNormMode.RANGE_M100_100
+            MotorNormMode.DEGREES
+            if config.use_degrees
+            else MotorNormMode.RANGE_M100_100
         )
         self.bus = FeetechMotorsBus(
             port=self.config.port,
@@ -80,7 +83,11 @@ class SO100Follower(Robot):
     @property
     def _cameras_ft(self) -> dict[str, tuple]:
         return {
-            cam: (self.config.cameras[cam].height, self.config.cameras[cam].width, 3)
+            cam: (
+                self.config.cameras[cam].height,
+                self.config.cameras[cam].width,
+                3,
+            )
             for cam in self.cameras
         }
 
@@ -94,7 +101,9 @@ class SO100Follower(Robot):
 
     @property
     def is_connected(self) -> bool:
-        return self.bus.is_connected and all(cam.is_connected for cam in self.cameras.values())
+        return self.bus.is_connected and all(
+            cam.is_connected for cam in self.cameras.values()
+        )
 
     def connect(self, calibrate: bool = True) -> None:
         """
@@ -137,18 +146,26 @@ class SO100Follower(Robot):
         logger.info(f'\nRunning calibration of {self}')
         self.bus.disable_torque()
         for motor in self.bus.motors:
-            self.bus.write('Operating_Mode', motor, OperatingMode.POSITION.value)
+            self.bus.write(
+                'Operating_Mode', motor, OperatingMode.POSITION.value
+            )
 
-        input(f'Move {self} to the middle of its range of motion and press ENTER....')
+        input(
+            f'Move {self} to the middle of its range of motion and press ENTER....'
+        )
         homing_offsets = self.bus.set_half_turn_homings()
 
         full_turn_motor = 'wrist_roll'
-        unknown_range_motors = [motor for motor in self.bus.motors if motor != full_turn_motor]
+        unknown_range_motors = [
+            motor for motor in self.bus.motors if motor != full_turn_motor
+        ]
         print(
             f"Move all joints except '{full_turn_motor}' sequentially through their "
             'entire ranges of motion.\nRecording positions. Press ENTER to stop...'
         )
-        range_mins, range_maxes = self.bus.record_ranges_of_motion(unknown_range_motors)
+        range_mins, range_maxes = self.bus.record_ranges_of_motion(
+            unknown_range_motors
+        )
         range_mins[full_turn_motor] = 0
         range_maxes[full_turn_motor] = 4095
 
@@ -170,7 +187,9 @@ class SO100Follower(Robot):
         with self.bus.torque_disabled():
             self.bus.configure_motors()
             for motor in self.bus.motors:
-                self.bus.write('Operating_Mode', motor, OperatingMode.POSITION.value)
+                self.bus.write(
+                    'Operating_Mode', motor, OperatingMode.POSITION.value
+                )
                 # Set P_Coefficient to lower value to avoid shakiness (Default is 32)
                 self.bus.write('P_Coefficient', motor, 16)
                 # Set I_Coefficient and D_Coefficient to default value 0 and 32
@@ -179,7 +198,9 @@ class SO100Follower(Robot):
 
     def setup_motors(self) -> None:
         for motor in reversed(self.bus.motors):
-            input(f"Connect the controller board to the '{motor}' motor only and press enter.")
+            input(
+                f"Connect the controller board to the '{motor}' motor only and press enter."
+            )
             self.bus.setup_motor(motor)
             print(f"'{motor}' motor id set to {self.bus.motors[motor].id}")
 
@@ -220,15 +241,22 @@ class SO100Follower(Robot):
             raise DeviceNotConnectedError(f'{self} is not connected.')
 
         goal_pos = {
-            key.removesuffix('.pos'): val for key, val in action.items() if key.endswith('.pos')
+            key.removesuffix('.pos'): val
+            for key, val in action.items()
+            if key.endswith('.pos')
         }
 
         # Cap goal position when too far away from present position.
         # /!\ Slower fps expected due to reading from the follower.
         if self.config.max_relative_target is not None:
             present_pos = self.bus.sync_read('Present_Position')
-            goal_present_pos = {key: (g_pos, present_pos[key]) for key, g_pos in goal_pos.items()}
-            goal_pos = ensure_safe_goal_position(goal_present_pos, self.config.max_relative_target)
+            goal_present_pos = {
+                key: (g_pos, present_pos[key])
+                for key, g_pos in goal_pos.items()
+            }
+            goal_pos = ensure_safe_goal_position(
+                goal_present_pos, self.config.max_relative_target
+            )
 
         # Send goal position to the arm
         self.bus.sync_write('Goal_Position', goal_pos)

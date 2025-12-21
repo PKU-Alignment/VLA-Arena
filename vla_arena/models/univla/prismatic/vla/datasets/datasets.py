@@ -29,10 +29,17 @@ import torch
 from PIL import Image
 from torch.utils.data import Dataset, IterableDataset
 from transformers import PreTrainedTokenizerBase
-from vla_arena.models.univla.prismatic.models.backbones.llm.prompting import PromptBuilder
-from vla_arena.models.univla.prismatic.models.backbones.vision import ImageTransform
+
+from vla_arena.models.univla.prismatic.models.backbones.llm.prompting import (
+    PromptBuilder,
+)
+from vla_arena.models.univla.prismatic.models.backbones.vision import (
+    ImageTransform,
+)
 from vla_arena.models.univla.prismatic.util.data_utils import tree_map
-from vla_arena.models.univla.prismatic.vla.action_tokenizer import ActionTokenizer
+from vla_arena.models.univla.prismatic.vla.action_tokenizer import (
+    ActionTokenizer,
+)
 from vla_arena.models.univla.prismatic.vla.datasets.rlds import (
     make_interleaved_dataset,
     make_single_dataset,
@@ -41,7 +48,10 @@ from vla_arena.models.univla.prismatic.vla.datasets.rlds.oxe import (
     OXE_NAMED_MIXTURES,
     get_oxe_dataset_kwargs_and_weights,
 )
-from vla_arena.models.univla.prismatic.vla.datasets.rlds.utils.data_utils import NormalizationType
+from vla_arena.models.univla.prismatic.vla.datasets.rlds.utils.data_utils import (
+    NormalizationType,
+)
+
 
 # HuggingFace Default / LLaMa-2 IGNORE_INDEX (for labels)
 IGNORE_INDEX = -100
@@ -79,14 +89,20 @@ class RLDSBatchTransform:
 
     def __call__(self, rlds_batch: dict[str, Any]) -> dict[str, Any]:
         """Converts a RLDS batch to the format expected by the OpenVLA collator/models."""
-        dataset_name, action = rlds_batch['dataset_name'], rlds_batch['action'][0]
+        dataset_name, action = (
+            rlds_batch['dataset_name'],
+            rlds_batch['action'][0],
+        )
         img = Image.fromarray(rlds_batch['observation']['image_primary'][0])
         lang = rlds_batch['task']['language_instruction'].decode().lower()
 
         # Construct Chat-based Prompt =>> Input is default query + language instruction, output are the action tokens
         prompt_builder = self.prompt_builder_fn('openvla')
         conversation = [
-            {'from': 'human', 'value': f'What action should the robot take to {lang}?'},
+            {
+                'from': 'human',
+                'value': f'What action should the robot take to {lang}?',
+            },
             {'from': 'gpt', 'value': self.action_tokenizer(action)},
         ]
         for turn in conversation:
@@ -109,7 +125,10 @@ class RLDSBatchTransform:
             labels[-1] = IGNORE_INDEX
 
         return dict(
-            pixel_values=pixel_values, input_ids=input_ids, labels=labels, dataset_name=dataset_name
+            pixel_values=pixel_values,
+            input_ids=input_ids,
+            labels=labels,
+            dataset_name=dataset_name,
         )
 
 
@@ -125,15 +144,22 @@ class RLDSBatchTransformLIBERO_withHis:
 
     def __call__(self, rlds_batch: dict[str, Any]) -> dict[str, Any]:
         """Converts a RLDS batch to the format expected by the OpenVLA collator/models."""
-        dataset_name, action = rlds_batch['dataset_name'], rlds_batch['action'][0]
+        dataset_name, action = (
+            rlds_batch['dataset_name'],
+            rlds_batch['action'][0],
+        )
         # img = Image.fromarray(rlds_batch["observation"]["image_primary"][0])
         lang = rlds_batch['task']['language_instruction'].decode().lower()
 
         randomized_overlap = random.randint(0, 1)
         img = Image.fromarray(rlds_batch['observation']['image_primary'][0])
-        img_k = Image.fromarray(rlds_batch['observation']['image_primary'][self.window_size - 1])
+        img_k = Image.fromarray(
+            rlds_batch['observation']['image_primary'][self.window_size - 1]
+        )
 
-        input_img = Image.fromarray(rlds_batch['observation']['image_primary'][randomized_overlap])
+        input_img = Image.fromarray(
+            rlds_batch['observation']['image_primary'][randomized_overlap]
+        )
         pixel_values = self.image_transform(input_img)
 
         with torch.no_grad():
@@ -151,19 +177,27 @@ class RLDSBatchTransformLIBERO_withHis:
                 .unsqueeze(0)
                 .to(self.action_tokenizer.device)
             )
-            latent_action_idx = self.action_tokenizer.vq_encode(video)['indices'].squeeze()
+            latent_action_idx = self.action_tokenizer.vq_encode(video)[
+                'indices'
+            ].squeeze()
 
             if randomized_overlap > 0:
                 initial_pixel_values = self.image_transform_lam(img)
                 target_pixel_values = self.image_transform_lam(img_k)
                 video = (
-                    torch.stack([initial_pixel_values, target_pixel_values], dim=0)
+                    torch.stack(
+                        [initial_pixel_values, target_pixel_values], dim=0
+                    )
                     .unsqueeze(0)
                     .to(self.action_tokenizer.device)
                 )
-                hist_action_idx = self.action_tokenizer.vq_encode(video)['indices'].squeeze()
+                hist_action_idx = self.action_tokenizer.vq_encode(video)[
+                    'indices'
+                ].squeeze()
 
-        action_vocab = [f'<ACT_{i.item()}>' for i in latent_action_idx]  # [ACT_1, ACT_2, ... ACT_K]
+        action_vocab = [
+            f'<ACT_{i.item()}>' for i in latent_action_idx
+        ]  # [ACT_1, ACT_2, ... ACT_K]
         # print(action_vocab)
         action_tokens = ''
         for i, action in enumerate(action_vocab):
@@ -180,7 +214,8 @@ class RLDSBatchTransformLIBERO_withHis:
                 hist_action_tokens += action
 
             input_prompt = (
-                f'What action should the robot take to {lang}? History action ' + hist_action_tokens
+                f'What action should the robot take to {lang}? History action '
+                + hist_action_tokens
             )
 
         # Construct Chat-based Prompt =>> Input is default query + language instruction, output are the action tokens
@@ -231,15 +266,22 @@ class RLDSBatchTransformVLA_ARENA_withHis:
 
     def __call__(self, rlds_batch: dict[str, Any]) -> dict[str, Any]:
         """Converts a RLDS batch to the format expected by the OpenVLA collator/models."""
-        dataset_name, action = rlds_batch['dataset_name'], rlds_batch['action'][0]
+        dataset_name, action = (
+            rlds_batch['dataset_name'],
+            rlds_batch['action'][0],
+        )
         # img = Image.fromarray(rlds_batch["observation"]["image_primary"][0])
         lang = rlds_batch['task']['language_instruction'].decode().lower()
 
         randomized_overlap = random.randint(0, 1)
         img = Image.fromarray(rlds_batch['observation']['image_primary'][0])
-        img_k = Image.fromarray(rlds_batch['observation']['image_primary'][self.window_size - 1])
+        img_k = Image.fromarray(
+            rlds_batch['observation']['image_primary'][self.window_size - 1]
+        )
 
-        input_img = Image.fromarray(rlds_batch['observation']['image_primary'][randomized_overlap])
+        input_img = Image.fromarray(
+            rlds_batch['observation']['image_primary'][randomized_overlap]
+        )
         pixel_values = self.image_transform(input_img)
 
         with torch.no_grad():
@@ -257,19 +299,27 @@ class RLDSBatchTransformVLA_ARENA_withHis:
                 .unsqueeze(0)
                 .to(self.action_tokenizer.device)
             )
-            latent_action_idx = self.action_tokenizer.vq_encode(video)['indices'].squeeze()
+            latent_action_idx = self.action_tokenizer.vq_encode(video)[
+                'indices'
+            ].squeeze()
 
             if randomized_overlap > 0:
                 initial_pixel_values = self.image_transform_lam(img)
                 target_pixel_values = self.image_transform_lam(img_k)
                 video = (
-                    torch.stack([initial_pixel_values, target_pixel_values], dim=0)
+                    torch.stack(
+                        [initial_pixel_values, target_pixel_values], dim=0
+                    )
                     .unsqueeze(0)
                     .to(self.action_tokenizer.device)
                 )
-                hist_action_idx = self.action_tokenizer.vq_encode(video)['indices'].squeeze()
+                hist_action_idx = self.action_tokenizer.vq_encode(video)[
+                    'indices'
+                ].squeeze()
 
-        action_vocab = [f'<ACT_{i.item()}>' for i in latent_action_idx]  # [ACT_1, ACT_2, ... ACT_K]
+        action_vocab = [
+            f'<ACT_{i.item()}>' for i in latent_action_idx
+        ]  # [ACT_1, ACT_2, ... ACT_K]
         # print(action_vocab)
         action_tokens = ''
         for i, action in enumerate(action_vocab):
@@ -286,7 +336,8 @@ class RLDSBatchTransformVLA_ARENA_withHis:
                 hist_action_tokens += action
 
             input_prompt = (
-                f'What action should the robot take to {lang}? History action ' + hist_action_tokens
+                f'What action should the robot take to {lang}? History action '
+                + hist_action_tokens
             )
 
         # Construct Chat-based Prompt =>> Input is default query + language instruction, output are the action tokens
@@ -336,7 +387,10 @@ class RLDSBatchTransformLIBERO:
 
     def __call__(self, rlds_batch: dict[str, Any]) -> dict[str, Any]:
         """Converts a RLDS batch to the format expected by the OpenVLA collator/models."""
-        dataset_name, action = rlds_batch['dataset_name'], rlds_batch['action'][0]
+        dataset_name, action = (
+            rlds_batch['dataset_name'],
+            rlds_batch['action'][0],
+        )
         # img = Image.fromarray(rlds_batch["observation"]["image_primary"][0])
         lang = rlds_batch['task']['language_instruction'].decode().lower()
 
@@ -352,9 +406,13 @@ class RLDSBatchTransformLIBERO:
                 .unsqueeze(0)
                 .to(self.action_tokenizer.device)
             )
-            latent_action_idx = self.action_tokenizer.vq_encode(video)['indices'].squeeze()
+            latent_action_idx = self.action_tokenizer.vq_encode(video)[
+                'indices'
+            ].squeeze()
 
-        action_vocab = [f'<ACT_{i.item()}>' for i in latent_action_idx]  # [ACT_1, ACT_2, ... ACT_K]
+        action_vocab = [
+            f'<ACT_{i.item()}>' for i in latent_action_idx
+        ]  # [ACT_1, ACT_2, ... ACT_K]
 
         action_tokens = ''
         for i, action in enumerate(action_vocab):
@@ -364,7 +422,10 @@ class RLDSBatchTransformLIBERO:
         # Construct Chat-based Prompt =>> Input is default query + language instruction, output are the action tokens
         prompt_builder = self.prompt_builder_fn('openvla')
         conversation = [
-            {'from': 'human', 'value': f'What action should the robot take to {lang}?'},
+            {
+                'from': 'human',
+                'value': f'What action should the robot take to {lang}?',
+            },
             {'from': 'gpt', 'value': action_tokens},
         ]
         for turn in conversation:
@@ -406,7 +467,10 @@ class RLDSBatchTransformLatentAction:
 
     def __call__(self, rlds_batch: dict[str, Any]) -> dict[str, Any]:
         """Converts a RLDS batch to the format expected by the OpenVLA collator/models."""
-        dataset_name, action = rlds_batch['dataset_name'], rlds_batch['action'][0]
+        dataset_name, action = (
+            rlds_batch['dataset_name'],
+            rlds_batch['action'][0],
+        )
         # img = Image.fromarray(rlds_batch["observation"]["image_primary"][0])
         lang = rlds_batch['task']['language_instruction'].decode().lower()
 
@@ -423,9 +487,13 @@ class RLDSBatchTransformLatentAction:
                 .unsqueeze(0)
                 .to(self.action_tokenizer.device)
             )
-            latent_action_idx = self.action_tokenizer.vq_encode(video)['indices'].squeeze()
+            latent_action_idx = self.action_tokenizer.vq_encode(video)[
+                'indices'
+            ].squeeze()
 
-        action_vocab = [f'<ACT_{i.item()}>' for i in latent_action_idx]  # [ACT_1, ACT_2, ... ACT_K]
+        action_vocab = [
+            f'<ACT_{i.item()}>' for i in latent_action_idx
+        ]  # [ACT_1, ACT_2, ... ACT_K]
 
         action_tokens = ''
         for i, action in enumerate(action_vocab):
@@ -434,7 +502,10 @@ class RLDSBatchTransformLatentAction:
         # Construct Chat-based Prompt =>> Input is default query + language instruction, output are the action tokens
         prompt_builder = self.prompt_builder_fn('openvla')
         conversation = [
-            {'from': 'human', 'value': f'What action should the robot take to {lang}?'},
+            {
+                'from': 'human',
+                'value': f'What action should the robot take to {lang}?',
+            },
             {'from': 'gpt', 'value': action_tokens},
         ]
         for turn in conversation:
@@ -456,7 +527,10 @@ class RLDSBatchTransformLatentAction:
             labels[-1] = IGNORE_INDEX
 
         return dict(
-            pixel_values=pixel_values, input_ids=input_ids, labels=labels, dataset_name=dataset_name
+            pixel_values=pixel_values,
+            input_ids=input_ids,
+            labels=labels,
+            dataset_name=dataset_name,
         )
 
 
@@ -466,11 +540,15 @@ class RLDSBatchTransformVideo:
 
     def __call__(self, rlds_batch: dict[str, Any]) -> dict[str, Any]:
         """Converts a RLDS batch to the format expected by the OpenVLA collator/models."""
-        dataset_name, action = rlds_batch['dataset_name'], np.array(rlds_batch['action'])
+        dataset_name, action = rlds_batch['dataset_name'], np.array(
+            rlds_batch['action']
+        )
 
         lang = rlds_batch['task']['language_instruction'].decode().lower()
 
-        img = Image.fromarray(rlds_batch['observation']['image_primary'][0])  # .copy()
+        img = Image.fromarray(
+            rlds_batch['observation']['image_primary'][0]
+        )  # .copy()
         initial_pixel_values = self.image_transform(img)
 
         # the frame interval is already tackled in RLDS dataloader
@@ -567,7 +645,9 @@ class RLDSDataset(IterableDataset):
         # fmt: on
 
         # Initialize RLDS Dataset
-        self.dataset, self.dataset_length, self.dataset_statistics = self.make_dataset(rlds_config)
+        self.dataset, self.dataset_length, self.dataset_statistics = (
+            self.make_dataset(rlds_config)
+        )
 
     def make_dataset(self, rlds_config):
         return make_interleaved_dataset(**rlds_config)
@@ -605,7 +685,9 @@ class EpisodicRLDSDataset(RLDSDataset):
     def __iter__(self) -> dict[str, Any]:
         for rlds_batch in self.dataset.as_numpy_iterator():
             out = [
-                self.batch_transform(tree_map(lambda x: x[i], rlds_batch))  # noqa: B023
+                self.batch_transform(
+                    tree_map(lambda x: x[i], rlds_batch)
+                )  # noqa: B023
                 for i in range(rlds_batch['action'].shape[0])
             ]
             yield out
@@ -641,14 +723,19 @@ class DummyDataset(Dataset):
 
     def __getitem__(self, idx):
         # TODO =>> Load image, action and instruction from disk -- we use dummy values
-        image = Image.fromarray(np.asarray(np.random.rand(224, 224, 3) * 255.0, dtype=np.uint8))
+        image = Image.fromarray(
+            np.asarray(np.random.rand(224, 224, 3) * 255.0, dtype=np.uint8)
+        )
         action = np.asarray(np.random.rand(7), dtype=np.float32)
         instruction = 'do something spectacular'
 
         # Add instruction to VLA prompt
         prompt_builder = self.prompt_builder_fn('openvla')
         conversation = [
-            {'from': 'human', 'value': f'What action should the robot take to {instruction}?'},
+            {
+                'from': 'human',
+                'value': f'What action should the robot take to {instruction}?',
+            },
             {'from': 'gpt', 'value': self.action_tokenizer(action)},
         ]
         for turn in conversation:
@@ -668,4 +755,6 @@ class DummyDataset(Dataset):
         # [CRITICAL] We do not want to take the loss for anything but the predicted action tokens!
         labels[: -(len(action) + 1)] = IGNORE_INDEX
 
-        return dict(pixel_values=pixel_values, input_ids=input_ids, labels=labels)
+        return dict(
+            pixel_values=pixel_values, input_ids=input_ids, labels=labels
+        )

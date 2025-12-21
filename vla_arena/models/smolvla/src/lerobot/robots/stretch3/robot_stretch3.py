@@ -31,16 +31,16 @@
 import time
 
 import numpy as np
+from lerobot.cameras.utils import make_cameras_from_configs
+from lerobot.constants import OBS_IMAGES, OBS_STATE
+from lerobot.datasets.utils import get_nested_item
 from stretch_body.gamepad_teleop import GamePadTeleop
 from stretch_body.robot import Robot as StretchAPI
 from stretch_body.robot_params import RobotParams
 
-from lerobot.cameras.utils import make_cameras_from_configs
-from lerobot.constants import OBS_IMAGES, OBS_STATE
-from lerobot.datasets.utils import get_nested_item
-
 from ..robot import Robot
 from .configuration_stretch3 import Stretch3RobotConfig
+
 
 # {lerobot_keys: stretch.api.keys}
 STRETCH_MOTORS = {
@@ -122,7 +122,9 @@ class Stretch3Robot(Robot):
             self.is_connected = self.is_connected and cam.is_connected
 
         if not self.is_connected:
-            print('Could not connect to the cameras, check that all cameras are plugged-in.')
+            print(
+                'Could not connect to the cameras, check that all cameras are plugged-in.'
+            )
             raise ConnectionError()
 
         self.calibrate()
@@ -133,7 +135,10 @@ class Stretch3Robot(Robot):
 
     def _get_state(self) -> dict:
         status = self.api.get_status()
-        return {k: get_nested_item(status, v, sep='.') for k, v in STRETCH_MOTORS.items()}
+        return {
+            k: get_nested_item(status, v, sep='.')
+            for k, v in STRETCH_MOTORS.items()
+        }
 
     def get_observation(self) -> dict[str, np.ndarray]:
         obs_dict = {}
@@ -153,8 +158,12 @@ class Stretch3Robot(Robot):
         for cam_key, cam in self.cameras.items():
             before_camread_t = time.perf_counter()
             obs_dict[f'{OBS_IMAGES}.{cam_key}'] = cam.async_read()
-            self.logs[f'read_camera_{cam_key}_dt_s'] = cam.logs['delta_timestamp_s']
-            self.logs[f'async_read_camera_{cam_key}_dt_s'] = time.perf_counter() - before_camread_t
+            self.logs[f'read_camera_{cam_key}_dt_s'] = cam.logs[
+                'delta_timestamp_s'
+            ]
+            self.logs[f'async_read_camera_{cam_key}_dt_s'] = (
+                time.perf_counter() - before_camread_t
+            )
 
         return obs_dict
 

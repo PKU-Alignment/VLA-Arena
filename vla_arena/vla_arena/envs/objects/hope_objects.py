@@ -114,7 +114,9 @@ class Ketchup(HopeBaseObject):
 
 @register_object
 class MacaroniAndCheese(HopeBaseObject):
-    def __init__(self, name='macaroni_and_cheese', obj_name='macaroni_and_cheese'):
+    def __init__(
+        self, name='macaroni_and_cheese', obj_name='macaroni_and_cheese'
+    ):
         super().__init__(name, obj_name)
         self.rotation = {
             'x': (np.pi / 2, np.pi / 2),
@@ -331,7 +333,9 @@ class SaladDressing(HopeBaseObject):
 
 @register_object
 class NewSaladDressing(HopeBaseObject):
-    def __init__(self, name='new_salad_dressing', obj_name='new_salad_dressing'):
+    def __init__(
+        self, name='new_salad_dressing', obj_name='new_salad_dressing'
+    ):
         super().__init__(name, obj_name)
         self.rotation = {
             'x': (np.pi / 2, np.pi / 2),
@@ -350,7 +354,10 @@ class TomatoSauce(HopeBaseObject):
 @register_object
 class HammerHandle(HopeBaseObject):
     def __init__(
-        self, name='hammer_handle', obj_name='hammer_handle', duplicate_collision_geoms=True,
+        self,
+        name='hammer_handle',
+        obj_name='hammer_handle',
+        duplicate_collision_geoms=True,
     ):
         super().__init__(name, obj_name, duplicate_collision_geoms)
         self.rotation = (0, 0)
@@ -359,7 +366,9 @@ class HammerHandle(HopeBaseObject):
 
 @register_object
 class Hammer(HopeBaseObject):
-    def __init__(self, name='hammer', obj_name='hammer', duplicate_collision_geoms=True):
+    def __init__(
+        self, name='hammer', obj_name='hammer', duplicate_collision_geoms=True
+    ):
         super().__init__(name, obj_name, duplicate_collision_geoms)
         self.rotation = (np.pi / 2, np.pi / 2)
         self.rotation_axis = 'x'
@@ -367,7 +376,9 @@ class Hammer(HopeBaseObject):
 
 @register_object
 class Knife(HopeBaseObject):
-    def __init__(self, name='knife', obj_name='knife', duplicate_collision_geoms=True):
+    def __init__(
+        self, name='knife', obj_name='knife', duplicate_collision_geoms=True
+    ):
         super().__init__(name, obj_name, duplicate_collision_geoms)
         self.rotation = (-np.pi / 2, -np.pi / 2)
         self.rotation_axis = 'x'
@@ -375,7 +386,12 @@ class Knife(HopeBaseObject):
 
 @register_object
 class KnifeN(HopeBaseObject):
-    def __init__(self, name='knife_n', obj_name='knife_n', duplicate_collision_geoms=True):
+    def __init__(
+        self,
+        name='knife_n',
+        obj_name='knife_n',
+        duplicate_collision_geoms=True,
+    ):
         super().__init__(name, obj_name, duplicate_collision_geoms)
         self.rotation = (-np.pi / 2, -np.pi / 2)
         self.rotation_axis = 'x'
@@ -383,7 +399,12 @@ class KnifeN(HopeBaseObject):
 
 @register_object
 class RotatedKnife(HopeBaseObject):
-    def __init__(self, name='rotated_knife', obj_name='knife_n', duplicate_collision_geoms=True):
+    def __init__(
+        self,
+        name='rotated_knife',
+        obj_name='knife_n',
+        duplicate_collision_geoms=True,
+    ):
         super().__init__(name, obj_name, duplicate_collision_geoms)
         self.rotation = (-np.pi / 6, -np.pi / 6)
         self.rotation_axis = 'x'
@@ -391,7 +412,12 @@ class RotatedKnife(HopeBaseObject):
 
 @register_object
 class RotatedKnifePi(HopeBaseObject):
-    def __init__(self, name='rotated_knife_pi', obj_name='knife_n', duplicate_collision_geoms=True):
+    def __init__(
+        self,
+        name='rotated_knife_pi',
+        obj_name='knife_n',
+        duplicate_collision_geoms=True,
+    ):
         super().__init__(name, obj_name, duplicate_collision_geoms)
         self.rotation = (np.pi / 2, np.pi / 2)
         self.rotation_axis = 'x'
@@ -418,7 +444,12 @@ class RotatedKnifePi(HopeBaseObject):
 #         super().__init__(name, obj_name)
 @register_object
 class Scissors(HopeBaseObject):
-    def __init__(self, name='scissors', obj_name='scissors', duplicate_collision_geoms=True):
+    def __init__(
+        self,
+        name='scissors',
+        obj_name='scissors',
+        duplicate_collision_geoms=True,
+    ):
         super().__init__(name, obj_name, duplicate_collision_geoms)
         self.rotation = (-np.pi / 2, -np.pi / 2)
         self.rotation_axis = 'x'
@@ -427,7 +458,10 @@ class Scissors(HopeBaseObject):
 @register_object
 class RotatedScissorsPi(HopeBaseObject):
     def __init__(
-        self, name='rotated_scissors_pi', obj_name='scissors', duplicate_collision_geoms=True,
+        self,
+        name='rotated_scissors_pi',
+        obj_name='scissors',
+        duplicate_collision_geoms=True,
     ):
         super().__init__(name, obj_name, duplicate_collision_geoms)
         self.rotation = (np.pi / 2, np.pi / 2)
@@ -437,7 +471,10 @@ class RotatedScissorsPi(HopeBaseObject):
 @register_object
 class RotatedScissors(HopeBaseObject):
     def __init__(
-        self, name='rotated_scissors', obj_name='scissors', duplicate_collision_geoms=True,
+        self,
+        name='rotated_scissors',
+        obj_name='scissors',
+        duplicate_collision_geoms=True,
     ):
         super().__init__(name, obj_name, duplicate_collision_geoms)
         self.rotation = (-np.pi / 5, -np.pi / 5)
@@ -446,7 +483,12 @@ class RotatedScissors(HopeBaseObject):
 
 @register_object
 class ScissorsN(HopeBaseObject):
-    def __init__(self, name='scissors_n', obj_name='scissors_n', duplicate_collision_geoms=True):
+    def __init__(
+        self,
+        name='scissors_n',
+        obj_name='scissors_n',
+        duplicate_collision_geoms=True,
+    ):
         super().__init__(name, obj_name, duplicate_collision_geoms)
         self.rotation = (-np.pi / 2, -np.pi / 2)
         self.rotation_axis = 'z'
@@ -454,7 +496,9 @@ class ScissorsN(HopeBaseObject):
 
 @register_object
 class Fork(HopeBaseObject):
-    def __init__(self, name='fork', obj_name='fork', duplicate_collision_geoms=True):
+    def __init__(
+        self, name='fork', obj_name='fork', duplicate_collision_geoms=True
+    ):
         super().__init__(name, obj_name, duplicate_collision_geoms)
         self.rotation = (-np.pi / 2, -np.pi / 2)
         self.rotation_axis = 'x'
@@ -462,7 +506,12 @@ class Fork(HopeBaseObject):
 
 @register_object
 class RotatedFork(HopeBaseObject):
-    def __init__(self, name='rotated_fork', obj_name='fork', duplicate_collision_geoms=True):
+    def __init__(
+        self,
+        name='rotated_fork',
+        obj_name='fork',
+        duplicate_collision_geoms=True,
+    ):
         super().__init__(name, obj_name, duplicate_collision_geoms)
         self.rotation = (np.pi / 6, np.pi / 6)
         self.rotation_axis = 'x'
@@ -470,7 +519,12 @@ class RotatedFork(HopeBaseObject):
 
 @register_object
 class RotatedForkPi(HopeBaseObject):
-    def __init__(self, name='rotated_fork_pi', obj_name='fork', duplicate_collision_geoms=True):
+    def __init__(
+        self,
+        name='rotated_fork_pi',
+        obj_name='fork',
+        duplicate_collision_geoms=True,
+    ):
         super().__init__(name, obj_name, duplicate_collision_geoms)
         self.rotation = (np.pi / 2, np.pi / 2)
         self.rotation_axis = 'x'

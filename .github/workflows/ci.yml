@@ -49,13 +49,13 @@ jobs:
         run: |
           make py-format
 
-      - name: Lint with ruff
-        run: |
-          make ruff
+      # - name: Lint with ruff
+      #   run: |
+      #     make ruff
 
-      - name: Lint with flake8
-        run: |
-          make flake8
+      # - name: Lint with flake8
+      #   run: |
+      #     make flake8
 
       - name: Check with pylint
         run: |

@@ -55,6 +55,7 @@ from pathlib import Path
 
 from tqdm import tqdm
 
+
 # === Constants ===
 BASE_DIR = Path('data/download/llava-v1.5-instruct')
 LRV_DIR = BASE_DIR / 'lrv'
@@ -63,14 +64,19 @@ VG_JSON_FILES, VG_IMG_DIR = [
     LRV_DIR / 'filter_cap1.json',
     LRV_DIR / 'filter_cap_more1.json',
 ], LRV_DIR / 'lrv-vg'
-CHART_JSON_FILE, CHART_IMG_DIR = LRV_DIR / 'chart_release_update.json', LRV_DIR / 'lrv-chart'
+CHART_JSON_FILE, CHART_IMG_DIR = (
+    LRV_DIR / 'chart_release_update.json',
+    LRV_DIR / 'lrv-chart',
+)
 
 # JSON Files for "merged" variants fo the dataset (with `llava_v1_5_mix665k.json` and `llava_v1_5_lvis4v_mix888k.json`
 BASE_JSON_FILE = BASE_DIR / 'llava_v1_5_mix665k.json'
 BASE_LVIS_JSON_FILE = BASE_DIR / 'llava_v1_5_lvis4v_mix888k.json'
 
 MERGED_BASE_LRV_JSON_FILE = BASE_DIR / 'llava_v1_5_lrv_mix1008k.json'
-MERGED_BASE_LVIS_LRV_JSON_FILE = BASE_DIR / 'llava_v1_5_lvis4v_lrv_mix1231k.json'
+MERGED_BASE_LVIS_LRV_JSON_FILE = (
+    BASE_DIR / 'llava_v1_5_lvis4v_lrv_mix1231k.json'
+)
 
 
 def build_lrv_instruct() -> None:
@@ -86,18 +92,26 @@ def build_lrv_instruct() -> None:
             vg_examples.extend(json.load(f))
 
     # Iterate through VG Examples & Verify Image Existence
-    for example in tqdm(vg_examples, desc='[*] Verifying all VG Images in LRV Instruct'):
+    for example in tqdm(
+        vg_examples, desc='[*] Verifying all VG Images in LRV Instruct'
+    ):
         image_id = example['image_id']
-        assert (VG_IMG_DIR / f'{image_id}.jpg').exists(), f'Missing Image `{image_id}.jpg`'
+        assert (
+            VG_IMG_DIR / f'{image_id}.jpg'
+        ).exists(), f'Missing Image `{image_id}.jpg`'
 
     # Open Chart JSON File
     with open(CHART_JSON_FILE) as f:
         chart_examples = json.load(f)
 
     # Iterate through Chart Examples & Verify Image Existence
-    for example in tqdm(chart_examples, desc='[*] Verifying all Chart Images in LRV Instruct'):
+    for example in tqdm(
+        chart_examples, desc='[*] Verifying all Chart Images in LRV Instruct'
+    ):
         image_path = example['image_id']
-        assert (CHART_IMG_DIR / image_path).exists(), f'Missing Image `{image_path}`'
+        assert (
+            CHART_IMG_DIR / image_path
+        ).exists(), f'Missing Image `{image_path}`'
 
     # Reformat VG Examples as LLaVa "Chat" Style => List[Entry] where each Entry is a Dictionary:
     #   => "id": str
@@ -106,13 +120,18 @@ def build_lrv_instruct() -> None:
     #           => {"from": "human", "value": "<image>\n{VG_EXAMPLE['question']}"}
     #           => {"from": "gpt", "value": "{VG_EXAMPLE['answer']}"}
     vg_chat_json = []
-    for vg_example in tqdm(vg_examples, desc='[*] Converting all VG Examples to LLaVa Format'):
+    for vg_example in tqdm(
+        vg_examples, desc='[*] Converting all VG Examples to LLaVa Format'
+    ):
         vg_chat_json.append(
             {
                 'id': vg_example['image_id'],
                 'image': f"lrv/lrv-vg/{vg_example['image_id']}.jpg",
                 'conversations': [
-                    {'from': 'human', 'value': f"<image>\n{vg_example['question'].strip()}"},
+                    {
+                        'from': 'human',
+                        'value': f"<image>\n{vg_example['question'].strip()}",
+                    },
                     {'from': 'gpt', 'value': vg_example['answer'].strip()},
                 ],
             }
@@ -121,14 +140,18 @@ def build_lrv_instruct() -> None:
     # Reformat Chart Examples as LLaVa "Chat" Style
     chart_chat_json = []
     for chart_example in tqdm(
-        chart_examples, desc='[*] Converting all Chart Examples to LLaVa Format'
+        chart_examples,
+        desc='[*] Converting all Chart Examples to LLaVa Format',
     ):
         chart_chat_json.append(
             {
                 'id': Path(chart_example['image_id']).stem,
                 'image': f"lrv/lrv-chart/{chart_example['image_id']}",
                 'conversations': [
-                    {'from': 'human', 'value': f"<image>\n{chart_example['question'].strip()}"},
+                    {
+                        'from': 'human',
+                        'value': f"<image>\n{chart_example['question'].strip()}",
+                    },
                     {'from': 'gpt', 'value': chart_example['answer'].strip()},
                 ],
             }

@@ -12,6 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from lerobot.constants import SCHEDULER_STATE
+from lerobot.optim.schedulers import (
+    CosineDecayWithWarmupSchedulerConfig,
+    DiffuserSchedulerConfig,
+    VQBeTSchedulerConfig,
+    load_scheduler_state,
+    save_scheduler_state,
+)
+
 # Copyright 2024 The HuggingFace Inc. team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,15 +35,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from torch.optim.lr_scheduler import LambdaLR
-
-from lerobot.constants import SCHEDULER_STATE
-from lerobot.optim.schedulers import (
-    CosineDecayWithWarmupSchedulerConfig,
-    DiffuserSchedulerConfig,
-    VQBeTSchedulerConfig,
-    load_scheduler_state,
-    save_scheduler_state,
-)
 
 
 def test_diffuser_scheduler(optimizer):
@@ -56,7 +56,9 @@ def test_diffuser_scheduler(optimizer):
 
 
 def test_vqbet_scheduler(optimizer):
-    config = VQBeTSchedulerConfig(num_warmup_steps=10, num_vqvae_training_steps=20, num_cycles=0.5)
+    config = VQBeTSchedulerConfig(
+        num_warmup_steps=10, num_vqvae_training_steps=20, num_cycles=0.5
+    )
     scheduler = config.build(optimizer, num_training_steps=100)
     assert isinstance(scheduler, LambdaLR)
 

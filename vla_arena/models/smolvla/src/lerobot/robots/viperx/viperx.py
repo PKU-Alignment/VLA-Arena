@@ -41,6 +41,7 @@ from ..robot import Robot
 from ..utils import ensure_safe_goal_position
 from .config_viperx import ViperXConfig
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -63,13 +64,25 @@ class ViperX(Robot):
             port=self.config.port,
             motors={
                 'waist': Motor(1, 'xm540-w270', MotorNormMode.RANGE_M100_100),
-                'shoulder': Motor(2, 'xm540-w270', MotorNormMode.RANGE_M100_100),
-                'shoulder_shadow': Motor(3, 'xm540-w270', MotorNormMode.RANGE_M100_100),
+                'shoulder': Motor(
+                    2, 'xm540-w270', MotorNormMode.RANGE_M100_100
+                ),
+                'shoulder_shadow': Motor(
+                    3, 'xm540-w270', MotorNormMode.RANGE_M100_100
+                ),
                 'elbow': Motor(4, 'xm540-w270', MotorNormMode.RANGE_M100_100),
-                'elbow_shadow': Motor(5, 'xm540-w270', MotorNormMode.RANGE_M100_100),
-                'forearm_roll': Motor(6, 'xm540-w270', MotorNormMode.RANGE_M100_100),
-                'wrist_angle': Motor(7, 'xm540-w270', MotorNormMode.RANGE_M100_100),
-                'wrist_rotate': Motor(8, 'xm430-w350', MotorNormMode.RANGE_M100_100),
+                'elbow_shadow': Motor(
+                    5, 'xm540-w270', MotorNormMode.RANGE_M100_100
+                ),
+                'forearm_roll': Motor(
+                    6, 'xm540-w270', MotorNormMode.RANGE_M100_100
+                ),
+                'wrist_angle': Motor(
+                    7, 'xm540-w270', MotorNormMode.RANGE_M100_100
+                ),
+                'wrist_rotate': Motor(
+                    8, 'xm430-w350', MotorNormMode.RANGE_M100_100
+                ),
                 'gripper': Motor(9, 'xm430-w350', MotorNormMode.RANGE_0_100),
             },
         )
@@ -82,7 +95,11 @@ class ViperX(Robot):
     @property
     def _cameras_ft(self) -> dict[str, tuple]:
         return {
-            cam: (self.config.cameras[cam].height, self.config.cameras[cam].width, 3)
+            cam: (
+                self.config.cameras[cam].height,
+                self.config.cameras[cam].width,
+                3,
+            )
             for cam in self.cameras
         }
 
@@ -96,7 +113,9 @@ class ViperX(Robot):
 
     @property
     def is_connected(self) -> bool:
-        return self.bus.is_connected and all(cam.is_connected for cam in self.cameras.values())
+        return self.bus.is_connected and all(
+            cam.is_connected for cam in self.cameras.values()
+        )
 
     def connect(self, calibrate: bool = True) -> None:
         """
@@ -125,18 +144,26 @@ class ViperX(Robot):
         logger.info(f'\nRunning calibration of {self}')
         self.bus.disable_torque()
         for motor in self.bus.motors:
-            self.bus.write('Operating_Mode', motor, OperatingMode.EXTENDED_POSITION.value)
+            self.bus.write(
+                'Operating_Mode', motor, OperatingMode.EXTENDED_POSITION.value
+            )
 
-        input('Move robot to the middle of its range of motion and press ENTER....')
+        input(
+            'Move robot to the middle of its range of motion and press ENTER....'
+        )
         homing_offsets = self.bus.set_half_turn_homings()
 
         full_turn_motors = ['shoulder_pan', 'wrist_roll']
-        unknown_range_motors = [motor for motor in self.bus.motors if motor not in full_turn_motors]
+        unknown_range_motors = [
+            motor for motor in self.bus.motors if motor not in full_turn_motors
+        ]
         print(
             f'Move all joints except {full_turn_motors} sequentially through their entire '
             'ranges of motion.\nRecording positions. Press ENTER to stop...'
         )
-        range_mins, range_maxes = self.bus.record_ranges_of_motion(unknown_range_motors)
+        range_mins, range_maxes = self.bus.record_ranges_of_motion(
+            unknown_range_motors
+        )
         for motor in full_turn_motors:
             range_mins[motor] = 0
             range_maxes[motor] = 4095
@@ -175,12 +202,20 @@ class ViperX(Robot):
             # See: https://emanual.robotis.com/docs/en/dxl/x/x_series/#operating-mode11
             for motor in self.bus.motors:
                 if motor != 'gripper':
-                    self.bus.write('Operating_Mode', motor, OperatingMode.EXTENDED_POSITION.value)
+                    self.bus.write(
+                        'Operating_Mode',
+                        motor,
+                        OperatingMode.EXTENDED_POSITION.value,
+                    )
 
             # Use 'position control current based' for follower gripper to be limited by the limit of the
             # current. It can grasp an object without forcing too much even tho, it's goal position is a
             # complete grasp (both gripper fingers are ordered to join and reach a touch).
-            self.bus.write('Operating_Mode', 'gripper', OperatingMode.CURRENT_POSITION.value)
+            self.bus.write(
+                'Operating_Mode',
+                'gripper',
+                OperatingMode.CURRENT_POSITION.value,
+            )
 
     def get_observation(self) -> dict[str, Any]:
         """The returned observations do not have a batch dimension."""
@@ -222,15 +257,22 @@ class ViperX(Robot):
             raise DeviceNotConnectedError(f'{self} is not connected.')
 
         goal_pos = {
-            key.removesuffix('.pos'): val for key, val in action.items() if key.endswith('.pos')
+            key.removesuffix('.pos'): val
+            for key, val in action.items()
+            if key.endswith('.pos')
         }
 
         # Cap goal position when too far away from present position.
         # /!\ Slower fps expected due to reading from the follower.
         if self.config.max_relative_target is not None:
             present_pos = self.bus.sync_read('Present_Position')
-            goal_present_pos = {key: (g_pos, present_pos[key]) for key, g_pos in goal_pos.items()}
-            goal_pos = ensure_safe_goal_position(goal_present_pos, self.config.max_relative_target)
+            goal_present_pos = {
+                key: (g_pos, present_pos[key])
+                for key, g_pos in goal_pos.items()
+            }
+            goal_pos = ensure_safe_goal_position(
+                goal_present_pos, self.config.max_relative_target
+            )
 
         # Send goal position to the arm
         self.bus.sync_write('Goal_Position', goal_pos)

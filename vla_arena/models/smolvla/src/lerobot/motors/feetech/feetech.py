@@ -31,9 +31,19 @@ from copy import deepcopy
 from enum import Enum
 from pprint import pformat
 
-from lerobot.utils.encoding_utils import decode_sign_magnitude, encode_sign_magnitude
+from lerobot.utils.encoding_utils import (
+    decode_sign_magnitude,
+    encode_sign_magnitude,
+)
 
-from ..motors_bus import Motor, MotorCalibration, MotorsBus, NameOrID, Value, get_address
+from ..motors_bus import (
+    Motor,
+    MotorCalibration,
+    MotorsBus,
+    NameOrID,
+    Value,
+    get_address,
+)
 from .tables import (
     FIRMWARE_MAJOR_VERSION,
     FIRMWARE_MINOR_VERSION,
@@ -46,6 +56,7 @@ from .tables import (
     MODEL_RESOLUTION,
     SCAN_BAUDRATES,
 )
+
 
 DEFAULT_PROTOCOL_VERSION = 0
 DEFAULT_BAUDRATE = 1_000_000
@@ -108,7 +119,9 @@ def patch_setPacketTimeout(self, packet_length):  # noqa: N802
     """
     self.packet_start_time = self.getCurrentTime()
     self.packet_timeout = (
-        (self.tx_time_per_byte * packet_length) + (self.tx_time_per_byte * 3.0) + 50
+        (self.tx_time_per_byte * packet_length)
+        + (self.tx_time_per_byte * 3.0)
+        + 50
     )
 
 
@@ -147,18 +160,28 @@ class FeetechMotorsBus(MotorsBus):
             self.port_handler, scs.PortHandler
         )
         self.packet_handler = scs.PacketHandler(protocol_version)
-        self.sync_reader = scs.GroupSyncRead(self.port_handler, self.packet_handler, 0, 0)
-        self.sync_writer = scs.GroupSyncWrite(self.port_handler, self.packet_handler, 0, 0)
+        self.sync_reader = scs.GroupSyncRead(
+            self.port_handler, self.packet_handler, 0, 0
+        )
+        self.sync_writer = scs.GroupSyncWrite(
+            self.port_handler, self.packet_handler, 0, 0
+        )
         self._comm_success = scs.COMM_SUCCESS
         self._no_error = 0x00
 
-        if any(MODEL_PROTOCOL[model] != self.protocol_version for model in self.models):
+        if any(
+            MODEL_PROTOCOL[model] != self.protocol_version
+            for model in self.models
+        ):
             raise ValueError(
                 f'Some motors are incompatible with protocol_version={self.protocol_version}'
             )
 
     def _assert_same_protocol(self) -> None:
-        if any(MODEL_PROTOCOL[model] != self.protocol_version for model in self.models):
+        if any(
+            MODEL_PROTOCOL[model] != self.protocol_version
+            for model in self.models
+        ):
             raise RuntimeError('Some motors use an incompatible protocol.')
 
     def _assert_protocol_is_compatible(self, instruction_name: str) -> None:
@@ -172,7 +195,9 @@ class FeetechMotorsBus(MotorsBus):
             )
 
     def _assert_same_firmware(self) -> None:
-        firmware_versions = self._read_firmware_version(self.ids, raise_on_error=True)
+        firmware_versions = self._read_firmware_version(
+            self.ids, raise_on_error=True
+        )
         if len(set(firmware_versions.values())) != 1:
             raise RuntimeError(
                 'Some Motors use different firmware versions:'
@@ -198,7 +223,9 @@ class FeetechMotorsBus(MotorsBus):
     ) -> tuple[int, int]:
         model = self.motors[motor].model
         search_baudrates = (
-            [initial_baudrate] if initial_baudrate is not None else self.model_baudrate_table[model]
+            [initial_baudrate]
+            if initial_baudrate is not None
+            else self.model_baudrate_table[model]
         )
         expected_model_nb = self.model_number_table[model]
 
@@ -226,7 +253,9 @@ class FeetechMotorsBus(MotorsBus):
 
         model = self.motors[motor].model
         search_baudrates = (
-            [initial_baudrate] if initial_baudrate is not None else self.model_baudrate_table[model]
+            [initial_baudrate]
+            if initial_baudrate is not None
+            else self.model_baudrate_table[model]
         )
         expected_model_nb = self.model_number_table[model]
 
@@ -282,8 +311,12 @@ class FeetechMotorsBus(MotorsBus):
     def read_calibration(self) -> dict[str, MotorCalibration]:
         offsets, mins, maxes = {}, {}, {}
         for motor in self.motors:
-            mins[motor] = self.read('Min_Position_Limit', motor, normalize=False)
-            maxes[motor] = self.read('Max_Position_Limit', motor, normalize=False)
+            mins[motor] = self.read(
+                'Min_Position_Limit', motor, normalize=False
+            )
+            maxes[motor] = self.read(
+                'Max_Position_Limit', motor, normalize=False
+            )
             offsets[motor] = (
                 self.read('Homing_Offset', motor, normalize=False)
                 if self.protocol_version == 0
@@ -314,7 +347,9 @@ class FeetechMotorsBus(MotorsBus):
         if cache:
             self.calibration = calibration_dict
 
-    def _get_half_turn_homings(self, positions: dict[NameOrID, Value]) -> dict[NameOrID, Value]:
+    def _get_half_turn_homings(
+        self, positions: dict[NameOrID, Value]
+    ) -> dict[NameOrID, Value]:
         """
         On Feetech Motors:
         Present_Position = Actual_Position - Homing_Offset
@@ -327,39 +362,71 @@ class FeetechMotorsBus(MotorsBus):
 
         return half_turn_homings
 
-    def disable_torque(self, motors: str | list[str] | None = None, num_retry: int = 0) -> None:
+    def disable_torque(
+        self, motors: str | list[str] | None = None, num_retry: int = 0
+    ) -> None:
         for motor in self._get_motors_list(motors):
-            self.write('Torque_Enable', motor, TorqueMode.DISABLED.value, num_retry=num_retry)
+            self.write(
+                'Torque_Enable',
+                motor,
+                TorqueMode.DISABLED.value,
+                num_retry=num_retry,
+            )
             self.write('Lock', motor, 0, num_retry=num_retry)
 
-    def _disable_torque(self, motor_id: int, model: str, num_retry: int = 0) -> None:
-        addr, length = get_address(self.model_ctrl_table, model, 'Torque_Enable')
-        self._write(addr, length, motor_id, TorqueMode.DISABLED.value, num_retry=num_retry)
+    def _disable_torque(
+        self, motor_id: int, model: str, num_retry: int = 0
+    ) -> None:
+        addr, length = get_address(
+            self.model_ctrl_table, model, 'Torque_Enable'
+        )
+        self._write(
+            addr,
+            length,
+            motor_id,
+            TorqueMode.DISABLED.value,
+            num_retry=num_retry,
+        )
         addr, length = get_address(self.model_ctrl_table, model, 'Lock')
         self._write(addr, length, motor_id, 0, num_retry=num_retry)
 
-    def enable_torque(self, motors: str | list[str] | None = None, num_retry: int = 0) -> None:
+    def enable_torque(
+        self, motors: str | list[str] | None = None, num_retry: int = 0
+    ) -> None:
         for motor in self._get_motors_list(motors):
-            self.write('Torque_Enable', motor, TorqueMode.ENABLED.value, num_retry=num_retry)
+            self.write(
+                'Torque_Enable',
+                motor,
+                TorqueMode.ENABLED.value,
+                num_retry=num_retry,
+            )
             self.write('Lock', motor, 1, num_retry=num_retry)
 
-    def _encode_sign(self, data_name: str, ids_values: dict[int, int]) -> dict[int, int]:
+    def _encode_sign(
+        self, data_name: str, ids_values: dict[int, int]
+    ) -> dict[int, int]:
         for id_ in ids_values:
             model = self._id_to_model(id_)
             encoding_table = self.model_encoding_table.get(model)
             if encoding_table and data_name in encoding_table:
                 sign_bit = encoding_table[data_name]
-                ids_values[id_] = encode_sign_magnitude(ids_values[id_], sign_bit)
+                ids_values[id_] = encode_sign_magnitude(
+                    ids_values[id_], sign_bit
+                )
 
         return ids_values
 
-    def _decode_sign(self, data_name: str, ids_values: dict[int, int]) -> dict[int, int]:
+    def _decode_sign(
+        self, data_name: str, ids_values: dict[int, int]
+    ) -> dict[int, int]:
         for id_ in ids_values:
             model = self._id_to_model(id_)
             encoding_table = self.model_encoding_table.get(model)
             if encoding_table and data_name in encoding_table:
                 sign_bit = encoding_table[data_name]
-                ids_values[id_] = decode_sign_magnitude(ids_values[id_], sign_bit)
+                ids_values[id_] = decode_sign_magnitude(
+                    ids_values[id_], sign_bit
+                )
 
         return ids_values
 
@@ -395,7 +462,9 @@ class FeetechMotorsBus(MotorsBus):
         )
 
         rxpacket = []
-        while not self.port_handler.isPacketTimeout() and rx_length < wait_length:
+        while (
+            not self.port_handler.isPacketTimeout() and rx_length < wait_length
+        ):
             rxpacket += self.port_handler.readPort(wait_length - rx_length)
             rx_length = len(rxpacket)
 
@@ -416,7 +485,9 @@ class FeetechMotorsBus(MotorsBus):
             if idx == 0:  # found at the beginning of the packet
                 # calculate checksum
                 checksum = 0
-                for idx in range(2, status_length - 1):  # except header & checksum
+                for idx in range(
+                    2, status_length - 1
+                ):  # except header & checksum
                     checksum += rxpacket[idx]
 
                 checksum = ~checksum & 0xFF
@@ -447,7 +518,9 @@ class FeetechMotorsBus(MotorsBus):
             ids_status, comm = self._broadcast_ping()
             if self._is_comm_success(comm):
                 break
-            logger.debug(f"Broadcast ping failed on port '{self.port}' ({n_try=})")
+            logger.debug(
+                f"Broadcast ping failed on port '{self.port}' ({n_try=})"
+            )
             logger.debug(self.packet_handler.getTxRxResult(comm))
 
         if not self._is_comm_success(comm):
@@ -455,10 +528,15 @@ class FeetechMotorsBus(MotorsBus):
                 raise ConnectionError(self.packet_handler.getTxRxResult(comm))
             return
 
-        ids_errors = {id_: status for id_, status in ids_status.items() if self._is_error(status)}
+        ids_errors = {
+            id_: status
+            for id_, status in ids_status.items()
+            if self._is_error(status)
+        }
         if ids_errors:
             display_dict = {
-                id_: self.packet_handler.getRxPacketError(err) for id_, err in ids_errors.items()
+                id_: self.packet_handler.getRxPacketError(err)
+                for id_, err in ids_errors.items()
             }
             logger.error(
                 f'Some motors found returned an error status:\n{pformat(display_dict, indent=4)}'
@@ -492,7 +570,9 @@ class FeetechMotorsBus(MotorsBus):
     ) -> dict[int, int]:
         model_numbers = {}
         for id_ in motor_ids:
-            model_nb, comm, error = self._read(*MODEL_NUMBER, id_, raise_on_error=raise_on_error)
+            model_nb, comm, error = self._read(
+                *MODEL_NUMBER, id_, raise_on_error=raise_on_error
+            )
             if not self._is_comm_success(comm) or self._is_error(error):
                 continue
 

@@ -28,7 +28,9 @@ import numpy as np
 
 
 gym_old_venv_step_type = tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
-gym_new_venv_step_type = tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]
+gym_new_venv_step_type = tuple[
+    np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
+]
 warnings.simplefilter('once', DeprecationWarning)
 _NP_TO_CT = {
     np.bool_: ctypes.c_bool,
@@ -86,7 +88,10 @@ class EnvWorker(ABC):
         self._env_fn = env_fn
         self.is_closed = False
         self.result: (
-            gym_old_venv_step_type | gym_new_venv_step_type | tuple[np.ndarray, dict] | np.ndarray
+            gym_old_venv_step_type
+            | gym_new_venv_step_type
+            | tuple[np.ndarray, dict]
+            | np.ndarray
         )
         # self.action_space = self.get_env_attr("action_space")
         self.is_reset = False
@@ -121,7 +126,10 @@ class EnvWorker(ABC):
     def recv(
         self,
     ) -> (
-        gym_old_venv_step_type | gym_new_venv_step_type | tuple[np.ndarray, dict] | np.ndarray
+        gym_old_venv_step_type
+        | gym_new_venv_step_type
+        | tuple[np.ndarray, dict]
+        | np.ndarray
     ):
         """Receive result from low-level worker.
 
@@ -143,7 +151,9 @@ class EnvWorker(ABC):
     def reset(self, **kwargs: Any) -> np.ndarray | tuple[np.ndarray, dict]:
         pass
 
-    def step(self, action: np.ndarray) -> gym_old_venv_step_type | gym_new_venv_step_type:
+    def step(
+        self, action: np.ndarray
+    ) -> gym_old_venv_step_type | gym_new_venv_step_type:
         """Perform one timestep of the environment's dynamic.
 
         "send" and "recv" are coupled in sync simulation, so users only call
@@ -155,7 +165,9 @@ class EnvWorker(ABC):
 
     @staticmethod
     def wait(
-        workers: list['EnvWorker'], wait_num: int, timeout: float | None = None,
+        workers: list['EnvWorker'],
+        wait_num: int,
+        timeout: float | None = None,
     ) -> list['EnvWorker']:
         """Given a list of workers, return those ready ones."""
         raise NotImplementedError
@@ -214,7 +226,9 @@ def _worker(
     env_fn_wrapper: CloudpickleWrapper,
     obs_bufs: dict | tuple | ShArray | None = None,
 ) -> None:
-    def _encode_obs(obs: dict | tuple | np.ndarray, buffer: dict | tuple | ShArray) -> None:
+    def _encode_obs(
+        obs: dict | tuple | np.ndarray, buffer: dict | tuple | ShArray
+    ) -> None:
         if isinstance(obs, np.ndarray) and isinstance(buffer, ShArray):
             buffer.save(obs)
         elif isinstance(obs, tuple) and isinstance(buffer, tuple):
@@ -310,7 +324,9 @@ class DummyEnvWorker(EnvWorker):
 
     @staticmethod
     def wait(  # type: ignore
-        workers: list['DummyEnvWorker'], wait_num: int, timeout: float | None = None,
+        workers: list['DummyEnvWorker'],
+        wait_num: int,
+        timeout: float | None = None,
     ) -> list['DummyEnvWorker']:
         # Sequential EnvWorker objects are always ready
         return workers
@@ -351,7 +367,9 @@ class DummyEnvWorker(EnvWorker):
 class SubprocEnvWorker(EnvWorker):
     """Subprocess worker used in SubprocVectorEnv and ShmemVectorEnv."""
 
-    def __init__(self, env_fn: Callable[[], gym.Env], share_memory: bool = False) -> None:
+    def __init__(
+        self, env_fn: Callable[[], gym.Env], share_memory: bool = False
+    ) -> None:
         self.parent_remote, self.child_remote = Pipe()
         self.share_memory = share_memory
         self.buffer: dict | tuple | ShArray | None = None
@@ -380,7 +398,9 @@ class SubprocEnvWorker(EnvWorker):
         self.parent_remote.send(['setattr', {'key': key, 'value': value}])
 
     def _decode_obs(self) -> dict | tuple | np.ndarray:
-        def decode_obs(buffer: dict | tuple | ShArray | None) -> dict | tuple | np.ndarray:
+        def decode_obs(
+            buffer: dict | tuple | ShArray | None,
+        ) -> dict | tuple | np.ndarray:
             if isinstance(buffer, ShArray):
                 return buffer.get()
             if isinstance(buffer, tuple):
@@ -406,9 +426,13 @@ class SubprocEnvWorker(EnvWorker):
                 if remain_time <= 0:
                     break
             # connection.wait hangs if the list is empty
-            new_ready_conns = connection.wait(remain_conns, timeout=remain_time)
+            new_ready_conns = connection.wait(
+                remain_conns, timeout=remain_time
+            )
             ready_conns.extend(new_ready_conns)  # type: ignore
-            remain_conns = [conn for conn in remain_conns if conn not in ready_conns]
+            remain_conns = [
+                conn for conn in remain_conns if conn not in ready_conns
+            ]
         return [workers[conns.index(con)] for con in ready_conns]
 
     def send(self, action: np.ndarray | None, **kwargs: Any) -> None:
@@ -422,7 +446,10 @@ class SubprocEnvWorker(EnvWorker):
     def recv(
         self,
     ) -> (
-        gym_old_venv_step_type | gym_new_venv_step_type | tuple[np.ndarray, dict] | np.ndarray
+        gym_old_venv_step_type
+        | gym_new_venv_step_type
+        | tuple[np.ndarray, dict]
+        | np.ndarray
     ):
         result = self.parent_remote.recv()
         if isinstance(result, tuple):
@@ -482,7 +509,9 @@ class SubprocEnvWorker(EnvWorker):
         return self.parent_remote.recv()
 
     def get_segmentation_of_interest(self, segmentation_image):
-        self.parent_remote.send(['get_segmentation_of_interest', segmentation_image])
+        self.parent_remote.send(
+            ['get_segmentation_of_interest', segmentation_image]
+        )
         return self.parent_remote.recv()
 
     def get_sim_state(self):
@@ -670,7 +699,9 @@ class BaseVectorEnv:
             assert (
                 i not in self.waiting_id
             ), f'Cannot interact with environment {i} which is stepping now.'
-            assert i in self.ready_id, f'Can only interact with ready environments {self.ready_id}.'
+            assert (
+                i in self.ready_id
+            ), f'Can only interact with ready environments {self.ready_id}.'
 
     def reset(
         self,
@@ -789,7 +820,9 @@ class BaseVectorEnv:
                 self.ready_id = [x for x in self.ready_id if x not in id]
             ready_conns: list[EnvWorker] = []
             while not ready_conns:
-                ready_conns = self.worker_class.wait(self.waiting_conn, self.wait_num, self.timeout)
+                ready_conns = self.worker_class.wait(
+                    self.waiting_conn, self.wait_num, self.timeout
+                )
             result = []
             for conn in ready_conns:
                 waiting_index = self.waiting_conn.index(conn)
@@ -838,7 +871,8 @@ class BaseVectorEnv:
         self._assert_is_not_closed()
         if self.is_async and len(self.waiting_id) > 0:
             raise RuntimeError(
-                f'Environments {self.waiting_id} are still stepping, cannot ' 'render them now.',
+                f'Environments {self.waiting_id} are still stepping, cannot '
+                'render them now.',
             )
         return [w.render(**kwargs) for w in self.workers]
 
@@ -862,7 +896,9 @@ class DummyVectorEnv(BaseVectorEnv):
         Please refer to :class:`~tianshou.env.BaseVectorEnv` for other APIs' usage.
     """
 
-    def __init__(self, env_fns: list[Callable[[], gym.Env]], **kwargs: Any) -> None:
+    def __init__(
+        self, env_fns: list[Callable[[], gym.Env]], **kwargs: Any
+    ) -> None:
         super().__init__(env_fns, DummyEnvWorker, **kwargs)
 
     def check_success(self):
@@ -870,7 +906,8 @@ class DummyVectorEnv(BaseVectorEnv):
 
     def get_segmentation_of_interest(self, segmentation_images):
         return [
-            w.get_segmentation_of_interest(img) for w, img in zip(self.workers, segmentation_images)
+            w.get_segmentation_of_interest(img)
+            for w, img in zip(self.workers, segmentation_images)
         ]
 
     def get_sim_state(self):
@@ -909,7 +946,9 @@ class SubprocVectorEnv(BaseVectorEnv):
         Please refer to :class:`~tianshou.env.BaseVectorEnv` for other APIs' usage.
     """
 
-    def __init__(self, env_fns: list[Callable[[], gym.Env]], **kwargs: Any) -> None:
+    def __init__(
+        self, env_fns: list[Callable[[], gym.Env]], **kwargs: Any
+    ) -> None:
         def worker_fn(fn: Callable[[], gym.Env]) -> SubprocEnvWorker:
             return SubprocEnvWorker(fn, share_memory=False)
 
@@ -920,7 +959,8 @@ class SubprocVectorEnv(BaseVectorEnv):
 
     def get_segmentation_of_interest(self, segmentation_images):
         return [
-            w.get_segmentation_of_interest(img) for w, img in zip(self.workers, segmentation_images)
+            w.get_segmentation_of_interest(img)
+            for w, img in zip(self.workers, segmentation_images)
         ]
 
     def get_sim_state(self):

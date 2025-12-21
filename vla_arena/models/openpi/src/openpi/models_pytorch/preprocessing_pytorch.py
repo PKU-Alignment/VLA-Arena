@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections.abc import Sequence
 import logging
+from collections.abc import Sequence
 
 import torch
-
 from openpi.shared import image_tools
+
 
 logger = logging.getLogger("openpi")
 
@@ -55,14 +55,18 @@ def preprocess_observation_pytorch(
 
         # TODO: This is a hack to handle both [B, C, H, W] and [B, H, W, C] formats
         # Handle both [B, C, H, W] and [B, H, W, C] formats
-        is_channels_first = image.shape[1] == 3  # Check if channels are in dimension 1
+        is_channels_first = (
+            image.shape[1] == 3
+        )  # Check if channels are in dimension 1
 
         if is_channels_first:
             # Convert [B, C, H, W] to [B, H, W, C] for processing
             image = image.permute(0, 2, 3, 1)
 
         if image.shape[1:3] != image_resolution:
-            logger.info(f"Resizing image {key} from {image.shape[1:3]} to {image_resolution}")
+            logger.info(
+                f"Resizing image {key} from {image.shape[1:3]} to {image_resolution}"
+            )
             image = image_tools.resize_with_pad_torch(image, *image_resolution)
 
         if train:
@@ -83,10 +87,17 @@ def preprocess_observation_pytorch(
                 max_w = width - crop_width
                 if max_h > 0 and max_w > 0:
                     # Use tensor operations instead of .item() for torch.compile compatibility
-                    start_h = torch.randint(0, max_h + 1, (1,), device=image.device)
-                    start_w = torch.randint(0, max_w + 1, (1,), device=image.device)
+                    start_h = torch.randint(
+                        0, max_h + 1, (1,), device=image.device
+                    )
+                    start_w = torch.randint(
+                        0, max_w + 1, (1,), device=image.device
+                    )
                     image = image[
-                        :, start_h : start_h + crop_height, start_w : start_w + crop_width, :
+                        :,
+                        start_h : start_h + crop_height,
+                        start_w : start_w + crop_width,
+                        :,
                     ]
 
                 # Resize back to original size
@@ -104,7 +115,9 @@ def preprocess_observation_pytorch(
                 angle = (
                     torch.rand(1, device=image.device) * 10 - 5
                 )  # Random angle between -5 and 5 degrees
-                if torch.abs(angle) > 0.1:  # Only rotate if angle is significant
+                if (
+                    torch.abs(angle) > 0.1
+                ):  # Only rotate if angle is significant
                     # Convert to radians
                     angle_rad = angle * torch.pi / 180.0
 
@@ -117,7 +130,9 @@ def preprocess_observation_pytorch(
                     grid_y = torch.linspace(-1, 1, height, device=image.device)
 
                     # Create meshgrid
-                    grid_y, grid_x = torch.meshgrid(grid_y, grid_x, indexing="ij")
+                    grid_y, grid_x = torch.meshgrid(
+                        grid_y, grid_x, indexing="ij"
+                    )
 
                     # Expand to batch dimension
                     grid_x = grid_x.unsqueeze(0).expand(image.shape[0], -1, -1)
@@ -131,7 +146,9 @@ def preprocess_observation_pytorch(
                     grid = torch.stack([grid_x_rot, grid_y_rot], dim=-1)
 
                     image = torch.nn.functional.grid_sample(
-                        image.permute(0, 3, 1, 2),  # [b, h, w, c] -> [b, c, h, w]
+                        image.permute(
+                            0, 3, 1, 2
+                        ),  # [b, h, w, c] -> [b, c, h, w]
                         grid,
                         mode="bilinear",
                         padding_mode="zeros",

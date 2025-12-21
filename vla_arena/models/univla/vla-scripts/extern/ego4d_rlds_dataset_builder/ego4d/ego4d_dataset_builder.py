@@ -20,6 +20,7 @@ import numpy as np
 import tensorflow_datasets as tfds
 import tensorflow_hub as hub
 
+
 # import ipdb; ipdb.set_trace()
 
 
@@ -76,23 +77,28 @@ class ego4dDataset(tfds.core.GeneratorBasedBuilder):
                                 '2x gripper velocities, 1x terminate episode].',
                             ),
                             'discount': tfds.features.Scalar(
-                                dtype=np.float32, doc='Discount if provided, default to 1.'
+                                dtype=np.float32,
+                                doc='Discount if provided, default to 1.',
                             ),
                             'reward': tfds.features.Scalar(
                                 dtype=np.float32,
                                 doc='Reward if provided, 1 on final step for demos.',
                             ),
                             'is_first': tfds.features.Scalar(
-                                dtype=np.bool_, doc='True on first step of the episode.'
+                                dtype=np.bool_,
+                                doc='True on first step of the episode.',
                             ),
                             'is_last': tfds.features.Scalar(
-                                dtype=np.bool_, doc='True on last step of the episode.'
+                                dtype=np.bool_,
+                                doc='True on last step of the episode.',
                             ),
                             'is_terminal': tfds.features.Scalar(
                                 dtype=np.bool_,
                                 doc='True on last step of the episode if it is a terminal step, True for demos.',
                             ),
-                            'language_instruction': tfds.features.Text(doc='Language Instruction.'),
+                            'language_instruction': tfds.features.Text(
+                                doc='Language Instruction.'
+                            ),
                             'language_embedding': tfds.features.Tensor(
                                 shape=(512,),
                                 dtype=np.float32,
@@ -103,7 +109,9 @@ class ego4dDataset(tfds.core.GeneratorBasedBuilder):
                     ),
                     'episode_metadata': tfds.features.FeaturesDict(
                         {
-                            'file_path': tfds.features.Text(doc='Path to the original data file.'),
+                            'file_path': tfds.features.Text(
+                                doc='Path to the original data file.'
+                            ),
                         }
                     ),
                 }
@@ -123,13 +131,17 @@ class ego4dDataset(tfds.core.GeneratorBasedBuilder):
         def _parse_example(episode_path):
             print(episode_path)
             # load raw data --> this should change for your dataset
-            data = np.load(episode_path, allow_pickle=True)  # this is a list of dicts in our case
+            data = np.load(
+                episode_path, allow_pickle=True
+            )  # this is a list of dicts in our case
 
             # assemble episode --> here we're assuming demos so we set reward to 1 at the end
             episode = []
             for i, step in enumerate(data):
                 # compute Kona language embedding
-                language_embedding = self._embed([step['language_instruction']])[0].numpy()
+                language_embedding = self._embed(
+                    [step['language_instruction']]
+                )[0].numpy()
 
                 episode.append(
                     {
@@ -150,7 +162,10 @@ class ego4dDataset(tfds.core.GeneratorBasedBuilder):
                 )
 
             # create output data sample
-            sample = {'steps': episode, 'episode_metadata': {'file_path': episode_path}}
+            sample = {
+                'steps': episode,
+                'episode_metadata': {'file_path': episode_path},
+            }
 
             # if you want to skip an example for whatever reason, simply return None
             return episode_path, sample

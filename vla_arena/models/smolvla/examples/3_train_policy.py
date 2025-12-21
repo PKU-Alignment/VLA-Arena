@@ -35,9 +35,11 @@ examples/2_evaluate_pretrained_policy.py
 from pathlib import Path
 
 import torch
-
 from lerobot.configs.types import FeatureType
-from lerobot.datasets.lerobot_dataset import LeRobotDataset, LeRobotDatasetMetadata
+from lerobot.datasets.lerobot_dataset import (
+    LeRobotDataset,
+    LeRobotDatasetMetadata,
+)
 from lerobot.datasets.utils import dataset_to_policy_features
 from lerobot.policies.diffusion.configuration_diffusion import DiffusionConfig
 from lerobot.policies.diffusion.modeling_diffusion import DiffusionPolicy
@@ -62,12 +64,20 @@ def main():
     #   - dataset stats: for normalization and denormalization of input/outputs
     dataset_metadata = LeRobotDatasetMetadata('lerobot/pusht')
     features = dataset_to_policy_features(dataset_metadata.features)
-    output_features = {key: ft for key, ft in features.items() if ft.type is FeatureType.ACTION}
-    input_features = {key: ft for key, ft in features.items() if key not in output_features}
+    output_features = {
+        key: ft
+        for key, ft in features.items()
+        if ft.type is FeatureType.ACTION
+    }
+    input_features = {
+        key: ft for key, ft in features.items() if key not in output_features
+    }
 
     # Policies are initialized with a configuration class, in this case `DiffusionConfig`. For this example,
     # we'll just use the defaults and so no arguments other than input/output features need to be passed.
-    cfg = DiffusionConfig(input_features=input_features, output_features=output_features)
+    cfg = DiffusionConfig(
+        input_features=input_features, output_features=output_features
+    )
 
     # We can now instantiate our policy with this config and the dataset stats.
     policy = DiffusionPolicy(cfg, dataset_stats=dataset_metadata.stats)
@@ -77,8 +87,12 @@ def main():
     # Another policy-dataset interaction is with the delta_timestamps. Each policy expects a given number frames
     # which can differ for inputs, outputs and rewards (if there are some).
     delta_timestamps = {
-        'observation.image': [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
-        'observation.state': [i / dataset_metadata.fps for i in cfg.observation_delta_indices],
+        'observation.image': [
+            i / dataset_metadata.fps for i in cfg.observation_delta_indices
+        ],
+        'observation.state': [
+            i / dataset_metadata.fps for i in cfg.observation_delta_indices
+        ],
         'action': [i / dataset_metadata.fps for i in cfg.action_delta_indices],
     }
 
@@ -91,11 +105,30 @@ def main():
         # Load the previous action (-0.1), the next action to be executed (0.0),
         # and 14 future actions with a 0.1 seconds spacing. All these actions will be
         # used to supervise the policy.
-        'action': [-0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4],
+        'action': [
+            -0.1,
+            0.0,
+            0.1,
+            0.2,
+            0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.7,
+            0.8,
+            0.9,
+            1.0,
+            1.1,
+            1.2,
+            1.3,
+            1.4,
+        ],
     }
 
     # We can then instantiate the dataset with these delta_timestamps configuration.
-    dataset = LeRobotDataset('lerobot/pusht', delta_timestamps=delta_timestamps)
+    dataset = LeRobotDataset(
+        'lerobot/pusht', delta_timestamps=delta_timestamps
+    )
 
     # Then we create our optimizer and dataloader for offline training.
     optimizer = torch.optim.Adam(policy.parameters(), lr=1e-4)
@@ -114,7 +147,8 @@ def main():
     while not done:
         for batch in dataloader:
             batch = {
-                k: (v.to(device) if isinstance(v, torch.Tensor) else v) for k, v in batch.items()
+                k: (v.to(device) if isinstance(v, torch.Tensor) else v)
+                for k, v in batch.items()
             }
             loss, _ = policy.forward(batch)
             loss.backward()

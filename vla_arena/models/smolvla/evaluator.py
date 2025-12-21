@@ -29,12 +29,13 @@ import draccus
 import imageio
 import numpy as np
 import torch
+from lerobot.policies.smolvla.modeling_smolvla import SmolVLAPolicy
+from lerobot.utils.utils import init_logging
 from tqdm import tqdm
+
 from vla_arena.vla_arena import benchmark, get_vla_arena_path
 from vla_arena.vla_arena.envs import OffScreenRenderEnv
 
-from lerobot.policies.smolvla.modeling_smolvla import SmolVLAPolicy
-from lerobot.utils.utils import init_logging
 
 LIBERO_DUMMY_ACTION = [0.0] * 6 + [-1.0]
 LIBERO_ENV_RESOLUTION = 256  # resolution used to render training data
@@ -165,7 +166,9 @@ def eval_vla_arena(args: Args) -> None:
             cost = 0
 
             # Add initial frame
-            agentview_image = np.ascontiguousarray(obs['agentview_image'][::-1, ::-1])
+            agentview_image = np.ascontiguousarray(
+                obs['agentview_image'][::-1, ::-1]
+            )
             # frames.append(agentview_image)
             # import ipdb; ipdb.set_trace()
             logging.info(f'Starting episode {task_episodes+1}...')
@@ -173,8 +176,12 @@ def eval_vla_arena(args: Args) -> None:
                 try:
                     # Get preprocessed image
                     # IMPORTANT: rotate 180 degrees to match train preprocessing
-                    wrist_img = np.ascontiguousarray(obs['robot0_eye_in_hand_image'][::-1, ::-1])
-                    agentview_image = np.ascontiguousarray(obs['agentview_image'][::-1, ::-1])
+                    wrist_img = np.ascontiguousarray(
+                        obs['robot0_eye_in_hand_image'][::-1, ::-1]
+                    )
+                    agentview_image = np.ascontiguousarray(
+                        obs['agentview_image'][::-1, ::-1]
+                    )
                     frames.append(agentview_image)
 
                     # Prepare observations dict
@@ -186,12 +193,16 @@ def eval_vla_arena(args: Args) -> None:
                         )
                     )
                     observation = {
-                        'observation.images.image': torch.from_numpy(agentview_image / 255.0)
+                        'observation.images.image': torch.from_numpy(
+                            agentview_image / 255.0
+                        )
                         .permute(2, 0, 1)
                         .to(torch.float32)
                         .to(args.device)
                         .unsqueeze(0),
-                        'observation.images.wrist_image': torch.from_numpy(wrist_img / 255.0)
+                        'observation.images.wrist_image': torch.from_numpy(
+                            wrist_img / 255.0
+                        )
                         .permute(2, 0, 1)
                         .to(torch.float32)
                         .to(args.device)
@@ -215,7 +226,10 @@ def eval_vla_arena(args: Args) -> None:
                         cost += info['cost']
                     if done:
                         if 'cost' in info:
-                            if args.task_suite_name == 'safety_hazard_avoidance':
+                            if (
+                                args.task_suite_name
+                                == 'safety_hazard_avoidance'
+                            ):
                                 cost *= 0.05
                         logging.info(f'Task success with cost {cost}')
                         task_successes += 1
@@ -247,7 +261,9 @@ def eval_vla_arena(args: Args) -> None:
             if should_save_video:
                 # Save a replay video of the episode
                 suffix = 'success' if done else 'failure'
-                task_segment = task_description.replace(' ', '_').replace('/', '_')
+                task_segment = task_description.replace(' ', '_').replace(
+                    '/', '_'
+                )
                 video_path = (
                     Path(video_out_path)
                     / f'{TIME}_rollout_task_{task_id}_episode_{episode_idx}_{task_segment}_{suffix}.mp4'
@@ -281,8 +297,12 @@ def eval_vla_arena(args: Args) -> None:
 
     logging.info('--- Evaluation finished ---')
     if total_episodes > 0:
-        logging.info(f'Total success rate: {float(total_successes) / float(total_episodes):.2f}')
-        logging.info(f'Average costs: {float(total_costs) / float(total_episodes):.2f}')
+        logging.info(
+            f'Total success rate: {float(total_successes) / float(total_episodes):.2f}'
+        )
+        logging.info(
+            f'Average costs: {float(total_costs) / float(total_episodes):.2f}'
+        )
     logging.info(f'Total episodes: {total_episodes}')
     logging.info(f'Total successes: {total_successes}')
     cv2.destroyAllWindows()
@@ -362,7 +382,9 @@ def main(cfg: Args | str | Path):
     elif isinstance(cfg, Args):
         args = cfg
     else:
-        raise ValueError(f'Unsupported config type: {type(cfg)}. Expected Args or path string.')
+        raise ValueError(
+            f'Unsupported config type: {type(cfg)}. Expected Args or path string.'
+        )
     eval_vla_arena(args=args)
 
 
@@ -371,7 +393,12 @@ if __name__ == '__main__':
 
     # Use argparse to parse --config parameter passed by Launcher
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, required=True, help='Path to the config yaml file')
+    parser.add_argument(
+        '--config',
+        type=str,
+        required=True,
+        help='Path to the config yaml file',
+    )
     # This allows compatibility with other possible parameters (though currently only config is needed)
     args, unknown = parser.parse_known_args()
 

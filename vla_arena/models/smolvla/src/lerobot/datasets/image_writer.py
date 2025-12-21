@@ -43,7 +43,9 @@ def safe_stop_image_writer(func):
             return func(*args, **kwargs)
         except Exception as e:
             dataset = kwargs.get('dataset')
-            image_writer = getattr(dataset, 'image_writer', None) if dataset else None
+            image_writer = (
+                getattr(dataset, 'image_writer', None) if dataset else None
+            )
             if image_writer is not None:
                 print('Waiting for image writer to terminate...')
                 image_writer.stop()
@@ -52,7 +54,9 @@ def safe_stop_image_writer(func):
     return wrapper
 
 
-def image_array_to_pil_image(image_array: np.ndarray, range_check: bool = True) -> PIL.Image.Image:
+def image_array_to_pil_image(
+    image_array: np.ndarray, range_check: bool = True
+) -> PIL.Image.Image:
     # TODO(aliberts): handle 1 channel and 4 for depth images
     if image_array.ndim != 3:
         raise ValueError(
@@ -143,13 +147,17 @@ class AsyncImageWriter:
         self._stopped = False
 
         if num_threads <= 0 and num_processes <= 0:
-            raise ValueError('Number of threads and processes must be greater than zero.')
+            raise ValueError(
+                'Number of threads and processes must be greater than zero.'
+            )
 
         if self.num_processes == 0:
             # Use threading
             self.queue = queue.Queue()
             for _ in range(self.num_threads):
-                t = threading.Thread(target=worker_thread_loop, args=(self.queue,))
+                t = threading.Thread(
+                    target=worker_thread_loop, args=(self.queue,)
+                )
                 t.daemon = True
                 t.start()
                 self.threads.append(t)
@@ -164,7 +172,9 @@ class AsyncImageWriter:
                 p.start()
                 self.processes.append(p)
 
-    def save_image(self, image: torch.Tensor | np.ndarray | PIL.Image.Image, fpath: Path):
+    def save_image(
+        self, image: torch.Tensor | np.ndarray | PIL.Image.Image, fpath: Path
+    ):
         if isinstance(image, torch.Tensor):
             # Convert tensor to numpy array to minimize main process time
             image = image.cpu().numpy()

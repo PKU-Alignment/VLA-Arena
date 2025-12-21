@@ -34,8 +34,8 @@ from pickle import UnpicklingError
 
 import pytest
 import torch
-
 from lerobot.utils.transition import Transition
+
 from tests.utils import require_cuda, require_package
 
 
@@ -109,7 +109,11 @@ def test_not_silent_mode():
 
 @require_package('grpc')
 def test_send_bytes_in_chunks_large_data():
-    from lerobot.transport.utils import CHUNK_SIZE, send_bytes_in_chunks, services_pb2
+    from lerobot.transport.utils import (
+        CHUNK_SIZE,
+        send_bytes_in_chunks,
+        services_pb2,
+    )
 
     """Test sending large data."""
     data = b'x' * (CHUNK_SIZE * 2 + 1000)
@@ -117,16 +121,24 @@ def test_send_bytes_in_chunks_large_data():
     chunks = list(send_bytes_in_chunks(data, message_class))
     assert len(chunks) == 3
     assert chunks[0].data == b'x' * CHUNK_SIZE
-    assert chunks[0].transfer_state == services_pb2.TransferState.TRANSFER_BEGIN
+    assert (
+        chunks[0].transfer_state == services_pb2.TransferState.TRANSFER_BEGIN
+    )
     assert chunks[1].data == b'x' * CHUNK_SIZE
-    assert chunks[1].transfer_state == services_pb2.TransferState.TRANSFER_MIDDLE
+    assert (
+        chunks[1].transfer_state == services_pb2.TransferState.TRANSFER_MIDDLE
+    )
     assert chunks[2].data == b'x' * 1000
     assert chunks[2].transfer_state == services_pb2.TransferState.TRANSFER_END
 
 
 @require_package('grpc')
 def test_send_bytes_in_chunks_large_data_with_exact_chunk_size():
-    from lerobot.transport.utils import CHUNK_SIZE, send_bytes_in_chunks, services_pb2
+    from lerobot.transport.utils import (
+        CHUNK_SIZE,
+        send_bytes_in_chunks,
+        services_pb2,
+    )
 
     """Test sending large data with exact chunk size."""
     data = b'x' * CHUNK_SIZE
@@ -183,7 +195,8 @@ def test_receive_bytes_in_chunks_single_not_end_chunk():
     data = b'Single chunk data'
     chunks = [
         services_pb2.InteractionMessage(
-            data=data, transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE
+            data=data,
+            transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE,
         )
     ]
 
@@ -202,13 +215,16 @@ def test_receive_bytes_in_chunks_multiple_chunks():
 
     chunks = [
         services_pb2.InteractionMessage(
-            data=b'First ', transfer_state=services_pb2.TransferState.TRANSFER_BEGIN
+            data=b'First ',
+            transfer_state=services_pb2.TransferState.TRANSFER_BEGIN,
         ),
         services_pb2.InteractionMessage(
-            data=b'Middle ', transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE
+            data=b'Middle ',
+            transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE,
         ),
         services_pb2.InteractionMessage(
-            data=b'Last', transfer_state=services_pb2.TransferState.TRANSFER_END
+            data=b'Last',
+            transfer_state=services_pb2.TransferState.TRANSFER_END,
         ),
     ]
 
@@ -229,21 +245,26 @@ def test_receive_bytes_in_chunks_multiple_messages():
     chunks = [
         # First message - single chunk
         services_pb2.InteractionMessage(
-            data=b'Message1', transfer_state=services_pb2.TransferState.TRANSFER_END
+            data=b'Message1',
+            transfer_state=services_pb2.TransferState.TRANSFER_END,
         ),
         # Second message - multi chunk
         services_pb2.InteractionMessage(
-            data=b'Start2 ', transfer_state=services_pb2.TransferState.TRANSFER_BEGIN
+            data=b'Start2 ',
+            transfer_state=services_pb2.TransferState.TRANSFER_BEGIN,
         ),
         services_pb2.InteractionMessage(
-            data=b'Middle2 ', transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE
+            data=b'Middle2 ',
+            transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE,
         ),
         services_pb2.InteractionMessage(
-            data=b'End2', transfer_state=services_pb2.TransferState.TRANSFER_END
+            data=b'End2',
+            transfer_state=services_pb2.TransferState.TRANSFER_END,
         ),
         # Third message - single chunk
         services_pb2.InteractionMessage(
-            data=b'Message3', transfer_state=services_pb2.TransferState.TRANSFER_END
+            data=b'Message3',
+            transfer_state=services_pb2.TransferState.TRANSFER_END,
         ),
     ]
 
@@ -267,13 +288,16 @@ def test_receive_bytes_in_chunks_shutdown_during_receive():
 
     chunks = [
         services_pb2.InteractionMessage(
-            data=b'First ', transfer_state=services_pb2.TransferState.TRANSFER_BEGIN
+            data=b'First ',
+            transfer_state=services_pb2.TransferState.TRANSFER_BEGIN,
         ),
         services_pb2.InteractionMessage(
-            data=b'Middle ', transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE
+            data=b'Middle ',
+            transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE,
         ),
         services_pb2.InteractionMessage(
-            data=b'Last', transfer_state=services_pb2.TransferState.TRANSFER_END
+            data=b'Last',
+            transfer_state=services_pb2.TransferState.TRANSFER_END,
         ),
     ]
 
@@ -292,7 +316,8 @@ def test_receive_bytes_in_chunks_only_begin_chunk():
 
     chunks = [
         services_pb2.InteractionMessage(
-            data=b'Start', transfer_state=services_pb2.TransferState.TRANSFER_BEGIN
+            data=b'Start',
+            transfer_state=services_pb2.TransferState.TRANSFER_BEGIN,
         ),
         # No END chunk
     ]
@@ -313,7 +338,8 @@ def test_receive_bytes_in_chunks_missing_begin():
     chunks = [
         # Missing BEGIN
         services_pb2.InteractionMessage(
-            data=b'Middle', transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE
+            data=b'Middle',
+            transfer_state=services_pb2.TransferState.TRANSFER_MIDDLE,
         ),
         services_pb2.InteractionMessage(
             data=b'End', transfer_state=services_pb2.TransferState.TRANSFER_END
@@ -434,7 +460,10 @@ def test_state_to_bytes_various_dtypes_cuda():
 
 @require_package('grpc')
 def test_python_object_to_bytes_none():
-    from lerobot.transport.utils import bytes_to_python_object, python_object_to_bytes
+    from lerobot.transport.utils import (
+        bytes_to_python_object,
+        python_object_to_bytes,
+    )
 
     """Test converting None to bytes."""
     obj = None
@@ -466,7 +495,10 @@ def test_python_object_to_bytes_none():
 )
 @require_package('grpc')
 def test_python_object_to_bytes_simple_types(obj):
-    from lerobot.transport.utils import bytes_to_python_object, python_object_to_bytes
+    from lerobot.transport.utils import (
+        bytes_to_python_object,
+        python_object_to_bytes,
+    )
 
     """Test converting simple Python types."""
     data = python_object_to_bytes(obj)
@@ -477,7 +509,10 @@ def test_python_object_to_bytes_simple_types(obj):
 
 @require_package('grpc')
 def test_python_object_to_bytes_with_tensors():
-    from lerobot.transport.utils import bytes_to_python_object, python_object_to_bytes
+    from lerobot.transport.utils import (
+        bytes_to_python_object,
+        python_object_to_bytes,
+    )
 
     """Test converting objects containing PyTorch tensors."""
     obj = {
@@ -495,14 +530,23 @@ def test_python_object_to_bytes_with_tensors():
     assert torch.allclose(obj['tensor'], reconstructed['tensor'])
     assert reconstructed['list_with_tensor'][0] == 1
     assert reconstructed['list_with_tensor'][3] == 'string'
-    assert torch.allclose(obj['list_with_tensor'][2], reconstructed['list_with_tensor'][2])
-    assert torch.allclose(obj['nested']['tensor1'], reconstructed['nested']['tensor1'])
-    assert torch.equal(obj['nested']['tensor2'], reconstructed['nested']['tensor2'])
+    assert torch.allclose(
+        obj['list_with_tensor'][2], reconstructed['list_with_tensor'][2]
+    )
+    assert torch.allclose(
+        obj['nested']['tensor1'], reconstructed['nested']['tensor1']
+    )
+    assert torch.equal(
+        obj['nested']['tensor2'], reconstructed['nested']['tensor2']
+    )
 
 
 @require_package('grpc')
 def test_transitions_to_bytes_empty_list():
-    from lerobot.transport.utils import bytes_to_transitions, transitions_to_bytes
+    from lerobot.transport.utils import (
+        bytes_to_transitions,
+        transitions_to_bytes,
+    )
 
     """Test converting empty transitions list."""
     transitions = []
@@ -514,7 +558,10 @@ def test_transitions_to_bytes_empty_list():
 
 @require_package('grpc')
 def test_transitions_to_bytes_single_transition():
-    from lerobot.transport.utils import bytes_to_transitions, transitions_to_bytes
+    from lerobot.transport.utils import (
+        bytes_to_transitions,
+        transitions_to_bytes,
+    )
 
     """Test converting a single transition."""
     transition = Transition(
@@ -554,7 +601,10 @@ def assert_observation_equal(o1: dict, o2: dict):
 
 @require_package('grpc')
 def test_transitions_to_bytes_multiple_transitions():
-    from lerobot.transport.utils import bytes_to_transitions, transitions_to_bytes
+    from lerobot.transport.utils import (
+        bytes_to_transitions,
+        transitions_to_bytes,
+    )
 
     """Test converting multiple transitions."""
     transitions = []
@@ -572,7 +622,9 @@ def test_transitions_to_bytes_multiple_transitions():
     reconstructed = bytes_to_transitions(data)
 
     assert len(reconstructed) == len(transitions)
-    for original, reconstructed_item in zip(transitions, reconstructed, strict=False):
+    for original, reconstructed_item in zip(
+        transitions, reconstructed, strict=False
+    ):
         assert_transitions_equal(original, reconstructed_item)
 
 

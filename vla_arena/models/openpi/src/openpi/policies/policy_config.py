@@ -18,13 +18,12 @@ import pathlib
 from typing import Any
 
 import jax.numpy as jnp
-
 import openpi.models.model as _model
 import openpi.policies.policy as _policy
 import openpi.shared.download as download
+import openpi.transforms as transforms
 from openpi.training import checkpoints as _checkpoints
 from openpi.training import config as _config
-import openpi.transforms as transforms
 
 
 def create_trained_policy(
@@ -69,15 +68,21 @@ def create_trained_policy(
         model.paligemma_with_expert.to_bfloat16_for_selected_params("bfloat16")
     else:
         model = train_config.model.load(
-            _model.restore_params(checkpoint_dir / "params", dtype=jnp.bfloat16)
+            _model.restore_params(
+                checkpoint_dir / "params", dtype=jnp.bfloat16
+            )
         )
-    data_config = train_config.data.create(train_config.assets_dirs, train_config.model)
+    data_config = train_config.data.create(
+        train_config.assets_dirs, train_config.model
+    )
     if norm_stats is None:
         # We are loading the norm stats from the checkpoint instead of the config assets dir to make sure
         # that the policy is using the same normalization stats as the original training process.
         if data_config.asset_id is None:
             raise ValueError("Asset id is required to load norm stats.")
-        norm_stats = _checkpoints.load_norm_stats(checkpoint_dir / "assets", data_config.asset_id)
+        norm_stats = _checkpoints.load_norm_stats(
+            checkpoint_dir / "assets", data_config.asset_id
+        )
 
     # Determine the device to use for PyTorch models
     if is_pytorch and pytorch_device is None:
@@ -94,12 +99,16 @@ def create_trained_policy(
             *repack_transforms.inputs,
             transforms.InjectDefaultPrompt(default_prompt),
             *data_config.data_transforms.inputs,
-            transforms.Normalize(norm_stats, use_quantiles=data_config.use_quantile_norm),
+            transforms.Normalize(
+                norm_stats, use_quantiles=data_config.use_quantile_norm
+            ),
             *data_config.model_transforms.inputs,
         ],
         output_transforms=[
             *data_config.model_transforms.outputs,
-            transforms.Unnormalize(norm_stats, use_quantiles=data_config.use_quantile_norm),
+            transforms.Unnormalize(
+                norm_stats, use_quantiles=data_config.use_quantile_norm
+            ),
             *data_config.data_transforms.outputs,
             *repack_transforms.outputs,
         ],

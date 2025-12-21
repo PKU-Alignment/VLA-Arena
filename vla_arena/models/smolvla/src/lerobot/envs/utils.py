@@ -34,14 +34,15 @@ import einops
 import gymnasium as gym
 import numpy as np
 import torch
-from torch import Tensor
-
 from lerobot.configs.types import FeatureType, PolicyFeature
 from lerobot.envs.configs import EnvConfig
 from lerobot.utils.utils import get_channel_first_image_shape
+from torch import Tensor
 
 
-def preprocess_observation(observations: dict[str, np.ndarray]) -> dict[str, Tensor]:
+def preprocess_observation(
+    observations: dict[str, np.ndarray],
+) -> dict[str, Tensor]:
     # TODO(aliberts, rcadene): refactor this to use features from the environment (no hardcoding)
     """Convert environment observation to LeRobot format observation.
     Args:
@@ -53,7 +54,10 @@ def preprocess_observation(observations: dict[str, np.ndarray]) -> dict[str, Ten
     return_observations = {}
     if 'pixels' in observations:
         if isinstance(observations['pixels'], dict):
-            imgs = {f'observation.images.{key}': img for key, img in observations['pixels'].items()}
+            imgs = {
+                f'observation.images.{key}': img
+                for key, img in observations['pixels'].items()
+            }
         else:
             imgs = {'observation.image': observations['pixels']}
 
@@ -67,10 +71,14 @@ def preprocess_observation(observations: dict[str, np.ndarray]) -> dict[str, Ten
                 img = img.unsqueeze(0)
             # sanity check that images are channel last
             _, h, w, c = img.shape
-            assert c < h and c < w, f'expect channel last images, but instead got {img.shape=}'
+            assert (
+                c < h and c < w
+            ), f'expect channel last images, but instead got {img.shape=}'
 
             # sanity check that images are uint8
-            assert img.dtype == torch.uint8, f'expect torch.uint8, but instead {img.dtype=}'
+            assert (
+                img.dtype == torch.uint8
+            ), f'expect torch.uint8, but instead {img.dtype=}'
 
             # convert to channel first of type float32 in range [0,1]
             img = einops.rearrange(img, 'b h w c -> b c h w').contiguous()
@@ -102,7 +110,9 @@ def env_to_policy_features(env_cfg: EnvConfig) -> dict[str, PolicyFeature]:
     for key, ft in env_cfg.features.items():
         if ft.type is FeatureType.VISUAL:
             if len(ft.shape) != 3:
-                raise ValueError(f'Number of dimensions of {key} != 3 (shape={ft.shape})')
+                raise ValueError(
+                    f'Number of dimensions of {key} != 3 (shape={ft.shape})'
+                )
 
             shape = get_channel_first_image_shape(ft.shape)
             feature = PolicyFeature(type=ft.type, shape=shape)
@@ -122,9 +132,14 @@ def are_all_envs_same_type(env: gym.vector.VectorEnv) -> bool:
 
 def check_env_attributes_and_types(env: gym.vector.VectorEnv) -> None:
     with warnings.catch_warnings():
-        warnings.simplefilter('once', UserWarning)  # Apply filter only in this function
+        warnings.simplefilter(
+            'once', UserWarning
+        )  # Apply filter only in this function
 
-        if not (hasattr(env.envs[0], 'task_description') and hasattr(env.envs[0], 'task')):
+        if not (
+            hasattr(env.envs[0], 'task_description')
+            and hasattr(env.envs[0], 'task')
+        ):
             warnings.warn(
                 "The environment does not have 'task_description' and 'task'. Some policies require these features.",
                 UserWarning,
@@ -138,7 +153,9 @@ def check_env_attributes_and_types(env: gym.vector.VectorEnv) -> None:
             )
 
 
-def add_envs_task(env: gym.vector.VectorEnv, observation: dict[str, Any]) -> dict[str, Any]:
+def add_envs_task(
+    env: gym.vector.VectorEnv, observation: dict[str, Any]
+) -> dict[str, Any]:
     """Adds task feature to the observation dict with respect to the first environment attribute."""
     if hasattr(env.envs[0], 'task_description'):
         observation['task'] = env.call('task_description')

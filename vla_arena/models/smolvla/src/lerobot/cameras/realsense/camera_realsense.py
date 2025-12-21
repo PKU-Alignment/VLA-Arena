@@ -38,6 +38,7 @@ from typing import Any
 import cv2
 import numpy as np
 
+
 try:
     import pyrealsense2 as rs
 except Exception as e:
@@ -49,6 +50,7 @@ from ..camera import Camera
 from ..configs import ColorMode
 from ..utils import get_cv2_rotation
 from .configuration_realsense import RealSenseCameraConfig
+
 
 logger = logging.getLogger(__name__)
 
@@ -133,7 +135,9 @@ class RealSenseCamera(Camera):
         if config.serial_number_or_name.isdigit():
             self.serial_number = config.serial_number_or_name
         else:
-            self.serial_number = self._find_serial_number_from_name(config.serial_number_or_name)
+            self.serial_number = self._find_serial_number_from_name(
+                config.serial_number_or_name
+            )
 
         self.fps = config.fps
         self.color_mode = config.color_mode
@@ -153,8 +157,14 @@ class RealSenseCamera(Camera):
 
         if self.height and self.width:
             self.capture_width, self.capture_height = self.width, self.height
-            if self.rotation in [cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_90_COUNTERCLOCKWISE]:
-                self.capture_width, self.capture_height = self.height, self.width
+            if self.rotation in [
+                cv2.ROTATE_90_CLOCKWISE,
+                cv2.ROTATE_90_COUNTERCLOCKWISE,
+            ]:
+                self.capture_width, self.capture_height = (
+                    self.height,
+                    self.width,
+                )
 
     def __str__(self) -> str:
         return f'{self.__class__.__name__}({self.serial_number})'
@@ -229,8 +239,12 @@ class RealSenseCamera(Camera):
                 'name': device.get_info(rs.camera_info.name),
                 'type': 'RealSense',
                 'id': device.get_info(rs.camera_info.serial_number),
-                'firmware_version': device.get_info(rs.camera_info.firmware_version),
-                'usb_type_descriptor': device.get_info(rs.camera_info.usb_type_descriptor),
+                'firmware_version': device.get_info(
+                    rs.camera_info.firmware_version
+                ),
+                'usb_type_descriptor': device.get_info(
+                    rs.camera_info.usb_type_descriptor
+                ),
                 'physical_port': device.get_info(rs.camera_info.physical_port),
                 'product_id': device.get_info(rs.camera_info.product_id),
                 'product_line': device.get_info(rs.camera_info.product_line),
@@ -242,7 +256,10 @@ class RealSenseCamera(Camera):
                 profiles = sensor.get_stream_profiles()
 
                 for profile in profiles:
-                    if profile.is_video_stream_profile() and profile.is_default():
+                    if (
+                        profile.is_video_stream_profile()
+                        and profile.is_default()
+                    ):
                         vprofile = profile.as_video_stream_profile()
                         stream_info = {
                             'stream_type': vprofile.stream_name(),
@@ -260,7 +277,9 @@ class RealSenseCamera(Camera):
     def _find_serial_number_from_name(self, name: str) -> str:
         """Finds the serial number for a given unique camera name."""
         camera_infos = self.find_cameras()
-        found_devices = [cam for cam in camera_infos if str(cam['name']) == name]
+        found_devices = [
+            cam for cam in camera_infos if str(cam['name']) == name
+        ]
 
         if not found_devices:
             available_names = [cam['name'] for cam in camera_infos]
@@ -284,7 +303,11 @@ class RealSenseCamera(Camera):
 
         if self.width and self.height and self.fps:
             rs_config.enable_stream(
-                rs.stream.color, self.capture_width, self.capture_height, rs.format.rgb8, self.fps
+                rs.stream.color,
+                self.capture_width,
+                self.capture_height,
+                rs.format.rgb8,
+                self.fps,
             )
             if self.use_depth:
                 rs_config.enable_stream(
@@ -313,7 +336,9 @@ class RealSenseCamera(Camera):
                 f'Cannot validate settings for {self} as it is not connected.'
             )
 
-        stream = self.rs_profile.get_stream(rs.stream.color).as_video_stream_profile()
+        stream = self.rs_profile.get_stream(
+            rs.stream.color
+        ).as_video_stream_profile()
 
         if self.fps is None:
             self.fps = stream.fps()
@@ -321,12 +346,21 @@ class RealSenseCamera(Camera):
         if self.width is None or self.height is None:
             actual_width = int(round(stream.width()))
             actual_height = int(round(stream.height()))
-            if self.rotation in [cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_90_COUNTERCLOCKWISE]:
+            if self.rotation in [
+                cv2.ROTATE_90_CLOCKWISE,
+                cv2.ROTATE_90_COUNTERCLOCKWISE,
+            ]:
                 self.width, self.height = actual_height, actual_width
-                self.capture_width, self.capture_height = actual_width, actual_height
+                self.capture_width, self.capture_height = (
+                    actual_width,
+                    actual_height,
+                )
             else:
                 self.width, self.height = actual_width, actual_height
-                self.capture_width, self.capture_height = actual_width, actual_height
+                self.capture_width, self.capture_height = (
+                    actual_width,
+                    actual_height,
+                )
 
     def read_depth(self, timeout_ms: int = 200) -> np.ndarray:
         """
@@ -356,7 +390,9 @@ class RealSenseCamera(Camera):
 
         start_time = time.perf_counter()
 
-        ret, frame = self.rs_pipeline.try_wait_for_frames(timeout_ms=timeout_ms)
+        ret, frame = self.rs_pipeline.try_wait_for_frames(
+            timeout_ms=timeout_ms
+        )
 
         if not ret or frame is None:
             raise RuntimeError(f'{self} read_depth failed (status={ret}).')
@@ -364,14 +400,18 @@ class RealSenseCamera(Camera):
         depth_frame = frame.get_depth_frame()
         depth_map = np.asanyarray(depth_frame.get_data())
 
-        depth_map_processed = self._postprocess_image(depth_map, depth_frame=True)
+        depth_map_processed = self._postprocess_image(
+            depth_map, depth_frame=True
+        )
 
         read_duration_ms = (time.perf_counter() - start_time) * 1e3
         logger.debug(f'{self} read took: {read_duration_ms:.1f}ms')
 
         return depth_map_processed
 
-    def read(self, color_mode: ColorMode | None = None, timeout_ms: int = 200) -> np.ndarray:
+    def read(
+        self, color_mode: ColorMode | None = None, timeout_ms: int = 200
+    ) -> np.ndarray:
         """
         Reads a single frame (color) synchronously from the camera.
 
@@ -396,7 +436,9 @@ class RealSenseCamera(Camera):
 
         start_time = time.perf_counter()
 
-        ret, frame = self.rs_pipeline.try_wait_for_frames(timeout_ms=timeout_ms)
+        ret, frame = self.rs_pipeline.try_wait_for_frames(
+            timeout_ms=timeout_ms
+        )
 
         if not ret or frame is None:
             raise RuntimeError(f'{self} read failed (status={ret}).')
@@ -404,7 +446,9 @@ class RealSenseCamera(Camera):
         color_frame = frame.get_color_frame()
         color_image_raw = np.asanyarray(color_frame.get_data())
 
-        color_image_processed = self._postprocess_image(color_image_raw, color_mode)
+        color_image_processed = self._postprocess_image(
+            color_image_raw, color_mode
+        )
 
         read_duration_ms = (time.perf_counter() - start_time) * 1e3
         logger.debug(f'{self} read took: {read_duration_ms:.1f}ms')
@@ -412,7 +456,10 @@ class RealSenseCamera(Camera):
         return color_image_processed
 
     def _postprocess_image(
-        self, image: np.ndarray, color_mode: ColorMode | None = None, depth_frame: bool = False
+        self,
+        image: np.ndarray,
+        color_mode: ColorMode | None = None,
+        depth_frame: bool = False,
     ) -> np.ndarray:
         """
         Applies color conversion, dimension validation, and rotation to a raw color frame.
@@ -486,7 +533,9 @@ class RealSenseCamera(Camera):
             except DeviceNotConnectedError:
                 break
             except Exception as e:
-                logger.warning(f'Error reading frame in background thread for {self}: {e}')
+                logger.warning(
+                    f'Error reading frame in background thread for {self}: {e}'
+                )
 
     def _start_read_thread(self) -> None:
         """Starts or restarts the background read thread if it's not running."""
@@ -496,7 +545,9 @@ class RealSenseCamera(Camera):
             self.stop_event.set()
 
         self.stop_event = Event()
-        self.thread = Thread(target=self._read_loop, args=(), name=f'{self}_read_loop')
+        self.thread = Thread(
+            target=self._read_loop, args=(), name=f'{self}_read_loop'
+        )
         self.thread.daemon = True
         self.thread.start()
 
@@ -551,7 +602,9 @@ class RealSenseCamera(Camera):
             self.new_frame_event.clear()
 
         if frame is None:
-            raise RuntimeError(f'Internal error: Event set but no frame available for {self}.')
+            raise RuntimeError(
+                f'Internal error: Event set but no frame available for {self}.'
+            )
 
         return frame
 

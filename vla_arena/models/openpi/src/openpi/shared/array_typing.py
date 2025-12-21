@@ -21,20 +21,17 @@ import beartype
 import jax
 import jax._src.tree_util as private_tree_util
 import jax.core
-from jaxtyping import ArrayLike
+import jaxtyping._decorator
+import torch
 from jaxtyping import Bool  # noqa: F401
 from jaxtyping import DTypeLike  # noqa: F401
-from jaxtyping import Float
 from jaxtyping import Int  # noqa: F401
 from jaxtyping import Key  # noqa: F401
 from jaxtyping import Num  # noqa: F401
-from jaxtyping import PyTree
 from jaxtyping import Real  # noqa: F401
 from jaxtyping import UInt8  # noqa: F401
-from jaxtyping import config
-from jaxtyping import jaxtyped
-import jaxtyping._decorator
-import torch
+from jaxtyping import ArrayLike, Float, PyTree, config, jaxtyped
+
 
 # patch jaxtyping to handle https://github.com/patrick-kidger/jaxtyping/issues/277.
 # the problem is that custom PyTree nodes are sometimes initialized with arbitrary types (e.g., `jax.ShapeDtypeStruct`,
@@ -57,7 +54,9 @@ def _check_dataclass_annotations(self, typechecker):
     return None
 
 
-jaxtyping._decorator._check_dataclass_annotations = _check_dataclass_annotations  # noqa: SLF001
+jaxtyping._decorator._check_dataclass_annotations = (
+    _check_dataclass_annotations  # noqa: SLF001
+)
 
 KeyArrayLike: TypeAlias = jax.typing.ArrayLike
 Params: TypeAlias = PyTree[Float[ArrayLike, "..."]]
@@ -79,7 +78,11 @@ def disable_typechecking():
 
 
 def check_pytree_equality(
-    *, expected: PyTree, got: PyTree, check_shapes: bool = False, check_dtypes: bool = False
+    *,
+    expected: PyTree,
+    got: PyTree,
+    check_shapes: bool = False,
+    check_dtypes: bool = False,
 ):
     """Checks that two PyTrees have the same structure and optionally checks shapes and dtypes. Creates a much nicer
     error message than if `jax.tree.map` is naively used on PyTrees with different structures.

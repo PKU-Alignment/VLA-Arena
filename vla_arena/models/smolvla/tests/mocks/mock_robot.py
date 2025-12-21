@@ -54,8 +54,13 @@ class MockRobotConfig(RobotConfig):
         if self.random_values and self.static_values is not None:
             raise ValueError('Choose either random values or static values')
 
-        if self.static_values is not None and len(self.static_values) != self.n_motors:
-            raise ValueError('Specify the same number of static values as motors')
+        if (
+            self.static_values is not None
+            and len(self.static_values) != self.n_motors
+        ):
+            raise ValueError(
+                'Specify the same number of static values as motors'
+            )
 
         if len(self.cameras) > 0:
             raise NotImplementedError  # TODO with the cameras refactor
@@ -82,7 +87,11 @@ class MockRobot(Robot):
     @property
     def _cameras_ft(self) -> dict[str, tuple]:
         return {
-            cam: (self.config.cameras[cam].height, self.config.cameras[cam].width, 3)
+            cam: (
+                self.config.cameras[cam].height,
+                self.config.cameras[cam].width,
+                3,
+            )
             for cam in self.cameras
         }
 
@@ -124,11 +133,16 @@ class MockRobot(Robot):
             raise DeviceNotConnectedError(f'{self} is not connected.')
 
         if self.config.random_values:
-            return {f'{motor}.pos': random.uniform(-100, 100) for motor in self.motors}
+            return {
+                f'{motor}.pos': random.uniform(-100, 100)
+                for motor in self.motors
+            }
         else:
             return {
                 f'{motor}.pos': val
-                for motor, val in zip(self.motors, self.config.static_values, strict=True)
+                for motor, val in zip(
+                    self.motors, self.config.static_values, strict=True
+                )
             }
 
     def send_action(self, action: dict[str, Any]) -> dict[str, Any]:

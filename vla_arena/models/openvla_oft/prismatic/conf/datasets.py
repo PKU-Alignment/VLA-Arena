@@ -56,7 +56,9 @@ class LLaVa_V15_Config(DatasetConfig):
         Path('download/llava-v1.5-instruct/llava_v1_5_mix665k.json'),
         Path('download/llava-v1.5-instruct/'),
     )
-    dataset_root_dir: Path = Path('/mnt/fsx/skaramcheti/datasets/prismatic-vlms')
+    dataset_root_dir: Path = Path(
+        '/mnt/fsx/skaramcheti/datasets/prismatic-vlms'
+    )
 
 
 # [Multimodal-Only] LLava-v15 WITHOUT the Language-Only ShareGPT Data (No Co-Training)
@@ -72,7 +74,9 @@ class LLaVa_Multimodal_Only_Config(DatasetConfig):
         Path('download/llava-v1.5-instruct/llava_v1_5_stripped625k.json'),
         Path('download/llava-v1.5-instruct/'),
     )
-    dataset_root_dir: Path = Path('/mnt/fsx/skaramcheti/datasets/prismatic-vlms')
+    dataset_root_dir: Path = Path(
+        '/mnt/fsx/skaramcheti/datasets/prismatic-vlms'
+    )
 
 
 # LLaVa-v15 + LVIS-Instruct-4V
@@ -88,7 +92,9 @@ class LLaVa_LVIS4V_Config(DatasetConfig):
         Path('download/llava-v1.5-instruct/llava_v1_5_lvis4v_mix888k.json'),
         Path('download/llava-v1.5-instruct/'),
     )
-    dataset_root_dir: Path = Path('/mnt/fsx/skaramcheti/datasets/prismatic-vlms')
+    dataset_root_dir: Path = Path(
+        '/mnt/fsx/skaramcheti/datasets/prismatic-vlms'
+    )
 
 
 # LLaVa-v15 + LRV-Instruct
@@ -104,7 +110,9 @@ class LLaVa_LRV_Config(DatasetConfig):
         Path('download/llava-v1.5-instruct/llava_v1_5_lrv_mix1008k.json'),
         Path('download/llava-v1.5-instruct/'),
     )
-    dataset_root_dir: Path = Path('/mnt/fsx/skaramcheti/datasets/prismatic-vlms')
+    dataset_root_dir: Path = Path(
+        '/mnt/fsx/skaramcheti/datasets/prismatic-vlms'
+    )
 
 
 # LLaVa-v15 + LVIS-Instruct-4V + LRV-Instruct
@@ -117,10 +125,14 @@ class LLaVa_LVIS4V_LRV_Config(DatasetConfig):
         Path('download/llava-laion-cc-sbu-558k/'),
     )
     finetune_stage_components: tuple[Path, Path] = (
-        Path('download/llava-v1.5-instruct/llava_v1_5_lvis4v_lrv_mix1231k.json'),
+        Path(
+            'download/llava-v1.5-instruct/llava_v1_5_lvis4v_lrv_mix1231k.json'
+        ),
         Path('download/llava-v1.5-instruct/'),
     )
-    dataset_root_dir: Path = Path('/mnt/fsx/skaramcheti/datasets/prismatic-vlms')
+    dataset_root_dir: Path = Path(
+        '/mnt/fsx/skaramcheti/datasets/prismatic-vlms'
+    )
 
 
 # === Define a Dataset Registry Enum for Reference & Validation =>> all *new* datasets must be added here! ===
@@ -143,4 +155,6 @@ class DatasetRegistry(Enum):
 
 # Register Datasets in Choice Registry
 for dataset_variant in DatasetRegistry:
-    DatasetConfig.register_subclass(dataset_variant.dataset_id, dataset_variant.value)
+    DatasetConfig.register_subclass(
+        dataset_variant.dataset_id, dataset_variant.value
+    )

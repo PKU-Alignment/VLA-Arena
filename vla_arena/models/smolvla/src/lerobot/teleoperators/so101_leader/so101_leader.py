@@ -38,6 +38,7 @@ from lerobot.motors.feetech import FeetechMotorsBus, OperatingMode
 from ..teleoperator import Teleoperator
 from .config_so101_leader import SO101LeaderConfig
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -53,7 +54,9 @@ class SO101Leader(Teleoperator):
         super().__init__(config)
         self.config = config
         norm_mode_body = (
-            MotorNormMode.DEGREES if config.use_degrees else MotorNormMode.RANGE_M100_100
+            MotorNormMode.DEGREES
+            if config.use_degrees
+            else MotorNormMode.RANGE_M100_100
         )
         self.bus = FeetechMotorsBus(
             port=self.config.port,
@@ -114,9 +117,13 @@ class SO101Leader(Teleoperator):
         logger.info(f'\nRunning calibration of {self}')
         self.bus.disable_torque()
         for motor in self.bus.motors:
-            self.bus.write('Operating_Mode', motor, OperatingMode.POSITION.value)
+            self.bus.write(
+                'Operating_Mode', motor, OperatingMode.POSITION.value
+            )
 
-        input(f'Move {self} to the middle of its range of motion and press ENTER....')
+        input(
+            f'Move {self} to the middle of its range of motion and press ENTER....'
+        )
         homing_offsets = self.bus.set_half_turn_homings()
 
         print(
@@ -143,11 +150,15 @@ class SO101Leader(Teleoperator):
         self.bus.disable_torque()
         self.bus.configure_motors()
         for motor in self.bus.motors:
-            self.bus.write('Operating_Mode', motor, OperatingMode.POSITION.value)
+            self.bus.write(
+                'Operating_Mode', motor, OperatingMode.POSITION.value
+            )
 
     def setup_motors(self) -> None:
         for motor in reversed(self.bus.motors):
-            input(f"Connect the controller board to the '{motor}' motor only and press enter.")
+            input(
+                f"Connect the controller board to the '{motor}' motor only and press enter."
+            )
             self.bus.setup_motor(motor)
             print(f"'{motor}' motor id set to {self.bus.motors[motor].id}")
 

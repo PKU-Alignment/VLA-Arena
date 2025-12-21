@@ -18,8 +18,13 @@ from copy import deepcopy
 import numpy as np
 import robosuite.macros as macros
 import robosuite.utils.transform_utils as T
-from robosuite.controllers import controller_factory, load_part_controller_config
-from robosuite.environments.manipulation.manipulation_env import ManipulationEnv
+from robosuite.controllers import (
+    controller_factory,
+    load_part_controller_config,
+)
+from robosuite.environments.manipulation.manipulation_env import (
+    ManipulationEnv,
+)
 from robosuite.models.base import MujocoModel
 from robosuite.models.grippers import gripper_factory
 from robosuite.models.tasks import ManipulationTask

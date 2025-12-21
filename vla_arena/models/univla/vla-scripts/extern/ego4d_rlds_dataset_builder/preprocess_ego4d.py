@@ -24,11 +24,16 @@ from tqdm import tqdm
 
 def parse_arguments():
     """Parse command line arguments for video processing configuration."""
-    parser = argparse.ArgumentParser(description='Process Ego4D video clips into frame sequences.')
+    parser = argparse.ArgumentParser(
+        description='Process Ego4D video clips into frame sequences.'
+    )
 
     # Required paths
     parser.add_argument(
-        '--denseclips_dir', type=str, required=True, help='Root directory for denseclips output'
+        '--denseclips_dir',
+        type=str,
+        required=True,
+        help='Root directory for denseclips output',
     )
     parser.add_argument(
         '--info_clips_json',
@@ -45,10 +50,16 @@ def parse_arguments():
 
     # Processing options
     parser.add_argument(
-        '--frame_interval', type=int, default=15, help='Interval between saved frames (default: 15)'
+        '--frame_interval',
+        type=int,
+        default=15,
+        help='Interval between saved frames (default: 15)',
     )
     parser.add_argument(
-        '--processes', type=int, default=1, help='Number of parallel processes to use (default: 1)'
+        '--processes',
+        type=int,
+        default=1,
+        help='Number of parallel processes to use (default: 1)',
     )
 
     return parser.parse_args()
@@ -83,9 +94,13 @@ def process_video(video_name, clips, args, info):
 
         # Save frames at specified intervals
         for frame_count, frame in enumerate(clip_frames):
-            if frame_count % args.frame_interval == 0 or frame_count == end - start:
+            if (
+                frame_count % args.frame_interval == 0
+                or frame_count == end - start
+            ):
                 npy_name = os.path.join(
-                    save_path, f'{frame_count//args.frame_interval + 1:05d}.npy'
+                    save_path,
+                    f'{frame_count//args.frame_interval + 1:05d}.npy',
                 )
                 if not os.path.exists(npy_name):
                     np.save(npy_name, frame)
@@ -118,11 +133,16 @@ def main():
         with Pool(processes=args.processes) as pool:
             pool.starmap(
                 process_video,
-                [(video_name, clips, args, info) for video_name, clips in clip_data.items()],
+                [
+                    (video_name, clips, args, info)
+                    for video_name, clips in clip_data.items()
+                ],
             )
     else:
         info = []
-        for video_name, clips in tqdm(clip_data.items(), desc='Processing videos'):
+        for video_name, clips in tqdm(
+            clip_data.items(), desc='Processing videos'
+        ):
             process_video(video_name, clips, args, info)
 
     # Save annotations

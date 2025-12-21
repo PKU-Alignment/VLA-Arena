@@ -30,8 +30,13 @@
 import importlib
 
 import gymnasium as gym
-
-from lerobot.envs.configs import AlohaEnv, EnvConfig, HILEnvConfig, PushtEnv, XarmEnv
+from lerobot.envs.configs import (
+    AlohaEnv,
+    EnvConfig,
+    HILEnvConfig,
+    PushtEnv,
+    XarmEnv,
+)
 
 
 def make_env_config(env_type: str, **kwargs) -> EnvConfig:
@@ -81,10 +86,16 @@ def make_env(
     gym_handle = f'{package_name}/{cfg.task}'
 
     # batched version of the env that returns an observation of shape (b, c)
-    env_cls = gym.vector.AsyncVectorEnv if use_async_envs else gym.vector.SyncVectorEnv
+    env_cls = (
+        gym.vector.AsyncVectorEnv
+        if use_async_envs
+        else gym.vector.SyncVectorEnv
+    )
     env = env_cls(
         [
-            lambda: gym.make(gym_handle, disable_env_checker=True, **cfg.gym_kwargs)
+            lambda: gym.make(
+                gym_handle, disable_env_checker=True, **cfg.gym_kwargs
+            )
             for _ in range(n_envs)
         ]
     )

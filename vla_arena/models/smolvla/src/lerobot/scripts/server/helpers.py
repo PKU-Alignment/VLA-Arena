@@ -34,7 +34,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import torch
-
 from lerobot.configs.types import PolicyFeature
 from lerobot.constants import OBS_IMAGES, OBS_STATE
 from lerobot.datasets.utils import build_dataset_frame, hw_to_dataset_features
@@ -49,6 +48,7 @@ from lerobot.policies import (  # noqa: F401
 )
 from lerobot.robots.robot import Robot
 from lerobot.utils.utils import init_logging
+
 
 Action = torch.Tensor
 ActionChunk = torch.Tensor
@@ -77,7 +77,8 @@ def visualize_action_queue_size(action_queue_size: list[int]) -> None:
 
 
 def validate_robot_cameras_for_policy(
-    lerobot_observation_features: dict[str, dict], policy_image_features: dict[str, PolicyFeature]
+    lerobot_observation_features: dict[str, dict],
+    policy_image_features: dict[str, PolicyFeature],
 ) -> None:
     image_keys = list(filter(is_image_key, lerobot_observation_features))
     assert set(image_keys) == set(
@@ -86,7 +87,9 @@ def validate_robot_cameras_for_policy(
 
 
 def map_robot_keys_to_lerobot_features(robot: Robot) -> dict[str, dict]:
-    return hw_to_dataset_features(robot.observation_features, 'observation', use_video=False)
+    return hw_to_dataset_features(
+        robot.observation_features, 'observation', use_video=False
+    )
 
 
 def is_image_key(k: str) -> bool:
@@ -118,7 +121,9 @@ def raw_observation_to_observation(
 ) -> Observation:
     observation = {}
 
-    observation = prepare_raw_observation(raw_observation, lerobot_features, policy_image_features)
+    observation = prepare_raw_observation(
+        raw_observation, lerobot_features, policy_image_features
+    )
     for k, v in observation.items():
         if isinstance(
             v, torch.Tensor
@@ -167,7 +172,9 @@ def make_lerobot_observation(
     lerobot_features: dict[str, dict],
 ) -> LeRobotObservation:
     """Make a lerobot observation from a raw observation."""
-    return build_dataset_frame(lerobot_features, robot_obs, prefix='observation')
+    return build_dataset_frame(
+        lerobot_features, robot_obs, prefix='observation'
+    )
 
 
 def prepare_raw_observation(
@@ -186,7 +193,8 @@ def prepare_raw_observation(
     # state's shape is expected as (B, state_dim)
     state_dict = {OBS_STATE: extract_state_from_raw_observation(lerobot_obs)}
     image_dict = {
-        image_k: extract_images_from_raw_observation(lerobot_obs, image_k) for image_k in image_keys
+        image_k: extract_images_from_raw_observation(lerobot_obs, image_k)
+        for image_k in image_keys
     }
 
     # Turns the image features to (C, H, W) with H, W matching the policy image features.
@@ -274,7 +282,9 @@ class FPSTracker:
     first_timestamp: float = None
     total_obs_count: int = 0
 
-    def calculate_fps_metrics(self, current_timestamp: float) -> dict[str, float]:
+    def calculate_fps_metrics(
+        self, current_timestamp: float
+    ) -> dict[str, float]:
         """Calculate average FPS vs target"""
         self.total_obs_count += 1
 
@@ -284,7 +294,11 @@ class FPSTracker:
 
         # Calculate overall average FPS (since start)
         total_duration = current_timestamp - self.first_timestamp
-        avg_fps = (self.total_obs_count - 1) / total_duration if total_duration > 1e-6 else 0.0
+        avg_fps = (
+            (self.total_obs_count - 1) / total_duration
+            if total_duration > 1e-6
+            else 0.0
+        )
 
         return {'avg_fps': avg_fps, 'target_fps': self.target_fps}
 

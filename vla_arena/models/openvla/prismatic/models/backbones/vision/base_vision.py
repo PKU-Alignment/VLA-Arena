@@ -53,7 +53,9 @@ def unpack_tuple(fn: Callable[[Any], tuple[Any]]) -> Callable[[Any], Any]:
 
 # === Interface for an Image Transform ===
 class ImageTransform(Protocol):
-    def __call__(self, img: Image, **kwargs: str) -> torch.Tensor | dict[str, torch.Tensor]: ...
+    def __call__(
+        self, img: Image, **kwargs: str
+    ) -> torch.Tensor | dict[str, torch.Tensor]: ...
 
 
 # === Custom Torchvision Image Transforms ===
@@ -64,15 +66,25 @@ class LetterboxPad:
     def __call__(self, image: Image) -> Image:
         """Given a PIL.Image, pad to square by adding a symmetric border around the height/width."""
         (w, h), max_wh = image.size, max(image.size)
-        horizontal_pad, vertical_pad = int((max_wh - w) / 2), int((max_wh - h) / 2)
+        horizontal_pad, vertical_pad = int((max_wh - w) / 2), int(
+            (max_wh - h) / 2
+        )
         padding = (horizontal_pad, vertical_pad, horizontal_pad, vertical_pad)
-        return TVF.pad(image, padding, fill=self.padding_fill_value, padding_mode='constant')
+        return TVF.pad(
+            image,
+            padding,
+            fill=self.padding_fill_value,
+            padding_mode='constant',
+        )
 
 
 # === Abstract Base Class for arbitrary Vision Backbones ===
 class VisionBackbone(nn.Module, ABC):
     def __init__(
-        self, vision_backbone_id: str, image_resize_strategy: str, default_image_size: int = 224
+        self,
+        vision_backbone_id: str,
+        image_resize_strategy: str,
+        default_image_size: int = 224,
     ) -> None:
         super().__init__()
         self.identifier: str = vision_backbone_id
@@ -122,7 +134,9 @@ class TimmViTBackbone(VisionBackbone, ABC):
         override_act_layer: str | None = None,
     ) -> None:
         super().__init__(
-            vision_backbone_id, image_resize_strategy, default_image_size=default_image_size
+            vision_backbone_id,
+            image_resize_strategy,
+            default_image_size=default_image_size,
         )
         self.timm_path_or_url = timm_path_or_url
         self.override_act_layer = override_act_layer
@@ -150,7 +164,10 @@ class TimmViTBackbone(VisionBackbone, ABC):
         #   => Note: By default set `get_intermediate_layers` to return the *SECOND-TO-LAST* layer patches!
         #   => TODO (siddk) Remove after resolution of https://github.com/pytorch/pytorch/issues/109385
         self.featurizer.forward = unpack_tuple(
-            partial(self.featurizer.get_intermediate_layers, n={len(self.featurizer.blocks) - 2})
+            partial(
+                self.featurizer.get_intermediate_layers,
+                n={len(self.featurizer.blocks) - 2},
+            )
         )
 
         # Validation =>> for now, this class *only* supports TIMM Vision Transformers (but can be extended!)
@@ -161,13 +178,22 @@ class TimmViTBackbone(VisionBackbone, ABC):
 
         # Get Config =>> Note :: Override default image size to ensure correct image transform
         self.data_cfg = timm.data.resolve_model_data_config(self.featurizer)
-        self.data_cfg['input_size'] = (3, self.default_image_size, self.default_image_size)
+        self.data_cfg['input_size'] = (
+            3,
+            self.default_image_size,
+            self.default_image_size,
+        )
 
         # Initialize Default Image Transform --> Modified by `self.image_resize_strategy`
-        default_image_transform = timm.data.create_transform(**self.data_cfg, is_training=False)
+        default_image_transform = timm.data.create_transform(
+            **self.data_cfg, is_training=False
+        )
 
         # Fix =>> SigLIP & IN1K default transforms resize to *larger* than `self.default_image_size` (crops image)!
-        if 'siglip' in self.timm_path_or_url or 'in1k' in self.timm_path_or_url:
+        if (
+            'siglip' in self.timm_path_or_url
+            or 'in1k' in self.timm_path_or_url
+        ):
             assert isinstance(
                 default_image_transform, Compose
             ), 'Unexpected `default_image_transform`!'
@@ -176,7 +202,9 @@ class TimmViTBackbone(VisionBackbone, ABC):
                 [
                     Resize(
                         self.default_image_size,
-                        interpolation=default_image_transform.transforms[0].interpolation,
+                        interpolation=default_image_transform.transforms[
+                            0
+                        ].interpolation,
                     ),
                     *default_image_transform.transforms[1:],
                 ]
@@ -194,7 +222,9 @@ class TimmViTBackbone(VisionBackbone, ABC):
                 [
                     Resize(
                         target_size,
-                        interpolation=default_image_transform.transforms[0].interpolation,
+                        interpolation=default_image_transform.transforms[
+                            0
+                        ].interpolation,
                     ),
                     *default_image_transform.transforms[1:],
                 ]
@@ -207,7 +237,9 @@ class TimmViTBackbone(VisionBackbone, ABC):
             assert isinstance(
                 default_image_transform, Compose
             ), 'Unexpected `default_image_transform`!'
-            assert 'mean' in self.data_cfg, 'TIMM `data_cfg` missing image normalization mean!'
+            assert (
+                'mean' in self.data_cfg
+            ), 'TIMM `data_cfg` missing image normalization mean!'
 
             # Compute Padding Fill Value (rescaled normalization mean if applicable)
             fill = tuple([int(x * 255) for x in self.data_cfg['mean']])
@@ -224,13 +256,19 @@ class TimmViTBackbone(VisionBackbone, ABC):
 
     def get_fsdp_wrapping_policy(self) -> Callable:
         """Return a simple FSDP policy that wraps each ViT block and then the _entire_ featurizer."""
-        vit_wrap_policy = partial(_module_wrap_policy, module_classes={VisionTransformer})
+        vit_wrap_policy = partial(
+            _module_wrap_policy, module_classes={VisionTransformer}
+        )
         transformer_block_policy = partial(
             transformer_auto_wrap_policy, transformer_layer_cls={Block}
         )
-        return partial(_or_policy, policies=[vit_wrap_policy, transformer_block_policy])
+        return partial(
+            _or_policy, policies=[vit_wrap_policy, transformer_block_policy]
+        )
 
-    def forward(self, pixel_values: torch.Tensor | dict[str, torch.Tensor]) -> torch.Tensor:
+    def forward(
+        self, pixel_values: torch.Tensor | dict[str, torch.Tensor]
+    ) -> torch.Tensor:
         """Runs transformed image/pixel tensor through vision backbone, returning _all_ patch features."""
         return self.featurizer(pixel_values)
 

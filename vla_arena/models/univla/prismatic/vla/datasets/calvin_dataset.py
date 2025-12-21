@@ -30,6 +30,7 @@ from omegaconf import DictConfig, ListConfig, OmegaConf
 from PIL import Image
 from torch.utils.data import Dataset
 
+
 # Constants
 Image.MAX_IMAGE_PIXELS = 1000000000
 MAX_NUM_TOKENS = 256
@@ -81,10 +82,15 @@ def process_state(
     seq_state_obs = torch.cat(state_obs_list_normalized, dim=1)
     seq_state_obs_unnormalized = torch.cat(state_obs_list_unnormalized, dim=1)
 
-    if not proprio_state.normalize_robot_orientation and 'robot_orientation_idx' in proprio_state:
-        seq_state_obs[:, slice(*proprio_state.robot_orientation_idx)] = seq_state_obs_unnormalized[
-            :, slice(*proprio_state.robot_orientation_idx)
-        ]
+    if (
+        not proprio_state.normalize_robot_orientation
+        and 'robot_orientation_idx' in proprio_state
+    ):
+        seq_state_obs[:, slice(*proprio_state.robot_orientation_idx)] = (
+            seq_state_obs_unnormalized[
+                :, slice(*proprio_state.robot_orientation_idx)
+            ]
+        )
 
     if not proprio_state.normalize:
         seq_state_obs = seq_state_obs_unnormalized
@@ -153,7 +159,9 @@ def process_depth(
         if window_size == 0 and seq_idx == 0:  # single file loader
             depth_ob_ = torch.from_numpy(depth_ob).float()
         else:  # episode loader
-            depth_ob_ = torch.from_numpy(depth_ob[seq_idx : seq_idx + window_size]).float()
+            depth_ob_ = torch.from_numpy(
+                depth_ob[seq_idx : seq_idx + window_size]
+            ).float()
         # we might have different transformations for the different cameras
         if depth_obs_key in transforms:
             depth_ob_ = transforms[depth_obs_key](depth_ob_)
@@ -201,7 +209,9 @@ def process_language(
     return seq_lang
 
 
-def get_state_info_dict(episode: dict[str, np.ndarray]) -> dict[str, dict[str, torch.Tensor]]:
+def get_state_info_dict(
+    episode: dict[str, np.ndarray],
+) -> dict[str, dict[str, torch.Tensor]]:
     """
     Create a dictionary with raw state observations for environment resets.
 
@@ -235,7 +245,9 @@ def load_dataset_statistics(train_dataset_dir, val_dataset_dir, transforms):
     paths = {'train': train_dataset_dir, 'val': val_dataset_dir}
     for dataset_type in ['train', 'val']:
         try:
-            statistics = OmegaConf.load(Path(paths[dataset_type]) / 'statistics.yaml')
+            statistics = OmegaConf.load(
+                Path(paths[dataset_type]) / 'statistics.yaml'
+            )
             # Hack for maintaining two repositories with transforms
             statistics = OmegaConf.create(
                 OmegaConf.to_yaml(statistics).replace('calvin_models.', '')
@@ -250,9 +262,14 @@ def load_dataset_statistics(train_dataset_dir, val_dataset_dir, transforms):
                     for dataset_trans in dataset_transforms:
                         exists = False
                         for i, conf_trans in enumerate(conf_transforms):
-                            if dataset_trans['_target_'] == conf_trans['_target_']:
+                            if (
+                                dataset_trans['_target_']
+                                == conf_trans['_target_']
+                            ):
                                 exists = True
-                                transforms[dataset_type][modality][i] = dataset_trans
+                                transforms[dataset_type][modality][
+                                    i
+                                ] = dataset_trans
                                 break
                         if not exists:
                             transforms[dataset_type][modality] = ListConfig(
@@ -263,7 +280,9 @@ def load_dataset_statistics(train_dataset_dir, val_dataset_dir, transforms):
     return transforms
 
 
-def lookup_naming_pattern(dataset_dir: Path, save_format: str) -> tuple[tuple[Path, str], int]:
+def lookup_naming_pattern(
+    dataset_dir: Path, save_format: str
+) -> tuple[tuple[Path, str], int]:
     """
     Check naming pattern of dataset files.
 
@@ -368,7 +387,9 @@ class BaseCalvinDataset(Dataset):
         self.transforms = transforms
 
         self.with_lang = key == 'lang'
-        self.relative_actions = 'rel_actions' in self.observation_space['actions']
+        self.relative_actions = (
+            'rel_actions' in self.observation_space['actions']
+        )
 
         self.pad = pad
         self.batch_size = batch_size
@@ -419,7 +440,9 @@ class BaseCalvinDataset(Dataset):
                 # To Square image
                 seq_rgb_obs_ = torch.from_numpy(rgb_obs).byte()
             else:  # episode loader
-                seq_rgb_obs_ = torch.from_numpy(rgb_obs[seq_idx : seq_idx + window_size]).byte()
+                seq_rgb_obs_ = torch.from_numpy(
+                    rgb_obs[seq_idx : seq_idx + window_size]
+                ).byte()
 
             if rgb_obs_key in transforms:
                 seq_rgb_obs_ = transforms[rgb_obs_key](seq_rgb_obs_)
@@ -427,14 +450,20 @@ class BaseCalvinDataset(Dataset):
         # shape: N_rgb_obs x (BxHxWxC)
         return {'rgb_obs': seq_rgb_obs_dict}
 
-    def process_language(self, episode: dict[str, np.ndarray], transforms: dict, with_lang: bool):
+    def process_language(
+        self, episode: dict[str, np.ndarray], transforms: dict, with_lang: bool
+    ):
         return {'lang': episode['language']}
 
-    def get_openvla_prompt(self, instruction: str, tokenized_action: str = None) -> str:
+    def get_openvla_prompt(
+        self, instruction: str, tokenized_action: str = None
+    ) -> str:
         # print(tokenized_action)
         return f'In: What action should the robot take to {instruction.lower()}?\nOut:'  # + tokenized_action + "</s>"
 
-    def __getitem__(self, idx: int | tuple[int, int], fixed_seed=False) -> dict:
+    def __getitem__(
+        self, idx: int | tuple[int, int], fixed_seed=False
+    ) -> dict:
         """
         Get sequence of dataset.
 
@@ -469,16 +498,26 @@ class BaseCalvinDataset(Dataset):
         pixel_values = self.image_transform(image_vla)
 
         # Prepare frame inputs for the latent action model
-        initial_pixel_values = self.image_transform_lam(self.resize_img(image_vla))
-        target_pixel_values = self.image_transform_lam(self.resize_img(goal_image))
+        initial_pixel_values = self.image_transform_lam(
+            self.resize_img(image_vla)
+        )
+        target_pixel_values = self.image_transform_lam(
+            self.resize_img(goal_image)
+        )
 
         # Prepare history frame inputs for the latent action model (to label history latent actions)
         initial_pixel_values_hist, target_pixel_values_hist = None, None
         if extra_frame_num > 0:
             hist_frame_prev = Image.fromarray(image[0].astype(np.uint8))
-            hist_frame_goal = Image.fromarray(image[self.min_window_size].astype(np.uint8))
-            initial_pixel_values_hist = self.image_transform_lam(self.resize_img(hist_frame_prev))
-            target_pixel_values_hist = self.image_transform_lam(self.resize_img(hist_frame_goal))
+            hist_frame_goal = Image.fromarray(
+                image[self.min_window_size].astype(np.uint8)
+            )
+            initial_pixel_values_hist = self.image_transform_lam(
+                self.resize_img(hist_frame_prev)
+            )
+            target_pixel_values_hist = self.image_transform_lam(
+                self.resize_img(hist_frame_goal)
+            )
 
         # Get proprio states (not used by the current version of UniVLA)
         proprio = torch.tensor(sequence['robot_obs'].numpy())
@@ -504,7 +543,9 @@ class BaseCalvinDataset(Dataset):
             proprio=proprio,
         )
 
-    def _get_sequences(self, idx: int, window_size: int, head: bool = False) -> dict:
+    def _get_sequences(
+        self, idx: int, window_size: int, head: bool = False
+    ) -> dict:
         """
         Load sequence of length window_size.
 
@@ -519,16 +560,25 @@ class BaseCalvinDataset(Dataset):
         episode = self._load_episode(idx, window_size)
 
         seq_state_obs = process_state(
-            episode, self.observation_space, self.transforms, self.proprio_state
+            episode,
+            self.observation_space,
+            self.transforms,
+            self.proprio_state,
         )
-        seq_rgb_obs = self.process_rgb(episode, self.observation_space, self.transforms)
-        seq_depth_obs = process_depth(episode, self.observation_space, self.transforms)
+        seq_rgb_obs = self.process_rgb(
+            episode, self.observation_space, self.transforms
+        )
+        seq_depth_obs = process_depth(
+            episode, self.observation_space, self.transforms
+        )
         seq_acts = process_actions(episode, 'actions', self.transforms)
         rel_eq_acts = process_actions(episode, 'rel_actions', self.transforms)
         seq_acts.update({'rel_actions': rel_eq_acts['actions']})
 
         info = get_state_info_dict(episode)
-        seq_lang = self.process_language(episode, self.transforms, self.with_lang)
+        seq_lang = self.process_language(
+            episode, self.transforms, self.with_lang
+        )
         info = self._add_language_info(info, idx)
         seq_dict = {
             **seq_state_obs,
@@ -542,7 +592,9 @@ class BaseCalvinDataset(Dataset):
 
         return seq_dict
 
-    def _load_episode(self, idx: int, window_size: int) -> dict[str, np.ndarray]:
+    def _load_episode(
+        self, idx: int, window_size: int
+    ) -> dict[str, np.ndarray]:
         raise NotImplementedError
 
     def _get_window_size(self, idx: int) -> int:
@@ -558,8 +610,13 @@ class BaseCalvinDataset(Dataset):
         window_diff = self.max_window_size - self.min_window_size
         if len(self.episode_lookup) <= idx + window_diff:
             # last episode
-            max_window = self.min_window_size + len(self.episode_lookup) - idx - 1
-        elif self.episode_lookup[idx + window_diff] != self.episode_lookup[idx] + window_diff:
+            max_window = (
+                self.min_window_size + len(self.episode_lookup) - idx - 1
+            )
+        elif (
+            self.episode_lookup[idx + window_diff]
+            != self.episode_lookup[idx] + window_diff
+        ):
             # less than max_episode steps until next episode
             steps_to_next_episode = int(
                 np.nonzero(
@@ -568,14 +625,17 @@ class BaseCalvinDataset(Dataset):
                 )[0][0]
             )
             max_window = min(
-                self.max_window_size, (self.min_window_size + steps_to_next_episode - 1)
+                self.max_window_size,
+                (self.min_window_size + steps_to_next_episode - 1),
             )
         else:
             max_window = self.max_window_size
 
         if self.validation:
             # in validation step, repeat the window sizes for each epoch.
-            return get_validation_window_size(idx, self.min_window_size, max_window)
+            return get_validation_window_size(
+                idx, self.min_window_size, max_window
+            )
         else:
             return np.random.randint(self.min_window_size, max_window + 1)
 
@@ -598,7 +658,9 @@ class BaseCalvinDataset(Dataset):
         """
         return self.max_window_size - len(sequence['actions'])
 
-    def _pad_sequence(self, seq: dict, pad_size: int, head: bool = False) -> dict:
+    def _pad_sequence(
+        self, seq: dict, pad_size: int, head: bool = False
+    ) -> dict:
         """
         Pad a sequence by repeating the last frame.
 
@@ -614,7 +676,13 @@ class BaseCalvinDataset(Dataset):
                 seq_acts = self._pad_with_zeros(seq['actions'], pad_size, head)
             else:
                 # repeat action for world coordinates action space
-                seq.update({'actions': self._pad_with_repetition(seq['actions'], pad_size, head)})
+                seq.update(
+                    {
+                        'actions': self._pad_with_repetition(
+                            seq['actions'], pad_size, head
+                        )
+                    }
+                )
         else:
             # for relative actions zero pad all but the last action dims and repeat last action dim (gripper action)
             if head:
@@ -622,8 +690,12 @@ class BaseCalvinDataset(Dataset):
             else:
                 seq_acts = torch.cat(
                     [
-                        self._pad_with_zeros(seq['actions'][..., :-1], pad_size, head),
-                        self._pad_with_repetition(seq['actions'][..., -1:], pad_size, head),
+                        self._pad_with_zeros(
+                            seq['actions'][..., :-1], pad_size, head
+                        ),
+                        self._pad_with_repetition(
+                            seq['actions'][..., -1:], pad_size, head
+                        ),
                     ],
                     dim=-1,
                 )
@@ -654,12 +726,16 @@ class BaseCalvinDataset(Dataset):
         """
         if head:
             last_repeated = torch.repeat_interleave(
-                torch.unsqueeze(input_tensor[0], dim=0), repeats=pad_size, dim=0
+                torch.unsqueeze(input_tensor[0], dim=0),
+                repeats=pad_size,
+                dim=0,
             )
             padded = torch.vstack((last_repeated, input_tensor))
         else:
             last_repeated = torch.repeat_interleave(
-                torch.unsqueeze(input_tensor[-1], dim=0), repeats=pad_size, dim=0
+                torch.unsqueeze(input_tensor[-1], dim=0),
+                repeats=pad_size,
+                dim=0,
             )
             padded = torch.vstack((input_tensor, last_repeated))
         return padded
@@ -704,7 +780,8 @@ class BaseCalvinDataset(Dataset):
             return info
         use_for_aux_lang_loss = (
             idx + self.aux_lang_loss_window >= len(self.lang_lookup)
-            or self.lang_lookup[idx] < self.lang_lookup[idx + self.aux_lang_loss_window]
+            or self.lang_lookup[idx]
+            < self.lang_lookup[idx + self.aux_lang_loss_window]
         )
         info['use_for_aux_lang_loss'] = use_for_aux_lang_loss
         return info
@@ -763,11 +840,16 @@ class DiskCalvinDataset(BaseCalvinDataset):
         self.skip_frames = skip_frames
         self.imagenet_norm = imagenet_norm
         if self.with_lang:
-            (self.episode_lookup, self.lang_lookup, self.lang_ann, self.lang_task) = (
-                self._build_file_indices_lang(self.abs_datasets_dir)
-            )
+            (
+                self.episode_lookup,
+                self.lang_lookup,
+                self.lang_ann,
+                self.lang_task,
+            ) = self._build_file_indices_lang(self.abs_datasets_dir)
         else:
-            self.episode_lookup = self._build_file_indices(self.abs_datasets_dir)
+            self.episode_lookup = self._build_file_indices(
+                self.abs_datasets_dir
+            )
 
         self.naming_pattern, self.n_digits = lookup_naming_pattern(
             self.abs_datasets_dir, self.save_format
@@ -814,9 +896,13 @@ class DiskCalvinDataset(BaseCalvinDataset):
         Returns:
             Path to file.
         """
-        return Path(f'{self.naming_pattern[0]}{file_idx:0{self.n_digits}d}{self.naming_pattern[1]}')
+        return Path(
+            f'{self.naming_pattern[0]}{file_idx:0{self.n_digits}d}{self.naming_pattern[1]}'
+        )
 
-    def _load_episode(self, idx: int, window_size: int) -> dict[str, np.ndarray]:
+    def _load_episode(
+        self, idx: int, window_size: int
+    ) -> dict[str, np.ndarray]:
         """
         Load consecutive frames saved as individual files on disk and combine to episode dict.
         Args:
@@ -826,7 +912,9 @@ class DiskCalvinDataset(BaseCalvinDataset):
             episode: Dict of numpy arrays containing the episode where keys are the names of modalities.
         """
         start_idx = self.episode_lookup[idx]
-        end_idx = start_idx + window_size  # * self.sampling_step + self.sampling_step
+        end_idx = (
+            start_idx + window_size
+        )  # * self.sampling_step + self.sampling_step
         keys = list(chain(*self.observation_space.values()))
         keys.remove('language')
         keys.append('scene_obs')
@@ -850,7 +938,9 @@ class DiskCalvinDataset(BaseCalvinDataset):
             episode['language'] = self.lang_ann[self.lang_lookup[idx]]
             if self.text_aug:
                 task = self.lang_task[self.lang_lookup[idx]]
-                enrich_lang = random.choice(self.enrich_lang[task] + [episode['language']])
+                enrich_lang = random.choice(
+                    self.enrich_lang[task] + [episode['language']]
+                )
                 episode['language'] = enrich_lang
         return episode
 
@@ -882,10 +972,14 @@ class DiskCalvinDataset(BaseCalvinDataset):
                 'Exception, trying to load lang data from: ',
                 abs_datasets_dir / 'auto_lang_ann.npy',
             )
-            lang_data = np.load(abs_datasets_dir / 'auto_lang_ann.npy', allow_pickle=True).item()
+            lang_data = np.load(
+                abs_datasets_dir / 'auto_lang_ann.npy', allow_pickle=True
+            ).item()
 
         ep_start_end_ids = lang_data['info']['indx']  # each of them are 64
-        lang_ann = lang_data['language']['ann']  # length total number of annotations
+        lang_ann = lang_data['language'][
+            'ann'
+        ]  # length total number of annotations
         lang_task = lang_data['language']['task']
         lang_lookup = []
 
@@ -894,7 +988,10 @@ class DiskCalvinDataset(BaseCalvinDataset):
             if self.pretrain:
                 start_idx = max(
                     start_idx,
-                    end_idx + 1 - self.min_window_size - self.aux_lang_loss_window,
+                    end_idx
+                    + 1
+                    - self.min_window_size
+                    - self.aux_lang_loss_window,
                 )
             assert end_idx >= self.max_window_size
             cnt = 0
@@ -921,7 +1018,9 @@ class DiskCalvinDataset(BaseCalvinDataset):
         episode_lookup = []
 
         ep_start_end_ids = np.load(abs_datasets_dir / 'ep_start_end_ids.npy')
-        print(f'Found "ep_start_end_ids.npy" with {len(ep_start_end_ids)} episodes.')
+        print(
+            f'Found "ep_start_end_ids.npy" with {len(ep_start_end_ids)} episodes.'
+        )
         for start_idx, end_idx in ep_start_end_ids:
             assert end_idx > self.max_window_size
             for idx in range(start_idx, end_idx + 1 - self.min_window_size):

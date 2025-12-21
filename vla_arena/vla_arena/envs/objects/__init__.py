@@ -14,7 +14,10 @@
 
 import re
 
-from vla_arena.vla_arena.envs.base_object import OBJECTS_DICT, VISUAL_CHANGE_OBJECTS_DICT
+from vla_arena.vla_arena.envs.base_object import (
+    OBJECTS_DICT,
+    VISUAL_CHANGE_OBJECTS_DICT,
+)
 
 from .articulated_objects import *
 from .google_scanned_objects import *

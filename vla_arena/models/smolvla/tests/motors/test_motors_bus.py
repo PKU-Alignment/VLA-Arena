@@ -32,7 +32,6 @@ import re
 from unittest.mock import patch
 
 import pytest
-
 from lerobot.motors.motors_bus import (
     Motor,
     MotorNormMode,
@@ -40,6 +39,7 @@ from lerobot.motors.motors_bus import (
     get_address,
     get_ctrl_table,
 )
+
 from tests.mocks.mock_motors_bus import (
     DUMMY_CTRL_TABLE_1,
     DUMMY_CTRL_TABLE_2,
@@ -65,12 +65,16 @@ def test_get_ctrl_table():
 
 def test_get_ctrl_table_error():
     model = 'model_99'
-    with pytest.raises(KeyError, match=f'Control table for {model=} not found.'):
+    with pytest.raises(
+        KeyError, match=f'Control table for {model=} not found.'
+    ):
         get_ctrl_table(DUMMY_MODEL_CTRL_TABLE, model)
 
 
 def test_get_address():
-    addr, n_bytes = get_address(DUMMY_MODEL_CTRL_TABLE, 'model_1', 'Firmware_Version')
+    addr, n_bytes = get_address(
+        DUMMY_MODEL_CTRL_TABLE, 'model_1', 'Firmware_Version'
+    )
     assert addr == 0
     assert n_bytes == 1
 
@@ -79,7 +83,8 @@ def test_get_address_error():
     model = 'model_1'
     data_name = 'Lock'
     with pytest.raises(
-        KeyError, match=f"Address for '{data_name}' not found in {model} control table."
+        KeyError,
+        match=f"Address for '{data_name}' not found in {model} control table.",
     ):
         get_address(DUMMY_MODEL_CTRL_TABLE, 'model_1', data_name)
 
@@ -102,7 +107,9 @@ def test_assert_same_address_different_length():
     models = ['model_1', 'model_2']
     with pytest.raises(
         NotImplementedError,
-        match=re.escape('At least two motor models use a different bytes representation'),
+        match=re.escape(
+            'At least two motor models use a different bytes representation'
+        ),
     ):
         assert_same_address(DUMMY_MODEL_CTRL_TABLE, models, 'Goal_Position')
 
@@ -140,9 +147,15 @@ def test_read(data_name, id_, value, dummy_motors):
     addr, length = DUMMY_CTRL_TABLE_2[data_name]
 
     with (
-        patch.object(MockMotorsBus, '_read', return_value=(value, 0, 0)) as mock__read,
-        patch.object(MockMotorsBus, '_decode_sign', return_value={id_: value}) as mock__decode_sign,
-        patch.object(MockMotorsBus, '_normalize', return_value={id_: value}) as mock__normalize,
+        patch.object(
+            MockMotorsBus, '_read', return_value=(value, 0, 0)
+        ) as mock__read,
+        patch.object(
+            MockMotorsBus, '_decode_sign', return_value={id_: value}
+        ) as mock__decode_sign,
+        patch.object(
+            MockMotorsBus, '_normalize', return_value={id_: value}
+        ) as mock__normalize,
     ):
         returned_value = bus.read(data_name, f'dummy_{id_}')
 
@@ -174,9 +187,15 @@ def test_write(data_name, id_, value, dummy_motors):
     addr, length = DUMMY_CTRL_TABLE_2[data_name]
 
     with (
-        patch.object(MockMotorsBus, '_write', return_value=(0, 0)) as mock__write,
-        patch.object(MockMotorsBus, '_encode_sign', return_value={id_: value}) as mock__encode_sign,
-        patch.object(MockMotorsBus, '_unnormalize', return_value={id_: value}) as mock__unnormalize,
+        patch.object(
+            MockMotorsBus, '_write', return_value=(0, 0)
+        ) as mock__write,
+        patch.object(
+            MockMotorsBus, '_encode_sign', return_value={id_: value}
+        ) as mock__encode_sign,
+        patch.object(
+            MockMotorsBus, '_unnormalize', return_value={id_: value}
+        ) as mock__unnormalize,
     ):
         bus.write(data_name, f'dummy_{id_}', value)
 
@@ -214,8 +233,12 @@ def test_sync_read_by_str(data_name, id_, value, dummy_motors):
         patch.object(
             MockMotorsBus, '_sync_read', return_value=({id_: value}, 0)
         ) as mock__sync_read,
-        patch.object(MockMotorsBus, '_decode_sign', return_value={id_: value}) as mock__decode_sign,
-        patch.object(MockMotorsBus, '_normalize', return_value={id_: value}) as mock__normalize,
+        patch.object(
+            MockMotorsBus, '_decode_sign', return_value={id_: value}
+        ) as mock__decode_sign,
+        patch.object(
+            MockMotorsBus, '_normalize', return_value={id_: value}
+        ) as mock__normalize,
     ):
         returned_dict = bus.sync_read(data_name, f'dummy_{id_}')
 
@@ -250,11 +273,19 @@ def test_sync_read_by_list(data_name, ids_values, dummy_motors):
     expected_values = {f'dummy_{id_}': val for id_, val in ids_values.items()}
 
     with (
-        patch.object(MockMotorsBus, '_sync_read', return_value=(ids_values, 0)) as mock__sync_read,
-        patch.object(MockMotorsBus, '_decode_sign', return_value=ids_values) as mock__decode_sign,
-        patch.object(MockMotorsBus, '_normalize', return_value=ids_values) as mock__normalize,
+        patch.object(
+            MockMotorsBus, '_sync_read', return_value=(ids_values, 0)
+        ) as mock__sync_read,
+        patch.object(
+            MockMotorsBus, '_decode_sign', return_value=ids_values
+        ) as mock__decode_sign,
+        patch.object(
+            MockMotorsBus, '_normalize', return_value=ids_values
+        ) as mock__normalize,
     ):
-        returned_dict = bus.sync_read(data_name, [f'dummy_{id_}' for id_ in ids])
+        returned_dict = bus.sync_read(
+            data_name, [f'dummy_{id_}' for id_ in ids]
+        )
 
     assert returned_dict == expected_values
     mock__sync_read.assert_called_once_with(
@@ -287,9 +318,15 @@ def test_sync_read_by_none(data_name, ids_values, dummy_motors):
     expected_values = {f'dummy_{id_}': val for id_, val in ids_values.items()}
 
     with (
-        patch.object(MockMotorsBus, '_sync_read', return_value=(ids_values, 0)) as mock__sync_read,
-        patch.object(MockMotorsBus, '_decode_sign', return_value=ids_values) as mock__decode_sign,
-        patch.object(MockMotorsBus, '_normalize', return_value=ids_values) as mock__normalize,
+        patch.object(
+            MockMotorsBus, '_sync_read', return_value=(ids_values, 0)
+        ) as mock__sync_read,
+        patch.object(
+            MockMotorsBus, '_decode_sign', return_value=ids_values
+        ) as mock__decode_sign,
+        patch.object(
+            MockMotorsBus, '_normalize', return_value=ids_values
+        ) as mock__normalize,
     ):
         returned_dict = bus.sync_read(data_name)
 
@@ -325,8 +362,12 @@ def test_sync_write_by_single_value(data_name, value, dummy_motors):
         patch.object(
             MockMotorsBus, '_sync_write', return_value=(ids_values, 0)
         ) as mock__sync_write,
-        patch.object(MockMotorsBus, '_encode_sign', return_value=ids_values) as mock__encode_sign,
-        patch.object(MockMotorsBus, '_unnormalize', return_value=ids_values) as mock__unnormalize,
+        patch.object(
+            MockMotorsBus, '_encode_sign', return_value=ids_values
+        ) as mock__encode_sign,
+        patch.object(
+            MockMotorsBus, '_unnormalize', return_value=ids_values
+        ) as mock__unnormalize,
     ):
         bus.sync_write(data_name, value)
 
@@ -362,8 +403,12 @@ def test_sync_write_by_value_dict(data_name, ids_values, dummy_motors):
         patch.object(
             MockMotorsBus, '_sync_write', return_value=(ids_values, 0)
         ) as mock__sync_write,
-        patch.object(MockMotorsBus, '_encode_sign', return_value=ids_values) as mock__encode_sign,
-        patch.object(MockMotorsBus, '_unnormalize', return_value=ids_values) as mock__unnormalize,
+        patch.object(
+            MockMotorsBus, '_encode_sign', return_value=ids_values
+        ) as mock__encode_sign,
+        patch.object(
+            MockMotorsBus, '_unnormalize', return_value=ids_values
+        ) as mock__unnormalize,
     ):
         bus.sync_write(data_name, values)
 

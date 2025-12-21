@@ -43,6 +43,7 @@ import draccus
 import torch
 import torch.distributed as dist
 import yaml
+
 from vla_arena.models.openvla.vla_arena.models.openvla.prismatic.conf import (
     DatasetConfig,
     DatasetRegistry,
@@ -64,7 +65,10 @@ from vla_arena.models.openvla.vla_arena.models.openvla.prismatic.training import
     Metrics,
     get_train_strategy,
 )
-from vla_arena.models.openvla.vla_arena.models.openvla.prismatic.util import set_global_seed
+from vla_arena.models.openvla.vla_arena.models.openvla.prismatic.util import (
+    set_global_seed,
+)
+
 
 # Disable Tokenizers Parallelism to Play Nice w/ PyTorch Multiprocessing DataLoaders
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
@@ -155,7 +159,9 @@ def pretrain(cfg: PretrainConfig) -> None:
     model_id = cfg.model.model_id
     if (dataset_id := cfg.dataset.dataset_id) == 'llava-v15':
         cfg.run_id = (
-            f'{model_id}+stage-{cfg.stage}+x{cfg.seed}' if cfg.run_id is None else cfg.run_id
+            f'{model_id}+stage-{cfg.stage}+x{cfg.seed}'
+            if cfg.run_id is None
+            else cfg.run_id
         )
     else:
         cfg.run_id = (
@@ -166,7 +172,8 @@ def pretrain(cfg: PretrainConfig) -> None:
 
     # Start =>> Build Directories and Set Randomness
     overwatch.info(
-        '"Life is like a prism; what you see depends on how you turn the glass."', ctx_level=1
+        '"Life is like a prism; what you see depends on how you turn the glass."',
+        ctx_level=1,
     )
     hf_token = (
         cfg.hf_token.read_text().strip()
@@ -179,14 +186,20 @@ def pretrain(cfg: PretrainConfig) -> None:
     if overwatch.is_rank_zero():
         # Additionally save a JSON version of the config
         draccus.dump(cfg, open(run_dir / 'config.yaml', 'w'))
-        with open(run_dir / 'config.yaml') as f_yaml, open(run_dir / 'config.json', 'w') as f_json:
+        with (
+            open(run_dir / 'config.yaml') as f_yaml,
+            open(run_dir / 'config.json', 'w') as f_json,
+        ):
             yaml_cfg = yaml.safe_load(f_yaml)
             json.dump(yaml_cfg, f_json, indent=2)
 
     # Load Vision Backbone --> on CPU, in Full Precision (initializing model, image_transform via TIMM)
-    overwatch.info(f'Loading Vision Backbone [bold]{cfg.model.vision_backbone_id}[/] via TIMM ')
+    overwatch.info(
+        f'Loading Vision Backbone [bold]{cfg.model.vision_backbone_id}[/] via TIMM '
+    )
     vision_backbone, image_transform = get_vision_backbone_and_transform(
-        cfg.model.vision_backbone_id, image_resize_strategy=cfg.model.image_resize_strategy
+        cfg.model.vision_backbone_id,
+        image_resize_strategy=cfg.model.image_resize_strategy,
     )
 
     # Load LLM Backbone --> on CPU, in Full Precision (initializing Tokenizer + handling special tokens if necessary)
@@ -194,11 +207,15 @@ def pretrain(cfg: PretrainConfig) -> None:
         f'Loading Pretrained LLM [bold]{cfg.model.llm_backbone_id}[/] via HF Transformers'
     )
     llm_backbone, tokenizer = get_llm_backbone_and_tokenizer(
-        cfg.model.llm_backbone_id, llm_max_length=cfg.model.llm_max_length, hf_token=hf_token
+        cfg.model.llm_backbone_id,
+        llm_max_length=cfg.model.llm_max_length,
+        hf_token=hf_token,
     )
 
     # Create VLM => wraps `vision_backbone` and `llm`
-    overwatch.info(f'Instantiating PrismaticVLM `{model_id}` for Training Stage = `{cfg.stage}`')
+    overwatch.info(
+        f'Instantiating PrismaticVLM `{model_id}` for Training Stage = `{cfg.stage}`'
+    )
     vlm = get_vlm(
         model_id,
         cfg.model.arch_specifier,
@@ -217,10 +234,14 @@ def pretrain(cfg: PretrainConfig) -> None:
     overwatch.info(
         f'Invoking `VLM.load_checkpoint()` for `{model_id}` => Training Stage: `{cfg.stage}`'
     )
-    vlm.load_from_checkpoint(cfg.stage, run_dir, pretrained_checkpoint=cfg.pretrained_checkpoint)
+    vlm.load_from_checkpoint(
+        cfg.stage, run_dir, pretrained_checkpoint=cfg.pretrained_checkpoint
+    )
 
     # Get Dataset for Specified Stage
-    overwatch.info(f'Creating Dataset `{cfg.dataset.dataset_id}` => Stage: `{cfg.stage}`')
+    overwatch.info(
+        f'Creating Dataset `{cfg.dataset.dataset_id}` => Stage: `{cfg.stage}`'
+    )
     train_dataset, collator = get_dataset_and_collator(
         cfg.stage,
         cfg.dataset,
@@ -252,10 +273,14 @@ def pretrain(cfg: PretrainConfig) -> None:
         reduce_in_full_precision=cfg.model.reduce_in_full_precision,
         worker_init_fn=worker_init_fn,
     )
-    train_strategy.run_setup(run_dir=run_dir, n_train_examples=len(train_dataset))
+    train_strategy.run_setup(
+        run_dir=run_dir, n_train_examples=len(train_dataset)
+    )
 
     # Create Metrics =>> Handles on the fly tracking, logging to specified trackers (e.g., JSONL, Weights & Biases)
-    overwatch.info(f'Creating Metrics with Active Trackers => `{cfg.trackers}`')
+    overwatch.info(
+        f'Creating Metrics with Active Trackers => `{cfg.trackers}`'
+    )
     metrics = Metrics(
         cfg.trackers,
         cfg.run_id,
@@ -269,7 +294,9 @@ def pretrain(cfg: PretrainConfig) -> None:
 
     # Run Training
     overwatch.info('Starting Training Loop')
-    train_strategy.run_training(train_dataset, collator, metrics, stage=cfg.stage, seed=cfg.seed)
+    train_strategy.run_training(
+        train_dataset, collator, metrics, stage=cfg.stage, seed=cfg.seed
+    )
 
     # Finalize
     overwatch.info('Done with Training =>> Finalizing Metrics')

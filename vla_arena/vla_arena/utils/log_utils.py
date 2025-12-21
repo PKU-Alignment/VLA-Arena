@@ -26,9 +26,12 @@ class VlaArenaColorFormatter(logging.Formatter):
     FORMATS = {
         logging.DEBUG: format_str + debug_message_str,
         logging.INFO: message_str,
-        logging.WARNING: colored(format_str, 'yellow', attrs=['bold']) + message_str,
-        logging.ERROR: colored(format_str, 'red', attrs=['bold']) + message_str,
-        logging.CRITICAL: colored(format_str, 'red', attrs=['bold', 'reverse']) + message_str,
+        logging.WARNING: colored(format_str, 'yellow', attrs=['bold'])
+        + message_str,
+        logging.ERROR: colored(format_str, 'red', attrs=['bold'])
+        + message_str,
+        logging.CRITICAL: colored(format_str, 'red', attrs=['bold', 'reverse'])
+        + message_str,
     }
 
     def format(self, record):

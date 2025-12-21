@@ -225,7 +225,10 @@ class DiffusionConfig(PreTrainedConfig):
 
         if self.crop_shape is not None:
             for key, image_ft in self.image_features.items():
-                if self.crop_shape[0] > image_ft.shape[1] or self.crop_shape[1] > image_ft.shape[2]:
+                if (
+                    self.crop_shape[0] > image_ft.shape[1]
+                    or self.crop_shape[1] > image_ft.shape[2]
+                ):
                     raise ValueError(
                         f'`crop_shape` should fit within the images shapes. Got {self.crop_shape} '
                         f'for `crop_shape` and {image_ft.shape} for '
@@ -234,7 +237,9 @@ class DiffusionConfig(PreTrainedConfig):
 
         # Check that all input images have the same shape.
         if len(self.image_features) > 0:
-            first_image_key, first_image_ft = next(iter(self.image_features.items()))
+            first_image_key, first_image_ft = next(
+                iter(self.image_features.items())
+            )
             for key, image_ft in self.image_features.items():
                 if image_ft.shape != first_image_ft.shape:
                     raise ValueError(
@@ -247,7 +252,9 @@ class DiffusionConfig(PreTrainedConfig):
 
     @property
     def action_delta_indices(self) -> list:
-        return list(range(1 - self.n_obs_steps, 1 - self.n_obs_steps + self.horizon))
+        return list(
+            range(1 - self.n_obs_steps, 1 - self.n_obs_steps + self.horizon)
+        )
 
     @property
     def reward_delta_indices(self) -> None:

@@ -24,16 +24,25 @@ import os
 from pathlib import Path
 
 from huggingface_hub import HfFileSystem, hf_hub_download
+
 from vla_arena.models.openvla_oft.prismatic.conf import ModelConfig
 from vla_arena.models.openvla_oft.prismatic.models.materialize import (
     get_llm_backbone_and_tokenizer,
     get_vision_backbone_and_transform,
 )
-from vla_arena.models.openvla_oft.prismatic.models.registry import GLOBAL_REGISTRY, MODEL_REGISTRY
+from vla_arena.models.openvla_oft.prismatic.models.registry import (
+    GLOBAL_REGISTRY,
+    MODEL_REGISTRY,
+)
 from vla_arena.models.openvla_oft.prismatic.models.vlas import OpenVLA
 from vla_arena.models.openvla_oft.prismatic.models.vlms import PrismaticVLM
-from vla_arena.models.openvla_oft.prismatic.overwatch import initialize_overwatch
-from vla_arena.models.openvla_oft.prismatic.vla.action_tokenizer import ActionTokenizer
+from vla_arena.models.openvla_oft.prismatic.overwatch import (
+    initialize_overwatch,
+)
+from vla_arena.models.openvla_oft.prismatic.vla.action_tokenizer import (
+    ActionTokenizer,
+)
+
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)
@@ -60,7 +69,12 @@ def get_model_description(model_id_or_name: str) -> str:
         )
 
     # Print Description & Return
-    print(json.dumps(description := GLOBAL_REGISTRY[model_id_or_name]['description'], indent=2))
+    print(
+        json.dumps(
+            description := GLOBAL_REGISTRY[model_id_or_name]['description'],
+            indent=2,
+        )
+    )
 
     return description
 
@@ -74,14 +88,18 @@ def load(
 ) -> PrismaticVLM:
     """Loads a pretrained PrismaticVLM from either local disk or the HuggingFace Hub."""
     if os.path.isdir(model_id_or_path):
-        overwatch.info(f'Loading from local path `{(run_dir := Path(model_id_or_path))}`')
+        overwatch.info(
+            f'Loading from local path `{(run_dir := Path(model_id_or_path))}`'
+        )
 
         # Get paths for `config.json` and pretrained checkpoint
         config_json, checkpoint_pt = (
             run_dir / 'config.json',
             run_dir / 'checkpoints' / 'latest-checkpoint.pt',
         )
-        assert config_json.exists(), f'Missing `config.json` for `{run_dir = }`'
+        assert (
+            config_json.exists()
+        ), f'Missing `config.json` for `{run_dir = }`'
         assert checkpoint_pt.exists(), f'Missing checkpoint for `{run_dir = }`'
     else:
         if model_id_or_path not in GLOBAL_REGISTRY:
@@ -94,7 +112,9 @@ def load(
         )
         with overwatch.local_zero_first():
             config_json = hf_hub_download(
-                repo_id=HF_HUB_REPO, filename=f'{model_id}/config.json', cache_dir=cache_dir
+                repo_id=HF_HUB_REPO,
+                filename=f'{model_id}/config.json',
+                cache_dir=cache_dir,
             )
             checkpoint_pt = hf_hub_download(
                 repo_id=HF_HUB_REPO,
@@ -117,7 +137,9 @@ def load(
     )
 
     # Load Vision Backbone
-    overwatch.info(f"Loading Vision Backbone [bold]{model_cfg['vision_backbone_id']}[/]")
+    overwatch.info(
+        f"Loading Vision Backbone [bold]{model_cfg['vision_backbone_id']}[/]"
+    )
     vision_backbone, image_transform = get_vision_backbone_and_transform(
         model_cfg['vision_backbone_id'],
         model_cfg['image_resize_strategy'],
@@ -135,7 +157,9 @@ def load(
     )
 
     # Load VLM using `from_pretrained` (clobbers HF syntax... eventually should reconcile)
-    overwatch.info(f"Loading VLM [bold blue]{model_cfg['model_id']}[/] from Checkpoint")
+    overwatch.info(
+        f"Loading VLM [bold blue]{model_cfg['model_id']}[/] from Checkpoint"
+    )
     vlm = PrismaticVLM.from_pretrained(
         checkpoint_pt,
         model_cfg['model_id'],
@@ -177,7 +201,9 @@ def load_vla(
             run_dir / 'config.json',
             run_dir / 'dataset_statistics.json',
         )
-        assert config_json.exists(), f'Missing `config.json` for `{run_dir = }`'
+        assert (
+            config_json.exists()
+        ), f'Missing `config.json` for `{run_dir = }`'
         assert (
             dataset_statistics_json.exists()
         ), f'Missing `dataset_statistics.json` for `{run_dir = }`'
@@ -192,11 +218,15 @@ def load_vla(
             raise ValueError(f"Couldn't find valid HF Hub Path `{hf_path = }`")
 
         # Identify Checkpoint to Load (via `step_to_load`)
-        step_to_load = f'{step_to_load:06d}' if step_to_load is not None else None
+        step_to_load = (
+            f'{step_to_load:06d}' if step_to_load is not None else None
+        )
         valid_ckpts = tmpfs.glob(
             f"{hf_path}/checkpoints/step-{step_to_load if step_to_load is not None else ''}*.pt"
         )
-        if (len(valid_ckpts) == 0) or (step_to_load is not None and len(valid_ckpts) != 1):
+        if (len(valid_ckpts) == 0) or (
+            step_to_load is not None and len(valid_ckpts) != 1
+        ):
             raise ValueError(
                 f"Couldn't find a valid checkpoint to load from HF Hub Path `{hf_path}/checkpoints/"
             )
@@ -245,7 +275,9 @@ def load_vla(
     )
 
     # Load Vision Backbone
-    overwatch.info(f'Loading Vision Backbone [bold]{model_cfg.vision_backbone_id}[/]')
+    overwatch.info(
+        f'Loading Vision Backbone [bold]{model_cfg.vision_backbone_id}[/]'
+    )
     vision_backbone, image_transform = get_vision_backbone_and_transform(
         model_cfg.vision_backbone_id,
         model_cfg.image_resize_strategy,
@@ -266,7 +298,9 @@ def load_vla(
     action_tokenizer = ActionTokenizer(llm_backbone.get_tokenizer())
 
     # Load VLM using `from_pretrained` (clobbers HF syntax... eventually should reconcile)
-    overwatch.info(f'Loading VLA [bold blue]{model_cfg.model_id}[/] from Checkpoint')
+    overwatch.info(
+        f'Loading VLA [bold blue]{model_cfg.model_id}[/] from Checkpoint'
+    )
     vla = OpenVLA.from_pretrained(
         checkpoint_pt,
         model_cfg.model_id,

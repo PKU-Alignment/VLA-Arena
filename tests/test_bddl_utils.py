@@ -15,7 +15,9 @@ except ImportError:
     BDDL_UTILS_AVAILABLE = False
 
 
-@pytest.mark.skipif(not BDDL_UTILS_AVAILABLE, reason='bddl_generation_utils not available')
+@pytest.mark.skipif(
+    not BDDL_UTILS_AVAILABLE, reason='bddl_generation_utils not available'
+)
 class TestBDDLGenerationUtils:
     """Test cases for bddl_generation_utils.py"""
 
@@ -43,12 +45,17 @@ class TestBDDLGenerationUtils:
         """Test save_to_file function."""
         # save_to_file expects a string result (from get_result), not a list
         result_list = ['(define (problem test)', '(:domain robosuite)', ')']
-        result = bddl_generation_utils.get_result(result_list)  # Convert to string
+        result = bddl_generation_utils.get_result(
+            result_list
+        )  # Convert to string
         scene_name = 'TEST_SCENE'
         language = 'pick up the cup'
 
         file_path = bddl_generation_utils.save_to_file(
-            result, scene_name, language, folder=temp_dir,
+            result,
+            scene_name,
+            language,
+            folder=temp_dir,
         )
 
         assert os.path.exists(file_path)

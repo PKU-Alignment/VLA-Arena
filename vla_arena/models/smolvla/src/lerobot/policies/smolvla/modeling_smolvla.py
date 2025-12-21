@@ -74,9 +74,6 @@ from collections import deque
 import safetensors
 import torch
 import torch.nn.functional as F  # noqa: N812
-from torch import Tensor, nn
-from transformers import AutoProcessor
-
 from lerobot.constants import ACTION, OBS_STATE
 from lerobot.policies.normalize import Normalize, Unnormalize
 from lerobot.policies.pretrained import PreTrainedPolicy
@@ -84,6 +81,9 @@ from lerobot.policies.smolvla.configuration_smolvla import SmolVLAConfig
 from lerobot.policies.smolvla.smolvlm_with_expert import SmolVLMWithExpertModel
 from lerobot.policies.utils import populate_queues
 from lerobot.utils.utils import get_safe_dtype
+from torch import Tensor, nn
+from transformers import AutoProcessor
+
 
 # Matches ".soNNN", optionally followed by "-something", up to the "_buffer_" marker
 _VARIANT_RE = re.compile(r'\.so\d+(?:-[\w]+)?_buffer_')
@@ -98,7 +98,10 @@ def canonicalise(k: str) -> str:
 
 
 def standardise_state_dict(
-    checkpoint: dict[str, torch.Tensor], ref_keys: set[str], *, verbose: bool = True
+    checkpoint: dict[str, torch.Tensor],
+    ref_keys: set[str],
+    *,
+    verbose: bool = True,
 ) -> tuple[dict[str, torch.Tensor], list[str]]:
     """
     • Re-keys `checkpoint ` so that every entry matches the *reference* key set.
@@ -122,7 +125,9 @@ def standardise_state_dict(
         for canon, variants in collisions.items():
             print(f"[standardise_state_dict] '{canon}'  ←  {variants}")
         if unmatched:
-            print(f'[standardise_state_dict] kept {len(unmatched)} unmatched keys')
+            print(
+                f'[standardise_state_dict] kept {len(unmatched)} unmatched keys'
+            )
 
     out.update({k: checkpoint[k] for k in unmatched})
     return out, unmatched
@@ -162,13 +167,23 @@ def load_smolvla(
 
     # Optional user-supplied renames (e.g. "model._orig_mod.//model.")
     if checkpoint_keys_mapping and '//' in checkpoint_keys_mapping:
-        state_dict = rename_checkpoint_keys(state_dict, checkpoint_keys_mapping)
+        state_dict = rename_checkpoint_keys(
+            state_dict, checkpoint_keys_mapping
+        )
 
-    state_dict, _ = standardise_state_dict(state_dict, set(model.state_dict().keys()))
+    state_dict, _ = standardise_state_dict(
+        state_dict, set(model.state_dict().keys())
+    )
 
     # HACK(aliberts): to not overwrite normalization parameters as they should come from the dataset
-    norm_keys = ('normalize_inputs', 'normalize_targets', 'unnormalize_outputs')
-    state_dict = {k: v for k, v in state_dict.items() if not k.startswith(norm_keys)}
+    norm_keys = (
+        'normalize_inputs',
+        'normalize_targets',
+        'unnormalize_outputs',
+    )
+    state_dict = {
+        k: v for k, v in state_dict.items() if not k.startswith(norm_keys)
+    }
 
     missing, unexpected = model.load_state_dict(state_dict, strict=False)
 
@@ -183,17 +198,25 @@ def load_smolvla(
 
 
 def create_sinusoidal_pos_embedding(
-    time: torch.tensor, dimension: int, min_period: float, max_period: float, device='cpu'
+    time: torch.tensor,
+    dimension: int,
+    min_period: float,
+    max_period: float,
+    device='cpu',
 ) -> Tensor:
     """Computes sine-cosine positional embedding vectors for scalar positions."""
     if dimension % 2 != 0:
         raise ValueError(f'dimension ({dimension}) must be divisible by 2')
 
     if time.ndim != 1:
-        raise ValueError('The time tensor is expected to be of shape `(batch_size, )`.')
+        raise ValueError(
+            'The time tensor is expected to be of shape `(batch_size, )`.'
+        )
 
     dtype = get_safe_dtype(torch.float64, device.type)
-    fraction = torch.linspace(0.0, 1.0, dimension // 2, dtype=dtype, device=device)
+    fraction = torch.linspace(
+        0.0, 1.0, dimension // 2, dtype=dtype, device=device
+    )
     period = min_period * (max_period / min_period) ** fraction
 
     # Compute the outer product
@@ -247,14 +270,19 @@ def resize_with_pad(img, width, height, pad_value=-1):
     resized_height = int(cur_height / ratio)
     resized_width = int(cur_width / ratio)
     resized_img = F.interpolate(
-        img, size=(resized_height, resized_width), mode='bilinear', align_corners=False
+        img,
+        size=(resized_height, resized_width),
+        mode='bilinear',
+        align_corners=False,
     )
 
     pad_height = max(0, int(height - resized_height))
     pad_width = max(0, int(width - resized_width))
 
     # pad on left and top of image
-    padded_img = F.pad(resized_img, (pad_width, 0, pad_height, 0), value=pad_value)
+    padded_img = F.pad(
+        resized_img, (pad_width, 0, pad_height, 0), value=pad_value
+    )
     return padded_img
 
 
@@ -381,7 +409,9 @@ class SmolVLAPolicy(PreTrainedPolicy):
         map_location: str,
         strict: bool,
     ):
-        safetensors.torch.load_model(model, model_file, strict=strict, device=map_location)
+        safetensors.torch.load_model(
+            model, model_file, strict=strict, device=map_location
+        )
         return load_smolvla(
             model,
             model_file,
@@ -392,7 +422,9 @@ class SmolVLAPolicy(PreTrainedPolicy):
     def get_optim_params(self) -> dict:
         return self.parameters()
 
-    def _get_action_chunk(self, batch: dict[str, Tensor], noise: Tensor | None = None) -> Tensor:
+    def _get_action_chunk(
+        self, batch: dict[str, Tensor], noise: Tensor | None = None
+    ) -> Tensor:
         # TODO: Check if this for loop is needed.
         # Context: In fact, self.queues contains only ACTION field, and in inference, we don't have action in the batch
         # In the case of offline inference, we have the action in the batch
@@ -430,17 +462,23 @@ class SmolVLAPolicy(PreTrainedPolicy):
         return batch
 
     @torch.no_grad()
-    def predict_action_chunk(self, batch: dict[str, Tensor], noise: Tensor | None = None) -> Tensor:
+    def predict_action_chunk(
+        self, batch: dict[str, Tensor], noise: Tensor | None = None
+    ) -> Tensor:
         self.eval()
 
         batch = self._prepare_batch(batch)
-        self._queues = populate_queues(self._queues, batch, exclude_keys=[ACTION])
+        self._queues = populate_queues(
+            self._queues, batch, exclude_keys=[ACTION]
+        )
 
         actions = self._get_action_chunk(batch, noise)
         return actions
 
     @torch.no_grad()
-    def select_action(self, batch: dict[str, Tensor], noise: Tensor | None = None) -> Tensor:
+    def select_action(
+        self, batch: dict[str, Tensor], noise: Tensor | None = None
+    ) -> Tensor:
         """Select a single action given environment observations.
 
         This method wraps `select_actions` in order to return one action at a time for execution in the
@@ -449,7 +487,9 @@ class SmolVLAPolicy(PreTrainedPolicy):
         """
         self.eval()
         batch = self._prepare_batch(batch)
-        self._queues = populate_queues(self._queues, batch, exclude_keys=[ACTION])
+        self._queues = populate_queues(
+            self._queues, batch, exclude_keys=[ACTION]
+        )
 
         # Action queue logic for n_action_steps > 1. When the action_queue is depleted, populate it by
         # querying the policy.
@@ -458,11 +498,15 @@ class SmolVLAPolicy(PreTrainedPolicy):
 
             # `self.predict_action_chunk` returns a (batch_size, n_action_steps, action_dim) tensor, but the queue
             # effectively has shape (n_action_steps, batch_size, *), hence the transpose.
-            self._queues[ACTION].extend(actions.transpose(0, 1)[: self.config.n_action_steps])
+            self._queues[ACTION].extend(
+                actions.transpose(0, 1)[: self.config.n_action_steps]
+            )
 
         return self._queues[ACTION].popleft()
 
-    def forward(self, batch: dict[str, Tensor], noise=None, time=None) -> dict[str, Tensor]:
+    def forward(
+        self, batch: dict[str, Tensor], noise=None, time=None
+    ) -> dict[str, Tensor]:
         """Do a full training forward pass to compute the loss"""
         if self.config.adapt_to_pi_aloha:
             batch[OBS_STATE] = self._pi_aloha_decode_state(batch[OBS_STATE])
@@ -476,7 +520,14 @@ class SmolVLAPolicy(PreTrainedPolicy):
         actions_is_pad = batch.get('actions_id_pad')
         loss_dict = {}
         losses = self.model.forward(
-            images, img_masks, lang_tokens, lang_masks, state, actions, noise, time
+            images,
+            img_masks,
+            lang_tokens,
+            lang_masks,
+            state,
+            actions,
+            noise,
+            time,
         )
         loss_dict['losses_after_forward'] = losses.clone()
 
@@ -501,8 +552,12 @@ class SmolVLAPolicy(PreTrainedPolicy):
         """
         images = []
         img_masks = []
-        present_img_keys = [key for key in self.config.image_features if key in batch]
-        missing_img_keys = [key for key in self.config.image_features if key not in batch]
+        present_img_keys = [
+            key for key in self.config.image_features if key in batch
+        ]
+        missing_img_keys = [
+            key for key in self.config.image_features if key not in batch
+        ]
 
         if len(present_img_keys) == 0:
             raise ValueError(
@@ -510,9 +565,15 @@ class SmolVLAPolicy(PreTrainedPolicy):
             )
         # Preprocess image features present in the batch
         for key in present_img_keys:
-            img = batch[key][:, -1, :, :, :] if batch[key].ndim == 5 else batch[key]
+            img = (
+                batch[key][:, -1, :, :, :]
+                if batch[key].ndim == 5
+                else batch[key]
+            )
             if self.config.resize_imgs_with_padding is not None:
-                img = resize_with_pad(img, *self.config.resize_imgs_with_padding, pad_value=0)
+                img = resize_with_pad(
+                    img, *self.config.resize_imgs_with_padding, pad_value=0
+                )
 
             # Normalize from range [0,1] to [-1,1] as expacted by siglip
             img = img * 2.0 - 1.0
@@ -547,7 +608,9 @@ class SmolVLAPolicy(PreTrainedPolicy):
         if len(tasks) == 1:
             tasks = [tasks[0] for _ in range(batch[OBS_STATE].shape[0])]
 
-        tasks = [task if task.endswith('\n') else f'{task}\n' for task in tasks]
+        tasks = [
+            task if task.endswith('\n') else f'{task}\n' for task in tasks
+        ]
 
         tokenized_prompt = self.language_tokenizer.__call__(
             tasks,
@@ -557,7 +620,9 @@ class SmolVLAPolicy(PreTrainedPolicy):
             return_tensors='pt',
         )
         lang_tokens = tokenized_prompt['input_ids'].to(device=device)
-        lang_masks = tokenized_prompt['attention_mask'].to(device=device, dtype=torch.bool)
+        lang_masks = tokenized_prompt['attention_mask'].to(
+            device=device, dtype=torch.bool
+        )
 
         return lang_tokens, lang_masks
 
@@ -576,7 +641,9 @@ class SmolVLAPolicy(PreTrainedPolicy):
             actions[:, :, motor_idx] *= -1
         # Reverse the gripper transformation that is being applied by the Aloha runtime.
         for motor_idx in [6, 13]:
-            actions[:, :, motor_idx] = aloha_gripper_from_angular(actions[:, :, motor_idx])
+            actions[:, :, motor_idx] = aloha_gripper_from_angular(
+                actions[:, :, motor_idx]
+            )
         return actions
 
     def _pi_aloha_encode_actions_inv(self, actions):
@@ -585,12 +652,18 @@ class SmolVLAPolicy(PreTrainedPolicy):
             actions[:, :, motor_idx] *= -1
         # Reverse the gripper transformation that is being applied by the Aloha runtime.
         for motor_idx in [6, 13]:
-            actions[:, :, motor_idx] = aloha_gripper_from_angular_inv(actions[:, :, motor_idx])
+            actions[:, :, motor_idx] = aloha_gripper_from_angular_inv(
+                actions[:, :, motor_idx]
+            )
         return actions
 
     def prepare_state(self, batch):
         """Pad state"""
-        state = batch[OBS_STATE][:, -1, :] if batch[OBS_STATE].ndim > 2 else batch[OBS_STATE]
+        state = (
+            batch[OBS_STATE][:, -1, :]
+            if batch[OBS_STATE].ndim > 2
+            else batch[OBS_STATE]
+        )
         state = pad_vector(state, self.config.max_state_dim)
         return state
 
@@ -616,7 +689,10 @@ def pad_tensor(tensor, max_len, pad_value=0):
 
     # Create a padded tensor of max_len and copy the existing values
     padded_tensor = torch.full(
-        (b, max_len, *tensor.shape[2:]), pad_value, dtype=tensor.dtype, device=tensor.device
+        (b, max_len, *tensor.shape[2:]),
+        pad_value,
+        dtype=tensor.dtype,
+        device=tensor.device,
     )
     padded_tensor[:, :d] = tensor  # Efficient in-place copy
 
@@ -665,7 +741,8 @@ class VLAFlowMatching(nn.Module):
             expert_width_multiplier=self.config.expert_width_multiplier,
         )
         self.state_proj = nn.Linear(
-            self.config.max_state_dim, self.vlm_with_expert.config.text_config.hidden_size
+            self.config.max_state_dim,
+            self.vlm_with_expert.config.text_config.hidden_size,
         )
         self.action_in_proj = nn.Linear(
             self.config.max_action_dim, self.vlm_with_expert.expert_hidden_size
@@ -675,21 +752,29 @@ class VLAFlowMatching(nn.Module):
         )
 
         self.action_time_mlp_in = nn.Linear(
-            self.vlm_with_expert.expert_hidden_size * 2, self.vlm_with_expert.expert_hidden_size
+            self.vlm_with_expert.expert_hidden_size * 2,
+            self.vlm_with_expert.expert_hidden_size,
         )
         self.action_time_mlp_out = nn.Linear(
-            self.vlm_with_expert.expert_hidden_size, self.vlm_with_expert.expert_hidden_size
+            self.vlm_with_expert.expert_hidden_size,
+            self.vlm_with_expert.expert_hidden_size,
         )
 
         self.set_requires_grad()
-        self.fake_image_token = self.vlm_with_expert.processor.tokenizer.fake_image_token_id
-        self.global_image_token = self.vlm_with_expert.processor.tokenizer.global_image_token_id
+        self.fake_image_token = (
+            self.vlm_with_expert.processor.tokenizer.fake_image_token_id
+        )
+        self.global_image_token = (
+            self.vlm_with_expert.processor.tokenizer.global_image_token_id
+        )
         self.global_image_start_token = torch.tensor(
             [self.fake_image_token, self.global_image_token], dtype=torch.long
         )
 
         self.add_image_special_tokens = self.config.add_image_special_tokens
-        self.image_end_token = torch.tensor([self.fake_image_token], dtype=torch.long)
+        self.image_end_token = torch.tensor(
+            [self.fake_image_token], dtype=torch.long
+        )
         self.prefix_length = self.config.prefix_length
 
     def set_requires_grad(self):
@@ -707,13 +792,22 @@ class VLAFlowMatching(nn.Module):
         return noise
 
     def sample_time(self, bsize, device):
-        beta_dist = torch.distributions.Beta(concentration1=1.5, concentration0=1.0)
-        time_beta = beta_dist.sample((bsize,)).to(device=device, dtype=torch.float32)
+        beta_dist = torch.distributions.Beta(
+            concentration1=1.5, concentration0=1.0
+        )
+        time_beta = beta_dist.sample((bsize,)).to(
+            device=device, dtype=torch.float32
+        )
         time = time_beta * 0.999 + 0.001
         return time
 
     def embed_prefix(
-        self, images, img_masks, lang_tokens, lang_masks, state: torch.Tensor = None
+        self,
+        images,
+        img_masks,
+        lang_tokens,
+        lang_masks,
+        state: torch.Tensor = None,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """Embed images with SigLIP and language tokens with embedding layer to prepare
         for SmolVLM transformer processing.
@@ -728,13 +822,17 @@ class VLAFlowMatching(nn.Module):
             if self.add_image_special_tokens:
                 image_start_token = (
                     self.vlm_with_expert.embed_language_tokens(
-                        self.global_image_start_token.to(device=self.vlm_with_expert.vlm.device)
+                        self.global_image_start_token.to(
+                            device=self.vlm_with_expert.vlm.device
+                        )
                     )
                     .unsqueeze(0)
                     .expand(img.shape[0], -1, -1)
                 )
                 image_start_mask = torch.ones_like(
-                    image_start_token[:, :, 0], dtype=torch.bool, device=image_start_token.device
+                    image_start_token[:, :, 0],
+                    dtype=torch.bool,
+                    device=image_start_token.device,
                 )
                 att_masks += [0] * (image_start_mask.shape[-1])
                 embs.append(image_start_token)
@@ -759,13 +857,17 @@ class VLAFlowMatching(nn.Module):
             if self.add_image_special_tokens:
                 image_end_token = (
                     self.vlm_with_expert.embed_language_tokens(
-                        self.image_end_token.to(device=self.vlm_with_expert.vlm.device)
+                        self.image_end_token.to(
+                            device=self.vlm_with_expert.vlm.device
+                        )
                     )
                     .unsqueeze(0)
                     .expand(img.shape[0], -1, -1)
                 )
                 image_end_mask = torch.ones_like(
-                    image_end_token[:, :, 0], dtype=torch.bool, device=image_end_token.device
+                    image_end_token[:, :, 0],
+                    dtype=torch.bool,
+                    device=image_end_token.device,
                 )
                 embs.append(image_end_token)
                 pad_masks.append(image_end_mask)
@@ -788,14 +890,18 @@ class VLAFlowMatching(nn.Module):
         device = state_emb.device
 
         states_seq_len = state_emb.shape[1]
-        state_mask = torch.ones(bsize, states_seq_len, dtype=torch.bool, device=device)
+        state_mask = torch.ones(
+            bsize, states_seq_len, dtype=torch.bool, device=device
+        )
         pad_masks.append(state_mask)
 
         # Set attention masks so that image and language inputs do not attend to state or actions
         att_masks += [1] * (states_seq_len)
         embs = torch.cat(embs, dim=1)
         pad_masks = torch.cat(pad_masks, dim=1)
-        att_masks = torch.tensor(att_masks, dtype=torch.bool, device=pad_masks.device)
+        att_masks = torch.tensor(
+            att_masks, dtype=torch.bool, device=pad_masks.device
+        )
         att_masks = att_masks[None, :]
 
         seq_len = pad_masks.shape[1]
@@ -840,19 +946,31 @@ class VLAFlowMatching(nn.Module):
         embs.append(action_time_emb)
 
         bsize, action_time_dim = action_time_emb.shape[:2]
-        action_time_mask = torch.ones(bsize, action_time_dim, dtype=torch.bool, device=device)
+        action_time_mask = torch.ones(
+            bsize, action_time_dim, dtype=torch.bool, device=device
+        )
         pad_masks.append(action_time_mask)
 
         # Set attention masks so that image, language and state inputs do not attend to action tokens
         att_masks += [1] * self.config.chunk_size
         embs = torch.cat(embs, dim=1)
         pad_masks = torch.cat(pad_masks, dim=1)
-        att_masks = torch.tensor(att_masks, dtype=embs.dtype, device=embs.device)
+        att_masks = torch.tensor(
+            att_masks, dtype=embs.dtype, device=embs.device
+        )
         att_masks = att_masks[None, :].expand(bsize, len(att_masks))
         return embs, pad_masks, att_masks
 
     def forward(
-        self, images, img_masks, lang_tokens, lang_masks, state, actions, noise=None, time=None
+        self,
+        images,
+        img_masks,
+        lang_tokens,
+        lang_masks,
+        state,
+        actions,
+        noise=None,
+        time=None,
     ) -> Tensor:
         """Do a full training forward pass and compute the loss (batch_size x num_steps x num_motors)"""
         if noise is None:
@@ -867,7 +985,9 @@ class VLAFlowMatching(nn.Module):
         prefix_embs, prefix_pad_masks, prefix_att_masks = self.embed_prefix(
             images, img_masks, lang_tokens, lang_masks, state=state
         )
-        suffix_embs, suffix_pad_masks, suffix_att_masks = self.embed_suffix(x_t, time)
+        suffix_embs, suffix_pad_masks, suffix_att_masks = self.embed_suffix(
+            x_t, time
+        )
 
         pad_masks = torch.cat([prefix_pad_masks, suffix_pad_masks], dim=1)
         att_masks = torch.cat([prefix_att_masks, suffix_att_masks], dim=1)
@@ -897,13 +1017,19 @@ class VLAFlowMatching(nn.Module):
         device = state.device
 
         if noise is None:
-            actions_shape = (bsize, self.config.chunk_size, self.config.max_action_dim)
+            actions_shape = (
+                bsize,
+                self.config.chunk_size,
+                self.config.max_action_dim,
+            )
             noise = self.sample_noise(actions_shape, device)
 
         prefix_embs, prefix_pad_masks, prefix_att_masks = self.embed_prefix(
             images, img_masks, lang_tokens, lang_masks, state=state
         )
-        prefix_att_2d_masks = make_att_2d_masks(prefix_pad_masks, prefix_att_masks)
+        prefix_att_2d_masks = make_att_2d_masks(
+            prefix_pad_masks, prefix_att_masks
+        )
         prefix_position_ids = torch.cumsum(prefix_pad_masks, dim=1) - 1
         # Compute image and language key value cache
         _, past_key_values = self.vlm_with_expert.forward(
@@ -940,7 +1066,9 @@ class VLAFlowMatching(nn.Module):
         timestep,
     ):
         """Apply one denoising step of the noise `x_t` at a given timestep."""
-        suffix_embs, suffix_pad_masks, suffix_att_masks = self.embed_suffix(x_t, timestep)
+        suffix_embs, suffix_pad_masks, suffix_att_masks = self.embed_suffix(
+            x_t, timestep
+        )
 
         suffix_len = suffix_pad_masks.shape[1]
         batch_size = prefix_pad_masks.shape[0]
@@ -949,11 +1077,17 @@ class VLAFlowMatching(nn.Module):
             batch_size, suffix_len, prefix_len
         )
 
-        suffix_att_2d_masks = make_att_2d_masks(suffix_pad_masks, suffix_att_masks)
+        suffix_att_2d_masks = make_att_2d_masks(
+            suffix_pad_masks, suffix_att_masks
+        )
 
-        full_att_2d_masks = torch.cat([prefix_pad_2d_masks, suffix_att_2d_masks], dim=2)
+        full_att_2d_masks = torch.cat(
+            [prefix_pad_2d_masks, suffix_att_2d_masks], dim=2
+        )
         prefix_offsets = torch.sum(prefix_pad_masks, dim=-1)[:, None]
-        position_ids = prefix_offsets + torch.cumsum(suffix_pad_masks, dim=1) - 1
+        position_ids = (
+            prefix_offsets + torch.cumsum(suffix_pad_masks, dim=1) - 1
+        )
 
         outputs_embeds, _ = self.vlm_with_expert.forward(
             attention_mask=full_att_2d_masks,

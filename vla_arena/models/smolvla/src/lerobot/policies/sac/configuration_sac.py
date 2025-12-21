@@ -198,15 +198,23 @@ class SACConfig(PreTrainedConfig):
 
     # Network configuration
     # Configuration for the critic network architecture
-    critic_network_kwargs: CriticNetworkConfig = field(default_factory=CriticNetworkConfig)
+    critic_network_kwargs: CriticNetworkConfig = field(
+        default_factory=CriticNetworkConfig
+    )
     # Configuration for the actor network architecture
-    actor_network_kwargs: ActorNetworkConfig = field(default_factory=ActorNetworkConfig)
+    actor_network_kwargs: ActorNetworkConfig = field(
+        default_factory=ActorNetworkConfig
+    )
     # Configuration for the policy parameters
     policy_kwargs: PolicyConfig = field(default_factory=PolicyConfig)
     # Configuration for the discrete critic network
-    discrete_critic_network_kwargs: CriticNetworkConfig = field(default_factory=CriticNetworkConfig)
+    discrete_critic_network_kwargs: CriticNetworkConfig = field(
+        default_factory=CriticNetworkConfig
+    )
     # Configuration for actor-learner architecture
-    actor_learner_config: ActorLearnerConfig = field(default_factory=ActorLearnerConfig)
+    actor_learner_config: ActorLearnerConfig = field(
+        default_factory=ActorLearnerConfig
+    )
     # Configuration for concurrency settings (you can use threads or processes for the actor and learner)
     concurrency: ConcurrencyConfig = field(default_factory=ConcurrencyConfig)
 
@@ -240,7 +248,9 @@ class SACConfig(PreTrainedConfig):
             )
 
         if 'action' not in self.output_features:
-            raise ValueError("You must provide 'action' in the output features")
+            raise ValueError(
+                "You must provide 'action' in the output features"
+            )
 
     @property
     def image_features(self) -> list[str]:

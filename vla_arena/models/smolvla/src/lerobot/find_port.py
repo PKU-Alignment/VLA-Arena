@@ -58,7 +58,9 @@ def find_port():
     ports_before = find_available_ports()
     print('Ports before disconnecting:', ports_before)
 
-    print('Remove the USB cable from your MotorsBus and press Enter when done.')
+    print(
+        'Remove the USB cable from your MotorsBus and press Enter when done.'
+    )
     input()  # Wait for user to disconnect the device
 
     time.sleep(0.5)  # Allow some time for port to be released
@@ -70,9 +72,13 @@ def find_port():
         print(f"The port of this MotorsBus is '{port}'")
         print('Reconnect the USB cable.')
     elif len(ports_diff) == 0:
-        raise OSError(f'Could not detect the port. No difference was found ({ports_diff}).')
+        raise OSError(
+            f'Could not detect the port. No difference was found ({ports_diff}).'
+        )
     else:
-        raise OSError(f'Could not detect the port. More than one port was found ({ports_diff}).')
+        raise OSError(
+            f'Could not detect the port. More than one port was found ({ports_diff}).'
+        )
 
 
 def main():

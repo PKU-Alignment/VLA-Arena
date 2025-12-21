@@ -27,6 +27,7 @@ import torchvision
 from PIL import Image
 from torch.utils.data import DataLoader
 
+
 logger = logging.getLogger(__name__)
 # Example
 language_tasks = [
@@ -63,8 +64,8 @@ class HDF5Dataset(torch.utils.data.Dataset):
         self.resize_img = torchvision.transforms.Resize((224, 224))
         self.image_transform_lam = torchvision.transforms.ToTensor()
         self.image_transform = image_transform
-        self.image_dict, self.qpos, self.action, self.tasks_embedding = self.load_all_episodes(
-            dataset_dir
+        self.image_dict, self.qpos, self.action, self.tasks_embedding = (
+            self.load_all_episodes(dataset_dir)
         )
         self.color_aug = torchvision.transforms.ColorJitter(
             brightness=0.2, contrast=0.2, saturation=0.2, hue=0.05
@@ -99,7 +100,9 @@ class HDF5Dataset(torch.utils.data.Dataset):
                 instructions.append(task_instruction)
 
                 for cam_name in self.camera_names:
-                    image_hdf5_dict[cam_name] = root[f'/observations/images/{cam_name}']
+                    image_hdf5_dict[cam_name] = root[
+                        f'/observations/images/{cam_name}'
+                    ]
                 for cam_name in image_dict.keys():
                     image_one_cam = []
                     for i_img in range(image_hdf5_dict[cam_name].shape[0]):
@@ -109,15 +112,21 @@ class HDF5Dataset(torch.utils.data.Dataset):
                             )  # [480, 640, 3]
                         else:
                             raw_image = image_hdf5_dict[cam_name][i_img]
-                        flipped_image = torch.flip(torch.from_numpy(raw_image), dims=(-1,))
+                        flipped_image = torch.flip(
+                            torch.from_numpy(raw_image), dims=(-1,)
+                        )
                         resized_image = F.interpolate(
-                            flipped_image.permute(2, 0, 1).unsqueeze(0).float(),
+                            flipped_image.permute(2, 0, 1)
+                            .unsqueeze(0)
+                            .float(),
                             size=(224, 224),
                             mode='bilinear',
                             align_corners=False,
                         )
                         image_one_cam.append(resized_image[0])
-                    image_dict[cam_name].append(torch.stack(image_one_cam, dim=0))
+                    image_dict[cam_name].append(
+                        torch.stack(image_one_cam, dim=0)
+                    )
         for cam_name in self.camera_names:
             image_dict[cam_name] = torch.stack(image_dict[cam_name], dim=0)
 
@@ -132,12 +141,17 @@ class HDF5Dataset(torch.utils.data.Dataset):
         window_size = self.window_size + extra_frame_num
 
         image_index = np.random.choice(self.episode_len - window_size)
-        actions_chunking = torch.zeros((self.chunk_size, self.action.shape[-1]))
+        actions_chunking = torch.zeros(
+            (self.chunk_size, self.action.shape[-1])
+        )
         is_not_padding = torch.zeros((self.chunk_size,))
 
-        actions_chunking[: min(self.episode_len - image_index, self.chunk_size)] = self.action[
+        actions_chunking[
+            : min(self.episode_len - image_index, self.chunk_size)
+        ] = self.action[
             clip_index,
-            image_index : image_index + min(self.episode_len - image_index, self.chunk_size),
+            image_index : image_index
+            + min(self.episode_len - image_index, self.chunk_size),
         ]
         qpos_chunking = self.qpos[clip_index][image_index]
 
@@ -147,39 +161,62 @@ class HDF5Dataset(torch.utils.data.Dataset):
             image_index : image_index + window_size
         ]
         image_vla = Image.fromarray(
-            np.transpose(image_chunking[extra_frame_num].cpu().numpy().astype(np.uint8), (1, 2, 0))
+            np.transpose(
+                image_chunking[extra_frame_num].cpu().numpy().astype(np.uint8),
+                (1, 2, 0),
+            )
         )
         image_vla = self.color_aug(image_vla)
         goal_image = Image.fromarray(
-            np.transpose(image_chunking[-1].cpu().numpy().astype(np.uint8), (1, 2, 0))
+            np.transpose(
+                image_chunking[-1].cpu().numpy().astype(np.uint8), (1, 2, 0)
+            )
         )
         pixel_values = self.image_transform(image_vla)
 
-        initial_pixel_values = self.image_transform_lam(self.resize_img(image_vla))
-        target_pixel_values = self.image_transform_lam(self.resize_img(goal_image))
+        initial_pixel_values = self.image_transform_lam(
+            self.resize_img(image_vla)
+        )
+        target_pixel_values = self.image_transform_lam(
+            self.resize_img(goal_image)
+        )
 
         initial_pixel_values_hist, target_pixel_values_hist = None, None
         if extra_frame_num > 0:
             hist_frame_prev = Image.fromarray(
-                np.transpose(image_chunking[0].cpu().numpy().astype(np.uint8), (1, 2, 0))
+                np.transpose(
+                    image_chunking[0].cpu().numpy().astype(np.uint8), (1, 2, 0)
+                )
             )
             hist_frame_goal = Image.fromarray(
                 np.transpose(
-                    image_chunking[self.min_window_size].cpu().numpy().astype(np.uint8), (1, 2, 0)
+                    image_chunking[self.min_window_size]
+                    .cpu()
+                    .numpy()
+                    .astype(np.uint8),
+                    (1, 2, 0),
                 )
             )
-            initial_pixel_values_hist = self.image_transform_lam(self.resize_img(hist_frame_prev))
-            target_pixel_values_hist = self.image_transform_lam(self.resize_img(hist_frame_goal))
+            initial_pixel_values_hist = self.image_transform_lam(
+                self.resize_img(hist_frame_prev)
+            )
+            target_pixel_values_hist = self.image_transform_lam(
+                self.resize_img(hist_frame_goal)
+            )
 
-        is_not_padding[: min(self.episode_len - image_index, self.chunk_size)] = 1
+        is_not_padding[
+            : min(self.episode_len - image_index, self.chunk_size)
+        ] = 1
 
         # normalize actions and change dtype to float
         qpos_tensor = qpos_chunking.float()
         action_tensor = actions_chunking.float()
-        action_tensor = (action_tensor - self.norm_stats['action_mean']) / self.norm_stats[
-            'action_std'
-        ]
-        qpos_tensor = (qpos_tensor - self.norm_stats['qpos_mean']) / self.norm_stats['qpos_std']
+        action_tensor = (
+            action_tensor - self.norm_stats['action_mean']
+        ) / self.norm_stats['action_std']
+        qpos_tensor = (
+            qpos_tensor - self.norm_stats['qpos_mean']
+        ) / self.norm_stats['qpos_std']
         task_embed = self.tasks_embedding[clip_index]
 
         dataset_name = 'agilex'
@@ -204,24 +241,36 @@ class PaddedCollatorForActionPrediction:
     padding_side: str = 'right'
     pixel_values_dtype: torch.dtype = torch.float32
 
-    def __call__(self, instances: Sequence[Dict[str, torch.Tensor]]) -> Dict[str, torch.Tensor]:
+    def __call__(
+        self, instances: Sequence[Dict[str, torch.Tensor]]
+    ) -> Dict[str, torch.Tensor]:
 
-        initial_pixel_values = [instance['initial_pixel_values'] for instance in instances]
-        target_pixel_values = [instance['target_pixel_values'] for instance in instances]
+        initial_pixel_values = [
+            instance['initial_pixel_values'] for instance in instances
+        ]
+        target_pixel_values = [
+            instance['target_pixel_values'] for instance in instances
+        ]
 
         initial_pixel_values_hist, target_pixel_values_hist = [], []
         with_hist = []
         for instance in instances:
             if instance['initial_pixel_values_hist'] is not None:
-                initial_pixel_values_hist.append(instance['initial_pixel_values_hist'])
-                target_pixel_values_hist.append(instance['target_pixel_values_hist'])
+                initial_pixel_values_hist.append(
+                    instance['initial_pixel_values_hist']
+                )
+                target_pixel_values_hist.append(
+                    instance['target_pixel_values_hist']
+                )
                 with_hist.append(torch.tensor(True))
             else:
                 with_hist.append(torch.tensor(False))
 
         pixel_values = [instance['pixel_values'] for instance in instances]
         if 'dataset_name' in instances[0]:
-            dataset_names = [instance['dataset_name'] for instance in instances]
+            dataset_names = [
+                instance['dataset_name'] for instance in instances
+            ]
         else:
             dataset_names = None
 
@@ -244,10 +293,14 @@ class PaddedCollatorForActionPrediction:
         initial_pixel_values = torch.stack(initial_pixel_values)
         target_pixel_values = torch.stack(target_pixel_values)
         initial_pixel_values_hist = (
-            torch.stack(initial_pixel_values_hist) if len(initial_pixel_values_hist) > 0 else []
+            torch.stack(initial_pixel_values_hist)
+            if len(initial_pixel_values_hist) > 0
+            else []
         )
         target_pixel_values_hist = (
-            torch.stack(target_pixel_values_hist) if len(target_pixel_values_hist) > 0 else []
+            torch.stack(target_pixel_values_hist)
+            if len(target_pixel_values_hist) > 0
+            else []
         )
         with_hist = torch.stack(with_hist)
 
@@ -299,7 +352,9 @@ def load_data_univla(
     )
 
     collator = PaddedCollatorForActionPrediction(
-        processor.tokenizer.model_max_length, processor.tokenizer.pad_token_id, padding_side='right'
+        processor.tokenizer.model_max_length,
+        processor.tokenizer.pad_token_id,
+        padding_side='right',
     )
     train_dataloader = DataLoader(
         train_dataset,
@@ -355,7 +410,9 @@ def get_norm_stats(dataset_paths, other_config=()):
     qpos_std = torch.clip(qpos_std, 1e-2, np.inf)  # clipping
 
     # Min-max norm action datra
-    action_max = all_action_data.max(dim=0, keepdim=True)[0][0]  # torch.Size([58200, 7])
+    action_max = all_action_data.max(dim=0, keepdim=True)[0][
+        0
+    ]  # torch.Size([58200, 7])
     action_min = all_action_data.min(dim=0, keepdim=True)[0][0]
 
     # print(action_max.shape, action_min)

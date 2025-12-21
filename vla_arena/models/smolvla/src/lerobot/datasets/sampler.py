@@ -53,9 +53,16 @@ class EpisodeAwareSampler:
         """
         indices = []
         for episode_idx, (start_index, end_index) in enumerate(
-            zip(episode_data_index['from'], episode_data_index['to'], strict=True)
+            zip(
+                episode_data_index['from'],
+                episode_data_index['to'],
+                strict=True,
+            )
         ):
-            if episode_indices_to_use is None or episode_idx in episode_indices_to_use:
+            if (
+                episode_indices_to_use is None
+                or episode_idx in episode_indices_to_use
+            ):
                 indices.extend(
                     range(
                         start_index.item() + drop_n_first_frames,

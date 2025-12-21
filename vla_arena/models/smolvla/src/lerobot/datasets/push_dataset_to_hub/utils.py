@@ -35,7 +35,6 @@ import datasets
 import numpy
 import PIL
 import torch
-
 from lerobot.datasets.video_utils import encode_video_frames
 
 
@@ -58,7 +57,9 @@ def concatenate_episodes(ep_dicts):
     return data_dict
 
 
-def save_images_concurrently(imgs_array: numpy.array, out_dir: Path, max_workers: int = 4):
+def save_images_concurrently(
+    imgs_array: numpy.array, out_dir: Path, max_workers: int = 4
+):
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -68,7 +69,10 @@ def save_images_concurrently(imgs_array: numpy.array, out_dir: Path, max_workers
 
     num_images = len(imgs_array)
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        [executor.submit(save_image, imgs_array[i], i, out_dir) for i in range(num_images)]
+        [
+            executor.submit(save_image, imgs_array[i], i, out_dir)
+            for i in range(num_images)
+        ]
 
 
 def get_default_encoding() -> dict:
@@ -77,7 +81,8 @@ def get_default_encoding() -> dict:
     return {
         k: v.default
         for k, v in signature.parameters.items()
-        if v.default is not inspect.Parameter.empty and k in ['vcodec', 'pix_fmt', 'g', 'crf']
+        if v.default is not inspect.Parameter.empty
+        and k in ['vcodec', 'pix_fmt', 'g', 'crf']
     }
 
 
@@ -90,7 +95,9 @@ def check_repo_id(repo_id: str) -> None:
 
 
 # TODO(aliberts): remove
-def calculate_episode_data_index(hf_dataset: datasets.Dataset) -> dict[str, torch.Tensor]:
+def calculate_episode_data_index(
+    hf_dataset: datasets.Dataset,
+) -> dict[str, torch.Tensor]:
     """
     Calculate episode data index for the provided HuggingFace Dataset. Relies on episode_index column of hf_dataset.
 

@@ -31,7 +31,9 @@ args = parser.parse_args()
 
 
 TARGET_SPEC = {
-    'observation': {'image': {'shape': (128, 128, 3), 'dtype': np.uint8, 'range': (0, 255)}},
+    'observation': {
+        'image': {'shape': (128, 128, 3), 'dtype': np.uint8, 'range': (0, 255)}
+    },
     'action': {
         'shape': (8,),
         'dtype': np.float32,
@@ -46,7 +48,11 @@ TARGET_SPEC = {
     'is_last': {'shape': (), 'dtype': np.bool_, 'range': None},
     'is_terminal': {'shape': (), 'dtype': np.bool_, 'range': None},
     'language_instruction': {'shape': (), 'dtype': str, 'range': None},
-    'language_embedding': {'shape': (512,), 'dtype': np.float32, 'range': None},
+    'language_embedding': {
+        'shape': (512,),
+        'dtype': np.float32,
+        'range': None,
+    },
 }
 
 
@@ -61,14 +67,19 @@ def check_elements(target, values):
                     raise ValueError(
                         f"Shape of {elem} should be {target[elem]['shape']} but is {tuple(values[elem].shape)}",
                     )
-            if not isinstance(values[elem], bytes) and values[elem].dtype != target[elem]['dtype']:
+            if (
+                not isinstance(values[elem], bytes)
+                and values[elem].dtype != target[elem]['dtype']
+            ):
                 raise ValueError(
                     f"Dtype of {elem} should be {target[elem]['dtype']} but is {values[elem].dtype}",
                 )
             if target[elem]['range'] is not None:
                 if isinstance(target[elem]['range'], list):
                     for vmin, vmax, val in zip(
-                        target[elem]['range'][0], target[elem]['range'][1], values[elem],
+                        target[elem]['range'][0],
+                        target[elem]['range'][1],
+                        values[elem],
                     ):
                         if not (val >= vmin and val <= vmax):
                             raise ValueError(

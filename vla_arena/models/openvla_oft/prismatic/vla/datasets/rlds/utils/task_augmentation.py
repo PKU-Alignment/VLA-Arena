@@ -20,7 +20,10 @@ Contains basic logic for randomly zeroing out keys in the task specification.
 
 
 import tensorflow as tf
-from vla_arena.models.openvla_oft.prismatic.vla.datasets.rlds.utils.data_utils import to_padding
+
+from vla_arena.models.openvla_oft.prismatic.vla.datasets.rlds.utils.data_utils import (
+    to_padding,
+)
 
 
 def delete_task_conditioning(traj: dict, keep_image_prob: float) -> dict:
@@ -37,17 +40,23 @@ def delete_task_conditioning(traj: dict, keep_image_prob: float) -> dict:
         return traj
 
     image_keys = {
-        key for key in traj['task'].keys() if key.startswith('image_') or key.startswith('depth_')
+        key
+        for key in traj['task'].keys()
+        if key.startswith('image_') or key.startswith('depth_')
     }
     if not image_keys:
         return traj
 
     traj_len = tf.shape(traj['action'])[0]
     should_keep_images = tf.random.uniform([traj_len]) < keep_image_prob
-    should_keep_images |= ~traj['task']['pad_mask_dict']['language_instruction']
+    should_keep_images |= ~traj['task']['pad_mask_dict'][
+        'language_instruction'
+    ]
 
     for key in image_keys | {'language_instruction'}:
-        should_keep = should_keep_images if key in image_keys else ~should_keep_images
+        should_keep = (
+            should_keep_images if key in image_keys else ~should_keep_images
+        )
         # pad out the key
         traj['task'][key] = tf.where(
             should_keep,

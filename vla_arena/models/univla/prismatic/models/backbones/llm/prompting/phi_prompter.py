@@ -28,7 +28,9 @@ from vla_arena.models.univla.prismatic.models.backbones.llm.prompting.base_promp
 
 
 class PhiPromptBuilder(PromptBuilder):
-    def __init__(self, model_family: str, system_prompt: str | None = None) -> None:
+    def __init__(
+        self, model_family: str, system_prompt: str | None = None
+    ) -> None:
         super().__init__(model_family, system_prompt)
 
         # Note =>> Phi Tokenizer is an instance of `CodeGenTokenizer(Fast)`
@@ -44,7 +46,11 @@ class PhiPromptBuilder(PromptBuilder):
         self.prompt, self.turn_count = '', 0
 
     def add_turn(self, role: str, message: str) -> str:
-        assert (role == 'human') if (self.turn_count % 2 == 0) else (role == 'gpt')
+        assert (
+            (role == 'human')
+            if (self.turn_count % 2 == 0)
+            else (role == 'gpt')
+        )
         message = message.replace('<image>', '').strip()
 
         # Special Handling for "first" input --> prepend a <BOS> token (expected by Prismatic)

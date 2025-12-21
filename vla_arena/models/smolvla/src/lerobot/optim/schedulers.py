@@ -33,12 +33,11 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 import draccus
-from torch.optim import Optimizer
-from torch.optim.lr_scheduler import LambdaLR, LRScheduler
-
 from lerobot.constants import SCHEDULER_STATE
 from lerobot.datasets.utils import write_json
 from lerobot.utils.io_utils import deserialize_json_into_object
+from torch.optim import Optimizer
+from torch.optim.lr_scheduler import LambdaLR, LRScheduler
 
 
 @dataclass
@@ -50,7 +49,9 @@ class LRSchedulerConfig(draccus.ChoiceRegistry, abc.ABC):
         return self.get_choice_name(self.__class__)
 
     @abc.abstractmethod
-    def build(self, optimizer: Optimizer, num_training_steps: int) -> LRScheduler | None:
+    def build(
+        self, optimizer: Optimizer, num_training_steps: int
+    ) -> LRScheduler | None:
         raise NotImplementedError
 
 
@@ -63,7 +64,11 @@ class DiffuserSchedulerConfig(LRSchedulerConfig):
     def build(self, optimizer: Optimizer, num_training_steps: int) -> LambdaLR:
         from diffusers.optimization import get_scheduler
 
-        kwargs = {**asdict(self), 'num_training_steps': num_training_steps, 'optimizer': optimizer}
+        kwargs = {
+            **asdict(self),
+            'num_training_steps': num_training_steps,
+            'optimizer': optimizer,
+        }
         return get_scheduler(**kwargs)
 
 
@@ -81,12 +86,21 @@ class VQBeTSchedulerConfig(LRSchedulerConfig):
             else:
                 adjusted_step = current_step - self.num_vqvae_training_steps
                 if adjusted_step < self.num_warmup_steps:
-                    return float(adjusted_step) / float(max(1, self.num_warmup_steps))
-                progress = float(adjusted_step - self.num_warmup_steps) / float(
-                    max(1, num_training_steps - self.num_warmup_steps)
-                )
+                    return float(adjusted_step) / float(
+                        max(1, self.num_warmup_steps)
+                    )
+                progress = float(
+                    adjusted_step - self.num_warmup_steps
+                ) / float(max(1, num_training_steps - self.num_warmup_steps))
                 return max(
-                    0.0, 0.5 * (1.0 + math.cos(math.pi * float(self.num_cycles) * 2.0 * progress))
+                    0.0,
+                    0.5
+                    * (
+                        1.0
+                        + math.cos(
+                            math.pi * float(self.num_cycles) * 2.0 * progress
+                        )
+                    ),
                 )
 
         return LambdaLR(optimizer, lr_lambda, -1)
@@ -114,7 +128,9 @@ class CosineDecayWithWarmupSchedulerConfig(LRSchedulerConfig):
 
             def cosine_decay_schedule(current_step):
                 step = min(current_step, self.num_decay_steps)
-                cosine_decay = 0.5 * (1 + math.cos(math.pi * step / self.num_decay_steps))
+                cosine_decay = 0.5 * (
+                    1 + math.cos(math.pi * step / self.num_decay_steps)
+                )
                 alpha = self.decay_lr / self.peak_lr
                 decayed = (1 - alpha) * cosine_decay + alpha
                 return decayed
@@ -132,7 +148,11 @@ def save_scheduler_state(scheduler: LRScheduler, save_dir: Path) -> None:
     write_json(state_dict, save_dir / SCHEDULER_STATE)
 
 
-def load_scheduler_state(scheduler: LRScheduler, save_dir: Path) -> LRScheduler:
-    state_dict = deserialize_json_into_object(save_dir / SCHEDULER_STATE, scheduler.state_dict())
+def load_scheduler_state(
+    scheduler: LRScheduler, save_dir: Path
+) -> LRScheduler:
+    state_dict = deserialize_json_into_object(
+        save_dir / SCHEDULER_STATE, scheduler.state_dict()
+    )
     scheduler.load_state_dict(state_dict)
     return scheduler

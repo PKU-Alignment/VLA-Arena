@@ -225,15 +225,27 @@ class VLARegistry(Enum):
     SIGLIP_224PX_MX_OXE_MAGIC_SOUP = Exp_SigLIP_224px_OXE_Magic_Soup
 
     # [OpenVLA 7B] DINO + SigLIP 224px + OXE Magic Soup++
-    DINOSIGLIP_224PX_MX_OXE_MAGIC_SOUP_PLUS = Exp_DinoSigLIP_224px_OXE_Magic_Soup_Plus
+    DINOSIGLIP_224PX_MX_OXE_MAGIC_SOUP_PLUS = (
+        Exp_DinoSigLIP_224px_OXE_Magic_Soup_Plus
+    )
 
     # === TDROID Fine-tuning Configs ===
-    SIGLIP_224PX_MX_TDROID_CARROT_IN_BOWL = Exp_SigLIP_224px_TDROID_CarrotInBowl
-    SIGLIP_224PX_MX_TDROID_POUR_CORN_IN_POT = Exp_SigLIP_224px_TDROID_PourCornInPot
+    SIGLIP_224PX_MX_TDROID_CARROT_IN_BOWL = (
+        Exp_SigLIP_224px_TDROID_CarrotInBowl
+    )
+    SIGLIP_224PX_MX_TDROID_POUR_CORN_IN_POT = (
+        Exp_SigLIP_224px_TDROID_PourCornInPot
+    )
 
-    SIGLIP_224PX_ICY_MX_TDROID_CARROT_IN_BOWL = Exp_SigLIP_224px_Icy_TDROID_CarrotInBowl
-    SIGLIP_224PX_LASTLAYER_MX_TDROID_CARROT_IN_BOWL = Exp_SigLIP_224px_LastLayer_TDROID_CarrotInBowl
-    SIGLIP_224PX_SANDWICH_MX_TDROID_CARROT_IN_BOWL = Exp_SigLIP_224px_Sandwich_TDROID_CarrotInBowl
+    SIGLIP_224PX_ICY_MX_TDROID_CARROT_IN_BOWL = (
+        Exp_SigLIP_224px_Icy_TDROID_CarrotInBowl
+    )
+    SIGLIP_224PX_LASTLAYER_MX_TDROID_CARROT_IN_BOWL = (
+        Exp_SigLIP_224px_LastLayer_TDROID_CarrotInBowl
+    )
+    SIGLIP_224PX_SANDWICH_MX_TDROID_CARROT_IN_BOWL = (
+        Exp_SigLIP_224px_Sandwich_TDROID_CarrotInBowl
+    )
 
     # === DROID Fine-tuning Configs ===
     SIGLIP_224PX_MX_DROID_WIPE = Exp_SigLIP_224px_Droid_Wipe

@@ -33,15 +33,14 @@ from unittest.mock import patch
 
 import pytest
 import torch
+from lerobot.utils.transition import Transition
 from torch.multiprocessing import Event, Queue
 
-from lerobot.utils.transition import Transition
 from tests.utils import require_package
 
 
 def create_learner_service_stub():
     import grpc
-
     from lerobot.transport import services_pb2, services_pb2_grpc
 
     class MockLearnerService(services_pb2_grpc.LearnerServiceServicer):
@@ -64,12 +63,19 @@ def create_learner_service_stub():
     # Create a gRPC server and add our servicer to it.
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=4))
     services_pb2_grpc.add_LearnerServiceServicer_to_server(servicer, server)
-    port = server.add_insecure_port('[::]:0')  # bind to a free port chosen by OS
+    port = server.add_insecure_port(
+        '[::]:0'
+    )  # bind to a free port chosen by OS
     server.start()  # start the server (non-blocking call):contentReference[oaicite:1]{index=1}
 
     # Create a client channel and stub connected to the server's port.
     channel = grpc.insecure_channel(f'localhost:{port}')
-    return services_pb2_grpc.LearnerServiceStub(channel), servicer, channel, server
+    return (
+        services_pb2_grpc.LearnerServiceStub(channel),
+        servicer,
+        channel,
+        server,
+    )
 
 
 def close_service_stub(channel, server):
@@ -117,6 +123,7 @@ def test_establish_learner_connection_failure():
 def test_push_transitions_to_transport_queue():
     from lerobot.scripts.rl.actor import push_transitions_to_transport_queue
     from lerobot.transport.utils import bytes_to_transitions
+
     from tests.transport.test_transport_utils import assert_transitions_equal
 
     """Test pushing transitions to transport queue."""
@@ -124,12 +131,18 @@ def test_push_transitions_to_transport_queue():
     transitions = []
     for i in range(3):
         transition = Transition(
-            state={'observation': torch.randn(3, 64, 64), 'state': torch.randn(10)},
+            state={
+                'observation': torch.randn(3, 64, 64),
+                'state': torch.randn(10),
+            },
             action=torch.randn(5),
             reward=torch.tensor(1.0 + i),
             done=torch.tensor(False),
             truncated=torch.tensor(False),
-            next_state={'observation': torch.randn(3, 64, 64), 'state': torch.randn(10)},
+            next_state={
+                'observation': torch.randn(3, 64, 64),
+                'state': torch.randn(10),
+            },
             complementary_info={'step': torch.tensor(i)},
         )
         transitions.append(transition)
@@ -158,13 +171,19 @@ def test_transitions_stream():
     transitions_queue = Queue()
 
     # Add test data to queue
-    test_data = [b'transition_data_1', b'transition_data_2', b'transition_data_3']
+    test_data = [
+        b'transition_data_1',
+        b'transition_data_2',
+        b'transition_data_3',
+    ]
     for data in test_data:
         transitions_queue.put(data)
 
     # Collect streamed data
     streamed_data = []
-    stream_generator = transitions_stream(shutdown_event, transitions_queue, 0.1)
+    stream_generator = transitions_stream(
+        shutdown_event, transitions_queue, 0.1
+    )
 
     # Process a few items
     for i, message in enumerate(stream_generator):
@@ -184,7 +203,10 @@ def test_transitions_stream():
 @pytest.mark.timeout(3)  # force cross-platform watchdog
 def test_interactions_stream():
     from lerobot.scripts.rl.actor import interactions_stream
-    from lerobot.transport.utils import bytes_to_python_object, python_object_to_bytes
+    from lerobot.transport.utils import (
+        bytes_to_python_object,
+        python_object_to_bytes,
+    )
 
     """Test interactions stream functionality."""
     shutdown_event = Event()
@@ -205,7 +227,9 @@ def test_interactions_stream():
 
     # Collect streamed data
     streamed_data = []
-    stream_generator = interactions_stream(shutdown_event, interactions_queue, 0.1)
+    stream_generator = interactions_stream(
+        shutdown_event, interactions_queue, 0.1
+    )
 
     # Process the items
     for i, message in enumerate(stream_generator):

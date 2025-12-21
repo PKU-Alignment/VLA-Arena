@@ -34,11 +34,11 @@ import time
 
 import pytest
 import torch
-from torch.multiprocessing import Event, Queue
-
 from lerobot.configs.train import TrainRLServerPipelineConfig
 from lerobot.policies.sac.configuration_sac import SACConfig
 from lerobot.utils.transition import Transition
+from torch.multiprocessing import Event, Queue
+
 from tests.utils import require_package
 
 
@@ -47,12 +47,18 @@ def create_test_transitions(count: int = 3) -> list[Transition]:
     transitions = []
     for i in range(count):
         transition = Transition(
-            state={'observation': torch.randn(3, 64, 64), 'state': torch.randn(10)},
+            state={
+                'observation': torch.randn(3, 64, 64),
+                'state': torch.randn(10),
+            },
             action=torch.randn(5),
             reward=torch.tensor(1.0 + i),
             done=torch.tensor(i == count - 1),  # Last transition is done
             truncated=torch.tensor(False),
-            next_state={'observation': torch.randn(3, 64, 64), 'state': torch.randn(10)},
+            next_state={
+                'observation': torch.randn(3, 64, 64),
+                'state': torch.randn(10),
+            },
             complementary_info={'step': torch.tensor(i), 'episode_id': i // 2},
         )
         transitions.append(transition)
@@ -112,6 +118,7 @@ def test_end_to_end_transitions_flow(cfg):
     )
     from lerobot.scripts.rl.learner import start_learner
     from lerobot.transport.utils import bytes_to_transitions
+
     from tests.transport.test_transport_utils import assert_transitions_equal
 
     """Test complete transitions flow from actor to learner."""
@@ -124,7 +131,13 @@ def test_end_to_end_transitions_flow(cfg):
 
     learner_thread = threading.Thread(
         target=start_learner,
-        args=(parameters_queue, transitions_learner_queue, interactions_queue, shutdown_event, cfg),
+        args=(
+            parameters_queue,
+            transitions_learner_queue,
+            interactions_queue,
+            shutdown_event,
+            cfg,
+        ),
     )
     learner_thread.start()
 
@@ -134,17 +147,27 @@ def test_end_to_end_transitions_flow(cfg):
         port=policy_cfg.actor_learner_config.learner_port,
     )
 
-    assert establish_learner_connection(learner_client, shutdown_event, attempts=5)
+    assert establish_learner_connection(
+        learner_client, shutdown_event, attempts=5
+    )
 
     send_transitions_thread = threading.Thread(
         target=send_transitions,
-        args=(cfg, transitions_actor_queue, shutdown_event, learner_client, channel),
+        args=(
+            cfg,
+            transitions_actor_queue,
+            shutdown_event,
+            learner_client,
+            channel,
+        ),
     )
     send_transitions_thread.start()
 
     input_transitions = create_test_transitions(count=5)
 
-    push_transitions_to_transport_queue(input_transitions, transitions_actor_queue)
+    push_transitions_to_transport_queue(
+        input_transitions, transitions_actor_queue
+    )
 
     # Wait for learner to start
     time.sleep(0.1)
@@ -158,7 +181,9 @@ def test_end_to_end_transitions_flow(cfg):
 
     received_transitions = []
     while not transitions_learner_queue.empty():
-        received_transitions.extend(bytes_to_transitions(transitions_learner_queue.get()))
+        received_transitions.extend(
+            bytes_to_transitions(transitions_learner_queue.get())
+        )
 
     assert len(received_transitions) == len(input_transitions)
     for i, transition in enumerate(received_transitions):
@@ -174,7 +199,10 @@ def test_end_to_end_interactions_flow(cfg):
         send_interactions,
     )
     from lerobot.scripts.rl.learner import start_learner
-    from lerobot.transport.utils import bytes_to_python_object, python_object_to_bytes
+    from lerobot.transport.utils import (
+        bytes_to_python_object,
+        python_object_to_bytes,
+    )
 
     """Test complete interactions flow from actor to learner."""
     # Queues for actor-learner communication
@@ -207,12 +235,20 @@ def test_end_to_end_interactions_flow(cfg):
         port=policy_cfg.actor_learner_config.learner_port,
     )
 
-    assert establish_learner_connection(learner_client, shutdown_event, attempts=5)
+    assert establish_learner_connection(
+        learner_client, shutdown_event, attempts=5
+    )
 
     # Start the actor's interaction sending process in a separate thread
     send_interactions_thread = threading.Thread(
         target=send_interactions,
-        args=(cfg, interactions_actor_queue, shutdown_event, learner_client, channel),
+        args=(
+            cfg,
+            interactions_actor_queue,
+            shutdown_event,
+            learner_client,
+            channel,
+        ),
     )
     send_interactions_thread.start()
 
@@ -233,7 +269,9 @@ def test_end_to_end_interactions_flow(cfg):
     # Verify that the learner received the interactions
     received_interactions = []
     while not interactions_learner_queue.empty():
-        received_interactions.append(bytes_to_python_object(interactions_learner_queue.get()))
+        received_interactions.append(
+            bytes_to_python_object(interactions_learner_queue.get())
+        )
 
     assert len(received_interactions) == len(input_interactions)
 
@@ -241,7 +279,9 @@ def test_end_to_end_interactions_flow(cfg):
     received_interactions.sort(key=lambda x: x['step'])
     input_interactions.sort(key=lambda x: x['step'])
 
-    for received, expected in zip(received_interactions, input_interactions, strict=False):
+    for received, expected in zip(
+        received_interactions, input_interactions, strict=False
+    ):
         assert received == expected
 
 
@@ -289,12 +329,20 @@ def test_end_to_end_parameters_flow(cfg, data_size):
         port=policy_cfg.actor_learner_config.learner_port,
     )
 
-    assert establish_learner_connection(learner_client, shutdown_event, attempts=5)
+    assert establish_learner_connection(
+        learner_client, shutdown_event, attempts=5
+    )
 
     # Start the actor's parameter receiving process in a separate thread
     receive_params_thread = threading.Thread(
         target=receive_policy,
-        args=(cfg, parameters_actor_queue, shutdown_event, learner_client, channel),
+        args=(
+            cfg,
+            parameters_actor_queue,
+            shutdown_event,
+            learner_client,
+            channel,
+        ),
     )
     receive_params_thread.start()
 

@@ -35,7 +35,9 @@ def print_dataset_info(name, obj):
                 # Limit display count to avoid excessive output
                 preview_flat = data_preview.flatten()
                 preview_size = min(5, preview_flat.size)
-                preview_str = ', '.join(str(x) for x in preview_flat[:preview_size])
+                preview_str = ', '.join(
+                    str(x) for x in preview_flat[:preview_size]
+                )
                 print(
                     f"{indent}    Sample data: {preview_str}{' ...' if preview_flat.size > preview_size else ''}",
                 )
@@ -67,7 +69,9 @@ def inspect_hdf5(file_path, dataset_path=None):
                 obj = h5_file[dataset_path]
                 print_dataset_info(dataset_path, obj)
             else:
-                print(f'Path {dataset_path} does not exist. Available keys include:')
+                print(
+                    f'Path {dataset_path} does not exist. Available keys include:'
+                )
                 for key in h5_file.keys():
                     print(f'- {key}')
         else:
@@ -75,7 +79,9 @@ def inspect_hdf5(file_path, dataset_path=None):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Print keys and value samples from HDF5 file')
+    parser = argparse.ArgumentParser(
+        description='Print keys and value samples from HDF5 file'
+    )
     parser.add_argument('file', type=str, help='HDF5 file path')
     parser.add_argument(
         '--path',

@@ -18,7 +18,10 @@ in1k_vit.py
 Vision Transformers trained / finetuned on ImageNet (ImageNet-21K =>> ImageNet-1K)
 """
 
-from vla_arena.models.univla.prismatic.models.backbones.vision.base_vision import TimmViTBackbone
+from vla_arena.models.univla.prismatic.models.backbones.vision.base_vision import (
+    TimmViTBackbone,
+)
+
 
 # Registry =>> Supported Vision Backbones (from TIMM)
 IN1K_VISION_BACKBONES = {
@@ -28,7 +31,10 @@ IN1K_VISION_BACKBONES = {
 
 class IN1KViTBackbone(TimmViTBackbone):
     def __init__(
-        self, vision_backbone_id: str, image_resize_strategy: str, default_image_size: int = 224
+        self,
+        vision_backbone_id: str,
+        image_resize_strategy: str,
+        default_image_size: int = 224,
     ) -> None:
         super().__init__(
             vision_backbone_id,

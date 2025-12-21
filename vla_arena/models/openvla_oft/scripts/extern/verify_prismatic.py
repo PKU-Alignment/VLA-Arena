@@ -25,6 +25,7 @@ import torch
 from PIL import Image
 from transformers import AutoModelForVision2Seq, AutoProcessor
 
+
 # === Verification Arguments ===
 MODEL_PATH = 'TRI-ML/prismatic-siglip-224px-7b'
 DEFAULT_IMAGE_URL = 'https://huggingface.co/datasets/huggingface/documentation-images/resolve/main/beignets-task-guide.png'
@@ -53,12 +54,20 @@ else:
 
 @torch.inference_mode()
 def verify_prismatic() -> None:
-    print(f'[*] Verifying PrismaticForConditionalGeneration using Model `{MODEL_PATH}`')
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    print(
+        f'[*] Verifying PrismaticForConditionalGeneration using Model `{MODEL_PATH}`'
+    )
+    device = (
+        torch.device('cuda')
+        if torch.cuda.is_available()
+        else torch.device('cpu')
+    )
 
     # Load Processor & VLM
     print('[*] Instantiating Processor and Pretrained VLM')
-    processor = AutoProcessor.from_pretrained(MODEL_PATH, trust_remote_code=True)
+    processor = AutoProcessor.from_pretrained(
+        MODEL_PATH, trust_remote_code=True
+    )
 
     # === AUTOCAST MODE ===
     # print("[*] Loading in BF16 Autocast Mode")
@@ -105,7 +114,9 @@ def verify_prismatic() -> None:
     # )
 
     # Iterate over Sample Prompts =>> Generate
-    image = Image.open(requests.get(DEFAULT_IMAGE_URL, stream=True).raw).convert('RGB')
+    image = Image.open(
+        requests.get(DEFAULT_IMAGE_URL, stream=True).raw
+    ).convert('RGB')
     num_tokens, total_time = 0, 0.0
 
     print('[*] Iterating over Sample Prompts\n===\n')
@@ -128,7 +139,9 @@ def verify_prismatic() -> None:
         gen_ids = None
         for _ in range(5):
             start_time = time.time()
-            gen_ids = vlm.generate(**inputs, do_sample=False, min_length=1, max_length=512)
+            gen_ids = vlm.generate(
+                **inputs, do_sample=False, min_length=1, max_length=512
+            )
             total_time += time.time() - start_time
 
             gen_ids = gen_ids[0, inputs.input_ids.shape[1] :]
@@ -136,7 +149,9 @@ def verify_prismatic() -> None:
 
         # ===
         gen_text = processor.decode(gen_ids, skip_special_tokens=True).strip()
-        print(f'[{idx + 1}] Input Prompt => {prompt}\n    Generated    => {gen_text}\n')
+        print(
+            f'[{idx + 1}] Input Prompt => {prompt}\n    Generated    => {gen_text}\n'
+        )
 
     # Compute Tokens / Second
     print(

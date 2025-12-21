@@ -43,8 +43,8 @@ import gymnasium as gym
 import imageio
 import numpy
 import torch
-
 from lerobot.policies.diffusion.modeling_diffusion import DiffusionPolicy
+
 
 # Create a directory to store the video of the evaluation
 output_directory = Path('outputs/eval/example_pusht_diffusion')
@@ -126,7 +126,9 @@ while not done:
     numpy_action = action.squeeze(0).to('cpu').numpy()
 
     # Step through the environment and receive a new observation
-    numpy_observation, reward, terminated, truncated, info = env.step(numpy_action)
+    numpy_observation, reward, terminated, truncated, info = env.step(
+        numpy_action
+    )
     print(f'{step=} {reward=} {terminated=}')
 
     # Keep track of all the rewards and frames

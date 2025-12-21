@@ -33,8 +33,11 @@ from uuid import uuid4
 import numpy as np
 import pytest
 import torch
+from lerobot.datasets.online_buffer import (
+    OnlineBuffer,
+    compute_sampler_weights,
+)
 
-from lerobot.datasets.online_buffer import OnlineBuffer, compute_sampler_weights
 
 # Some constants for OnlineBuffer tests.
 data_key = 'data'
@@ -44,13 +47,16 @@ fps = 10
 
 
 def make_new_buffer(
-    write_dir: str | None = None, delta_timestamps: dict[str, list[float]] | None = None
+    write_dir: str | None = None,
+    delta_timestamps: dict[str, list[float]] | None = None,
 ) -> tuple[OnlineBuffer, str]:
     if write_dir is None:
         write_dir = f'/tmp/online_buffer_{uuid4().hex}'
     buffer = OnlineBuffer(
         write_dir,
-        data_spec={data_key: {'shape': data_shape, 'dtype': np.dtype('float32')}},
+        data_spec={
+            data_key: {'shape': data_shape, 'dtype': np.dtype('float32')}
+        },
         buffer_capacity=buffer_capacity,
         fps=fps,
         delta_timestamps=delta_timestamps,
@@ -58,15 +64,23 @@ def make_new_buffer(
     return buffer, write_dir
 
 
-def make_spoof_data_frames(n_episodes: int, n_frames_per_episode: int) -> dict[str, np.ndarray]:
+def make_spoof_data_frames(
+    n_episodes: int, n_frames_per_episode: int
+) -> dict[str, np.ndarray]:
     new_data = {
-        data_key: np.arange(n_frames_per_episode * n_episodes * np.prod(data_shape)).reshape(
-            -1, *data_shape
-        ),
+        data_key: np.arange(
+            n_frames_per_episode * n_episodes * np.prod(data_shape)
+        ).reshape(-1, *data_shape),
         OnlineBuffer.INDEX_KEY: np.arange(n_frames_per_episode * n_episodes),
-        OnlineBuffer.EPISODE_INDEX_KEY: np.repeat(np.arange(n_episodes), n_frames_per_episode),
-        OnlineBuffer.FRAME_INDEX_KEY: np.tile(np.arange(n_frames_per_episode), n_episodes),
-        OnlineBuffer.TIMESTAMP_KEY: np.tile(np.arange(n_frames_per_episode) / fps, n_episodes),
+        OnlineBuffer.EPISODE_INDEX_KEY: np.repeat(
+            np.arange(n_episodes), n_frames_per_episode
+        ),
+        OnlineBuffer.FRAME_INDEX_KEY: np.tile(
+            np.arange(n_frames_per_episode), n_episodes
+        ),
+        OnlineBuffer.TIMESTAMP_KEY: np.tile(
+            np.arange(n_frames_per_episode) / fps, n_episodes
+        ),
     }
     return new_data
 
@@ -150,8 +164,12 @@ def test_fifo():
     # Developer sanity check (in case someone changes the global `buffer_capacity`).
     assert (
         n_episodes + n_more_episodes
-    ) * n_frames_per_episode > buffer_capacity, 'Something went wrong with the test code.'
-    more_new_data = make_spoof_data_frames(n_more_episodes, n_frames_per_episode)
+    ) * n_frames_per_episode > buffer_capacity, (
+        'Something went wrong with the test code.'
+    )
+    more_new_data = make_spoof_data_frames(
+        n_more_episodes, n_frames_per_episode
+    )
     buffer.add_data(more_new_data)
     assert len(buffer) == buffer_capacity, 'The buffer should be full.'
 
@@ -166,7 +184,9 @@ def test_fifo():
 
     for i, item in enumerate(buffer):
         assert all(isinstance(item[k], torch.Tensor) for k in item)
-        assert np.array_equal(item[data_key].numpy(), expected_data[data_key][i])
+        assert np.array_equal(
+            item[data_key].numpy(), expected_data[data_key][i]
+        )
 
 
 def test_delta_timestamps_within_tolerance():
@@ -183,7 +203,9 @@ def test_delta_timestamps_within_tolerance():
     item = buffer[2]
     data, is_pad = item['index'], item[f'index{OnlineBuffer.IS_PAD_POSTFIX}']
     torch.testing.assert_close(
-        data, torch.tensor([0, 2, 3]), msg='Data does not match expected values'
+        data,
+        torch.tensor([0, 2, 3]),
+        msg='Data does not match expected values',
     )
     assert not is_pad.any(), 'Unexpected padding detected'
 
@@ -214,13 +236,17 @@ def test_delta_timestamps_outside_tolerance_outside_episode_range():
     """
     # Sanity check on global fps as we are assuming it is 10 here.
     assert fps == 10, 'This test assumes fps==10'
-    buffer, _ = make_new_buffer(delta_timestamps={'index': [-0.3, -0.24, 0, 0.26, 0.3]})
+    buffer, _ = make_new_buffer(
+        delta_timestamps={'index': [-0.3, -0.24, 0, 0.26, 0.3]}
+    )
     new_data = make_spoof_data_frames(n_episodes=1, n_frames_per_episode=5)
     buffer.add_data(new_data)
     buffer.tolerance_s = 0.04
     item = buffer[2]
     data, is_pad = item['index'], item['index_is_pad']
-    assert torch.equal(data, torch.tensor([0, 0, 2, 4, 4])), 'Data does not match expected values'
+    assert torch.equal(
+        data, torch.tensor([0, 0, 2, 4, 4])
+    ), 'Data does not match expected values'
     assert torch.equal(
         is_pad, torch.tensor([True, False, False, True, True])
     ), 'Padding does not match expected values'
@@ -243,37 +269,60 @@ def test_compute_sampler_weights_trivial(
     online_dataset, _ = make_new_buffer()
     if online_dataset_size > 0:
         online_dataset.add_data(
-            make_spoof_data_frames(n_episodes=2, n_frames_per_episode=online_dataset_size // 2)
+            make_spoof_data_frames(
+                n_episodes=2, n_frames_per_episode=online_dataset_size // 2
+            )
         )
 
     weights = compute_sampler_weights(
-        offline_dataset, online_dataset=online_dataset, online_sampling_ratio=online_sampling_ratio
+        offline_dataset,
+        online_dataset=online_dataset,
+        online_sampling_ratio=online_sampling_ratio,
     )
     if offline_dataset_size == 0 or online_dataset_size == 0:
-        expected_weights = torch.ones(offline_dataset_size + online_dataset_size)
+        expected_weights = torch.ones(
+            offline_dataset_size + online_dataset_size
+        )
     elif online_sampling_ratio == 0:
         expected_weights = torch.cat(
-            [torch.ones(offline_dataset_size), torch.zeros(online_dataset_size)]
+            [
+                torch.ones(offline_dataset_size),
+                torch.zeros(online_dataset_size),
+            ]
         )
     elif online_sampling_ratio == 1:
         expected_weights = torch.cat(
-            [torch.zeros(offline_dataset_size), torch.ones(online_dataset_size)]
+            [
+                torch.zeros(offline_dataset_size),
+                torch.ones(online_dataset_size),
+            ]
         )
     expected_weights /= expected_weights.sum()
     torch.testing.assert_close(weights, expected_weights)
 
 
-def test_compute_sampler_weights_nontrivial_ratio(lerobot_dataset_factory, tmp_path):
+def test_compute_sampler_weights_nontrivial_ratio(
+    lerobot_dataset_factory, tmp_path
+):
     # Arbitrarily set small dataset sizes, making sure to have uneven sizes.
-    offline_dataset = lerobot_dataset_factory(tmp_path, total_episodes=1, total_frames=4)
+    offline_dataset = lerobot_dataset_factory(
+        tmp_path, total_episodes=1, total_frames=4
+    )
     online_dataset, _ = make_new_buffer()
-    online_dataset.add_data(make_spoof_data_frames(n_episodes=4, n_frames_per_episode=2))
+    online_dataset.add_data(
+        make_spoof_data_frames(n_episodes=4, n_frames_per_episode=2)
+    )
     online_sampling_ratio = 0.8
     weights = compute_sampler_weights(
-        offline_dataset, online_dataset=online_dataset, online_sampling_ratio=online_sampling_ratio
+        offline_dataset,
+        online_dataset=online_dataset,
+        online_sampling_ratio=online_sampling_ratio,
     )
     torch.testing.assert_close(
-        weights, torch.tensor([0.05, 0.05, 0.05, 0.05, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
+        weights,
+        torch.tensor(
+            [0.05, 0.05, 0.05, 0.05, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+        ),
     )
 
 
@@ -281,9 +330,13 @@ def test_compute_sampler_weights_nontrivial_ratio_and_drop_last_n(
     lerobot_dataset_factory, tmp_path
 ):
     # Arbitrarily set small dataset sizes, making sure to have uneven sizes.
-    offline_dataset = lerobot_dataset_factory(tmp_path, total_episodes=1, total_frames=4)
+    offline_dataset = lerobot_dataset_factory(
+        tmp_path, total_episodes=1, total_frames=4
+    )
     online_dataset, _ = make_new_buffer()
-    online_dataset.add_data(make_spoof_data_frames(n_episodes=4, n_frames_per_episode=2))
+    online_dataset.add_data(
+        make_spoof_data_frames(n_episodes=4, n_frames_per_episode=2)
+    )
     weights = compute_sampler_weights(
         offline_dataset,
         online_dataset=online_dataset,
@@ -291,15 +344,24 @@ def test_compute_sampler_weights_nontrivial_ratio_and_drop_last_n(
         online_drop_n_last_frames=1,
     )
     torch.testing.assert_close(
-        weights, torch.tensor([0.05, 0.05, 0.05, 0.05, 0.2, 0.0, 0.2, 0.0, 0.2, 0.0, 0.2, 0.0])
+        weights,
+        torch.tensor(
+            [0.05, 0.05, 0.05, 0.05, 0.2, 0.0, 0.2, 0.0, 0.2, 0.0, 0.2, 0.0]
+        ),
     )
 
 
-def test_compute_sampler_weights_drop_n_last_frames(lerobot_dataset_factory, tmp_path):
+def test_compute_sampler_weights_drop_n_last_frames(
+    lerobot_dataset_factory, tmp_path
+):
     """Note: test copied from test_sampler."""
-    offline_dataset = lerobot_dataset_factory(tmp_path, total_episodes=1, total_frames=2)
+    offline_dataset = lerobot_dataset_factory(
+        tmp_path, total_episodes=1, total_frames=2
+    )
     online_dataset, _ = make_new_buffer()
-    online_dataset.add_data(make_spoof_data_frames(n_episodes=4, n_frames_per_episode=2))
+    online_dataset.add_data(
+        make_spoof_data_frames(n_episodes=4, n_frames_per_episode=2)
+    )
 
     weights = compute_sampler_weights(
         offline_dataset,

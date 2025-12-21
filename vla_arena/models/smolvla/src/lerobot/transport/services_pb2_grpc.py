@@ -17,7 +17,9 @@
 import warnings
 
 import grpc
-from lerobot.transport import services_pb2 as lerobot_dot_transport_dot_services__pb2
+from lerobot.transport import (
+    services_pb2 as lerobot_dot_transport_dot_services__pb2,
+)
 
 
 GRPC_GENERATED_VERSION = '1.73.1'
@@ -27,7 +29,9 @@ _version_not_supported = False
 try:
     from grpc._utilities import first_version_is_lower
 
-    _version_not_supported = first_version_is_lower(GRPC_VERSION, GRPC_GENERATED_VERSION)
+    _version_not_supported = first_version_is_lower(
+        GRPC_VERSION, GRPC_GENERATED_VERSION
+    )
 except ImportError:
     _version_not_supported = True
 
@@ -135,7 +139,9 @@ def add_LearnerServiceServicer_to_server(servicer, server):
         'transport.LearnerService', rpc_method_handlers
     )
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('transport.LearnerService', rpc_method_handlers)
+    server.add_registered_method_handlers(
+        'transport.LearnerService', rpc_method_handlers
+    )
 
 
 # This class is part of an EXPERIMENTAL API.
@@ -361,7 +367,9 @@ def add_AsyncInferenceServicer_to_server(servicer, server):
         'transport.AsyncInference', rpc_method_handlers
     )
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('transport.AsyncInference', rpc_method_handlers)
+    server.add_registered_method_handlers(
+        'transport.AsyncInference', rpc_method_handlers
+    )
 
 
 # This class is part of an EXPERIMENTAL API.

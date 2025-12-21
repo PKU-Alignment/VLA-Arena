@@ -20,19 +20,22 @@ import dataclasses
 import logging
 from typing import Protocol
 
-from etils import epath
 import jax
-import orbax.checkpoint as ocp
-import orbax.checkpoint.future as future
-
-from openpi.shared import array_typing as at
 import openpi.shared.normalize as _normalize
 import openpi.training.data_loader as _data_loader
 import openpi.training.utils as training_utils
+import orbax.checkpoint as ocp
+import orbax.checkpoint.future as future
+from etils import epath
+from openpi.shared import array_typing as at
 
 
 def initialize_checkpoint_dir(
-    checkpoint_dir: epath.Path | str, *, keep_period: int | None, overwrite: bool, resume: bool
+    checkpoint_dir: epath.Path | str,
+    *,
+    keep_period: int | None,
+    overwrite: bool,
+    resume: bool,
 ) -> tuple[ocp.CheckpointManager, bool]:
     checkpoint_dir = epath.Path(checkpoint_dir).resolve()
     resuming = False
@@ -143,7 +146,9 @@ class CallbackHandler(ocp.AsyncCheckpointHandler):
         if jax.process_index() == 0:
             args.callback(directory)
 
-    async def async_save(self, directory: epath.Path, args: CallbackSave) -> list[futures.Future]:
+    async def async_save(
+        self, directory: epath.Path, args: CallbackSave
+    ) -> list[futures.Future]:
         return [
             future.CommitFutureAwaitingContractedSignals(
                 asyncio.to_thread(self.save, directory, args)
@@ -164,7 +169,9 @@ class CallbackSave(ocp.args.CheckpointArgs):
 class CallbackRestore(ocp.args.CheckpointArgs): ...
 
 
-def _split_params(state: training_utils.TrainState) -> tuple[training_utils.TrainState, at.Params]:
+def _split_params(
+    state: training_utils.TrainState,
+) -> tuple[training_utils.TrainState, at.Params]:
     if state.ema_params is not None:
         params = state.ema_params
         train_state = dataclasses.replace(state, ema_params=None)

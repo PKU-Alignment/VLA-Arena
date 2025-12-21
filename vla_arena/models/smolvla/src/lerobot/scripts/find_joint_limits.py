@@ -49,7 +49,6 @@ from dataclasses import dataclass
 
 import draccus
 import numpy as np
-
 from lerobot.model.kinematics import RobotKinematics
 from lerobot.robots import (  # noqa: F401
     RobotConfig,
@@ -91,11 +90,15 @@ def find_joint_and_ee_bounds(cfg: FindJointLimitsConfig):
         # Note to be compatible with the rest of the codebase,
         # we are using the new calibration method for so101 and so100
         robot_type = 'so_new_calibration'
-    kinematics = RobotKinematics(cfg.robot.urdf_path, cfg.robot.target_frame_name)
+    kinematics = RobotKinematics(
+        cfg.robot.urdf_path, cfg.robot.target_frame_name
+    )
 
     # Initialize min/max values
     observation = robot.get_observation()
-    joint_positions = np.array([observation[f'{key}.pos'] for key in robot.bus.motors])
+    joint_positions = np.array(
+        [observation[f'{key}.pos'] for key in robot.bus.motors]
+    )
     ee_pos = kinematics.forward_kinematics(joint_positions)[:3, 3]
 
     max_pos = joint_positions.copy()
@@ -108,7 +111,9 @@ def find_joint_and_ee_bounds(cfg: FindJointLimitsConfig):
         robot.send_action(action)
 
         observation = robot.get_observation()
-        joint_positions = np.array([observation[f'{key}.pos'] for key in robot.bus.motors])
+        joint_positions = np.array(
+            [observation[f'{key}.pos'] for key in robot.bus.motors]
+        )
         ee_pos = kinematics.forward_kinematics(joint_positions)[:3, 3]
 
         # Skip initial warmup period

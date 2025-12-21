@@ -30,7 +30,6 @@ import random
 import numpy as np
 import pytest
 import torch
-
 from lerobot.utils.random_utils import (
     deserialize_numpy_rng_state,
     deserialize_python_rng_state,
@@ -132,7 +131,9 @@ def test_seeded_context(fixed_seed):
         seeded_val2 = (random.random(), np.random.rand(), torch.rand(1).item())
 
     assert seeded_val1 == seeded_val2
-    assert all(a != b for a, b in zip(val1, seeded_val1, strict=True))  # changed inside the context
+    assert all(
+        a != b for a, b in zip(val1, seeded_val1, strict=True)
+    )  # changed inside the context
     assert all(
         a != b for a, b in zip(val2, seeded_val2, strict=True)
     )  # changed again after exiting

@@ -31,14 +31,13 @@ import shutil
 from pathlib import Path
 
 import torch
-from safetensors.torch import save_file
-
 from lerobot.configs.default import DatasetConfig
 from lerobot.configs.train import TrainPipelineConfig
 from lerobot.datasets.factory import make_dataset
 from lerobot.optim.factory import make_optimizer_and_scheduler
 from lerobot.policies.factory import make_policy, make_policy_config
 from lerobot.utils.random_utils import set_seed
+from safetensors.torch import save_file
 
 
 def get_policy_stats(ds_repo_id: str, policy_name: str, policy_kwargs: dict):
@@ -46,7 +45,9 @@ def get_policy_stats(ds_repo_id: str, policy_name: str, policy_kwargs: dict):
     train_cfg = TrainPipelineConfig(
         # TODO(rcadene, aliberts): remove dataset download
         dataset=DatasetConfig(repo_id=ds_repo_id, episodes=[0]),
-        policy=make_policy_config(policy_name, push_to_hub=False, **policy_kwargs),
+        policy=make_policy_config(
+            policy_name, push_to_hub=False, **policy_kwargs
+        ),
     )
     train_cfg.validate()  # Needed for auto-setting some parameters
 
@@ -65,7 +66,9 @@ def get_policy_stats(ds_repo_id: str, policy_name: str, policy_kwargs: dict):
     batch = next(iter(dataloader))
     loss, output_dict = policy.forward(batch)
     if output_dict is not None:
-        output_dict = {k: v for k, v in output_dict.items() if isinstance(v, torch.Tensor)}
+        output_dict = {
+            k: v for k, v in output_dict.items() if isinstance(v, torch.Tensor)
+        }
         output_dict['loss'] = loss
     else:
         output_dict = {'loss': loss}
@@ -76,14 +79,18 @@ def get_policy_stats(ds_repo_id: str, policy_name: str, policy_kwargs: dict):
         if param.requires_grad:
             grad_stats[f'{key}_mean'] = param.grad.mean()
             grad_stats[f'{key}_std'] = (
-                param.grad.std() if param.grad.numel() > 1 else torch.tensor(float(0.0))
+                param.grad.std()
+                if param.grad.numel() > 1
+                else torch.tensor(float(0.0))
             )
 
     optimizer.step()
     param_stats = {}
     for key, param in policy.named_parameters():
         param_stats[f'{key}_mean'] = param.mean()
-        param_stats[f'{key}_std'] = param.std() if param.numel() > 1 else torch.tensor(float(0.0))
+        param_stats[f'{key}_std'] = (
+            param.std() if param.numel() > 1 else torch.tensor(float(0.0))
+        )
 
     optimizer.zero_grad()
     policy.reset()
@@ -110,7 +117,10 @@ def get_policy_stats(ds_repo_id: str, policy_name: str, policy_kwargs: dict):
     else:
         actions_queue = train_cfg.policy.n_action_repeats
 
-    actions = {str(i): policy.select_action(obs).contiguous() for i in range(actions_queue)}
+    actions = {
+        str(i): policy.select_action(obs).contiguous()
+        for i in range(actions_queue)
+    }
     return output_dict, grad_stats, param_stats, actions
 
 
@@ -135,7 +145,12 @@ def save_policy_to_safetensors(
 
 if __name__ == '__main__':
     artifacts_cfg = [
-        ('lerobot/xarm_lift_medium', 'tdmpc', {'use_mpc': False}, 'use_policy'),
+        (
+            'lerobot/xarm_lift_medium',
+            'tdmpc',
+            {'use_mpc': False},
+            'use_policy',
+        ),
         ('lerobot/xarm_lift_medium', 'tdmpc', {'use_mpc': True}, 'use_mpc'),
         (
             'lerobot/pusht',
@@ -147,7 +162,12 @@ if __name__ == '__main__':
             },
             '',
         ),
-        ('lerobot/aloha_sim_insertion_human', 'act', {'n_action_steps': 10}, ''),
+        (
+            'lerobot/aloha_sim_insertion_human',
+            'act',
+            {'n_action_steps': 10},
+            '',
+        ),
         (
             'lerobot/aloha_sim_insertion_human',
             'act',
@@ -159,5 +179,10 @@ if __name__ == '__main__':
         raise RuntimeError('No policies were provided!')
     for ds_repo_id, policy, policy_kwargs, file_name_extra in artifacts_cfg:
         ds_name = ds_repo_id.split('/')[-1]
-        output_dir = Path('tests/artifacts/policies') / f'{ds_name}_{policy}_{file_name_extra}'
-        save_policy_to_safetensors(output_dir, ds_repo_id, policy, policy_kwargs)
+        output_dir = (
+            Path('tests/artifacts/policies')
+            / f'{ds_name}_{policy}_{file_name_extra}'
+        )
+        save_policy_to_safetensors(
+            output_dir, ds_repo_id, policy, policy_kwargs
+        )

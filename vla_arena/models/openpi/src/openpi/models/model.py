@@ -13,27 +13,25 @@
 # limitations under the License.
 
 import abc
-from collections.abc import Sequence
 import dataclasses
 import enum
 import logging
 import pathlib
+from collections.abc import Sequence
 from typing import Generic, TypeVar
 
 import augmax
-from flax import nnx
-from flax import struct
-from flax import traverse_util
 import jax
 import jax.numpy as jnp
 import numpy as np
+import openpi.shared.array_typing as at
 import orbax.checkpoint as ocp
 import safetensors
 import torch
-
+from flax import nnx, struct, traverse_util
 from openpi.models_pytorch import pi0_pytorch
 from openpi.shared import image_tools
-import openpi.shared.array_typing as at
+
 
 logger = logging.getLogger("openpi")
 
@@ -131,10 +129,18 @@ class Observation(Generic[ArrayT]):
         # If images are uint8, convert them to [-1, 1] float32.
         for key in data["image"]:
             if data["image"][key].dtype == np.uint8:
-                data["image"][key] = data["image"][key].astype(np.float32) / 255.0 * 2.0 - 1.0
-            elif hasattr(data["image"][key], "dtype") and data["image"][key].dtype == torch.uint8:
                 data["image"][key] = (
-                    data["image"][key].to(torch.float32).permute(0, 3, 1, 2) / 255.0 * 2.0 - 1.0
+                    data["image"][key].astype(np.float32) / 255.0 * 2.0 - 1.0
+                )
+            elif (
+                hasattr(data["image"][key], "dtype")
+                and data["image"][key].dtype == torch.uint8
+            ):
+                data["image"][key] = (
+                    data["image"][key].to(torch.float32).permute(0, 3, 1, 2)
+                    / 255.0
+                    * 2.0
+                    - 1.0
                 )
         return cls(
             images=data["image"],
@@ -182,7 +188,9 @@ def preprocess_observation(
     for key in image_keys:
         image = observation.images[key]
         if image.shape[1:3] != image_resolution:
-            logger.info(f"Resizing image {key} from {image.shape[1:3]} to {image_resolution}")
+            logger.info(
+                f"Resizing image {key} from {image.shape[1:3]} to {image_resolution}"
+            )
             image = image_tools.resize_with_pad(image, *image_resolution)
 
         if train:
@@ -198,7 +206,9 @@ def preprocess_observation(
                     augmax.Rotate((-5, 5)),
                 ]
             transforms += [
-                augmax.ColorJitter(brightness=0.3, contrast=0.4, saturation=0.5),
+                augmax.ColorJitter(
+                    brightness=0.3, contrast=0.4, saturation=0.5
+                ),
             ]
             sub_rngs = jax.random.split(rng, image.shape[0])
             image = jax.vmap(augmax.Chain(*transforms))(sub_rngs, image)
@@ -250,14 +260,21 @@ class BaseModelConfig(abc.ABC):
     def create(self, rng: at.KeyArrayLike) -> "BaseModel":
         """Create a new model, initializing parameters."""
 
-    def load(self, params: at.Params, *, remove_extra_params: bool = True) -> "BaseModel":
+    def load(
+        self, params: at.Params, *, remove_extra_params: bool = True
+    ) -> "BaseModel":
         """Create a model with the given parameters."""
         model = nnx.eval_shape(self.create, jax.random.key(0))
         graphdef, state = nnx.split(model)
         if remove_extra_params:
-            params = ocp.transform_utils.intersect_trees(state.to_pure_dict(), params)
+            params = ocp.transform_utils.intersect_trees(
+                state.to_pure_dict(), params
+            )
         at.check_pytree_equality(
-            expected=state.to_pure_dict(), got=params, check_shapes=True, check_dtypes=False
+            expected=state.to_pure_dict(),
+            got=params,
+            check_shapes=True,
+            check_dtypes=False,
         )
         state.replace_by_pure_dict(params)
         return nnx.merge(graphdef, state)
@@ -269,12 +286,16 @@ class BaseModelConfig(abc.ABC):
         return model
 
     @abc.abstractmethod
-    def inputs_spec(self, *, batch_size: int = 1) -> tuple[Observation, Actions]:
+    def inputs_spec(
+        self, *, batch_size: int = 1
+    ) -> tuple[Observation, Actions]:
         """Returns the input specification for the model. Values are jax.ShapeDtypeStruct."""
 
     def fake_obs(self, batch_size: int = 1) -> Observation:
         observation_spec, _ = self.inputs_spec(batch_size=batch_size)
-        return jax.tree.map(lambda x: jnp.ones(x.shape, x.dtype), observation_spec)
+        return jax.tree.map(
+            lambda x: jnp.ones(x.shape, x.dtype), observation_spec
+        )
 
     def fake_act(self, batch_size: int = 1) -> Actions:
         _, action_spec = self.inputs_spec(batch_size=batch_size)
@@ -336,7 +357,9 @@ def restore_params(
 
     if restore_type is jax.Array and sharding is None:
         mesh = jax.sharding.Mesh(jax.devices(), ("x",))
-        sharding = jax.sharding.NamedSharding(mesh, jax.sharding.PartitionSpec())
+        sharding = jax.sharding.NamedSharding(
+            mesh, jax.sharding.PartitionSpec()
+        )
 
     with ocp.PyTreeCheckpointer() as ckptr:
         metadata = ckptr.metadata(params_path)
@@ -348,7 +371,9 @@ def restore_params(
                 item=item,
                 restore_args=jax.tree.map(
                     lambda _: ocp.ArrayRestoreArgs(
-                        sharding=sharding, restore_type=restore_type, dtype=dtype
+                        sharding=sharding,
+                        restore_type=restore_type,
+                        dtype=dtype,
                     ),
                     item,
                 ),

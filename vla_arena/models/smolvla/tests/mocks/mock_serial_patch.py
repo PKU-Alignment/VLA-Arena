@@ -62,4 +62,6 @@ class WaitableStub(Stub):
             if self.calls >= min_calls:
                 return self.calls
             time.sleep(0.005)
-        raise TimeoutError(f'Stub not called {min_calls} times within {timeout} seconds.')
+        raise TimeoutError(
+            f'Stub not called {min_calls} times within {timeout} seconds.'
+        )

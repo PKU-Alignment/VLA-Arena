@@ -21,13 +21,22 @@ from typing import Any
 
 import numpy as np
 import torch
-from vla_arena.models.openvla_oft.experiments.robot.openvla_utils import get_vla, get_vla_action
+
+from vla_arena.models.openvla_oft.experiments.robot.openvla_utils import (
+    get_vla,
+    get_vla_action,
+)
+
 
 # Initialize important constants
 ACTION_DIM = 7
 DATE = time.strftime('%Y_%m_%d')
 DATE_TIME = time.strftime('%Y_%m_%d-%H_%M_%S')
-DEVICE = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
+DEVICE = (
+    torch.device('cuda:0')
+    if torch.cuda.is_available()
+    else torch.device('cpu')
+)
 
 # Configure NumPy print settings
 np.set_printoptions(formatter={'float': lambda x: f'{x:0.3f}'})
@@ -61,7 +70,9 @@ def set_seed_everywhere(seed: int) -> None:
     os.environ['PYTHONHASHSEED'] = str(seed)
 
 
-def get_model(cfg: Any, wrap_diffusion_policy_for_droid: bool = False) -> torch.nn.Module:
+def get_model(
+    cfg: Any, wrap_diffusion_policy_for_droid: bool = False
+) -> torch.nn.Module:
     """
     Load and initialize model for evaluation based on configuration.
 
@@ -156,7 +167,9 @@ def get_action(
     return action
 
 
-def normalize_gripper_action(action: np.ndarray, binarize: bool = True) -> np.ndarray:
+def normalize_gripper_action(
+    action: np.ndarray, binarize: bool = True
+) -> np.ndarray:
     """
     Normalize gripper action from [0,1] to [-1,+1] range.
 
@@ -179,7 +192,8 @@ def normalize_gripper_action(action: np.ndarray, binarize: bool = True) -> np.nd
     # Normalize the last action dimension to [-1,+1]
     orig_low, orig_high = 0.0, 1.0
     normalized_action[..., -1] = (
-        2 * (normalized_action[..., -1] - orig_low) / (orig_high - orig_low) - 1
+        2 * (normalized_action[..., -1] - orig_low) / (orig_high - orig_low)
+        - 1
     )
 
     if binarize:

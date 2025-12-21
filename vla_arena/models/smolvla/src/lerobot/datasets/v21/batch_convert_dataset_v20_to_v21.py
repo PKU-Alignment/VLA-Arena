@@ -36,9 +36,12 @@ import traceback
 from pathlib import Path
 
 from huggingface_hub import HfApi
-
 from lerobot import available_datasets
-from lerobot.datasets.v21.convert_dataset_v20_to_v21 import V21, convert_dataset
+from lerobot.datasets.v21.convert_dataset_v20_to_v21 import (
+    V21,
+    convert_dataset,
+)
+
 
 LOCAL_DIR = Path('data/')
 

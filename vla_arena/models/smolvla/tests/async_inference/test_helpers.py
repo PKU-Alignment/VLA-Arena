@@ -32,7 +32,6 @@ import time
 
 import numpy as np
 import torch
-
 from lerobot.configs.types import FeatureType, PolicyFeature
 from lerobot.scripts.server.helpers import (
     FPSTracker,
@@ -44,6 +43,7 @@ from lerobot.scripts.server.helpers import (
     raw_observation_to_observation,
     resize_robot_observation_image,
 )
+
 
 # ---------------------------------------------------------------------
 # FPSTracker
@@ -166,7 +166,9 @@ def test_timed_data_deserialization_data_getters():
     # TimedObservation
     # ------------------------------------------------------------------
     obs_dict = {'observation.state': torch.arange(4).float()}
-    to_in = TimedObservation(timestamp=ts, observation=obs_dict, timestep=7, must_go=True)
+    to_in = TimedObservation(
+        timestamp=ts, observation=obs_dict, timestep=7, must_go=True
+    )
 
     to_bytes = pickle.dumps(to_in)  # nosec
     to_out: TimedObservation = pickle.loads(to_bytes)  # nosec B301
@@ -176,7 +178,8 @@ def test_timed_data_deserialization_data_getters():
     assert to_out.must_go is True
     assert to_out.get_observation().keys() == obs_dict.keys()
     torch.testing.assert_close(
-        to_out.get_observation()['observation.state'], obs_dict['observation.state']
+        to_out.get_observation()['observation.state'],
+        obs_dict['observation.state'],
     )
 
 
@@ -230,7 +233,9 @@ def _create_mock_robot_observation():
         'elbow': 2.0,
         'wrist': 3.0,
         'gripper': 0.5,
-        'laptop': np.random.randint(0, 256, size=(480, 640, 3), dtype=np.uint8),
+        'laptop': np.random.randint(
+            0, 256, size=(480, 640, 3), dtype=np.uint8
+        ),
         'phone': np.random.randint(0, 256, size=(480, 640, 3), dtype=np.uint8),
     }
 
@@ -297,7 +302,9 @@ def test_prepare_image():
 def test_resize_robot_observation_image():
     """Test image resizing from robot resolution to policy resolution."""
     # Create mock image: (H=480, W=640, C=3)
-    original_image = torch.randint(0, 256, size=(480, 640, 3), dtype=torch.uint8)
+    original_image = torch.randint(
+        0, 256, size=(480, 640, 3), dtype=torch.uint8
+    )
     target_shape = (3, 224, 224)  # (C, H, W)
 
     resized = resize_robot_observation_image(original_image, target_shape)
@@ -319,7 +326,9 @@ def test_prepare_raw_observation():
     lerobot_features = _create_mock_lerobot_features()
     policy_image_features = _create_mock_policy_image_features()
 
-    prepared = prepare_raw_observation(robot_obs, lerobot_features, policy_image_features)
+    prepared = prepare_raw_observation(
+        robot_obs, lerobot_features, policy_image_features
+    )
 
     # Check that state is properly extracted and batched
     assert 'observation.state' in prepared
@@ -335,8 +344,14 @@ def test_prepare_raw_observation():
     phone_img = prepared['observation.images.phone']
 
     # Check image shapes match policy requirements
-    assert laptop_img.shape == policy_image_features['observation.images.laptop'].shape
-    assert phone_img.shape == policy_image_features['observation.images.phone'].shape
+    assert (
+        laptop_img.shape
+        == policy_image_features['observation.images.laptop'].shape
+    )
+    assert (
+        phone_img.shape
+        == policy_image_features['observation.images.phone'].shape
+    )
 
     # Check that images are tensors
     assert isinstance(laptop_img, torch.Tensor)
@@ -483,11 +498,15 @@ def test_image_processing_pipeline_preserves_content():
         robot_obs, lerobot_features, policy_image_features, 'cpu'
     )
 
-    processed_img = observation['observation.images.laptop'].squeeze(0)  # Remove batch dim
+    processed_img = observation['observation.images.laptop'].squeeze(
+        0
+    )  # Remove batch dim
 
     # Check that the center region has higher values than corners
     # Due to bilinear interpolation, exact values will change but pattern should remain
     center_val = processed_img[:, 25, 25].mean()  # Center of 50x50 image
     corner_val = processed_img[:, 5, 5].mean()  # Corner
 
-    assert center_val > corner_val, 'Image processing should preserve recognizable patterns'
+    assert (
+        center_val > corner_val
+    ), 'Image processing should preserve recognizable patterns'

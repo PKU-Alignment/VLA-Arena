@@ -27,7 +27,9 @@ from vla_arena.models.openvla.prismatic.models.backbones.llm.prompting.base_prom
 
 
 class MistralInstructPromptBuilder(PromptBuilder):
-    def __init__(self, model_family: str, system_prompt: str | None = None) -> None:
+    def __init__(
+        self, model_family: str, system_prompt: str | None = None
+    ) -> None:
         super().__init__(model_family, system_prompt)
 
         # Note =>> Mistral Tokenizer is an instance of `LlamaTokenizer(Fast)`
@@ -42,7 +44,11 @@ class MistralInstructPromptBuilder(PromptBuilder):
         self.prompt, self.turn_count = '', 0
 
     def add_turn(self, role: str, message: str) -> str:
-        assert (role == 'human') if (self.turn_count % 2 == 0) else (role == 'gpt')
+        assert (
+            (role == 'human')
+            if (self.turn_count % 2 == 0)
+            else (role == 'gpt')
+        )
         message = message.replace('<image>', '').strip()
 
         if (self.turn_count % 2) == 0:

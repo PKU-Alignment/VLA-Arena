@@ -35,6 +35,7 @@ import torch.nn as nn
 from huggingface_hub import hf_hub_download
 from timm.models.vision_transformer import LayerScale
 from transformers import AutoTokenizer
+
 from vla_arena.models.openvla.vla_arena.models.openvla.prismatic.extern.hf.configuration_prismatic import (
     PrismaticConfig,
 )
@@ -114,8 +115,14 @@ def remap_state_dicts_for_hf(
     assert (
         len(vision_backbone_state_dicts) <= 2
     ), 'Prismatic models only support up to 2 (fused) vision backbones!'
-    for idx, vision_backbone_state_dict in enumerate(vision_backbone_state_dicts):
-        prefix = 'vision_backbone.featurizer' if idx == 0 else 'vision_backbone.fused_featurizer'
+    for idx, vision_backbone_state_dict in enumerate(
+        vision_backbone_state_dicts
+    ):
+        prefix = (
+            'vision_backbone.featurizer'
+            if idx == 0
+            else 'vision_backbone.fused_featurizer'
+        )
         for key, value in vision_backbone_state_dict.items():
             hf_state_dict[f'{prefix}.{key}'] = value
 
@@ -131,20 +138,25 @@ def convert_prismatic_weights_to_hf(cfg: HFConvertConfig) -> None:
 
     # Get `config.json` and `checkpoint_pt` -- mirrors logic in `vla_arena.models.openvla.prismatic.models.load.py`
     if os.path.isdir(cfg.prismatic_model_path_or_id):
-        print(f'[*] Loading from Local Path `{(run_dir := Path(cfg.prismatic_model_path_or_id))}`')
+        print(
+            f'[*] Loading from Local Path `{(run_dir := Path(cfg.prismatic_model_path_or_id))}`'
+        )
         config_json, checkpoint_pt = (
             run_dir / 'config.json',
             run_dir / 'checkpoints' / 'latest-checkpoint.pt',
         )
 
-        assert config_json.exists(), f'Missing `config.json` for `{run_dir = }`'
+        assert (
+            config_json.exists()
+        ), f'Missing `config.json` for `{run_dir = }`'
         assert checkpoint_pt.exists(), f'Missing checkpoint for `{run_dir = }`'
     else:
         print(
             f'[*] Downloading Prismatic Checkpoint from HF Hub :: `TRI-ML/{cfg.prismatic_model_path_or_id}`'
         )
         config_json = hf_hub_download(
-            'TRI-ML/prismatic-vlms', f'{cfg.prismatic_model_path_or_id}/config.json'
+            'TRI-ML/prismatic-vlms',
+            f'{cfg.prismatic_model_path_or_id}/config.json',
         )
         checkpoint_pt = hf_hub_download(
             'TRI-ML/prismatic-vlms',
@@ -178,7 +190,9 @@ def convert_prismatic_weights_to_hf(cfg: HFConvertConfig) -> None:
     tokenizer.init_kwargs.pop(
         'add_prefix_space', None
     )  # Pop to prevent unnecessary warning on reload...
-    assert tokenizer.pad_token_id == hf_config.pad_token_id, 'Incorrect Pad Token ID!'
+    assert (
+        tokenizer.pad_token_id == hf_config.pad_token_id
+    ), 'Incorrect Pad Token ID!'
     assert (
         len(tokenizer) > hf_config.text_config.vocab_size
     ), 'Tokenizer vocabulary must be larger than LLM vocabulary!'
@@ -196,7 +210,13 @@ def convert_prismatic_weights_to_hf(cfg: HFConvertConfig) -> None:
     print(
         '[*] Loading TIMM Vision Backbone(s) and Image Transform(s) =>> Initializing PrismaticImageProcessor'
     )
-    timm_vision_backbones, input_sizes, interpolations, means, stds = [], [], [], [], []
+    timm_vision_backbones, input_sizes, interpolations, means, stds = (
+        [],
+        [],
+        [],
+        [],
+        [],
+    )
     for idx, timm_model_id in enumerate(hf_config.timm_model_ids):
         timm_vision_backbone = timm.create_model(
             timm_model_id,
@@ -209,7 +229,9 @@ def convert_prismatic_weights_to_hf(cfg: HFConvertConfig) -> None:
 
         # Get Per-Backbone Image Processing
         data_cfg = timm.data.resolve_model_data_config(timm_vision_backbone)
-        input_sizes.append((3, hf_config.image_sizes[idx], hf_config.image_sizes[idx]))
+        input_sizes.append(
+            (3, hf_config.image_sizes[idx], hf_config.image_sizes[idx])
+        )
         interpolations.append(data_cfg['interpolation'])
         means.append(data_cfg['mean'])
         stds.append(data_cfg['std'])
@@ -230,8 +252,12 @@ def convert_prismatic_weights_to_hf(cfg: HFConvertConfig) -> None:
     )
 
     # Create top-level PrismaticProcessor (`transformers.ProcessorMixin` =>> enables registry w/ AutoProcessor)
-    print('[*] Creating PrismaticProcessor Instance from Tokenizer and PrismaticImageProcessor')
-    hf_processor = PrismaticProcessor(image_processor=hf_image_processor, tokenizer=tokenizer)
+    print(
+        '[*] Creating PrismaticProcessor Instance from Tokenizer and PrismaticImageProcessor'
+    )
+    hf_processor = PrismaticProcessor(
+        image_processor=hf_image_processor, tokenizer=tokenizer
+    )
 
     # Load Prismatic Model State Dictionary (in preparation for conversion)
     print('[*] Loading Prismatic VLM State Dictionary from Checkpoint')
@@ -248,11 +274,15 @@ def convert_prismatic_weights_to_hf(cfg: HFConvertConfig) -> None:
     converted_state_dict = remap_state_dicts_for_hf(
         model_state_dict['projector'],
         model_state_dict['llm_backbone'],
-        vision_backbone_state_dicts=[vb.state_dict() for vb in timm_vision_backbones],
+        vision_backbone_state_dicts=[
+            vb.state_dict() for vb in timm_vision_backbones
+        ],
     )
 
     # Create PrismaticForConditionalGeneration =>> Note that we can't initialize on `meta` device because TIMM
-    print('[*] Building (Randomly Initialized) Model =>> PrismaticForConditionalGeneration')
+    print(
+        '[*] Building (Randomly Initialized) Model =>> PrismaticForConditionalGeneration'
+    )
     hf_model = PrismaticForConditionalGeneration(hf_config)
     hf_model.load_state_dict(converted_state_dict, strict=True, assign=True)
 
@@ -261,7 +291,9 @@ def convert_prismatic_weights_to_hf(cfg: HFConvertConfig) -> None:
 
     # Save Pretrained Versions to Local Path
     print('[*] Saving Model & Processor to Local Path')
-    hf_model.save_pretrained(cfg.output_hf_model_local_path, max_shard_size='7GB')
+    hf_model.save_pretrained(
+        cfg.output_hf_model_local_path, max_shard_size='7GB'
+    )
     hf_image_processor.save_pretrained(cfg.output_hf_model_local_path)
     hf_processor.save_pretrained(cfg.output_hf_model_local_path)
 
@@ -269,7 +301,9 @@ def convert_prismatic_weights_to_hf(cfg: HFConvertConfig) -> None:
     PrismaticConfig.register_for_auto_class()
     PrismaticImageProcessor.register_for_auto_class('AutoImageProcessor')
     PrismaticProcessor.register_for_auto_class('AutoProcessor')
-    PrismaticForConditionalGeneration.register_for_auto_class('AutoModelForVision2Seq')
+    PrismaticForConditionalGeneration.register_for_auto_class(
+        'AutoModelForVision2Seq'
+    )
 
     # Push to Hub
     print('[*] Pushing Model & Processor to HF Hub')

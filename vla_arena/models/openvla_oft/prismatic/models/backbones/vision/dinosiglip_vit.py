@@ -32,12 +32,14 @@ from torch.distributed.fsdp.wrap import (
     transformer_auto_wrap_policy,
 )
 from torchvision.transforms import Compose, Resize
+
 from vla_arena.models.openvla_oft.prismatic.models.backbones.vision.base_vision import (
     ImageTransform,
     LetterboxPad,
     VisionBackbone,
     unpack_tuple,
 )
+
 
 # Registry =>> Supported DinoSigLIP Pairs (as TIMM identifiers)
 DINOSigLIP_VISION_BACKBONES = {
@@ -67,13 +69,22 @@ class DinoSigLIPImageTransform:
 
 class DinoSigLIPViTBackbone(VisionBackbone):
     def __init__(
-        self, vision_backbone_id: str, image_resize_strategy: str, default_image_size: int = 224
+        self,
+        vision_backbone_id: str,
+        image_resize_strategy: str,
+        default_image_size: int = 224,
     ) -> None:
         super().__init__(
-            vision_backbone_id, image_resize_strategy, default_image_size=default_image_size
+            vision_backbone_id,
+            image_resize_strategy,
+            default_image_size=default_image_size,
         )
-        self.dino_timm_path_or_url = DINOSigLIP_VISION_BACKBONES[vision_backbone_id]['dino']
-        self.siglip_timm_path_or_url = DINOSigLIP_VISION_BACKBONES[vision_backbone_id]['siglip']
+        self.dino_timm_path_or_url = DINOSigLIP_VISION_BACKBONES[
+            vision_backbone_id
+        ]['dino']
+        self.siglip_timm_path_or_url = DINOSigLIP_VISION_BACKBONES[
+            vision_backbone_id
+        ]['siglip']
 
         # Initialize both Featurizers (ViTs) by downloading from HF / TIMM Hub if necessary
         self.dino_featurizer: VisionTransformer = timm.create_model(
@@ -109,14 +120,28 @@ class DinoSigLIPViTBackbone(VisionBackbone):
         )
 
         # Get Configs for _both_ Featurizers =>> Note :: Override default image size for larger resolution models
-        self.dino_data_cfg = timm.data.resolve_model_data_config(self.dino_featurizer)
-        self.dino_data_cfg['input_size'] = (3, self.default_image_size, self.default_image_size)
+        self.dino_data_cfg = timm.data.resolve_model_data_config(
+            self.dino_featurizer
+        )
+        self.dino_data_cfg['input_size'] = (
+            3,
+            self.default_image_size,
+            self.default_image_size,
+        )
 
-        self.siglip_data_cfg = timm.data.resolve_model_data_config(self.siglip_featurizer)
-        self.siglip_data_cfg['input_size'] = (3, self.default_image_size, self.default_image_size)
+        self.siglip_data_cfg = timm.data.resolve_model_data_config(
+            self.siglip_featurizer
+        )
+        self.siglip_data_cfg['input_size'] = (
+            3,
+            self.default_image_size,
+            self.default_image_size,
+        )
 
         # Initialize *both* Transforms
-        default_dino_transform = timm.data.create_transform(**self.dino_data_cfg, is_training=False)
+        default_dino_transform = timm.data.create_transform(
+            **self.dino_data_cfg, is_training=False
+        )
         default_siglip_transform = timm.data.create_transform(
             **self.siglip_data_cfg, is_training=False
         )
@@ -130,7 +155,9 @@ class DinoSigLIPViTBackbone(VisionBackbone):
             [
                 Resize(
                     self.default_image_size,
-                    interpolation=default_siglip_transform.transforms[0].interpolation,
+                    interpolation=default_siglip_transform.transforms[
+                        0
+                    ].interpolation,
                 ),
                 *default_siglip_transform.transforms[1:],
             ]
@@ -151,7 +178,9 @@ class DinoSigLIPViTBackbone(VisionBackbone):
                 [
                     Resize(
                         target_size,
-                        interpolation=default_dino_transform.transforms[0].interpolation,
+                        interpolation=default_dino_transform.transforms[
+                            0
+                        ].interpolation,
                     ),
                     *default_dino_transform.transforms[1:],
                 ]
@@ -160,13 +189,17 @@ class DinoSigLIPViTBackbone(VisionBackbone):
                 [
                     Resize(
                         target_size,
-                        interpolation=default_siglip_transform.transforms[0].interpolation,
+                        interpolation=default_siglip_transform.transforms[
+                            0
+                        ].interpolation,
                     ),
                     *default_siglip_transform.transforms[1:],
                 ]
             )
 
-            self.image_transform = DinoSigLIPImageTransform(dino_transform, siglip_transform)
+            self.image_transform = DinoSigLIPImageTransform(
+                dino_transform, siglip_transform
+            )
 
         elif self.image_resize_strategy == 'resize-crop':
             self.image_transform = DinoSigLIPImageTransform(
@@ -185,13 +218,27 @@ class DinoSigLIPViTBackbone(VisionBackbone):
             ), 'DinoSigLIP `data_cfg` missing `mean`!'
 
             # Compute Padding Fill Value(s) (rescaled normalization mean if applicable)
-            dino_fill = tuple([int(x * 255) for x in self.dino_data_cfg['mean']])
-            siglip_fill = tuple([int(x * 255) for x in self.siglip_data_cfg['mean']])
+            dino_fill = tuple(
+                [int(x * 255) for x in self.dino_data_cfg['mean']]
+            )
+            siglip_fill = tuple(
+                [int(x * 255) for x in self.siglip_data_cfg['mean']]
+            )
 
             # Build New Transform
             self.image_transform = DinoSigLIPImageTransform(
-                Compose([LetterboxPad(dino_fill), *default_dino_transform.transforms]),
-                Compose([LetterboxPad(siglip_fill), *default_siglip_transform.transforms]),
+                Compose(
+                    [
+                        LetterboxPad(dino_fill),
+                        *default_dino_transform.transforms,
+                    ]
+                ),
+                Compose(
+                    [
+                        LetterboxPad(siglip_fill),
+                        *default_siglip_transform.transforms,
+                    ]
+                ),
             )
 
         else:
@@ -201,11 +248,15 @@ class DinoSigLIPViTBackbone(VisionBackbone):
 
     def get_fsdp_wrapping_policy(self) -> Callable:
         """Return a simple FSDP policy that wraps each ViT block and then both of the _entire_ featurizers."""
-        vit_wrap_policy = partial(_module_wrap_policy, module_classes={VisionTransformer})
+        vit_wrap_policy = partial(
+            _module_wrap_policy, module_classes={VisionTransformer}
+        )
         transformer_block_policy = partial(
             transformer_auto_wrap_policy, transformer_layer_cls={Block}
         )
-        return partial(_or_policy, policies=[vit_wrap_policy, transformer_block_policy])
+        return partial(
+            _or_policy, policies=[vit_wrap_policy, transformer_block_policy]
+        )
 
     def forward(self, pixel_values: dict[str, torch.Tensor]) -> torch.Tensor:
         """Runs the transformed image/pixel tensors through each vision backbone, returning concatenated patches."""
@@ -220,7 +271,9 @@ class DinoSigLIPViTBackbone(VisionBackbone):
 
     @property
     def embed_dim(self) -> int:
-        return self.dino_featurizer.embed_dim + self.siglip_featurizer.embed_dim
+        return (
+            self.dino_featurizer.embed_dim + self.siglip_featurizer.embed_dim
+        )
 
     @property
     def num_patches(self) -> int:

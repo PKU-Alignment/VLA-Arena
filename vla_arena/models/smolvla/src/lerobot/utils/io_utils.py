@@ -34,6 +34,7 @@ from typing import TypeVar
 
 import imageio
 
+
 JsonLike = (
     str
     | int
@@ -51,7 +52,9 @@ def write_video(video_path, stacked_frames, fps):
     # Filter out DeprecationWarnings raised from pkg_resources
     with warnings.catch_warnings():
         warnings.filterwarnings(
-            'ignore', 'pkg_resources is deprecated as an API', category=DeprecationWarning
+            'ignore',
+            'pkg_resources is deprecated as an API',
+            category=DeprecationWarning,
         )
         imageio.mimsave(video_path, stacked_frames, fps=fps)
 
@@ -76,7 +79,9 @@ def deserialize_json_into_object(fpath: Path, obj: T) -> T:
         # If the target is a dictionary, source must be a dictionary as well.
         if isinstance(target, dict):
             if not isinstance(source, dict):
-                raise TypeError(f'Type mismatch: expected dict, got {type(source)}')
+                raise TypeError(
+                    f'Type mismatch: expected dict, got {type(source)}'
+                )
 
             # Check that they have exactly the same set of keys.
             if target.keys() != source.keys():
@@ -93,11 +98,15 @@ def deserialize_json_into_object(fpath: Path, obj: T) -> T:
         # If the target is a list, source must be a list as well.
         elif isinstance(target, list):
             if not isinstance(source, list):
-                raise TypeError(f'Type mismatch: expected list, got {type(source)}')
+                raise TypeError(
+                    f'Type mismatch: expected list, got {type(source)}'
+                )
 
             # Check length
             if len(target) != len(source):
-                raise ValueError(f'List length mismatch: expected {len(target)}, got {len(source)}')
+                raise ValueError(
+                    f'List length mismatch: expected {len(target)}, got {len(source)}'
+                )
 
             # Recursively update each element.
             for i in range(len(target)):
@@ -109,7 +118,9 @@ def deserialize_json_into_object(fpath: Path, obj: T) -> T:
         # which we'll convert back to a tuple.
         elif isinstance(target, tuple):
             if not isinstance(source, list):
-                raise TypeError(f'Type mismatch: expected list (for tuple), got {type(source)}')
+                raise TypeError(
+                    f'Type mismatch: expected list (for tuple), got {type(source)}'
+                )
 
             if len(target) != len(source):
                 raise ValueError(
@@ -128,7 +139,9 @@ def deserialize_json_into_object(fpath: Path, obj: T) -> T:
         else:
             # Check the exact type.  If these must match 1:1, do:
             if type(target) is not type(source):
-                raise TypeError(f'Type mismatch: expected {type(target)}, got {type(source)}')
+                raise TypeError(
+                    f'Type mismatch: expected {type(target)}, got {type(source)}'
+                )
             return source
 
     # Perform the in-place/recursive deserialization

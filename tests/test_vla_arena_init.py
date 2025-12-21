@@ -28,7 +28,9 @@ except ImportError:
     config_file = None
 
 
-@pytest.mark.skipif(not VLA_ARENA_INIT_AVAILABLE, reason='vla_arena init module not available')
+@pytest.mark.skipif(
+    not VLA_ARENA_INIT_AVAILABLE, reason='vla_arena init module not available'
+)
 class TestPathManagement:
     """Test cases for path management functions."""
 
@@ -52,13 +54,17 @@ class TestPathManagement:
 
         assert paths['benchmark_root'] == custom_location
         # Check that paths contain the expected directory names
-        assert 'bddl_files' in paths['bddl_files'] or paths['bddl_files'].endswith('bddl_files')
+        assert 'bddl_files' in paths['bddl_files'] or paths[
+            'bddl_files'
+        ].endswith('bddl_files')
         assert (
             'init_files' in paths['init_states']
             or paths['init_states'].endswith('init_files')
             or 'init_states' in paths['init_states']
         )
-        assert 'assets' in paths['assets'] or paths['assets'].endswith('assets')
+        assert 'assets' in paths['assets'] or paths['assets'].endswith(
+            'assets'
+        )
 
     def test_get_vla_arena_path_success(self, temp_config_file):
         """Test getting VLA-Arena path from config file."""
@@ -114,7 +120,9 @@ class TestPathManagement:
             assert os.path.isdir(config_dir)
 
 
-@pytest.mark.skipif(not VLA_ARENA_INIT_AVAILABLE, reason='vla_arena init module not available')
+@pytest.mark.skipif(
+    not VLA_ARENA_INIT_AVAILABLE, reason='vla_arena init module not available'
+)
 class TestConfigFileStructure:
     """Test cases for config file structure."""
 
@@ -131,6 +139,11 @@ class TestConfigFileStructure:
         with open(temp_config_file) as f:
             config = yaml.safe_load(f)
 
-        required_keys = ['benchmark_root', 'bddl_files', 'init_states', 'assets']
+        required_keys = [
+            'benchmark_root',
+            'bddl_files',
+            'init_states',
+            'assets',
+        ]
         for key in required_keys:
             assert key in config, f'Missing required key: {key}'

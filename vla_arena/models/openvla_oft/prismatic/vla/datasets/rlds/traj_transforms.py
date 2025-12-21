@@ -23,7 +23,9 @@ that represents a single trajectory, meaning each tensor has the same leading di
 import tensorflow as tf
 
 
-def chunk_act_obs(traj: dict, window_size: int, future_action_window_size: int = 0) -> dict:
+def chunk_act_obs(
+    traj: dict, window_size: int, future_action_window_size: int = 0
+) -> dict:
     """
     Chunks actions and observations into the given window_size.
 
@@ -39,7 +41,10 @@ def chunk_act_obs(traj: dict, window_size: int, future_action_window_size: int =
     effective_traj_len = traj_len - future_action_window_size
     chunk_indices = tf.broadcast_to(
         tf.range(-window_size + 1, 1), [effective_traj_len, window_size]
-    ) + tf.broadcast_to(tf.range(effective_traj_len)[:, None], [effective_traj_len, window_size])
+    ) + tf.broadcast_to(
+        tf.range(effective_traj_len)[:, None],
+        [effective_traj_len, window_size],
+    )
 
     action_chunk_indices = tf.broadcast_to(
         tf.range(-window_size + 1, 1 + future_action_window_size),
@@ -69,7 +74,9 @@ def chunk_act_obs(traj: dict, window_size: int, future_action_window_size: int =
     traj['task'] = tf.nest.map_structure(
         lambda x: tf.gather(x, tf.range(effective_traj_len)), traj['task']
     )
-    traj['dataset_name'] = tf.gather(traj['dataset_name'], tf.range(effective_traj_len))
+    traj['dataset_name'] = tf.gather(
+        traj['dataset_name'], tf.range(effective_traj_len)
+    )
     traj['absolute_action_mask'] = tf.gather(
         traj['absolute_action_mask'], tf.range(effective_traj_len)
     )
@@ -99,7 +106,9 @@ def add_pad_mask_dict(traj: dict) -> dict:
         for subkey in traj[key]:
             # Handles "language_instruction", "image_*", and "depth_*"
             if traj[key][subkey].dtype == tf.string:
-                pad_mask_dict[subkey] = tf.strings.length(traj[key][subkey]) != 0
+                pad_mask_dict[subkey] = (
+                    tf.strings.length(traj[key][subkey]) != 0
+                )
 
             # All other keys should not be treated as padding
             else:

@@ -18,7 +18,6 @@ import re
 import flax.linen as nn
 import flax.struct as struct
 import jax.numpy as jnp
-
 import openpi.shared.array_typing as at
 
 
@@ -41,7 +40,11 @@ class LoRAConfig:
 
     @property
     def scaling_value(self) -> float:
-        return self.alpha / math.sqrt(self.rank) if self.rslora else self.alpha / self.rank
+        return (
+            self.alpha / math.sqrt(self.rank)
+            if self.rslora
+            else self.alpha / self.rank
+        )
 
 
 class Einsum(nn.Module):
@@ -110,7 +113,9 @@ class FeedForward(nn.Module):
     def setup(self):
         self.w_gating = self.param(
             "gating_einsum",
-            nn.initializers.lecun_normal(in_axis=-2, out_axis=-1, batch_axis=(0,)),
+            nn.initializers.lecun_normal(
+                in_axis=-2, out_axis=-1, batch_axis=(0,)
+            ),
             (2, self.features, self.hidden_dim),
         )
         self.w_linear = self.param(
@@ -178,11 +183,15 @@ class FeedForward(nn.Module):
         return outputs
 
     def _dot(
-        self, x: at.Array, w: at.Array, lora_weights: tuple[at.Array, at.Array] | None
+        self,
+        x: at.Array,
+        w: at.Array,
+        lora_weights: tuple[at.Array, at.Array] | None,
     ) -> at.Array:
         base = jnp.dot(x, w.astype(x.dtype))
         if lora_weights is None:
             return base
         return base + jnp.dot(
-            jnp.dot(x, lora_weights[0].astype(x.dtype)), lora_weights[1].astype(x.dtype)
+            jnp.dot(x, lora_weights[0].astype(x.dtype)),
+            lora_weights[1].astype(x.dtype),
         )

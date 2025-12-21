@@ -159,7 +159,10 @@ class ACTConfig(PreTrainedConfig):
             raise ValueError(
                 f'`vision_backbone` must be one of the ResNet variants. Got {self.vision_backbone}.'
             )
-        if self.temporal_ensemble_coeff is not None and self.n_action_steps > 1:
+        if (
+            self.temporal_ensemble_coeff is not None
+            and self.n_action_steps > 1
+        ):
             raise NotImplementedError(
                 '`n_action_steps` must be 1 when using temporal ensembling. This is '
                 'because the policy needs to be queried every step to compute the ensembled action.'

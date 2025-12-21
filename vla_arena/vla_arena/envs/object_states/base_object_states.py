@@ -50,13 +50,23 @@ class ObjectState(BaseObjectState):
         self.env = env
         self.object_name = object_name
         self.is_fixture = is_fixture
-        self.query_dict = self.env.fixtures_dict if self.is_fixture else self.env.objects_dict
+        self.query_dict = (
+            self.env.fixtures_dict
+            if self.is_fixture
+            else self.env.objects_dict
+        )
         self.object_state_type = 'object'
-        self.has_turnon_affordance = hasattr(self.env.get_object(self.object_name), 'turn_on')
+        self.has_turnon_affordance = hasattr(
+            self.env.get_object(self.object_name), 'turn_on'
+        )
 
     def get_geom_state(self):
-        object_pos = self.env.sim.data.body_xpos[self.env.obj_body_id[self.object_name]]
-        object_quat = self.env.sim.data.body_xquat[self.env.obj_body_id[self.object_name]]
+        object_pos = self.env.sim.data.body_xpos[
+            self.env.obj_body_id[self.object_name]
+        ]
+        object_quat = self.env.sim.data.body_xquat[
+            self.env.obj_body_id[self.object_name]
+        ]
         return {'pos': object_pos, 'quat': object_quat}
 
     def check_contact(self, other):
@@ -84,9 +94,13 @@ class ObjectState(BaseObjectState):
 
     def check_contain(self, other):
         object_1 = self.env.get_object(self.object_name)
-        object_1_position = self.env.sim.data.body_xpos[self.env.obj_body_id[self.object_name]]
+        object_1_position = self.env.sim.data.body_xpos[
+            self.env.obj_body_id[self.object_name]
+        ]
         object_2 = self.env.get_object(other.object_name)
-        object_2_position = self.env.sim.data.body_xpos[self.env.obj_body_id[other.object_name]]
+        object_2_position = self.env.sim.data.body_xpos[
+            self.env.obj_body_id[other.object_name]
+        ]
         return object_1.in_box(object_1_position, object_2_position)
 
     def get_joint_state(self):
@@ -99,13 +113,22 @@ class ObjectState(BaseObjectState):
 
     def check_ontop(self, other):
         this_object = self.env.get_object(self.object_name)
-        this_object_position = self.env.sim.data.body_xpos[self.env.obj_body_id[self.object_name]]
+        this_object_position = self.env.sim.data.body_xpos[
+            self.env.obj_body_id[self.object_name]
+        ]
         other_object = self.env.get_object(other.object_name)
-        other_object_position = self.env.sim.data.body_xpos[self.env.obj_body_id[other.object_name]]
+        other_object_position = self.env.sim.data.body_xpos[
+            self.env.obj_body_id[other.object_name]
+        ]
         return (
             (this_object_position[2] <= other_object_position[2])
             and self.check_contact(other)
-            and (np.linalg.norm(this_object_position[:2] - other_object_position[:2]) < 0.07)
+            and (
+                np.linalg.norm(
+                    this_object_position[:2] - other_object_position[:2]
+                )
+                < 0.07
+            )
         )
 
     def set_joint(self, qpos=1.5):
@@ -167,12 +190,18 @@ class ObjectState(BaseObjectState):
         if original_pos is None or original_quat is None:
             return False
 
-        current_pos = self.env.sim.data.body_xpos[self.env.obj_body_id[self.object_name]]
-        current_quat = self.env.sim.data.body_xquat[self.env.obj_body_id[self.object_name]]
+        current_pos = self.env.sim.data.body_xpos[
+            self.env.obj_body_id[self.object_name]
+        ]
+        current_quat = self.env.sim.data.body_xquat[
+            self.env.obj_body_id[self.object_name]
+        ]
 
         # Check position changes
         pos_diff = np.linalg.norm(current_pos - original_pos)
-        height_drop = original_pos[2] - current_pos[2]  # Positive value indicates drop
+        height_drop = (
+            original_pos[2] - current_pos[2]
+        )  # Positive value indicates drop
         xy_diff = np.linalg.norm(current_pos[:2] - original_pos[:2])
 
         # Position fall detection
@@ -180,7 +209,8 @@ class ObjectState(BaseObjectState):
 
         # Check orientation changes
         quat_diff = transform_utils.quat_multiply(
-            current_quat, transform_utils.quat_inverse(original_quat),
+            current_quat,
+            transform_utils.quat_inverse(original_quat),
         )
         quat_diff_euler = transform_utils.quat2axisangle(quat_diff)
 
@@ -200,7 +230,9 @@ class ObjectState(BaseObjectState):
     def check_in_contact_part(self, object_name, geom_name_1, geom_name_2):
         object_1 = self.env.get_object(self.object_name)
         object_2 = self.env.get_object(object_name)
-        return self.env.check_in_contact_part(object_1, object_2, geom_name_1, geom_name_2)
+        return self.env.check_in_contact_part(
+            object_1, object_2, geom_name_1, geom_name_2
+        )
 
     def check_gripper_contact_part(self, geom_name_1):
         object_1 = self.env.get_object(self.object_name)
@@ -217,22 +249,34 @@ class SiteObjectState(BaseObjectState):
         self.object_name = object_name
         self.parent_name = parent_name
         self.is_fixture = self.parent_name in self.env.fixtures_dict
-        self.query_dict = self.env.fixtures_dict if self.is_fixture else self.env.objects_dict
+        self.query_dict = (
+            self.env.fixtures_dict
+            if self.is_fixture
+            else self.env.objects_dict
+        )
         self.object_state_type = 'site'
 
     def get_geom_state(self):
         object_pos = self.env.sim.data.get_site_xpos(self.object_name)
-        object_quat = transform_utils.mat2quat(self.env.sim.data.get_site_xmat(self.object_name))
+        object_quat = transform_utils.mat2quat(
+            self.env.sim.data.get_site_xmat(self.object_name)
+        )
         return {'pos': object_pos, 'quat': object_quat}
 
     def check_contain(self, other):
         this_object = self.env.object_sites_dict[self.object_name]
-        this_object_position = self.env.sim.data.get_site_xpos(self.object_name)
+        this_object_position = self.env.sim.data.get_site_xpos(
+            self.object_name
+        )
         this_object_mat = self.env.sim.data.get_site_xmat(self.object_name)
 
         other_object = self.env.get_object(other.object_name)
-        other_object_position = self.env.sim.data.body_xpos[self.env.obj_body_id[other.object_name]]
-        return this_object.in_box(this_object_position, this_object_mat, other_object_position)
+        other_object_position = self.env.sim.data.body_xpos[
+            self.env.obj_body_id[other.object_name]
+        ]
+        return this_object.in_box(
+            this_object_position, this_object_mat, other_object_position
+        )
 
     def check_contact(self, other):
         """
@@ -243,7 +287,9 @@ class SiteObjectState(BaseObjectState):
     def check_ontop(self, other):
         this_object = self.env.object_sites_dict[self.object_name]
         if hasattr(this_object, 'under'):
-            this_object_position = self.env.sim.data.get_site_xpos(self.object_name)
+            this_object_position = self.env.sim.data.get_site_xpos(
+                self.object_name
+            )
             this_object_mat = self.env.sim.data.get_site_xmat(self.object_name)
             other_object = self.env.get_object(other.object_name)
             other_object_position = self.env.sim.data.body_xpos[
@@ -255,10 +301,14 @@ class SiteObjectState(BaseObjectState):
             parent_object = self.env.get_object(self.parent_name)
             if parent_object is None:
                 return this_object.under(
-                    this_object_position, this_object_mat, other_object_position,
+                    this_object_position,
+                    this_object_mat,
+                    other_object_position,
                 )
             return this_object.under(
-                this_object_position, this_object_mat, other_object_position,
+                this_object_position,
+                this_object_mat,
+                other_object_position,
             ) and self.env.check_contact(parent_object, other_object)
         return True
 

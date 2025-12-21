@@ -90,7 +90,9 @@ class RealSenseCameraConfig(CameraConfig):
             )
 
         values = (self.fps, self.width, self.height)
-        if any(v is not None for v in values) and any(v is None for v in values):
+        if any(v is not None for v in values) and any(
+            v is None for v in values
+        ):
             raise ValueError(
                 'For `fps`, `width` and `height`, either all of them need to be set, or none of them.'
             )

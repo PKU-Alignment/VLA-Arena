@@ -48,12 +48,19 @@ def resize_with_pad(
 
     images = images.reshape(-1, *original_shape[-3:])
     resized = np.stack(
-        [_resize_with_pad_pil(Image.fromarray(im), height, width, method=method) for im in images]
+        [
+            _resize_with_pad_pil(
+                Image.fromarray(im), height, width, method=method
+            )
+            for im in images
+        ]
     )
     return resized.reshape(*original_shape[:-3], *resized.shape[-3:])
 
 
-def _resize_with_pad_pil(image: Image.Image, height: int, width: int, method: int) -> Image.Image:
+def _resize_with_pad_pil(
+    image: Image.Image, height: int, width: int, method: int
+) -> Image.Image:
     """Replicates tf.image.resize_with_pad for one image using PIL. Resizes an image to a target height and
     width without distortion by padding with zeros.
 
@@ -66,7 +73,9 @@ def _resize_with_pad_pil(image: Image.Image, height: int, width: int, method: in
     ratio = max(cur_width / width, cur_height / height)
     resized_height = int(cur_height / ratio)
     resized_width = int(cur_width / ratio)
-    resized_image = image.resize((resized_width, resized_height), resample=method)
+    resized_image = image.resize(
+        (resized_width, resized_height), resample=method
+    )
 
     zero_image = Image.new(resized_image.mode, (width, height), 0)
     pad_height = max(0, int((height - resized_height) / 2))

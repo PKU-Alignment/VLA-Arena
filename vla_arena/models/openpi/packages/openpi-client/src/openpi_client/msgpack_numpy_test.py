@@ -22,7 +22,9 @@ def _check(expected, actual):
     if isinstance(expected, np.ndarray):
         assert expected.shape == actual.shape
         assert expected.dtype == actual.dtype
-        assert np.array_equal(expected, actual, equal_nan=expected.dtype.kind == 'f')
+        assert np.array_equal(
+            expected, actual, equal_nan=expected.dtype.kind == 'f'
+        )
     else:
         assert expected == actual
 
@@ -44,7 +46,9 @@ def _check(expected, actual):
         np.array(['asdf', 'qwer']),  # string array
         np.array([True, False]),  # boolean array
         np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32),  # 2D float array
-        np.array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]], dtype=np.int16),  # 3D integer array
+        np.array(
+            [[[1, 2], [3, 4]], [[5, 6], [7, 8]]], dtype=np.int16
+        ),  # 3D integer array
         np.array([np.nan, np.inf, -np.inf]),  # special float values
         {
             'arr': np.array([1, 2, 3]),

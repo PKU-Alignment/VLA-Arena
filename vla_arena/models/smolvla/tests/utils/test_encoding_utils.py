@@ -29,7 +29,6 @@
 # limitations under the License.
 
 import pytest
-
 from lerobot.utils.encoding_utils import (
     decode_sign_magnitude,
     decode_twos_complement,
@@ -86,7 +85,9 @@ def test_encode_decode_sign_magnitude():
         for value in range(-max_val, max_val + 1):
             encoded = encode_sign_magnitude(value, sign_bit_index)
             decoded = decode_sign_magnitude(encoded, sign_bit_index)
-            assert decoded == value, f'Failed at value={value}, index={sign_bit_index}'
+            assert (
+                decoded == value
+            ), f'Failed at value={value}, index={sign_bit_index}'
 
 
 @pytest.mark.parametrize(

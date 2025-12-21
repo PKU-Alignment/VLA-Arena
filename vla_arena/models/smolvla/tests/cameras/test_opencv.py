@@ -37,16 +37,18 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-
 from lerobot.cameras.configs import Cv2Rotation
 from lerobot.cameras.opencv import OpenCVCamera, OpenCVCameraConfig
 from lerobot.errors import DeviceAlreadyConnectedError, DeviceNotConnectedError
+
 
 # NOTE(Steven): more tests + assertions?
 TEST_ARTIFACTS_DIR = Path(__file__).parent.parent / 'artifacts' / 'cameras'
 DEFAULT_PNG_FILE_PATH = TEST_ARTIFACTS_DIR / 'image_160x120.png'
 TEST_IMAGE_SIZES = ['128x128', '160x120', '320x180', '480x270']
-TEST_IMAGE_PATHS = [TEST_ARTIFACTS_DIR / f'image_{size}.png' for size in TEST_IMAGE_SIZES]
+TEST_IMAGE_PATHS = [
+    TEST_ARTIFACTS_DIR / f'image_{size}.png' for size in TEST_IMAGE_SIZES
+]
 
 
 def test_abc_implementation():
@@ -94,7 +96,9 @@ def test_invalid_width_connect():
         camera.connect(warmup=False)
 
 
-@pytest.mark.parametrize('index_or_path', TEST_IMAGE_PATHS, ids=TEST_IMAGE_SIZES)
+@pytest.mark.parametrize(
+    'index_or_path', TEST_IMAGE_PATHS, ids=TEST_IMAGE_SIZES
+)
 def test_read(index_or_path):
     config = OpenCVCameraConfig(index_or_path=index_or_path)
     camera = OpenCVCamera(config)
@@ -131,7 +135,9 @@ def test_disconnect_before_connect():
         _ = camera.disconnect()
 
 
-@pytest.mark.parametrize('index_or_path', TEST_IMAGE_PATHS, ids=TEST_IMAGE_SIZES)
+@pytest.mark.parametrize(
+    'index_or_path', TEST_IMAGE_PATHS, ids=TEST_IMAGE_SIZES
+)
 def test_async_read(index_or_path):
     config = OpenCVCameraConfig(index_or_path=index_or_path)
     camera = OpenCVCamera(config)
@@ -169,7 +175,9 @@ def test_async_read_before_connect():
         _ = camera.async_read()
 
 
-@pytest.mark.parametrize('index_or_path', TEST_IMAGE_PATHS, ids=TEST_IMAGE_SIZES)
+@pytest.mark.parametrize(
+    'index_or_path', TEST_IMAGE_PATHS, ids=TEST_IMAGE_SIZES
+)
 @pytest.mark.parametrize(
     'rotation',
     [
@@ -182,7 +190,9 @@ def test_async_read_before_connect():
 )
 def test_rotation(rotation, index_or_path):
     filename = Path(index_or_path).name
-    dimensions = filename.split('_')[-1].split('.')[0]  # Assumes filenames format (_wxh.png)
+    dimensions = filename.split('_')[-1].split('.')[
+        0
+    ]  # Assumes filenames format (_wxh.png)
     original_width, original_height = map(int, dimensions.split('x'))
 
     config = OpenCVCameraConfig(index_or_path=index_or_path, rotation=rotation)

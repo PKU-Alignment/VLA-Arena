@@ -20,7 +20,9 @@ from typing import List, NamedTuple, Optional
 import torch
 
 from vla_arena.vla_arena import get_vla_arena_path
-from vla_arena.vla_arena.benchmark.vla_arena_suite_task_map import vla_arena_task_map
+from vla_arena.vla_arena.benchmark.vla_arena_suite_task_map import (
+    vla_arena_task_map,
+)
 from vla_arena.vla_arena.envs.bddl_utils import *
 
 
@@ -85,9 +87,13 @@ def grab_language_from_filename(x):
 
     if x_clean[0].isupper():  # vla_arena-100
         if 'SCENE10' in x_clean:
-            language = ' '.join(x_clean[x_clean.find('SCENE') + 8 :].split('_'))
+            language = ' '.join(
+                x_clean[x_clean.find('SCENE') + 8 :].split('_')
+            )
         else:
-            language = ' '.join(x_clean[x_clean.find('SCENE') + 7 :].split('_'))
+            language = ' '.join(
+                x_clean[x_clean.find('SCENE') + 7 :].split('_')
+            )
     else:
         language = ' '.join(x_clean.split('_'))
     en = language.find('.bddl')
@@ -97,7 +103,10 @@ def grab_language_from_filename(x):
 def grab_language_from_bddl_file(bddl_filename, problem_folder, level_dir):
     domain_name = 'robosuite'
     bddl_file_path = os.path.join(
-        get_vla_arena_path('bddl_files'), problem_folder, level_dir, bddl_filename,
+        get_vla_arena_path('bddl_files'),
+        problem_folder,
+        level_dir,
+        bddl_filename,
     )
     tokens = scan_tokens(filename=bddl_file_path)
     if isinstance(tokens, list) and tokens.pop(0) == 'define':
@@ -120,7 +129,9 @@ def grab_language_from_bddl_file(bddl_filename, problem_folder, level_dir):
                 problem_name = group[-1]
             elif t == ':domain':
                 if domain_name != group[-1]:
-                    raise Exception('Different domain specified in problem file')
+                    raise Exception(
+                        'Different domain specified in problem file'
+                    )
             elif t == ':requirements':
                 pass
             elif t == ':objects':
@@ -220,7 +231,9 @@ def grab_language_from_bddl_path(bddl_file_path):
                 problem_name = group[-1]
             elif t == ':domain':
                 if domain_name != group[-1]:
-                    raise Exception('Different domain specified in problem file')
+                    raise Exception(
+                        'Different domain specified in problem file'
+                    )
             elif t == ':requirements':
                 pass
             elif t == ':objects':
@@ -380,11 +393,15 @@ for vla_arena_suite in vla_arena_suites:
             for level_id, task in enumerate(level_tasks):
 
                 # Determine the actual problem folder name
-                problem_folder = suite_to_problem_folder.get(vla_arena_suite, vla_arena_suite)
+                problem_folder = suite_to_problem_folder.get(
+                    vla_arena_suite, vla_arena_suite
+                )
                 level_dir = f'level_{level}'
 
                 # Get language (removing level suffix for processing)
-                language = grab_language_from_bddl_file(task + '.bddl', problem_folder, level_dir)
+                language = grab_language_from_bddl_file(
+                    task + '.bddl', problem_folder, level_dir
+                )
 
                 bddl_filename = f'{task}.bddl'
                 init_states_filename = f'{task}.pruned_init'
@@ -419,7 +436,9 @@ class Benchmark(abc.ABC):
                 level_tasks = vla_arena_task_map[self.name][level]
                 for task_name in level_tasks:
                     if task_name in task_maps[self.name][level]:
-                        self.level_task_maps[level].append(task_maps[self.name][level][task_name])
+                        self.level_task_maps[level].append(
+                            task_maps[self.name][level][task_name]
+                        )
         # Flatten all tasks for backward compatibility
         self.tasks = list(task_maps[self.name].values())
 
@@ -460,7 +479,11 @@ class Benchmark(abc.ABC):
         return None
 
     def _get_task_file_path(
-        self, level: int, level_id: int, file_type: str, file_extension: str,
+        self,
+        level: int,
+        level_id: int,
+        file_type: str,
+        file_extension: str,
     ) -> str | None:
         """
         Generic method to get file paths by level and level_id.
@@ -485,22 +508,31 @@ class Benchmark(abc.ABC):
             return None
 
         file_path = os.path.join(
-            get_vla_arena_path(file_type), task.problem_folder, level_dir, filename,
+            get_vla_arena_path(file_type),
+            task.problem_folder,
+            level_dir,
+            filename,
         )
         return file_path
 
-    def get_task_bddl_file_path_by_level_id(self, level: int, level_id: int) -> str | None:
+    def get_task_bddl_file_path_by_level_id(
+        self, level: int, level_id: int
+    ) -> str | None:
         """Get the bddl file path by level and level_id."""
         return self._get_task_file_path(level, level_id, 'bddl_files', '.bddl')
 
     def get_task_init_states_by_level_id(self, level: int, level_id: int):
         """Get init states by level and level_id."""
-        init_states_path = self._get_task_file_path(level, level_id, 'init_states', '.pruned_init')
+        init_states_path = self._get_task_file_path(
+            level, level_id, 'init_states', '.pruned_init'
+        )
         if init_states_path is None:
             return None
         return torch.load(init_states_path, weights_only=False)
 
-    def get_task_demonstration_by_level_id(self, level: int, level_id: int) -> str | None:
+    def get_task_demonstration_by_level_id(
+        self, level: int, level_id: int
+    ) -> str | None:
         """Get demonstration path by level and level_id."""
         task = self.get_task_by_level_id(level, level_id)
         if task is None:
@@ -509,7 +541,9 @@ class Benchmark(abc.ABC):
         # Extract base task name without level suffix for demo file
         base_task_name = re.sub(r'_L[0-2]$', '', task.name)
         level_dir = f'level_{task.level}'
-        demo_path = f'{task.problem_folder}/{level_dir}/{base_task_name}_demo.hdf5'
+        demo_path = (
+            f'{task.problem_folder}/{level_dir}/{base_task_name}_demo.hdf5'
+        )
         return demo_path
 
     def get_num_tasks_by_level(self, level: int) -> int:
@@ -535,7 +569,9 @@ class Benchmark(abc.ABC):
         ), f'[error] task number {i} is outer of range {self.n_tasks}'
 
         task = self.tasks[i]
-        return self.get_task_demonstration_by_level_id(task.level, task.level_id)
+        return self.get_task_demonstration_by_level_id(
+            task.level, task.level_id
+        )
 
     def get_task(self, i):
         return self.tasks[i]

@@ -29,25 +29,32 @@ def chunk_act_obs(traj, window_size, future_action_window_size):
     action_dim = traj['action'].shape[-1]
 
     # Create indices for the first and last elements within the window size
-    first_indices = tf.range(traj_len)[:, None]  # First index is the current timestep
+    first_indices = tf.range(traj_len)[
+        :, None
+    ]  # First index is the current timestep
     last_indices = tf.maximum(
         first_indices + (window_size - 1), 0
     )  # Last index is the end of the window
 
     # Combine first and last indices into a single tensor
-    chunk_indices = tf.concat([first_indices, last_indices], axis=1)  # Shape: [traj_len, 2]
+    chunk_indices = tf.concat(
+        [first_indices, last_indices], axis=1
+    )  # Shape: [traj_len, 2]
 
     # Create action_chunk_indices for the first and last elements
     action_first_indices = first_indices
     action_last_indices = tf.minimum(
-        first_indices + (window_size + future_action_window_size - 1), traj_len - 1
+        first_indices + (window_size + future_action_window_size - 1),
+        traj_len - 1,
     )
     action_chunk_indices = tf.concat(
         [action_first_indices, action_last_indices], axis=1
     )  # Shape: [traj_len, 2]
 
     # Ensure indices are bounded
-    floored_chunk_indices = tf.maximum(tf.minimum(chunk_indices, traj_len - 1), 0)
+    floored_chunk_indices = tf.maximum(
+        tf.minimum(chunk_indices, traj_len - 1), 0
+    )
 
     if 'timestep' in traj['task']:
         goal_timestep = traj['task']['timestep']
@@ -77,18 +84,24 @@ def chunk_act_obs(traj, window_size, future_action_window_size):
     )
     neutral_actions = tf.where(
         absolute_action_mask[:, None, :],
-        traj['action'],  # absolute actions are repeated (already done during chunking)
+        traj[
+            'action'
+        ],  # absolute actions are repeated (already done during chunking)
         tf.zeros_like(traj['action']),  # relative actions are zeroed
     )
 
     # Actions past the goal timestep become neutral
     action_past_goal = action_chunk_indices > goal_timestep[:, None]
-    traj['action'] = tf.where(action_past_goal[:, :, None], neutral_actions, traj['action'])
+    traj['action'] = tf.where(
+        action_past_goal[:, :, None], neutral_actions, traj['action']
+    )
 
     return traj
 
 
-def chunk_act_obs_libero(traj: dict, window_size: int, future_action_window_size: int = 0) -> dict:
+def chunk_act_obs_libero(
+    traj: dict, window_size: int, future_action_window_size: int = 0
+) -> dict:
     """
     Chunks actions and observations into the given window_size.
 
@@ -143,13 +156,17 @@ def chunk_act_obs_libero(traj: dict, window_size: int, future_action_window_size
     )
     neutral_actions = tf.where(
         absolute_action_mask[:, None, :],
-        traj['action'],  # absolute actions are repeated (already done during chunking)
+        traj[
+            'action'
+        ],  # absolute actions are repeated (already done during chunking)
         tf.zeros_like(traj['action']),  # relative actions are zeroed
     )
 
     # actions past the goal timestep become neutral
     action_past_goal = action_chunk_indices > goal_timestep[:, None]
-    traj['action'] = tf.where(action_past_goal[:, :, None], neutral_actions, traj['action'])
+    traj['action'] = tf.where(
+        action_past_goal[:, :, None], neutral_actions, traj['action']
+    )
 
     return traj
 
@@ -176,7 +193,9 @@ def add_pad_mask_dict(traj: dict) -> dict:
         for subkey in traj[key]:
             # Handles "language_instruction", "image_*", and "depth_*"
             if traj[key][subkey].dtype == tf.string:
-                pad_mask_dict[subkey] = tf.strings.length(traj[key][subkey]) != 0
+                pad_mask_dict[subkey] = (
+                    tf.strings.length(traj[key][subkey]) != 0
+                )
 
             # All other keys should not be treated as padding
             else:

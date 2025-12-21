@@ -27,7 +27,9 @@ from absl import logging
 
 
 # ruff: noqa: B023
-def augment(obs: dict, seed: tf.Tensor, augment_kwargs: dict | dict[str, dict]) -> dict:
+def augment(
+    obs: dict, seed: tf.Tensor, augment_kwargs: dict | dict[str, dict]
+) -> dict:
     """Augments images, skipping padding images."""
     image_names = {key[6:] for key in obs if key.startswith('image_')}
 
@@ -81,9 +83,13 @@ def decode_and_resize(
         if image.dtype == tf.string:
             if tf.strings.length(image) == 0:
                 # this is a padding image
-                image = tf.zeros((*resize_size.get(name, (1, 1)), 3), dtype=tf.uint8)
+                image = tf.zeros(
+                    (*resize_size.get(name, (1, 1)), 3), dtype=tf.uint8
+                )
             else:
-                image = tf.io.decode_image(image, expand_animations=False, dtype=tf.uint8)
+                image = tf.io.decode_image(
+                    image, expand_animations=False, dtype=tf.uint8
+                )
         elif image.dtype != tf.uint8:
             raise ValueError(
                 f'Unsupported image dtype: found image_{name} with dtype {image.dtype}'
@@ -102,16 +108,22 @@ def decode_and_resize(
 
         if depth.dtype == tf.string:
             if tf.strings.length(depth) == 0:
-                depth = tf.zeros((*depth_resize_size.get(name, (1, 1)), 1), dtype=tf.float32)
+                depth = tf.zeros(
+                    (*depth_resize_size.get(name, (1, 1)), 1), dtype=tf.float32
+                )
             else:
-                depth = tf.io.decode_image(depth, expand_animations=False, dtype=tf.float32)[..., 0]
+                depth = tf.io.decode_image(
+                    depth, expand_animations=False, dtype=tf.float32
+                )[..., 0]
         elif depth.dtype != tf.float32:
             raise ValueError(
                 f'Unsupported depth dtype: found depth_{name} with dtype {depth.dtype}'
             )
 
         if name in depth_resize_size:
-            depth = dl.transforms.resize_depth_image(depth, size=depth_resize_size[name])
+            depth = dl.transforms.resize_depth_image(
+                depth, size=depth_resize_size[name]
+            )
 
         obs[f'depth_{name}'] = depth
 

@@ -34,11 +34,10 @@ from typing import Any
 
 import draccus
 import torch
-from safetensors.torch import load_file, save_file
-
 from lerobot.constants import OPTIMIZER_PARAM_GROUPS, OPTIMIZER_STATE
 from lerobot.datasets.utils import flatten_dict, unflatten_dict, write_json
 from lerobot.utils.io_utils import deserialize_json_into_object
+from safetensors.torch import load_file, save_file
 
 
 @dataclass
@@ -56,7 +55,9 @@ class OptimizerConfig(draccus.ChoiceRegistry, abc.ABC):
         return 'adam'
 
     @abc.abstractmethod
-    def build(self) -> torch.optim.Optimizer | dict[str, torch.optim.Optimizer]:
+    def build(
+        self,
+    ) -> torch.optim.Optimizer | dict[str, torch.optim.Optimizer]:
         """
         Build the optimizer. It can be a single optimizer or a dictionary of optimizers.
         NOTE: Multiple optimizers are useful when you have different models to optimize.
@@ -134,7 +135,9 @@ class MultiAdamConfig(OptimizerConfig):
     grad_clip_norm: float = 10.0
     optimizer_groups: dict[str, dict[str, Any]] = field(default_factory=dict)
 
-    def build(self, params_dict: dict[str, list]) -> dict[str, torch.optim.Optimizer]:
+    def build(
+        self, params_dict: dict[str, list]
+    ) -> dict[str, torch.optim.Optimizer]:
         """Build multiple Adam optimizers.
 
         Args:
@@ -155,7 +158,9 @@ class MultiAdamConfig(OptimizerConfig):
                 'lr': group_config.get('lr', self.lr),
                 'betas': group_config.get('betas', (0.9, 0.999)),
                 'eps': group_config.get('eps', 1e-5),
-                'weight_decay': group_config.get('weight_decay', self.weight_decay),
+                'weight_decay': group_config.get(
+                    'weight_decay', self.weight_decay
+                ),
             }
 
             optimizers[name] = torch.optim.Adam(params, **optimizer_kwargs)
@@ -164,7 +169,8 @@ class MultiAdamConfig(OptimizerConfig):
 
 
 def save_optimizer_state(
-    optimizer: torch.optim.Optimizer | dict[str, torch.optim.Optimizer], save_dir: Path
+    optimizer: torch.optim.Optimizer | dict[str, torch.optim.Optimizer],
+    save_dir: Path,
 ) -> None:
     """Save optimizer state to disk.
 
@@ -183,7 +189,9 @@ def save_optimizer_state(
         _save_single_optimizer_state(optimizer, save_dir)
 
 
-def _save_single_optimizer_state(optimizer: torch.optim.Optimizer, save_dir: Path) -> None:
+def _save_single_optimizer_state(
+    optimizer: torch.optim.Optimizer, save_dir: Path
+) -> None:
     """Save a single optimizer's state to disk."""
     state = optimizer.state_dict()
     param_groups = state.pop('param_groups')
@@ -193,7 +201,8 @@ def _save_single_optimizer_state(optimizer: torch.optim.Optimizer, save_dir: Pat
 
 
 def load_optimizer_state(
-    optimizer: torch.optim.Optimizer | dict[str, torch.optim.Optimizer], save_dir: Path
+    optimizer: torch.optim.Optimizer | dict[str, torch.optim.Optimizer],
+    save_dir: Path,
 ) -> torch.optim.Optimizer | dict[str, torch.optim.Optimizer]:
     """Load optimizer state from disk.
 
@@ -210,7 +219,9 @@ def load_optimizer_state(
         for name, opt in optimizer.items():
             optimizer_dir = save_dir / name
             if optimizer_dir.exists():
-                loaded_optimizers[name] = _load_single_optimizer_state(opt, optimizer_dir)
+                loaded_optimizers[name] = _load_single_optimizer_state(
+                    opt, optimizer_dir
+                )
             else:
                 loaded_optimizers[name] = opt
         return loaded_optimizers
@@ -229,13 +240,16 @@ def _load_single_optimizer_state(
 
     # Handle case where 'state' key might not exist (for newly created optimizers)
     if 'state' in state:
-        loaded_state_dict = {'state': {int(k): v for k, v in state['state'].items()}}
+        loaded_state_dict = {
+            'state': {int(k): v for k, v in state['state'].items()}
+        }
     else:
         loaded_state_dict = {'state': {}}
 
     if 'param_groups' in current_state_dict:
         param_groups = deserialize_json_into_object(
-            save_dir / OPTIMIZER_PARAM_GROUPS, current_state_dict['param_groups']
+            save_dir / OPTIMIZER_PARAM_GROUPS,
+            current_state_dict['param_groups'],
         )
         loaded_state_dict['param_groups'] = param_groups
 

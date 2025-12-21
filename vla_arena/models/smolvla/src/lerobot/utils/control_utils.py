@@ -40,15 +40,16 @@ from functools import cache
 import numpy as np
 import torch
 from deepdiff import DeepDiff
-from termcolor import colored
-
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
 from lerobot.datasets.utils import DEFAULT_FEATURES
 from lerobot.policies.pretrained import PreTrainedPolicy
 from lerobot.robots import Robot
+from termcolor import colored
 
 
-def log_control_info(robot: Robot, dt_s, episode_index=None, frame_index=None, fps=None):
+def log_control_info(
+    robot: Robot, dt_s, episode_index=None, frame_index=None, fps=None
+):
     log_items = []
     if episode_index is not None:
         log_items.append(f'ep:{episode_index}')
@@ -57,7 +58,9 @@ def log_control_info(robot: Robot, dt_s, episode_index=None, frame_index=None, f
 
     def log_dt(shortname, dt_val_s):
         nonlocal log_items, fps
-        info_str = f'{shortname}:{dt_val_s * 1000:5.2f} ({1 / dt_val_s:3.1f}hz)'
+        info_str = (
+            f'{shortname}:{dt_val_s * 1000:5.2f} ({1 / dt_val_s:3.1f}hz)'
+        )
         if fps is not None:
             actual_fps = 1 / dt_val_s
             if actual_fps < fps - 1:
@@ -133,7 +136,9 @@ def predict_action(
             observation[name] = torch.from_numpy(observation[name])
             if 'image' in name:
                 observation[name] = observation[name].type(torch.float32) / 255
-                observation[name] = observation[name].permute(2, 0, 1).contiguous()
+                observation[name] = (
+                    observation[name].permute(2, 0, 1).contiguous()
+                )
             observation[name] = observation[name].unsqueeze(0)
             observation[name] = observation[name].to(device)
 
@@ -178,7 +183,9 @@ def init_keyboard_listener():
                 print('Right arrow key pressed. Exiting loop...')
                 events['exit_early'] = True
             elif key == keyboard.Key.left:
-                print('Left arrow key pressed. Exiting loop and rerecord the last episode...')
+                print(
+                    'Left arrow key pressed. Exiting loop and rerecord the last episode...'
+                )
                 events['rerecord_episode'] = True
                 events['exit_early'] = True
             elif key == keyboard.Key.esc:
@@ -223,11 +230,18 @@ def sanity_check_dataset_robot_compatibility(
 
     mismatches = []
     for field, dataset_value, present_value in fields:
-        diff = DeepDiff(dataset_value, present_value, exclude_regex_paths=[r".*\['info'\]$"])
+        diff = DeepDiff(
+            dataset_value,
+            present_value,
+            exclude_regex_paths=[r".*\['info'\]$"],
+        )
         if diff:
-            mismatches.append(f'{field}: expected {present_value}, got {dataset_value}')
+            mismatches.append(
+                f'{field}: expected {present_value}, got {dataset_value}'
+            )
 
     if mismatches:
         raise ValueError(
-            'Dataset metadata compatibility check failed with mismatches:\n' + '\n'.join(mismatches)
+            'Dataset metadata compatibility check failed with mismatches:\n'
+            + '\n'.join(mismatches)
         )

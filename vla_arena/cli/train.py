@@ -45,7 +45,9 @@ def train_main(args):
     if model == 'openpi':
         # === openpi uses JAX distributed training, directly call trainer ===
         print(f'[Launcher] Preparing JAX training for model: {model}')
-        print('[Launcher] JAX will automatically detect and use available GPUs')
+        print(
+            '[Launcher] JAX will automatically detect and use available GPUs'
+        )
 
         # Collect override parameters
         override_kwargs = {}

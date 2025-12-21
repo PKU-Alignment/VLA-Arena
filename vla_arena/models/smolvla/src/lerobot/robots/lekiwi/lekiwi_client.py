@@ -36,7 +36,6 @@ from typing import Any
 
 import cv2
 import numpy as np
-
 from lerobot.errors import DeviceAlreadyConnectedError, DeviceNotConnectedError
 
 from ..robot import Robot
@@ -107,7 +106,10 @@ class LeKiwiClient(Robot):
 
     @cached_property
     def _cameras_ft(self) -> dict[str, tuple[int, int, int]]:
-        return {name: (cfg.height, cfg.width, 3) for name, cfg in self.config.cameras.items()}
+        return {
+            name: (cfg.height, cfg.width, 3)
+            for name, cfg in self.config.cameras.items()
+        }
 
     @cached_property
     def observation_features(self) -> dict[str, type | tuple]:
@@ -141,7 +143,9 @@ class LeKiwiClient(Robot):
         self.zmq_cmd_socket.setsockopt(zmq.CONFLATE, 1)
 
         self.zmq_observation_socket = self.zmq_context.socket(zmq.PULL)
-        zmq_observations_locator = f'tcp://{self.remote_ip}:{self.port_zmq_observations}'
+        zmq_observations_locator = (
+            f'tcp://{self.remote_ip}:{self.port_zmq_observations}'
+        )
         self.zmq_observation_socket.connect(zmq_observations_locator)
         self.zmq_observation_socket.setsockopt(zmq.CONFLATE, 1)
 
@@ -152,7 +156,9 @@ class LeKiwiClient(Robot):
             self.zmq_observation_socket not in socks
             or socks[self.zmq_observation_socket] != zmq.POLLIN
         ):
-            raise DeviceNotConnectedError('Timeout waiting for LeKiwi Host to connect expired.')
+            raise DeviceNotConnectedError(
+                'Timeout waiting for LeKiwi Host to connect expired.'
+            )
 
         self._is_connected = True
 
@@ -184,11 +190,15 @@ class LeKiwiClient(Robot):
                 break
 
         if last_msg is None:
-            logging.warning('Poller indicated data, but failed to retrieve message.')
+            logging.warning(
+                'Poller indicated data, but failed to retrieve message.'
+            )
 
         return last_msg
 
-    def _parse_observation_json(self, obs_string: str) -> dict[str, Any] | None:
+    def _parse_observation_json(
+        self, obs_string: str
+    ) -> dict[str, Any] | None:
         """Parses the JSON observation string."""
         try:
             return json.loads(obs_string)
@@ -216,11 +226,18 @@ class LeKiwiClient(Robot):
     ) -> tuple[dict[str, np.ndarray], dict[str, Any]]:
         """Extracts frames, and state from the parsed observation."""
 
-        flat_state = {key: observation.get(key, 0.0) for key in self._state_order}
+        flat_state = {
+            key: observation.get(key, 0.0) for key in self._state_order
+        }
 
-        state_vec = np.array([flat_state[key] for key in self._state_order], dtype=np.float32)
+        state_vec = np.array(
+            [flat_state[key] for key in self._state_order], dtype=np.float32
+        )
 
-        obs_dict: dict[str, Any] = {**flat_state, 'observation.state': state_vec}
+        obs_dict: dict[str, Any] = {
+            **flat_state,
+            'observation.state': state_vec,
+        }
 
         # Decode images
         current_frames: dict[str, np.ndarray] = {}
@@ -233,7 +250,9 @@ class LeKiwiClient(Robot):
 
         return current_frames, obs_dict
 
-    def _get_data(self) -> tuple[dict[str, np.ndarray], dict[str, Any], dict[str, Any]]:
+    def _get_data(
+        self,
+    ) -> tuple[dict[str, np.ndarray], dict[str, Any], dict[str, Any]]:
         """
         Polls the video socket for the latest observation data.
 
@@ -260,7 +279,9 @@ class LeKiwiClient(Robot):
         try:
             new_frames, new_state = self._remote_state_from_obs(observation)
         except Exception as e:
-            logging.error(f'Error processing observation data, serving last observation: {e}')
+            logging.error(
+                f'Error processing observation data, serving last observation: {e}'
+            )
             return self.last_frames, self.last_remote_state
 
         self.last_frames = new_frames
@@ -342,12 +363,18 @@ class LeKiwiClient(Robot):
                 'ManipulatorRobot is not connected. You need to run `robot.connect()`.'
             )
 
-        self.zmq_cmd_socket.send_string(json.dumps(action))  # action is in motor space
+        self.zmq_cmd_socket.send_string(
+            json.dumps(action)
+        )  # action is in motor space
 
         # TODO(Steven): Remove the np conversion when it is possible to record a non-numpy array value
-        actions = np.array([action.get(k, 0.0) for k in self._state_order], dtype=np.float32)
+        actions = np.array(
+            [action.get(k, 0.0) for k in self._state_order], dtype=np.float32
+        )
 
-        action_sent = {key: actions[i] for i, key in enumerate(self._state_order)}
+        action_sent = {
+            key: actions[i] for i, key in enumerate(self._state_order)
+        }
         action_sent['action'] = actions
         return action_sent
 

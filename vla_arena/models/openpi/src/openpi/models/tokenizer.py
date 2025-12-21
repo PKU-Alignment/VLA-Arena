@@ -17,12 +17,11 @@ import os
 
 import jax
 import numpy as np
+import openpi.models.utils.fsq_tokenizer as fsq_tokenizer
+import openpi.shared.download as download
 import orbax.checkpoint as ocp
 import sentencepiece
 from transformers import AutoProcessor
-
-import openpi.models.utils.fsq_tokenizer as fsq_tokenizer
-import openpi.shared.download as download
 
 
 class PaligemmaTokenizer:
@@ -33,7 +32,9 @@ class PaligemmaTokenizer:
             "gs://big_vision/paligemma_tokenizer.model", gs={"token": "anon"}
         )
         with path.open("rb") as f:
-            self._tokenizer = sentencepiece.SentencePieceProcessor(model_proto=f.read())
+            self._tokenizer = sentencepiece.SentencePieceProcessor(
+                model_proto=f.read()
+            )
 
     def tokenize(
         self, prompt: str, state: np.ndarray | None = None
@@ -41,16 +42,20 @@ class PaligemmaTokenizer:
         cleaned_text = prompt.strip().replace("_", " ").replace("\n", " ")
         if state is not None:
             # This is the Pi05 format, where the state is part of the discrete language input.
-            discretized_state = np.digitize(state, bins=np.linspace(-1, 1, 256 + 1)[:-1]) - 1
+            discretized_state = (
+                np.digitize(state, bins=np.linspace(-1, 1, 256 + 1)[:-1]) - 1
+            )
             state_str = " ".join(map(str, discretized_state))
-            full_prompt = f"Task: {cleaned_text}, State: {state_str};\nAction: "
+            full_prompt = (
+                f"Task: {cleaned_text}, State: {state_str};\nAction: "
+            )
             tokens = self._tokenizer.encode(full_prompt, add_bos=True)
         else:
             # This is the Pi0 format, where the state is part of the continuous action expert input.
             # tokenize "\n" separately as the "start of answer" token
-            tokens = self._tokenizer.encode(cleaned_text, add_bos=True) + self._tokenizer.encode(
-                "\n"
-            )
+            tokens = self._tokenizer.encode(
+                cleaned_text, add_bos=True
+            ) + self._tokenizer.encode("\n")
         tokens_len = len(tokens)
         if tokens_len < self._max_len:
             padding = [False] * (self._max_len - tokens_len)
@@ -69,7 +74,11 @@ class PaligemmaTokenizer:
 
 
 class FASTTokenizer:
-    def __init__(self, max_len: int = 256, fast_tokenizer_path: str = "physical-intelligence/fast"):
+    def __init__(
+        self,
+        max_len: int = 256,
+        fast_tokenizer_path: str = "physical-intelligence/fast",
+    ):
         self._max_len = max_len
 
         # Download base PaliGemma tokenizer
@@ -77,15 +86,15 @@ class FASTTokenizer:
             "gs://big_vision/paligemma_tokenizer.model", gs={"token": "anon"}
         )
         with path.open("rb") as f:
-            self._paligemma_tokenizer = sentencepiece.SentencePieceProcessor(model_proto=f.read())
+            self._paligemma_tokenizer = sentencepiece.SentencePieceProcessor(
+                model_proto=f.read()
+            )
 
         # Instantiate FAST tokenizer
         self._fast_tokenizer = AutoProcessor.from_pretrained(
             fast_tokenizer_path, trust_remote_code=True
         )
-        self._fast_skip_tokens = (
-            128  # Skip last 128 tokens in PaliGemma vocab since they are special tokens
-        )
+        self._fast_skip_tokens = 128  # Skip last 128 tokens in PaliGemma vocab since they are special tokens
 
     def tokenize(
         self, prompt: str, state: np.ndarray, actions: np.ndarray | None
@@ -93,7 +102,9 @@ class FASTTokenizer:
         cleaned_text = prompt.lower().strip().replace("_", " ")
 
         # Convention: state gets discretized into 256 discrete bins (assumed range after normalization: [-1, 1])
-        discretized_state = np.digitize(state, bins=np.linspace(-1, 1, 256 + 1)[:-1]) - 1
+        discretized_state = (
+            np.digitize(state, bins=np.linspace(-1, 1, 256 + 1)[:-1]) - 1
+        )
 
         # Convention: prefix includes prompt and string-representation of state, followed by ';'
         state_str = " ".join(map(str, discretized_state))
@@ -103,7 +114,9 @@ class FASTTokenizer:
         if actions is not None:
             # Tokenize actions with FAST tokenizer --> map to last tokens in PaliGemma vocab
             action_tokens = self._fast_tokenizer(actions[None])[0]
-            action_tokens_in_pg = self._act_tokens_to_paligemma_tokens(action_tokens)
+            action_tokens_in_pg = self._act_tokens_to_paligemma_tokens(
+                action_tokens
+            )
 
             # Convention: postfix contains 'Action:' followed by FAST tokens, followed by '|'
             postfix_tokens = (
@@ -167,13 +180,22 @@ class FASTTokenizer:
         )
         action_tokens = self._act_tokens_to_paligemma_tokens(raw_action_tokens)
         return self._fast_tokenizer.decode(
-            [action_tokens.tolist()], time_horizon=action_horizon, action_dim=action_dim
+            [action_tokens.tolist()],
+            time_horizon=action_horizon,
+            action_dim=action_dim,
         )[0]
 
-    def _act_tokens_to_paligemma_tokens(self, tokens: np.ndarray | list[int]) -> np.ndarray:
+    def _act_tokens_to_paligemma_tokens(
+        self, tokens: np.ndarray | list[int]
+    ) -> np.ndarray:
         if isinstance(tokens, list):
             tokens = np.array(tokens)
-        return self._paligemma_tokenizer.vocab_size() - 1 - self._fast_skip_tokens - tokens
+        return (
+            self._paligemma_tokenizer.vocab_size()
+            - 1
+            - self._fast_skip_tokens
+            - tokens
+        )
 
 
 ###########################################################################
@@ -196,11 +218,11 @@ class BinningTokenizer:
             "gs://big_vision/paligemma_tokenizer.model", gs={"token": "anon"}
         )
         with path.open("rb") as f:
-            self._paligemma_tokenizer = sentencepiece.SentencePieceProcessor(model_proto=f.read())
+            self._paligemma_tokenizer = sentencepiece.SentencePieceProcessor(
+                model_proto=f.read()
+            )
 
-        self._fast_skip_tokens = (
-            128  # Skip last 128 tokens in PaliGemma vocab since they are special tokens
-        )
+        self._fast_skip_tokens = 128  # Skip last 128 tokens in PaliGemma vocab since they are special tokens
 
     def tokenize(
         self, prompt: str, state: np.ndarray, actions: np.ndarray | None
@@ -221,7 +243,9 @@ class BinningTokenizer:
         cleaned_text = prompt.lower().strip().replace("_", " ")
 
         # Convention: state gets discretized into 256 discrete bins (assumed range after normalization: [-1, 1])
-        discretized_state = np.digitize(state, bins=np.linspace(-1, 1, 256 + 1)[:-1]) - 1
+        discretized_state = (
+            np.digitize(state, bins=np.linspace(-1, 1, 256 + 1)[:-1]) - 1
+        )
 
         # Convention: prefix includes prompt and string-representation of state, followed by ';'
         state_str = " ".join(map(str, discretized_state))
@@ -293,10 +317,17 @@ class BinningTokenizer:
         )
         return action_tokens / self._n_bins * 2 - 1
 
-    def _act_tokens_to_paligemma_tokens(self, tokens: np.ndarray | list[int]) -> np.ndarray:
+    def _act_tokens_to_paligemma_tokens(
+        self, tokens: np.ndarray | list[int]
+    ) -> np.ndarray:
         if isinstance(tokens, list):
             tokens = np.array(tokens)
-        return self._paligemma_tokenizer.vocab_size() - 1 - self._fast_skip_tokens - tokens
+        return (
+            self._paligemma_tokenizer.vocab_size()
+            - 1
+            - self._fast_skip_tokens
+            - tokens
+        )
 
 
 class FSQTokenizer:
@@ -304,10 +335,14 @@ class FSQTokenizer:
     FSQ tokenizer from the FAST paper baselines.
     """
 
-    def __init__(self, max_len: int = 256, fsq_tokenizer_path: str | None = None):
+    def __init__(
+        self, max_len: int = 256, fsq_tokenizer_path: str | None = None
+    ):
         self._max_len = max_len
 
-        assert fsq_tokenizer_path is not None, "fsq_tokenizer_path must be provided"
+        assert (
+            fsq_tokenizer_path is not None
+        ), "fsq_tokenizer_path must be provided"
         # Download tokenizer
         path = download.maybe_download(fsq_tokenizer_path)
         tok_path = os.path.join(path, os.listdir(path)[0])
@@ -330,7 +365,8 @@ class FSQTokenizer:
             restored = mgr.restore(
                 step,
                 args=ocp.args.Composite(
-                    config=ocp.args.JsonRestore(), params=ocp.args.StandardRestore()
+                    config=ocp.args.JsonRestore(),
+                    params=ocp.args.StandardRestore(),
                 ),
             )
             config = restored["config"]
@@ -358,11 +394,11 @@ class FSQTokenizer:
             "gs://big_vision/paligemma_tokenizer.model", gs={"token": "anon"}
         )
         with path.open("rb") as f:
-            self._paligemma_tokenizer = sentencepiece.SentencePieceProcessor(model_proto=f.read())
+            self._paligemma_tokenizer = sentencepiece.SentencePieceProcessor(
+                model_proto=f.read()
+            )
 
-        self._fast_skip_tokens = (
-            128  # Skip last 128 tokens in PaliGemma vocab since they are special tokens
-        )
+        self._fast_skip_tokens = 128  # Skip last 128 tokens in PaliGemma vocab since they are special tokens
 
     def tokenize(
         self, prompt: str, state: np.ndarray, actions: np.ndarray | None
@@ -370,7 +406,9 @@ class FSQTokenizer:
         cleaned_text = prompt.lower().strip().replace("_", " ")
 
         # Convention: state gets discretized into 256 discrete bins (assumed range after normalization: [-1, 1])
-        discretized_state = np.digitize(state, bins=np.linspace(-1, 1, 256 + 1)[:-1]) - 1
+        discretized_state = (
+            np.digitize(state, bins=np.linspace(-1, 1, 256 + 1)[:-1]) - 1
+        )
 
         # Convention: prefix includes prompt and string-representation of state, followed by ';'
         state_str = " ".join(map(str, discretized_state))
@@ -439,13 +477,24 @@ class FSQTokenizer:
             # Move computation to CPU and compile on-demand
             device = jax.devices("cpu")[0]
             with jax.default_device(device):
-                detok_act = self._detokenize_fn(self._params, action_tokens[None, ...])[0]
-            return detok_act[: action_horizon * action_dim].reshape([action_horizon, action_dim])
+                detok_act = self._detokenize_fn(
+                    self._params, action_tokens[None, ...]
+                )[0]
+            return detok_act[: action_horizon * action_dim].reshape(
+                [action_horizon, action_dim]
+            )
         except Exception as e:
             logging.warning(f"Error decoding FSQ: {e}")
             return np.zeros((action_horizon, action_dim))
 
-    def _act_tokens_to_paligemma_tokens(self, tokens: np.ndarray | list[int]) -> np.ndarray:
+    def _act_tokens_to_paligemma_tokens(
+        self, tokens: np.ndarray | list[int]
+    ) -> np.ndarray:
         if isinstance(tokens, list):
             tokens = np.array(tokens)
-        return self._paligemma_tokenizer.vocab_size() - 1 - self._fast_skip_tokens - tokens
+        return (
+            self._paligemma_tokenizer.vocab_size()
+            - 1
+            - self._fast_skip_tokens
+            - tokens
+        )

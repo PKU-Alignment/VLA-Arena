@@ -22,7 +22,10 @@ from robosuite.models.objects import MujocoXMLObject
 
 absolute_path = pathlib.Path(__file__).parent.parent.parent.absolute()
 
-from vla_arena.vla_arena.envs.base_object import register_object, register_visual_change_object
+from vla_arena.vla_arena.envs.base_object import (
+    register_object,
+    register_visual_change_object,
+)
 
 
 class ArticulatedObject(MujocoXMLObject):
@@ -34,7 +37,10 @@ class ArticulatedObject(MujocoXMLObject):
         duplicate_collision_geoms=False,
     ):
         super().__init__(
-            os.path.join(str(absolute_path), f'assets/articulated_objects/{obj_name}.xml'),
+            os.path.join(
+                str(absolute_path),
+                f'assets/articulated_objects/{obj_name}.xml',
+            ),
             name=name,
             joints=joints,
             obj_type='all',
@@ -72,16 +78,26 @@ class Microwave(ArticulatedObject):
     ):
         super().__init__(name, obj_name, joints)
 
-        self.object_properties['articulation']['default_open_ranges'] = [-2.094, -1.3]
-        self.object_properties['articulation']['default_close_ranges'] = [-0.005, 0.0]
+        self.object_properties['articulation']['default_open_ranges'] = [
+            -2.094,
+            -1.3,
+        ]
+        self.object_properties['articulation']['default_close_ranges'] = [
+            -0.005,
+            0.0,
+        ]
 
     def is_open(self, qpos):
-        if qpos < max(self.object_properties['articulation']['default_open_ranges']):
+        if qpos < max(
+            self.object_properties['articulation']['default_open_ranges']
+        ):
             return True
         return False
 
     def is_close(self, qpos):
-        if qpos > min(self.object_properties['articulation']['default_close_ranges']):
+        if qpos > min(
+            self.object_properties['articulation']['default_close_ranges']
+        ):
             return True
         return False
 
@@ -122,7 +138,9 @@ class Faucet(ArticulatedObject):
 
 @register_object
 class BasinFaucet(ArticulatedObject):
-    def __init__(self, name='basin_faucet', obj_name='basin_faucet', joints=None):
+    def __init__(
+        self, name='basin_faucet', obj_name='basin_faucet', joints=None
+    ):
         super().__init__(name, obj_name, joints)
 
 
@@ -136,16 +154,26 @@ class ShortCabinet(ArticulatedObject):
     ):
         super().__init__(name, obj_name, joints)
 
-        self.object_properties['articulation']['default_open_ranges'] = [0.10, 0.16]
-        self.object_properties['articulation']['default_close_ranges'] = [-0.005, 0.0]
+        self.object_properties['articulation']['default_open_ranges'] = [
+            0.10,
+            0.16,
+        ]
+        self.object_properties['articulation']['default_close_ranges'] = [
+            -0.005,
+            0.0,
+        ]
 
     def is_open(self, qpos):
-        if qpos > min(self.object_properties['articulation']['default_open_ranges']):
+        if qpos > min(
+            self.object_properties['articulation']['default_open_ranges']
+        ):
             return True
         return False
 
     def is_close(self, qpos):
-        if qpos < max(self.object_properties['articulation']['default_close_ranges']):
+        if qpos < max(
+            self.object_properties['articulation']['default_close_ranges']
+        ):
             return True
         return False
 
@@ -160,16 +188,26 @@ class ShortFridge(ArticulatedObject):
     ):
         super().__init__(name, obj_name, joints)
 
-        self.object_properties['articulation']['default_open_ranges'] = [2.0, 2.7]
-        self.object_properties['articulation']['default_close_ranges'] = [-0.005, 0.0]
+        self.object_properties['articulation']['default_open_ranges'] = [
+            2.0,
+            2.7,
+        ]
+        self.object_properties['articulation']['default_close_ranges'] = [
+            -0.005,
+            0.0,
+        ]
 
     def is_open(self, qpos):
-        if qpos > min(self.object_properties['articulation']['default_open_ranges']):
+        if qpos > min(
+            self.object_properties['articulation']['default_open_ranges']
+        ):
             return True
         return False
 
     def is_close(self, qpos):
-        if qpos < max(self.object_properties['articulation']['default_close_ranges']):
+        if qpos < max(
+            self.object_properties['articulation']['default_close_ranges']
+        ):
             return True
         return False
 
@@ -185,16 +223,26 @@ class WoodenCabinet(ArticulatedObject):
         joints=[dict(type='free', damping='0.0005')],
     ):
         super().__init__(name, obj_name, joints)
-        self.object_properties['articulation']['default_open_ranges'] = [-0.16, -0.14]
-        self.object_properties['articulation']['default_close_ranges'] = [0.0, 0.005]
+        self.object_properties['articulation']['default_open_ranges'] = [
+            -0.16,
+            -0.14,
+        ]
+        self.object_properties['articulation']['default_close_ranges'] = [
+            0.0,
+            0.005,
+        ]
 
     def is_open(self, qpos):
-        if qpos < max(self.object_properties['articulation']['default_open_ranges']):
+        if qpos < max(
+            self.object_properties['articulation']['default_open_ranges']
+        ):
             return True
         return False
 
     def is_close(self, qpos):
-        if qpos > min(self.object_properties['articulation']['default_close_ranges']):
+        if qpos > min(
+            self.object_properties['articulation']['default_close_ranges']
+        ):
             return True
         return False
 
@@ -221,16 +269,26 @@ class WhiteCabinet(ArticulatedObject):
         joints=[dict(type='free', damping='0.0005')],
     ):
         super().__init__(name, obj_name, joints)
-        self.object_properties['articulation']['default_open_ranges'] = [-0.16, -0.14]
-        self.object_properties['articulation']['default_close_ranges'] = [0.0, 0.005]
+        self.object_properties['articulation']['default_open_ranges'] = [
+            -0.16,
+            -0.14,
+        ]
+        self.object_properties['articulation']['default_close_ranges'] = [
+            0.0,
+            0.005,
+        ]
 
     def is_open(self, qpos):
-        if qpos < max(self.object_properties['articulation']['default_open_ranges']):
+        if qpos < max(
+            self.object_properties['articulation']['default_open_ranges']
+        ):
             return True
         return False
 
     def is_close(self, qpos):
-        if qpos > min(self.object_properties['articulation']['default_close_ranges']):
+        if qpos > min(
+            self.object_properties['articulation']['default_close_ranges']
+        ):
             return True
         return False
 
@@ -251,11 +309,19 @@ class FlatStove(ArticulatedObject):
         tracking_sites_dict = {}
         tracking_sites_dict['burner'] = (self.naming_prefix + 'burner', False)
         self.object_properties['vis_site_names'].update(tracking_sites_dict)
-        self.object_properties['articulation']['default_turnon_ranges'] = [0.5, 2.1]
-        self.object_properties['articulation']['default_turnoff_ranges'] = [-0.005, 0.0]
+        self.object_properties['articulation']['default_turnon_ranges'] = [
+            0.5,
+            2.1,
+        ]
+        self.object_properties['articulation']['default_turnoff_ranges'] = [
+            -0.005,
+            0.0,
+        ]
 
     def turn_on(self, qpos):
-        if qpos >= min(self.object_properties['articulation']['default_turnon_ranges']):
+        if qpos >= min(
+            self.object_properties['articulation']['default_turnon_ranges']
+        ):
             # TODO: Set visualization sites to be true
             self.object_properties['vis_site_names']['burner'] = (
                 self.naming_prefix + 'burner',
@@ -269,7 +335,9 @@ class FlatStove(ArticulatedObject):
         return False
 
     def turn_off(self, qpos):
-        if qpos < max(self.object_properties['articulation']['default_turnoff_ranges']):
+        if qpos < max(
+            self.object_properties['articulation']['default_turnoff_ranges']
+        ):
             self.object_properties['vis_site_names']['burner'] = (
                 self.naming_prefix + 'burner',
                 False,

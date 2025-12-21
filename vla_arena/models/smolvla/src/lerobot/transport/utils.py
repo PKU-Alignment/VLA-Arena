@@ -38,9 +38,9 @@ from queue import Queue
 from typing import Any
 
 import torch
-
 from lerobot.transport import services_pb2
 from lerobot.utils.transition import Transition
+
 
 CHUNK_SIZE = 2 * 1024 * 1024  # 2 MB
 MAX_MESSAGE_SIZE = 4 * 1024 * 1024  # 4 MB
@@ -54,7 +54,10 @@ def bytes_buffer_size(buffer: io.BytesIO) -> int:
 
 
 def send_bytes_in_chunks(
-    buffer: bytes, message_class: Any, log_prefix: str = '', silent: bool = True
+    buffer: bytes,
+    message_class: Any,
+    log_prefix: str = '',
+    silent: bool = True,
 ):
     buffer = io.BytesIO(buffer)
     size_in_bytes = bytes_buffer_size(buffer)
@@ -63,7 +66,9 @@ def send_bytes_in_chunks(
 
     logging_method = logging.info if not silent else logging.debug
 
-    logging_method(f'{log_prefix} Buffer size {size_in_bytes / 1024 / 1024} MB with')
+    logging_method(
+        f'{log_prefix} Buffer size {size_in_bytes / 1024 / 1024} MB with'
+    )
 
     while sent_bytes < size_in_bytes:
         transfer_state = services_pb2.TransferState.TRANSFER_MIDDLE
@@ -125,8 +130,12 @@ def receive_bytes_in_chunks(
 
             logging.debug(f'{log_prefix} Queue updated')
         else:
-            logging.warning(f'{log_prefix} Received unknown transfer state {item.transfer_state}')
-            raise ValueError(f'Received unknown transfer state {item.transfer_state}')
+            logging.warning(
+                f'{log_prefix} Received unknown transfer state {item.transfer_state}'
+            )
+            raise ValueError(
+                f'Received unknown transfer state {item.transfer_state}'
+            )
 
 
 def state_to_bytes(state_dict: dict[str, torch.Tensor]) -> bytes:

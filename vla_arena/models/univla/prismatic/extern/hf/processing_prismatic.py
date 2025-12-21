@@ -25,9 +25,18 @@ import timm.data
 import torch
 import torchvision.transforms.functional as TVF
 from PIL import Image
-from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToTensor
+from torchvision.transforms import (
+    CenterCrop,
+    Compose,
+    Normalize,
+    Resize,
+    ToTensor,
+)
 from transformers import PreTrainedTokenizerBase
-from transformers.image_processing_utils import BatchFeature, ImageProcessingMixin
+from transformers.image_processing_utils import (
+    BatchFeature,
+    ImageProcessingMixin,
+)
 from transformers.processing_utils import ProcessorMixin
 from transformers.tokenization_utils import (
     PaddingStrategy,
@@ -47,7 +56,9 @@ def letterbox_pad_transform(
     horizontal_pad, vertical_pad = int((max_wh - w) / 2), int((max_wh - h) / 2)
     padding = (horizontal_pad, vertical_pad, horizontal_pad, vertical_pad)
 
-    return TVF.pad(image, padding, fill=padding_fill_value, padding_mode='constant')
+    return TVF.pad(
+        image, padding, fill=padding_fill_value, padding_mode='constant'
+    )
 
 
 class PrismaticImageProcessor(ImageProcessingMixin):
@@ -90,7 +101,11 @@ class PrismaticImageProcessor(ImageProcessingMixin):
         )
 
         # Grab torchvision transforms via TIMM =>> need to parse for specific "functional" transform values!
-        self.tvf_resize_params, self.tvf_crop_params, self.tvf_normalize_params = [], [], []
+        (
+            self.tvf_resize_params,
+            self.tvf_crop_params,
+            self.tvf_normalize_params,
+        ) = ([], [], [])
         self.tvf_do_letterbox, self.tvf_letterbox_fill = False, None
 
         for idx in range(len(input_sizes)):
@@ -113,7 +128,9 @@ class PrismaticImageProcessor(ImageProcessingMixin):
                 and isinstance(transform.transforms[2], ToTensor)
                 and isinstance(transform.transforms[3], Normalize)
                 and (transform.transforms[0].size == self.input_sizes[idx][-1])
-                and (transform.transforms[1].size == self.input_sizes[idx][-2:])
+                and (
+                    transform.transforms[1].size == self.input_sizes[idx][-2:]
+                )
             ):
                 raise ValueError(
                     f'Unexpected TIMM image transformation structure/sizes: `{transform}`'
@@ -129,7 +146,9 @@ class PrismaticImageProcessor(ImageProcessingMixin):
             self.tvf_resize_params.append(
                 {
                     'size': resize_t.size,
-                    'interpolation': TVF.pil_modes_mapping[resize_t.interpolation],
+                    'interpolation': TVF.pil_modes_mapping[
+                        resize_t.interpolation
+                    ],
                     'max_size': None,
                     'antialias': True,
                 }
@@ -146,7 +165,10 @@ class PrismaticImageProcessor(ImageProcessingMixin):
 
             # Handle Prismatic `image_resize_strategy`
             if self.image_resize_strategy == 'resize-naive':
-                self.tvf_resize_params[idx]['size'] = (resize_t.size, resize_t.size)
+                self.tvf_resize_params[idx]['size'] = (
+                    resize_t.size,
+                    resize_t.size,
+                )
             elif self.image_resize_strategy == 'letterbox':
                 self.tvf_do_letterbox, self.tvf_letterbox_fill = True, tuple(
                     [int(x * 255) for x in self.means[idx]]
@@ -172,7 +194,9 @@ class PrismaticImageProcessor(ImageProcessingMixin):
             img_idx = TVF.resize(img, **self.tvf_resize_params[idx])
             img_idx = TVF.center_crop(img_idx, **self.tvf_crop_params[idx])
             img_idx_t = TVF.to_tensor(img_idx)
-            img_idx_t = TVF.normalize(img_idx_t, **self.tvf_normalize_params[idx])
+            img_idx_t = TVF.normalize(
+                img_idx_t, **self.tvf_normalize_params[idx]
+            )
             imgs_t.append(img_idx_t)
 
         # [Contract] `imgs_t` is a list of Tensors of shape [3, input_size, input_size]; stack along dim = 0
@@ -197,14 +221,19 @@ class PrismaticImageProcessor(ImageProcessingMixin):
             images = [images]
 
         # Apply `self.img_transform` to each image (will return list of torch.Tensors); stack into "batched" Tensor
-        pixel_values = torch.stack([self.apply_transform(img.convert('RGB')) for img in images])
+        pixel_values = torch.stack(
+            [self.apply_transform(img.convert('RGB')) for img in images]
+        )
 
         # Return BatchFeature =>> note that for compatibility, constructor expects Dict[str, np.ndarray], so we convert
         return BatchFeature(
-            data={'pixel_values': pixel_values.float().numpy()}, tensor_type=return_tensors
+            data={'pixel_values': pixel_values.float().numpy()},
+            tensor_type=return_tensors,
         )
 
-    def __call__(self, images: Image.Image | list[Image.Image], **kwargs) -> BatchFeature:
+    def __call__(
+        self, images: Image.Image | list[Image.Image], **kwargs
+    ) -> BatchFeature:
         return self.preprocess(images, **kwargs)
 
 
@@ -224,7 +253,12 @@ class PrismaticProcessor(ProcessorMixin):
 
     def __call__(
         self,
-        text: TextInput | PreTokenizedInput | list[TextInput] | list[PreTokenizedInput],
+        text: (
+            TextInput
+            | PreTokenizedInput
+            | list[TextInput]
+            | list[PreTokenizedInput]
+        ),
         images: Image.Image | list[Image.Image],
         padding: bool | str | PaddingStrategy = False,
         truncation: bool | str | TruncationStrategy | None = None,
@@ -242,7 +276,9 @@ class PrismaticProcessor(ProcessorMixin):
         @param return_tensors: Type of return tensors (usually "pt" or TensorType.PYTORCH)
         @return: BatchFeature with keys for `input_ids`, `attention_mask` and `pixel_values`.
         """
-        pixel_values = self.image_processor(images, return_tensors=return_tensors)['pixel_values']
+        pixel_values = self.image_processor(
+            images, return_tensors=return_tensors
+        )['pixel_values']
         text_inputs = self.tokenizer(
             text,
             return_tensors=return_tensors,
@@ -253,7 +289,9 @@ class PrismaticProcessor(ProcessorMixin):
 
         # [Validate] Need same number of images and text inputs!
         if pixel_values.shape[0] != text_inputs.input_ids.shape[0]:
-            raise ValueError('Batch is malformed; expected same number of images and text inputs!')
+            raise ValueError(
+                'Batch is malformed; expected same number of images and text inputs!'
+            )
 
         return BatchFeature(data={**text_inputs, 'pixel_values': pixel_values})
 
@@ -276,7 +314,9 @@ class PrismaticProcessor(ProcessorMixin):
 
     def decode(
         self,
-        token_ids: int | list[int] | torch.Tensor | Any,  # `Any` = np.ndarray | tf.Tensor
+        token_ids: (
+            int | list[int] | torch.Tensor | Any
+        ),  # `Any` = np.ndarray | tf.Tensor
         skip_special_tokens: bool = False,
         clean_up_tokenization_spaces: bool | None = None,
         **kwargs: str,
@@ -293,4 +333,6 @@ class PrismaticProcessor(ProcessorMixin):
         tokenizer_input_names = self.tokenizer.model_input_names
         image_processor_input_names = self.image_processor.model_input_names
 
-        return list(dict.fromkeys(tokenizer_input_names + image_processor_input_names))
+        return list(
+            dict.fromkeys(tokenizer_input_names + image_processor_input_names)
+        )

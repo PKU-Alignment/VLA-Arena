@@ -16,9 +16,8 @@ import dataclasses
 from typing import Protocol, runtime_checkable
 
 import jax.numpy as jnp
-import optax
-
 import openpi.shared.array_typing as at
+import optax
 
 
 @runtime_checkable
@@ -61,7 +60,8 @@ class RsqrtDecaySchedule(LRScheduleConfig):
                     end_value=self.peak_lr,
                     transition_steps=self.warmup_steps,
                 ),
-                lambda step: self.peak_lr / jnp.sqrt((self.timescale + step) / self.timescale),
+                lambda step: self.peak_lr
+                / jnp.sqrt((self.timescale + step) / self.timescale),
             ],
             [self.warmup_steps],
         )
@@ -101,7 +101,9 @@ class AdamW(OptimizerConfig):
             mask=weight_decay_mask,
         )
 
-        return optax.chain(optax.clip_by_global_norm(self.clip_gradient_norm), tx)
+        return optax.chain(
+            optax.clip_by_global_norm(self.clip_gradient_norm), tx
+        )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -117,7 +119,9 @@ class SGD(OptimizerConfig):
         lr: optax.ScalarOrSchedule,
         weight_decay_mask: at.PyTree | None = None,
     ) -> optax.GradientTransformation:
-        assert weight_decay_mask is None, "Weight decay is not supported for SGD"
+        assert (
+            weight_decay_mask is None
+        ), "Weight decay is not supported for SGD"
         return optax.sgd(lr, momentum=self.momentum, nesterov=self.nesterov)
 
 

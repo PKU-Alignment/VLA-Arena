@@ -32,9 +32,8 @@ import threading
 import time
 from queue import Queue
 
-from torch.multiprocessing import Queue as TorchMPQueue
-
 from lerobot.utils.queue import get_last_item_from_queue
+from torch.multiprocessing import Queue as TorchMPQueue
 
 
 def test_get_last_item_single_item():

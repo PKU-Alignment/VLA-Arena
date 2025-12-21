@@ -35,9 +35,10 @@ import time
 
 import pytest
 import torch
-
 from lerobot.configs.types import PolicyFeature
+
 from tests.utils import require_package
+
 
 # -----------------------------------------------------------------------------
 # Test fixtures
@@ -56,7 +57,9 @@ class MockPolicy:
             """Empty image features since this test doesn't use images."""
             return {}
 
-    def predict_action_chunk(self, observation: dict[str, torch.Tensor]) -> torch.Tensor:
+    def predict_action_chunk(
+        self, observation: dict[str, torch.Tensor]
+    ) -> torch.Tensor:
         """Return a chunk of 20 dummy actions."""
         batch_size = len(observation['observation.state'])
         return torch.zeros(batch_size, 20, 6)
@@ -94,7 +97,14 @@ def policy_server():
         'observation.state': {
             'dtype': 'float32',
             'shape': [6],
-            'names': ['joint1', 'joint2', 'joint3', 'joint4', 'joint5', 'joint6'],
+            'names': [
+                'joint1',
+                'joint2',
+                'joint3',
+                'joint4',
+                'joint5',
+                'joint6',
+            ],
         }
     }
 
@@ -138,7 +148,9 @@ def test_time_action_chunk(policy_server):
     # A chunk of 3 action tensors.
     action_tensors = [torch.randn(6) for _ in range(3)]
 
-    timed_actions = policy_server._time_action_chunk(start_ts, action_tensors, start_t)
+    timed_actions = policy_server._time_action_chunk(
+        start_ts, action_tensors, start_t
+    )
 
     assert len(timed_actions) == 3
     # Check timesteps
@@ -149,7 +161,9 @@ def test_time_action_chunk(policy_server):
         start_ts + policy_server.config.environment_dt,
         start_ts + 2 * policy_server.config.environment_dt,
     ]
-    for ta, expected_ts in zip(timed_actions, expected_timestamps, strict=True):
+    for ta, expected_ts in zip(
+        timed_actions, expected_timestamps, strict=True
+    ):
         assert abs(ta.get_timestamp() - expected_ts) < 1e-6
 
 
@@ -216,14 +230,20 @@ def test_predict_action_chunk(monkeypatch, policy_server):
     def _fake_get_action_chunk(_self, _obs, _type='act'):
         return torch.zeros(batch_size, actions_per_chunk, action_dim)
 
-    monkeypatch.setattr(PolicyServer, '_get_action_chunk', _fake_get_action_chunk, raising=True)
+    monkeypatch.setattr(
+        PolicyServer, '_get_action_chunk', _fake_get_action_chunk, raising=True
+    )
 
     obs = _make_obs(torch.zeros(6), timestep=5)
     timed_actions = policy_server._predict_action_chunk(obs)
 
     assert len(timed_actions) == actions_per_chunk
-    assert [ta.get_timestep() for ta in timed_actions] == list(range(5, 5 + actions_per_chunk))
+    assert [ta.get_timestep() for ta in timed_actions] == list(
+        range(5, 5 + actions_per_chunk)
+    )
 
     for i, ta in enumerate(timed_actions):
-        expected_ts = obs.get_timestamp() + i * policy_server.config.environment_dt
+        expected_ts = (
+            obs.get_timestamp() + i * policy_server.config.environment_dt
+        )
         assert abs(ta.get_timestamp() - expected_ts) < 1e-6

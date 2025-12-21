@@ -24,7 +24,9 @@ import logging
 import tensorflow as tf
 
 
-def chunk_act_obs(traj: dict, window_size: int, future_action_window_size: int = 0) -> dict:
+def chunk_act_obs(
+    traj: dict, window_size: int, future_action_window_size: int = 0
+) -> dict:
     """
     Chunks actions and observations into the given window_size.
 
@@ -79,13 +81,17 @@ def chunk_act_obs(traj: dict, window_size: int, future_action_window_size: int =
     )
     neutral_actions = tf.where(
         absolute_action_mask[:, None, :],
-        traj['action'],  # absolute actions are repeated (already done during chunking)
+        traj[
+            'action'
+        ],  # absolute actions are repeated (already done during chunking)
         tf.zeros_like(traj['action']),  # relative actions are zeroed
     )
 
     # actions past the goal timestep become neutral
     action_past_goal = action_chunk_indices > goal_timestep[:, None]
-    traj['action'] = tf.where(action_past_goal[:, :, None], neutral_actions, traj['action'])
+    traj['action'] = tf.where(
+        action_past_goal[:, :, None], neutral_actions, traj['action']
+    )
 
     return traj
 
@@ -112,7 +118,9 @@ def add_pad_mask_dict(traj: dict) -> dict:
         for subkey in traj[key]:
             # Handles "language_instruction", "image_*", and "depth_*"
             if traj[key][subkey].dtype == tf.string:
-                pad_mask_dict[subkey] = tf.strings.length(traj[key][subkey]) != 0
+                pad_mask_dict[subkey] = (
+                    tf.strings.length(traj[key][subkey]) != 0
+                )
 
             # All other keys should not be treated as padding
             else:

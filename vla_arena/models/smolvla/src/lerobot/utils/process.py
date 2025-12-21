@@ -72,7 +72,9 @@ class ProcessSignalHandler:
             pid_str = ''
             if self._display_pid:
                 pid_str = f'[PID: {os.getpid()}]'
-            logging.info(f'{pid_str} Shutdown signal {signum} received. Cleaning up…')
+            logging.info(
+                f'{pid_str} Shutdown signal {signum} received. Cleaning up…'
+            )
             self.shutdown_event.set()
             self._counter += 1
 
@@ -92,6 +94,9 @@ class ProcessSignalHandler:
                 continue
             try:
                 signal.signal(sig, _signal_handler)
-            except (ValueError, OSError):  # pragma: no cover – unlikely but safe
+            except (
+                ValueError,
+                OSError,
+            ):  # pragma: no cover – unlikely but safe
                 # Signal not supported or we are in a non-main thread.
                 continue

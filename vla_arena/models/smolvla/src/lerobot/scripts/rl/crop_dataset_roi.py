@@ -36,9 +36,8 @@ from pathlib import Path
 import cv2
 import torch
 import torchvision.transforms.functional as F  # type: ignore  # noqa: N812
-from tqdm import tqdm  # type: ignore
-
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
+from tqdm import tqdm  # type: ignore
 
 
 def select_rect_roi(img):
@@ -81,7 +80,9 @@ def select_rect_roi(img):
                 right = max(index_x, x)
                 # Show a temporary image with the current rectangle drawn
                 temp = working_img.copy()
-                cv2.rectangle(temp, (left, top), (right, bottom), (0, 255, 0), 2)
+                cv2.rectangle(
+                    temp, (left, top), (right, bottom), (0, 255, 0), 2
+                )
                 cv2.imshow('Select ROI', temp)
 
         elif event == cv2.EVENT_LBUTTONUP:
@@ -96,7 +97,9 @@ def select_rect_roi(img):
             roi = (top, left, height, width)  # (top, left, height, width)
             # Draw the final rectangle on the working image and display it
             working_img = clone.copy()
-            cv2.rectangle(working_img, (left, top), (right, bottom), (0, 255, 0), 2)
+            cv2.rectangle(
+                working_img, (left, top), (right, bottom), (0, 255, 0), 2
+            )
             cv2.imshow('Select ROI', working_img)
 
     # Create the window and set the callback
@@ -214,7 +217,9 @@ def convert_lerobot_dataset_to_cropper_lerobot_dataset(
     # (Here we simply set the shape to be the final resize_size.)
     for key in crop_params_dict:
         if key in new_dataset.meta.info['features']:
-            new_dataset.meta.info['features'][key]['shape'] = [3] + list(resize_size)
+            new_dataset.meta.info['features'][key]['shape'] = [3] + list(
+                resize_size
+            )
 
     # TODO:  Directly modify the mp4 video + meta info features, instead of recreating a dataset
     prev_episode_index = 0
@@ -224,7 +229,14 @@ def convert_lerobot_dataset_to_cropper_lerobot_dataset(
         # Create a copy of the frame to add to the new dataset
         new_frame = {}
         for key, value in frame.items():
-            if key in ('task_index', 'timestamp', 'episode_index', 'frame_index', 'index', 'task'):
+            if key in (
+                'task_index',
+                'timestamp',
+                'episode_index',
+                'frame_index',
+                'index',
+                'task',
+            ):
                 continue
             if key in ('next.done', 'next.reward'):
                 # if not isinstance(value, str) and len(value.shape) == 0:
@@ -261,7 +273,9 @@ def convert_lerobot_dataset_to_cropper_lerobot_dataset(
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Crop rectangular ROIs from a LeRobot dataset.')
+    parser = argparse.ArgumentParser(
+        description='Crop rectangular ROIs from a LeRobot dataset.'
+    )
     parser.add_argument(
         '--repo-id',
         type=str,
@@ -306,21 +320,25 @@ if __name__ == '__main__':
             rois = json.load(f)
 
     # Print the selected rectangular ROIs
-    print('\nSelected Rectangular Regions of Interest (top, left, height, width):')
+    print(
+        '\nSelected Rectangular Regions of Interest (top, left, height, width):'
+    )
     for key, roi in rois.items():
         print(f'{key}: {roi}')
 
     new_repo_id = args.repo_id + '_cropped_resized'
     new_dataset_root = Path(str(dataset.root) + '_cropped_resized')
 
-    cropped_resized_dataset = convert_lerobot_dataset_to_cropper_lerobot_dataset(
-        original_dataset=dataset,
-        crop_params_dict=rois,
-        new_repo_id=new_repo_id,
-        new_dataset_root=new_dataset_root,
-        resize_size=(128, 128),
-        push_to_hub=args.push_to_hub,
-        task=args.task,
+    cropped_resized_dataset = (
+        convert_lerobot_dataset_to_cropper_lerobot_dataset(
+            original_dataset=dataset,
+            crop_params_dict=rois,
+            new_repo_id=new_repo_id,
+            new_dataset_root=new_dataset_root,
+            resize_size=(128, 128),
+            push_to_hub=args.push_to_hub,
+            task=args.task,
+        )
     )
 
     meta_dir = new_dataset_root / 'meta'

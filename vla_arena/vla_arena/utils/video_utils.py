@@ -19,7 +19,9 @@ import numpy as np
 
 
 class VideoWriter:
-    def __init__(self, video_path, save_video=False, fps=30, single_video=True):
+    def __init__(
+        self, video_path, save_video=False, fps=30, single_video=True
+    ):
         self.video_path = video_path
         self.save_video = save_video
         self.fps = fps
@@ -57,7 +59,10 @@ class VideoWriter:
                 blank_image[:, :, 0] = 0
                 blank_image[:, :, -1] = 0
                 transparency = 0.7
-                original_image = original_image * (1 - transparency) + blank_image * transparency
+                original_image = (
+                    original_image * (1 - transparency)
+                    + blank_image * transparency
+                )
 
                 self.image_buffer[idx].append(original_image.astype(np.uint8))
 

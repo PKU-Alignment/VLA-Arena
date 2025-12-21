@@ -21,7 +21,10 @@ Each function should add entries to the "task" dict.
 
 
 import tensorflow as tf
-from vla_arena.models.openvla_oft.prismatic.vla.datasets.rlds.utils.data_utils import tree_merge
+
+from vla_arena.models.openvla_oft.prismatic.vla.datasets.rlds.utils.data_utils import (
+    tree_merge,
+)
 
 
 def uniform(traj: dict) -> dict:
@@ -38,7 +41,9 @@ def uniform(traj: dict) -> dict:
     goal_idxs = tf.minimum(goal_idxs, traj_len - 1)
 
     # Adds keys to "task" mirroring "observation" keys (`tree_merge` to combine "pad_mask_dict" properly)
-    goal = tf.nest.map_structure(lambda x: tf.gather(x, goal_idxs), traj['observation'])
+    goal = tf.nest.map_structure(
+        lambda x: tf.gather(x, goal_idxs), traj['observation']
+    )
     traj['task'] = tree_merge(traj['task'], goal)
 
     return traj

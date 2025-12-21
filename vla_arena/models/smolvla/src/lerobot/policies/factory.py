@@ -30,8 +30,6 @@
 
 import logging
 
-from torch import nn
-
 from lerobot.configs.policies import PreTrainedConfig
 from lerobot.configs.types import FeatureType
 from lerobot.datasets.lerobot_dataset import LeRobotDatasetMetadata
@@ -44,10 +42,13 @@ from lerobot.policies.pi0.configuration_pi0 import PI0Config
 from lerobot.policies.pi0fast.configuration_pi0fast import PI0FASTConfig
 from lerobot.policies.pretrained import PreTrainedPolicy
 from lerobot.policies.sac.configuration_sac import SACConfig
-from lerobot.policies.sac.reward_model.configuration_classifier import RewardClassifierConfig
+from lerobot.policies.sac.reward_model.configuration_classifier import (
+    RewardClassifierConfig,
+)
 from lerobot.policies.smolvla.configuration_smolvla import SmolVLAConfig
 from lerobot.policies.tdmpc.configuration_tdmpc import TDMPCConfig
 from lerobot.policies.vqbet.configuration_vqbet import VQBeTConfig
+from torch import nn
 
 
 def get_policy_class(name: str) -> PreTrainedPolicy:
@@ -57,7 +58,9 @@ def get_policy_class(name: str) -> PreTrainedPolicy:
 
         return TDMPCPolicy
     elif name == 'diffusion':
-        from lerobot.policies.diffusion.modeling_diffusion import DiffusionPolicy
+        from lerobot.policies.diffusion.modeling_diffusion import (
+            DiffusionPolicy,
+        )
 
         return DiffusionPolicy
     elif name == 'act':
@@ -81,7 +84,9 @@ def get_policy_class(name: str) -> PreTrainedPolicy:
 
         return SACPolicy
     elif name == 'reward_classifier':
-        from lerobot.policies.sac.reward_model.modeling_classifier import Classifier
+        from lerobot.policies.sac.reward_model.modeling_classifier import (
+            Classifier,
+        )
 
         return Classifier
     elif name == 'smolvla':
@@ -89,7 +94,9 @@ def get_policy_class(name: str) -> PreTrainedPolicy:
 
         return SmolVLAPolicy
     else:
-        raise NotImplementedError(f'Policy with name {name} is not implemented.')
+        raise NotImplementedError(
+            f'Policy with name {name} is not implemented.'
+        )
 
 
 def make_policy_config(policy_type: str, **kwargs) -> PreTrainedConfig:
@@ -141,7 +148,9 @@ def make_policy(
         PreTrainedPolicy: _description_
     """
     if bool(ds_meta) == bool(env_cfg):
-        raise ValueError('Either one of a dataset metadata or a sim env must be provided.')
+        raise ValueError(
+            'Either one of a dataset metadata or a sim env must be provided.'
+        )
 
     # NOTE: Currently, if you try to run vqbet with mps backend, you'll get this error.
     # TODO(aliberts, rcadene): Implement a check_backend_compatibility in policies?
@@ -171,8 +180,16 @@ def make_policy(
             )
         features = env_to_policy_features(env_cfg)
 
-    cfg.output_features = {key: ft for key, ft in features.items() if ft.type is FeatureType.ACTION}
-    cfg.input_features = {key: ft for key, ft in features.items() if key not in cfg.output_features}
+    cfg.output_features = {
+        key: ft
+        for key, ft in features.items()
+        if ft.type is FeatureType.ACTION
+    }
+    cfg.input_features = {
+        key: ft
+        for key, ft in features.items()
+        if key not in cfg.output_features
+    }
     kwargs['config'] = cfg
 
     if cfg.pretrained_path:

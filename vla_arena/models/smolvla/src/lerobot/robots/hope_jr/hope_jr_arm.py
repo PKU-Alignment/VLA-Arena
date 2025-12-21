@@ -43,6 +43,7 @@ from ..robot import Robot
 from ..utils import ensure_safe_goal_position
 from .config_hope_jr import HopeJrArmConfig
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -56,13 +57,25 @@ class HopeJrArm(Robot):
         self.bus = FeetechMotorsBus(
             port=self.config.port,
             motors={
-                'shoulder_pitch': Motor(1, 'sm8512bl', MotorNormMode.RANGE_M100_100),
-                'shoulder_yaw': Motor(2, 'sts3250', MotorNormMode.RANGE_M100_100),
-                'shoulder_roll': Motor(3, 'sts3250', MotorNormMode.RANGE_M100_100),
-                'elbow_flex': Motor(4, 'sts3250', MotorNormMode.RANGE_M100_100),
-                'wrist_roll': Motor(5, 'sts3250', MotorNormMode.RANGE_M100_100),
+                'shoulder_pitch': Motor(
+                    1, 'sm8512bl', MotorNormMode.RANGE_M100_100
+                ),
+                'shoulder_yaw': Motor(
+                    2, 'sts3250', MotorNormMode.RANGE_M100_100
+                ),
+                'shoulder_roll': Motor(
+                    3, 'sts3250', MotorNormMode.RANGE_M100_100
+                ),
+                'elbow_flex': Motor(
+                    4, 'sts3250', MotorNormMode.RANGE_M100_100
+                ),
+                'wrist_roll': Motor(
+                    5, 'sts3250', MotorNormMode.RANGE_M100_100
+                ),
                 'wrist_yaw': Motor(6, 'sts3250', MotorNormMode.RANGE_M100_100),
-                'wrist_pitch': Motor(7, 'sts3250', MotorNormMode.RANGE_M100_100),
+                'wrist_pitch': Motor(
+                    7, 'sts3250', MotorNormMode.RANGE_M100_100
+                ),
             },
             calibration=self.calibration,
         )
@@ -70,7 +83,9 @@ class HopeJrArm(Robot):
 
         # HACK
         self.shoulder_pitch = 'shoulder_pitch'
-        self.other_motors = [m for m in self.bus.motors if m != 'shoulder_pitch']
+        self.other_motors = [
+            m for m in self.bus.motors if m != 'shoulder_pitch'
+        ]
 
     @property
     def _motors_ft(self) -> dict[str, type]:
@@ -79,7 +94,11 @@ class HopeJrArm(Robot):
     @property
     def _cameras_ft(self) -> dict[str, tuple]:
         return {
-            cam: (self.config.cameras[cam].height, self.config.cameras[cam].width, 3)
+            cam: (
+                self.config.cameras[cam].height,
+                self.config.cameras[cam].width,
+                3,
+            )
             for cam in self.cameras
         }
 
@@ -93,7 +112,9 @@ class HopeJrArm(Robot):
 
     @property
     def is_connected(self) -> bool:
-        return self.bus.is_connected and all(cam.is_connected for cam in self.cameras.values())
+        return self.bus.is_connected and all(
+            cam.is_connected for cam in self.cameras.values()
+        )
 
     def connect(self, calibrate: bool = True) -> None:
         """
@@ -137,7 +158,9 @@ class HopeJrArm(Robot):
     def setup_motors(self) -> None:
         # TODO: add docstring
         for motor in reversed(self.bus.motors):
-            input(f"Connect the controller board to the '{motor}' motor only and press enter.")
+            input(
+                f"Connect the controller board to the '{motor}' motor only and press enter."
+            )
             self.bus.setup_motor(motor)
             print(f"'{motor}' motor id set to {self.bus.motors[motor].id}")
 
@@ -148,7 +171,9 @@ class HopeJrArm(Robot):
         # Read arm position
         start = time.perf_counter()
         obs_dict = self.bus.sync_read('Present_Position', self.other_motors)
-        obs_dict[self.shoulder_pitch] = self.bus.read('Present_Position', self.shoulder_pitch)
+        obs_dict[self.shoulder_pitch] = self.bus.read(
+            'Present_Position', self.shoulder_pitch
+        )
         obs_dict = {f'{motor}.pos': val for motor, val in obs_dict.items()}
         dt_ms = (time.perf_counter() - start) * 1e3
         logger.debug(f'{self} read state: {dt_ms:.1f}ms')
@@ -167,15 +192,22 @@ class HopeJrArm(Robot):
             raise DeviceNotConnectedError(f'{self} is not connected.')
 
         goal_pos = {
-            key.removesuffix('.pos'): val for key, val in action.items() if key.endswith('.pos')
+            key.removesuffix('.pos'): val
+            for key, val in action.items()
+            if key.endswith('.pos')
         }
 
         # Cap goal position when too far away from present position.
         # /!\ Slower fps expected due to reading from the follower.
         if self.config.max_relative_target is not None:
             present_pos = self.bus.sync_read('Present_Position')
-            goal_present_pos = {key: (g_pos, present_pos[key]) for key, g_pos in goal_pos.items()}
-            goal_pos = ensure_safe_goal_position(goal_present_pos, self.config.max_relative_target)
+            goal_present_pos = {
+                key: (g_pos, present_pos[key])
+                for key, g_pos in goal_pos.items()
+            }
+            goal_pos = ensure_safe_goal_position(
+                goal_present_pos, self.config.max_relative_target
+            )
 
         self.bus.sync_write('Goal_Position', goal_pos)
         return {f'{motor}.pos': val for motor, val in goal_pos.items()}

@@ -25,7 +25,8 @@ from vla_arena.vla_arena.envs.textures import get_texture_file_list
 
 def create_problem_class_from_file(class_name):
     template_source_file = os.path.join(
-        get_vla_arena_path('benchmark_root'), '../../templates/problem_class_template.py',
+        get_vla_arena_path('benchmark_root'),
+        '../../templates/problem_class_template.py',
     )
     with open(template_source_file) as f:
         lines = f.readlines()
@@ -42,7 +43,8 @@ def create_problem_class_from_file(class_name):
 def create_scene_xml_file(scene_name):
     """This is just an example for you to jump start. For more advanced editing, you will need to figure out yourself. You can take a look at all the available xml files for reference."""
     template_source_file = os.path.join(
-        get_vla_arena_path('benchmark_root'), '../../templates/scene_template.xml',
+        get_vla_arena_path('benchmark_root'),
+        '../../templates/scene_template.xml',
     )
     parser = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
     tree = ET.parse(template_source_file, parser)
@@ -68,7 +70,9 @@ def create_scene_xml_file(scene_name):
         texture_list = get_texture_file_list(type=type, texture_path='../')
         for i, (texture_name, texture_file_path) in enumerate(texture_list):
             print(f'[{i}]: {texture_name}')
-        choice = int(input(f'Please select which texture to use for {element_name}: '))
+        choice = int(
+            input(f'Please select which texture to use for {element_name}: ')
+        )
         element.set('file', texture_list[choice][1])
     tree.write(f'{scene_name}.xml', encoding='utf-8')
     print(f'Creating scene {scene_name} at the file: {scene_name}.xml')

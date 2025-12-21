@@ -29,6 +29,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import draccus
+
 from vla_arena.models.openvla.vla_arena.models.openvla.prismatic.overwatch import (
     initialize_overwatch,
 )
@@ -36,6 +37,7 @@ from vla_arena.models.openvla.vla_arena.models.openvla.prismatic.preprocessing i
     convert_to_jpg,
     download_extract,
 )
+
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)
@@ -52,12 +54,16 @@ class PreprocessConfig:
 
 @draccus.wrap()
 def preprocess(cfg: PreprocessConfig) -> None:
-    overwatch.info(f"Downloading & Extracting `{cfg.dataset_id}` to `{cfg.root_dir / 'download'}")
+    overwatch.info(
+        f"Downloading & Extracting `{cfg.dataset_id}` to `{cfg.root_dir / 'download'}"
+    )
     download_extract(cfg.dataset_id, root_dir=cfg.root_dir)
 
     # Special Handling for OCR VQA Images (for `llava-v1.5-instruct`) --> convert GIFs/PNGs to JPG
     if cfg.dataset_id == 'llava-v1.5-instruct':
-        convert_to_jpg(cfg.root_dir / 'download' / cfg.dataset_id / 'ocr_vqa' / 'images')
+        convert_to_jpg(
+            cfg.root_dir / 'download' / cfg.dataset_id / 'ocr_vqa' / 'images'
+        )
 
 
 if __name__ == '__main__':

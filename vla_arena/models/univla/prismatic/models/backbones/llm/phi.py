@@ -23,11 +23,15 @@ import torch
 from torch import nn as nn
 from transformers import PhiForCausalLM
 from transformers.models.phi.modeling_phi import PhiDecoderLayer
-from vla_arena.models.univla.prismatic.models.backbones.llm.base_llm import HFCausalLLMBackbone
+
+from vla_arena.models.univla.prismatic.models.backbones.llm.base_llm import (
+    HFCausalLLMBackbone,
+)
 from vla_arena.models.univla.prismatic.models.backbones.llm.prompting import (
     PhiPromptBuilder,
     PromptBuilder,
 )
+
 
 # Registry ==> Support Phi Models (from HF Transformers)
 # fmt: off
@@ -61,14 +65,18 @@ class PhiLLMBackbone(HFCausalLLMBackbone):
         # [Special Case] Phi PAD Token Handling --> for clarity, we add an extra token (and resize)
         self.tokenizer.add_special_tokens({'pad_token': '<|pad|>'})
         self.llm.config.pad_token_id = self.tokenizer.pad_token_id
-        self.llm.resize_token_embeddings(len(self.tokenizer), pad_to_multiple_of=64)
+        self.llm.resize_token_embeddings(
+            len(self.tokenizer), pad_to_multiple_of=64
+        )
 
     @property
     def prompt_builder_fn(self) -> type[PromptBuilder]:
         if self.identifier.startswith('phi-2'):
             return PhiPromptBuilder
 
-        raise ValueError(f'No PromptBuilder defined for LLM Backbone `{self.identifier}`')
+        raise ValueError(
+            f'No PromptBuilder defined for LLM Backbone `{self.identifier}`'
+        )
 
     @property
     def transformer_layer_cls(self) -> type[nn.Module]:

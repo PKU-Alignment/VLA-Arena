@@ -15,11 +15,9 @@
 from collections.abc import Callable
 from typing import Any
 
-from flax import nnx
-from flax import struct
 import jax
 import optax
-
+from flax import nnx, struct
 from openpi.models import model as _model
 from openpi.shared import array_typing as at
 
@@ -38,12 +36,17 @@ class TrainState:
 
 
 @at.typecheck
-def tree_to_info(tree: at.PyTree, interp_func: Callable[[Any], str] = str) -> str:
+def tree_to_info(
+    tree: at.PyTree, interp_func: Callable[[Any], str] = str
+) -> str:
     """Converts a PyTree into a human-readable string for logging. Optionally, `interp_func` can be provided to convert
     the leaf values to more meaningful strings.
     """
     tree, _ = jax.tree_util.tree_flatten_with_path(tree)
-    return "\n".join(f"{jax.tree_util.keystr(path)}: {interp_func(value)}" for path, value in tree)
+    return "\n".join(
+        f"{jax.tree_util.keystr(path)}: {interp_func(value)}"
+        for path, value in tree
+    )
 
 
 @at.typecheck

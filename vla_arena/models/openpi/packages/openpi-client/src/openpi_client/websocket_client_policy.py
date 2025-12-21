@@ -28,7 +28,10 @@ class WebsocketClientPolicy(_base_policy.BasePolicy):
     """
 
     def __init__(
-        self, host: str = '0.0.0.0', port: int | None = None, api_key: str | None = None
+        self,
+        host: str = '0.0.0.0',
+        port: int | None = None,
+        api_key: str | None = None,
     ) -> None:
         if host.startswith('ws'):
             self._uri = host
@@ -43,13 +46,22 @@ class WebsocketClientPolicy(_base_policy.BasePolicy):
     def get_server_metadata(self) -> dict:
         return self._server_metadata
 
-    def _wait_for_server(self) -> tuple[websockets.sync.client.ClientConnection, dict]:
+    def _wait_for_server(
+        self,
+    ) -> tuple[websockets.sync.client.ClientConnection, dict]:
         logging.info(f'Waiting for server at {self._uri}...')
         while True:
             try:
-                headers = {'Authorization': f'Api-Key {self._api_key}'} if self._api_key else None
+                headers = (
+                    {'Authorization': f'Api-Key {self._api_key}'}
+                    if self._api_key
+                    else None
+                )
                 conn = websockets.sync.client.connect(
-                    self._uri, compression=None, max_size=None, additional_headers=headers
+                    self._uri,
+                    compression=None,
+                    max_size=None,
+                    additional_headers=headers,
                 )
                 metadata = msgpack_numpy.unpackb(conn.recv())
                 return conn, metadata

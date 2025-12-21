@@ -16,7 +16,10 @@
 clip_vit.py
 """
 
-from vla_arena.models.openvla.prismatic.models.backbones.vision.base_vision import TimmViTBackbone
+from vla_arena.models.openvla.prismatic.models.backbones.vision.base_vision import (
+    TimmViTBackbone,
+)
+
 
 # Registry =>> Supported CLIP Vision Backbones (from TIMM)
 CLIP_VISION_BACKBONES = {
@@ -32,7 +35,10 @@ CLIP_VISION_BACKBONES = {
 #                         to identify, but luckily there's an easy fix (`override_act_layer`)
 class CLIPViTBackbone(TimmViTBackbone):
     def __init__(
-        self, vision_backbone_id: str, image_resize_strategy: str, default_image_size: int = 224
+        self,
+        vision_backbone_id: str,
+        image_resize_strategy: str,
+        default_image_size: int = 224,
     ) -> None:
         super().__init__(
             vision_backbone_id,
@@ -41,7 +47,9 @@ class CLIPViTBackbone(TimmViTBackbone):
             default_image_size=default_image_size,
             override_act_layer=(
                 'quick_gelu'
-                if CLIP_VISION_BACKBONES[vision_backbone_id].endswith('.openai')
+                if CLIP_VISION_BACKBONES[vision_backbone_id].endswith(
+                    '.openai'
+                )
                 else None
             ),
         )

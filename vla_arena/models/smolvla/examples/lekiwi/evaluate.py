@@ -21,6 +21,7 @@ from lerobot.utils.control_utils import init_keyboard_listener
 from lerobot.utils.utils import log_say
 from lerobot.utils.visualization_utils import _init_rerun
 
+
 NUM_EPISODES = 2
 FPS = 30
 EPISODE_TIME_SEC = 60
@@ -34,7 +35,9 @@ policy = ACTPolicy.from_pretrained('<hf_username>/<policy_repo_id>')
 
 # Configure the dataset features
 action_features = hw_to_dataset_features(robot.action_features, 'action')
-obs_features = hw_to_dataset_features(robot.observation_features, 'observation')
+obs_features = hw_to_dataset_features(
+    robot.observation_features, 'observation'
+)
 dataset_features = {**action_features, **obs_features}
 
 # Create the dataset
@@ -59,7 +62,9 @@ if not robot.is_connected:
 
 recorded_episodes = 0
 while recorded_episodes < NUM_EPISODES and not events['stop_recording']:
-    log_say(f'Running inference, recording eval episode {recorded_episodes} of {NUM_EPISODES}')
+    log_say(
+        f'Running inference, recording eval episode {recorded_episodes} of {NUM_EPISODES}'
+    )
 
     # Run the policy inference loop
     record_loop(

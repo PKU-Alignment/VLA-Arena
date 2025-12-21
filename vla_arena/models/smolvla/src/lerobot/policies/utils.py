@@ -36,7 +36,9 @@ from torch import nn
 
 
 def populate_queues(
-    queues: dict[str, deque], batch: dict[str, torch.Tensor], exclude_keys: list[str] | None = None
+    queues: dict[str, deque],
+    batch: dict[str, torch.Tensor],
+    exclude_keys: list[str] | None = None,
 ):
     if exclude_keys is None:
         exclude_keys = []
@@ -88,7 +90,9 @@ def get_output_shape(module: nn.Module, input_shape: tuple) -> tuple:
     return tuple(output.shape)
 
 
-def log_model_loading_keys(missing_keys: list[str], unexpected_keys: list[str]) -> None:
+def log_model_loading_keys(
+    missing_keys: list[str], unexpected_keys: list[str]
+) -> None:
     """Log missing and unexpected keys when loading a model.
 
     Args:
@@ -98,4 +102,6 @@ def log_model_loading_keys(missing_keys: list[str], unexpected_keys: list[str]) 
     if missing_keys:
         logging.warning(f'Missing key(s) when loading model: {missing_keys}')
     if unexpected_keys:
-        logging.warning(f'Unexpected key(s) when loading model: {unexpected_keys}')
+        logging.warning(
+            f'Unexpected key(s) when loading model: {unexpected_keys}'
+        )

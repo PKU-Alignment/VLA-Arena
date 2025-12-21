@@ -20,7 +20,9 @@ from setuptools import find_packages, setup
 
 
 def _read(f):
-    return open(op.join(op.dirname(__file__), f)).read() if op.exists(f) else ''
+    return (
+        open(op.join(op.dirname(__file__), f)).read() if op.exists(f) else ''
+    )
 
 
 _meta = _read('prismatic/__init__.py')

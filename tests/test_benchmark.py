@@ -2,7 +2,6 @@
 Tests for benchmark functionality in vla_arena.benchmark.
 """
 
-
 import pytest
 
 
@@ -35,7 +34,9 @@ except (ImportError, OSError, FileNotFoundError, ModuleNotFoundError):
     BENCHMARK_MAPPING = {}
 
 
-@pytest.mark.skipif(not BENCHMARK_AVAILABLE, reason='benchmark module not available')
+@pytest.mark.skipif(
+    not BENCHMARK_AVAILABLE, reason='benchmark module not available'
+)
 class TestTask:
     """Test cases for Task namedtuple."""
 
@@ -74,7 +75,9 @@ class TestTask:
             task.name = 'new_name'
 
 
-@pytest.mark.skipif(not BENCHMARK_AVAILABLE, reason='benchmark module not available')
+@pytest.mark.skipif(
+    not BENCHMARK_AVAILABLE, reason='benchmark module not available'
+)
 class TestBenchmarkRegistration:
     """Test cases for benchmark registration."""
 
@@ -104,7 +107,9 @@ class TestBenchmarkRegistration:
 
         assert isinstance(benchmark_dict, dict)
         captured = capsys.readouterr()
-        assert 'Available benchmarks' in captured.out or len(benchmark_dict) >= 0
+        assert (
+            'Available benchmarks' in captured.out or len(benchmark_dict) >= 0
+        )
 
     def test_get_benchmark_case_insensitive(self):
         """Test that get_benchmark is case insensitive."""
@@ -131,7 +136,9 @@ class TestBenchmarkRegistration:
         BENCHMARK_MAPPING.pop(class_name.lower(), None)
 
 
-@pytest.mark.skipif(not BENCHMARK_AVAILABLE, reason='benchmark module not available')
+@pytest.mark.skipif(
+    not BENCHMARK_AVAILABLE, reason='benchmark module not available'
+)
 class TestLevelExtraction:
     """Test cases for level extraction functions."""
 

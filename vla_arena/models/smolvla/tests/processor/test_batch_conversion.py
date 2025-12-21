@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import torch
-
 from lerobot.processor.pipeline import (
     RobotProcessor,
     TransitionKey,
@@ -43,15 +42,26 @@ def test_observation_grouping_roundtrip():
     batch_out = proc(batch_in)
 
     # Check that all observation.* keys are preserved
-    original_obs_keys = {k: v for k, v in batch_in.items() if k.startswith('observation.')}
-    reconstructed_obs_keys = {k: v for k, v in batch_out.items() if k.startswith('observation.')}
+    original_obs_keys = {
+        k: v for k, v in batch_in.items() if k.startswith('observation.')
+    }
+    reconstructed_obs_keys = {
+        k: v for k, v in batch_out.items() if k.startswith('observation.')
+    }
 
     assert set(original_obs_keys.keys()) == set(reconstructed_obs_keys.keys())
 
     # Check tensor values
-    assert torch.allclose(batch_out['observation.image.left'], batch_in['observation.image.left'])
-    assert torch.allclose(batch_out['observation.image.right'], batch_in['observation.image.right'])
-    assert torch.allclose(batch_out['observation.state'], batch_in['observation.state'])
+    assert torch.allclose(
+        batch_out['observation.image.left'], batch_in['observation.image.left']
+    )
+    assert torch.allclose(
+        batch_out['observation.image.right'],
+        batch_in['observation.image.right'],
+    )
+    assert torch.allclose(
+        batch_out['observation.state'], batch_in['observation.state']
+    )
 
     # Check other fields
     assert torch.allclose(batch_out['action'], batch_in['action'])
@@ -91,7 +101,12 @@ def test_batch_to_transition_observation_grouping():
         transition[TransitionKey.OBSERVATION]['observation.image.left'],
         batch['observation.image.left'],
     )
-    assert transition[TransitionKey.OBSERVATION]['observation.state'] == [1, 2, 3, 4]
+    assert transition[TransitionKey.OBSERVATION]['observation.state'] == [
+        1,
+        2,
+        3,
+        4,
+    ]
 
     # Check other fields
     assert transition[TransitionKey.ACTION] == 'action_data'
@@ -128,9 +143,13 @@ def test_transition_to_batch_observation_flattening():
     assert 'observation.state' in batch
 
     # Check values are preserved
-    assert torch.allclose(batch['observation.image.top'], observation_dict['observation.image.top'])
     assert torch.allclose(
-        batch['observation.image.left'], observation_dict['observation.image.left']
+        batch['observation.image.top'],
+        observation_dict['observation.image.top'],
+    )
+    assert torch.allclose(
+        batch['observation.image.left'],
+        observation_dict['observation.image.left'],
     )
     assert batch['observation.state'] == [1, 2, 3, 4]
 
@@ -180,7 +199,9 @@ def test_minimal_batch():
     transition = _default_batch_to_transition(batch)
 
     # Check observation
-    assert transition[TransitionKey.OBSERVATION] == {'observation.state': 'minimal_state'}
+    assert transition[TransitionKey.OBSERVATION] == {
+        'observation.state': 'minimal_state'
+    }
     assert transition[TransitionKey.ACTION] == 'minimal_action'
 
     # Check defaults
@@ -227,8 +248,14 @@ def test_empty_batch():
 def test_complex_nested_observation():
     """Test with complex nested observation data."""
     batch = {
-        'observation.image.top': {'image': torch.randn(1, 3, 128, 128), 'timestamp': 1234567890},
-        'observation.image.left': {'image': torch.randn(1, 3, 128, 128), 'timestamp': 1234567891},
+        'observation.image.top': {
+            'image': torch.randn(1, 3, 128, 128),
+            'timestamp': 1234567890,
+        },
+        'observation.image.left': {
+            'image': torch.randn(1, 3, 128, 128),
+            'timestamp': 1234567891,
+        },
         'observation.state': torch.randn(7),
         'action': torch.randn(8),
         'next.reward': 3.14,
@@ -242,12 +269,16 @@ def test_complex_nested_observation():
 
     # Check that all observation keys are preserved
     original_obs_keys = {k for k in batch if k.startswith('observation.')}
-    reconstructed_obs_keys = {k for k in reconstructed_batch if k.startswith('observation.')}
+    reconstructed_obs_keys = {
+        k for k in reconstructed_batch if k.startswith('observation.')
+    }
 
     assert original_obs_keys == reconstructed_obs_keys
 
     # Check tensor values
-    assert torch.allclose(batch['observation.state'], reconstructed_batch['observation.state'])
+    assert torch.allclose(
+        batch['observation.state'], reconstructed_batch['observation.state']
+    )
 
     # Check nested dict with tensors
     assert torch.allclose(
@@ -278,14 +309,18 @@ def test_custom_converter():
         # Double the reward
         reward = tr.get(TransitionKey.REWARD, 0.0)
         new_tr = tr.copy()
-        new_tr[TransitionKey.REWARD] = reward * 2 if reward is not None else 0.0
+        new_tr[TransitionKey.REWARD] = (
+            reward * 2 if reward is not None else 0.0
+        )
         return new_tr
 
     def to_batch(tr):
         batch = _default_transition_to_batch(tr)
         return batch
 
-    processor = RobotProcessor(steps=[], to_transition=to_tr, to_output=to_batch)
+    processor = RobotProcessor(
+        steps=[], to_transition=to_tr, to_output=to_batch
+    )
 
     batch = {
         'observation.state': torch.randn(1, 4),
@@ -298,5 +333,7 @@ def test_custom_converter():
 
     # Check the reward was doubled by our custom converter
     assert result['next.reward'] == 2.0
-    assert torch.allclose(result['observation.state'], batch['observation.state'])
+    assert torch.allclose(
+        result['observation.state'], batch['observation.state']
+    )
     assert torch.allclose(result['action'], batch['action'])

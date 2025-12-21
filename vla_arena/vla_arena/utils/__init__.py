@@ -18,7 +18,9 @@ import yaml
 
 
 # This is a default path for localizing all the benchmark related files
-libero_config_path = os.environ.get('LIBERO_CONFIG_PATH', os.path.expanduser('~/.libero'))
+libero_config_path = os.environ.get(
+    'LIBERO_CONFIG_PATH', os.path.expanduser('~/.libero')
+)
 config_file = os.path.join(libero_config_path, 'config.yaml')
 
 
@@ -29,7 +31,9 @@ def get_path_dict(root_location=os.path.dirname(os.path.abspath(__file__))):
     bddl_files_default_path = os.path.join(benchmark_root_path, './bddl_files')
 
     # This is a default path for localizing all the default bddl files
-    init_states_default_path = os.path.join(benchmark_root_path, './init_files')
+    init_states_default_path = os.path.join(
+        benchmark_root_path, './init_files'
+    )
 
     # This is a default path for localizing all the default datasets
     dataset_default_path = os.path.join(benchmark_root_path, '../datasets')
@@ -49,7 +53,9 @@ def get_libero_path(key):
     return config[key]
 
 
-def set_libero_path(custom_location=os.path.dirname(os.path.abspath(__file__))):
+def set_libero_path(
+    custom_location=os.path.dirname(os.path.abspath(__file__)),
+):
     new_config = get_path_dict(custom_location)
     with open(config_file, 'w') as f:
         yaml.dump(new_config, f)

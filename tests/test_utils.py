@@ -51,7 +51,10 @@ class TestUtils:
         img_array = np.random.rand(224, 224, 3)
         reconstructed = utils.reconstruct_image_output(img_array)
 
-        assert reconstructed.dtype == np.float64 or reconstructed.dtype == np.float32
+        assert (
+            reconstructed.dtype == np.float64
+            or reconstructed.dtype == np.float32
+        )
         assert reconstructed.max() <= 255.0
         assert reconstructed.min() >= 0.0
         assert reconstructed.shape == img_array.shape
@@ -90,7 +93,9 @@ class TestUtils:
         assert 'robosuite' in result or len(result) > 0
 
 
-@pytest.mark.skipif(not DATASET_UTILS_AVAILABLE, reason='dataset_utils module not available')
+@pytest.mark.skipif(
+    not DATASET_UTILS_AVAILABLE, reason='dataset_utils module not available'
+)
 class TestDatasetUtils:
     """Test cases for dataset_utils.py"""
 
@@ -105,13 +110,17 @@ class TestDatasetUtils:
         """Test dataset info with filter key."""
         # This will fail if filter key doesn't exist, but we test the function call
         try:
-            dataset_utils.get_dataset_info(mock_h5py_file, filter_key='test_filter', verbose=False)
+            dataset_utils.get_dataset_info(
+                mock_h5py_file, filter_key='test_filter', verbose=False
+            )
         except (KeyError, AttributeError):
             # Expected if filter key doesn't exist
             pass
 
 
-@pytest.mark.skipif(not TIME_UTILS_AVAILABLE, reason='time_utils module not available')
+@pytest.mark.skipif(
+    not TIME_UTILS_AVAILABLE, reason='time_utils module not available'
+)
 class TestTimeUtils:
     """Test cases for time_utils.py"""
 

@@ -16,7 +16,9 @@ except (ImportError, OSError, FileNotFoundError, ModuleNotFoundError):
     TASK_GEN_UTILS_AVAILABLE = False
 
 
-@pytest.mark.skipif(not TASK_GEN_UTILS_AVAILABLE, reason='task_generation_utils not available')
+@pytest.mark.skipif(
+    not TASK_GEN_UTILS_AVAILABLE, reason='task_generation_utils not available'
+)
 class TestTaskGenerationUtils:
     """Test cases for task_generation_utils.py"""
 
@@ -29,7 +31,9 @@ class TestTaskGenerationUtils:
         """Test get_task_info with scene_name."""
         # This should raise KeyError if scene doesn't exist, or return a list
         try:
-            task_info = task_generation_utils.get_task_info('nonexistent_scene')
+            task_info = task_generation_utils.get_task_info(
+                'nonexistent_scene'
+            )
             assert isinstance(task_info, list)
         except KeyError:
             # Expected behavior if scene doesn't exist
@@ -40,7 +44,11 @@ class TestTaskGenerationUtils:
         """Test register_task_info function."""
         # Mock scene class - need to make it callable and return an instance
         mock_scene_instance = Mock()
-        mock_scene_instance.possible_objects_of_interest = ['obj1', 'obj2', 'obj3']
+        mock_scene_instance.possible_objects_of_interest = [
+            'obj1',
+            'obj2',
+            'obj3',
+        ]
         mock_scene_class = Mock(return_value=mock_scene_instance)
         mock_get_scene_class.return_value = mock_scene_class
 
@@ -90,7 +98,11 @@ class TestTaskGenerationUtils:
 
         for workspace_name in workspace_names:
             try:
-                generator_func = task_generation_utils.get_suite_generator_func(workspace_name)
+                generator_func = (
+                    task_generation_utils.get_suite_generator_func(
+                        workspace_name
+                    )
+                )
                 # Should return a function or None
                 assert generator_func is None or callable(generator_func)
             except NameError:
@@ -100,7 +112,9 @@ class TestTaskGenerationUtils:
     def test_get_suite_generator_func_invalid(self):
         """Test get_suite_generator_func with invalid workspace."""
         try:
-            generator_func = task_generation_utils.get_suite_generator_func('invalid_workspace')
+            generator_func = task_generation_utils.get_suite_generator_func(
+                'invalid_workspace'
+            )
             # Should return None or raise error
             assert generator_func is None or callable(generator_func)
         except NameError:

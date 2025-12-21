@@ -28,10 +28,17 @@ import torch
 from PIL import Image
 from torch.utils.data import Dataset, IterableDataset
 from transformers import PreTrainedTokenizerBase
-from vla_arena.models.openvla_oft.prismatic.models.backbones.llm.prompting import PromptBuilder
-from vla_arena.models.openvla_oft.prismatic.models.backbones.vision import ImageTransform
+
+from vla_arena.models.openvla_oft.prismatic.models.backbones.llm.prompting import (
+    PromptBuilder,
+)
+from vla_arena.models.openvla_oft.prismatic.models.backbones.vision import (
+    ImageTransform,
+)
 from vla_arena.models.openvla_oft.prismatic.util.data_utils import tree_map
-from vla_arena.models.openvla_oft.prismatic.vla.action_tokenizer import ActionTokenizer
+from vla_arena.models.openvla_oft.prismatic.vla.action_tokenizer import (
+    ActionTokenizer,
+)
 from vla_arena.models.openvla_oft.prismatic.vla.constants import (
     ACTION_PROPRIO_NORMALIZATION_TYPE,
     IGNORE_INDEX,
@@ -59,7 +66,10 @@ class RLDSBatchTransform:
 
     def __call__(self, rlds_batch: dict[str, Any]) -> dict[str, Any]:
         """Converts a RLDS batch to the format expected by the OpenVLA collator/models."""
-        dataset_name, current_action = rlds_batch['dataset_name'], rlds_batch['action'][0]
+        dataset_name, current_action = (
+            rlds_batch['dataset_name'],
+            rlds_batch['action'][0],
+        )
         img = Image.fromarray(rlds_batch['observation']['image_primary'][0])
         lang = rlds_batch['task']['language_instruction'].decode().lower()
         actions = rlds_batch['action']
@@ -77,7 +87,10 @@ class RLDSBatchTransform:
         action_chunk_len = len(action_chunk_string)
 
         conversation = [
-            {'from': 'human', 'value': f'What action should the robot take to {lang}?'},
+            {
+                'from': 'human',
+                'value': f'What action should the robot take to {lang}?',
+            },
             {'from': 'gpt', 'value': action_chunk_string},
         ]
         for turn in conversation:
@@ -112,10 +125,14 @@ class RLDSBatchTransform:
             all_wrist_pixels = []
             for k in rlds_batch['observation'].keys():
                 if 'wrist' in k:
-                    img_wrist = Image.fromarray(rlds_batch['observation'][k][0])
+                    img_wrist = Image.fromarray(
+                        rlds_batch['observation'][k][0]
+                    )
                     pixel_values_wrist = self.image_transform(img_wrist)
                     all_wrist_pixels.append(pixel_values_wrist)
-            return_dict['pixel_values_wrist'] = torch.cat(all_wrist_pixels, dim=0)
+            return_dict['pixel_values_wrist'] = torch.cat(
+                all_wrist_pixels, dim=0
+            )
         if self.use_proprio and 'proprio' in rlds_batch['observation']:
             proprio = rlds_batch['observation']['proprio']
             return_dict['proprio'] = proprio
@@ -202,7 +219,9 @@ class RLDSDataset(IterableDataset):
         # fmt: on
 
         # Initialize RLDS Dataset
-        self.dataset, self.dataset_length, self.dataset_statistics = self.make_dataset(rlds_config)
+        self.dataset, self.dataset_length, self.dataset_statistics = (
+            self.make_dataset(rlds_config)
+        )
 
     def make_dataset(self, rlds_config):
         return make_interleaved_dataset(**rlds_config)
@@ -240,7 +259,9 @@ class EpisodicRLDSDataset(RLDSDataset):
     def __iter__(self) -> dict[str, Any]:
         for rlds_batch in self.dataset.as_numpy_iterator():
             out = [
-                self.batch_transform(tree_map(lambda x: x[i], rlds_batch))  # noqa: B023
+                self.batch_transform(
+                    tree_map(lambda x: x[i], rlds_batch)
+                )  # noqa: B023
                 for i in range(rlds_batch['action'].shape[0])
             ]
             yield out
@@ -276,14 +297,19 @@ class DummyDataset(Dataset):
 
     def __getitem__(self, idx):
         # TODO =>> Load image, action and instruction from disk -- we use dummy values
-        image = Image.fromarray(np.asarray(np.random.rand(224, 224, 3) * 255.0, dtype=np.uint8))
+        image = Image.fromarray(
+            np.asarray(np.random.rand(224, 224, 3) * 255.0, dtype=np.uint8)
+        )
         action = np.asarray(np.random.rand(7), dtype=np.float32)
         instruction = 'do something spectacular'
 
         # Add instruction to VLA prompt
         prompt_builder = self.prompt_builder_fn('openvla')
         conversation = [
-            {'from': 'human', 'value': f'What action should the robot take to {instruction}?'},
+            {
+                'from': 'human',
+                'value': f'What action should the robot take to {instruction}?',
+            },
             {'from': 'gpt', 'value': self.action_tokenizer(action)},
         ]
         for turn in conversation:
@@ -303,4 +329,6 @@ class DummyDataset(Dataset):
         # [CRITICAL] We do not want to take the loss for anything but the predicted action tokens!
         labels[: -(len(action) + 1)] = IGNORE_INDEX
 
-        return dict(pixel_values=pixel_values, input_ids=input_ids, labels=labels)
+        return dict(
+            pixel_values=pixel_values, input_ids=input_ids, labels=labels
+        )

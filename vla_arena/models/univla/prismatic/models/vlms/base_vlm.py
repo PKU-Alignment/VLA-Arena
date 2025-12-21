@@ -35,9 +35,14 @@ import torch
 import torch.nn as nn
 from transformers import GenerationMixin, PretrainedConfig
 from transformers.modeling_outputs import CausalLMOutputWithPast
+
 from vla_arena.models.univla.prismatic.models.backbones.llm import LLMBackbone
-from vla_arena.models.univla.prismatic.models.backbones.llm.prompting import PromptBuilder
-from vla_arena.models.univla.prismatic.models.backbones.vision import VisionBackbone
+from vla_arena.models.univla.prismatic.models.backbones.llm.prompting import (
+    PromptBuilder,
+)
+from vla_arena.models.univla.prismatic.models.backbones.vision import (
+    VisionBackbone,
+)
 
 
 # === Abstract Base Class for arbitrary Vision-Language Models ===
@@ -80,14 +85,19 @@ class VLM(nn.Module, GenerationMixin, ABC):
     ) -> VLM: ...
 
     @abstractmethod
-    def get_prompt_builder(self, system_prompt: str | None = None) -> PromptBuilder: ...
+    def get_prompt_builder(
+        self, system_prompt: str | None = None
+    ) -> PromptBuilder: ...
 
     @abstractmethod
     def freeze_backbones(self, stage: str) -> None: ...
 
     @abstractmethod
     def load_from_checkpoint(
-        self, stage: str, run_dir: Path, pretrained_checkpoint: Path | None = None
+        self,
+        stage: str,
+        run_dir: Path,
+        pretrained_checkpoint: Path | None = None,
     ) -> None: ...
 
     @abstractmethod

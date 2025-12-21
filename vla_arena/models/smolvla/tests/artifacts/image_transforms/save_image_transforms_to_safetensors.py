@@ -30,8 +30,6 @@
 from pathlib import Path
 
 import torch
-from safetensors.torch import save_file
-
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
 from lerobot.datasets.transforms import (
     ImageTransformConfig,
@@ -40,19 +38,25 @@ from lerobot.datasets.transforms import (
     make_transform_from_config,
 )
 from lerobot.utils.random_utils import seeded_context
+from safetensors.torch import save_file
+
 
 ARTIFACT_DIR = Path('tests/artifacts/image_transforms')
 DATASET_REPO_ID = 'lerobot/aloha_static_cups_open'
 
 
-def save_default_config_transform(original_frame: torch.Tensor, output_dir: Path):
+def save_default_config_transform(
+    original_frame: torch.Tensor, output_dir: Path
+):
     cfg = ImageTransformsConfig(enable=True)
     default_tf = ImageTransforms(cfg)
 
     with seeded_context(1337):
         img_tf = default_tf(original_frame)
 
-    save_file({'default': img_tf}, output_dir / 'default_transforms.safetensors')
+    save_file(
+        {'default': img_tf}, output_dir / 'default_transforms.safetensors'
+    )
 
 
 def save_single_transforms(original_frame: torch.Tensor, output_dir: Path):
@@ -67,7 +71,9 @@ def save_single_transforms(original_frame: torch.Tensor, output_dir: Path):
     frames = {'original_frame': original_frame}
     for tf_type, tf_name, min_max_values in transforms.items():
         for min_max in min_max_values:
-            tf_cfg = ImageTransformConfig(type=tf_type, kwargs={tf_name: min_max})
+            tf_cfg = ImageTransformConfig(
+                type=tf_type, kwargs={tf_name: min_max}
+            )
             tf = make_transform_from_config(tf_cfg)
             key = f'{tf_name}_{min_max[0]}_{min_max[1]}'
             frames[key] = tf(original_frame)
@@ -76,7 +82,9 @@ def save_single_transforms(original_frame: torch.Tensor, output_dir: Path):
 
 
 def main():
-    dataset = LeRobotDataset(DATASET_REPO_ID, episodes=[0], image_transforms=None)
+    dataset = LeRobotDataset(
+        DATASET_REPO_ID, episodes=[0], image_transforms=None
+    )
     output_dir = Path(ARTIFACT_DIR)
     output_dir.mkdir(parents=True, exist_ok=True)
     original_frame = dataset[0][dataset.meta.camera_keys[0]]

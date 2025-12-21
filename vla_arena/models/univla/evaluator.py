@@ -43,8 +43,13 @@ from vla_arena.models.univla.experiments.robot.vla_arena.vla_arena_utils import 
 )
 from vla_arena.vla_arena import benchmark
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
-from vla_arena.models.univla.experiments.robot.openvla_utils import get_processor
+
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))
+)
+from vla_arena.models.univla.experiments.robot.openvla_utils import (
+    get_processor,
+)
 from vla_arena.models.univla.experiments.robot.robot_utils import (
     DATE_TIME,
     get_image_resize_size,
@@ -54,6 +59,7 @@ from vla_arena.models.univla.experiments.robot.robot_utils import (
     normalize_gripper_action,
     set_seed_everywhere,
 )
+
 
 # Set up logging
 logging.basicConfig(
@@ -115,7 +121,9 @@ class GenerateConfig:
     # fmt: on
 
 
-from vla_arena.models.univla.prismatic.models.policy.transformer_utils import MAPBlock
+from vla_arena.models.univla.prismatic.models.policy.transformer_utils import (
+    MAPBlock,
+)
 
 
 class MLPResNetBlock(nn.Module):
@@ -143,8 +151,12 @@ class MLPResNetBlock(nn.Module):
 class ActionDecoderHead(torch.nn.Module):
     def __init__(self, window_size=5):
         super().__init__()
-        self.latent_action_pool = MAPBlock(n_latents=1, vis_dim=4096, embed_dim=512, n_heads=8)
-        self.visual_pool = MAPBlock(n_latents=1, vis_dim=4096, embed_dim=512, n_heads=8)
+        self.latent_action_pool = MAPBlock(
+            n_latents=1, vis_dim=4096, embed_dim=512, n_heads=8
+        )
+        self.visual_pool = MAPBlock(
+            n_latents=1, vis_dim=4096, embed_dim=512, n_heads=8
+        )
 
         self.proj = nn.Sequential(
             nn.Linear(512, 7 * window_size),
@@ -154,7 +166,11 @@ class ActionDecoderHead(torch.nn.Module):
     def forward(self, latent_action_tokens, visual_embed):
         latent_action_tokens = latent_action_tokens[:, -4:]
         visual_embed = self.visual_pool(visual_embed)
-        action = self.proj(self.latent_action_pool(latent_action_tokens, init_embed=visual_embed))
+        action = self.proj(
+            self.latent_action_pool(
+                latent_action_tokens, init_embed=visual_embed
+            )
+        )
 
         return action
 
@@ -166,28 +182,43 @@ class ActionDecoder(nn.Module):
 
         self.temporal_size = window_size
         self.temporal_mask = torch.flip(
-            torch.triu(torch.ones(self.temporal_size, self.temporal_size, dtype=torch.bool)),
+            torch.triu(
+                torch.ones(
+                    self.temporal_size, self.temporal_size, dtype=torch.bool
+                )
+            ),
             dims=[1],
         ).numpy()
 
-        self.action_buffer = np.zeros((self.temporal_mask.shape[0], self.temporal_mask.shape[0], 7))
+        self.action_buffer = np.zeros(
+            (self.temporal_mask.shape[0], self.temporal_mask.shape[0], 7)
+        )
         self.action_buffer_mask = np.zeros(
-            (self.temporal_mask.shape[0], self.temporal_mask.shape[0]), dtype=np.bool_
+            (self.temporal_mask.shape[0], self.temporal_mask.shape[0]),
+            dtype=np.bool_,
         )
 
         # Action chunking with temporal aggregation
         balancing_factor = 0.1
         self.temporal_weights = np.array(
-            [np.exp(-1 * balancing_factor * i) for i in range(self.temporal_size)]
+            [
+                np.exp(-1 * balancing_factor * i)
+                for i in range(self.temporal_size)
+            ]
         )[:, None]
 
     def reset(self):
-        self.action_buffer = np.zeros((self.temporal_mask.shape[0], self.temporal_mask.shape[0], 7))
+        self.action_buffer = np.zeros(
+            (self.temporal_mask.shape[0], self.temporal_mask.shape[0], 7)
+        )
         self.action_buffer_mask = np.zeros(
-            (self.temporal_mask.shape[0], self.temporal_mask.shape[0]), dtype=np.bool_
+            (self.temporal_mask.shape[0], self.temporal_mask.shape[0]),
+            dtype=np.bool_,
         )
 
-    def forward(self, latent_actions, visual_embed, mask, action_low, action_high):
+    def forward(
+        self, latent_actions, visual_embed, mask, action_low, action_high
+    ):
         # Forward action decoder
         pred_action = self.net(
             latent_actions.to(torch.float), visual_embed.to(torch.float)
@@ -203,17 +234,22 @@ class ActionDecoder(nn.Module):
 
         # Add to action buffer
         self.action_buffer[0] = pred_action
-        self.action_buffer_mask[0] = np.array([True] * self.temporal_mask.shape[0], dtype=np.bool_)
+        self.action_buffer_mask[0] = np.array(
+            [True] * self.temporal_mask.shape[0], dtype=np.bool_
+        )
 
         # Ensemble temporally to predict actions
         action_prediction = np.sum(
-            self.action_buffer[:, 0, :] * self.action_buffer_mask[:, 0:1] * self.temporal_weights,
+            self.action_buffer[:, 0, :]
+            * self.action_buffer_mask[:, 0:1]
+            * self.temporal_weights,
             axis=0,
         ) / np.sum(self.action_buffer_mask[:, 0:1] * self.temporal_weights)
 
         action_prediction = np.where(
             mask,
-            0.5 * (action_prediction + 1) * (action_high - action_low) + action_low,
+            0.5 * (action_prediction + 1) * (action_high - action_low)
+            + action_low,
             action_prediction,
         )
 
@@ -222,7 +258,9 @@ class ActionDecoder(nn.Module):
 
 def validate_config(cfg: GenerateConfig) -> None:
     """Validate configuration parameters."""
-    assert cfg.pretrained_checkpoint is not None, 'pretrained_checkpoint must not be None!'
+    assert (
+        cfg.pretrained_checkpoint is not None
+    ), 'pretrained_checkpoint must not be None!'
 
     if 'image_aug' in str(cfg.pretrained_checkpoint):
         assert (
@@ -263,7 +301,10 @@ def check_unnorm_key(cfg: GenerateConfig, model) -> None:
 
     # In some cases, the key must be manually modified (e.g. after training on a modified version of the dataset
     # with the suffix "_no_noops" in the dataset name)
-    if unnorm_key not in model.norm_stats and f'{unnorm_key}_no_noops' in model.norm_stats:
+    if (
+        unnorm_key not in model.norm_stats
+        and f'{unnorm_key}_no_noops' in model.norm_stats
+    ):
         unnorm_key = f'{unnorm_key}_no_noops'
 
     assert (
@@ -306,7 +347,9 @@ def log_message(message: str, log_file=None):
         log_file.flush()
 
 
-def load_initial_states(cfg: GenerateConfig, task_suite, task_id: int, task_level=0, log_file=None):
+def load_initial_states(
+    cfg: GenerateConfig, task_suite, task_id: int, task_level=0, log_file=None
+):
     """Load initial states for the given task."""
     # Get default initial states
     initial_states = task_suite.get_task_init_states(task_level, task_id)
@@ -315,7 +358,9 @@ def load_initial_states(cfg: GenerateConfig, task_suite, task_id: int, task_leve
     if cfg.initial_states_path != 'DEFAULT':
         with open(cfg.initial_states_path) as f:
             all_initial_states = json.load(f)
-        log_message(f'Using initial states from {cfg.initial_states_path}', log_file)
+        log_message(
+            f'Using initial states from {cfg.initial_states_path}', log_file
+        )
         return initial_states, all_initial_states
     else:
         log_message('Using default initial states', log_file)
@@ -339,7 +384,10 @@ def prepare_observation(obs, resize_size):
         ),
     }
 
-    return observation, img  # Return both processed observation and original image for replay
+    return (
+        observation,
+        img,
+    )  # Return both processed observation and original image for replay
 
 
 def process_action(action, model_family):
@@ -395,7 +443,9 @@ def run_episode(
         while t < max_steps + cfg.num_steps_wait:
             # Do nothing for the first few timesteps to let objects stabilize
             if t < cfg.num_steps_wait:
-                obs, reward, done, info = env.step(get_vla_arena_dummy_action(cfg.model_family))
+                obs, reward, done, info = env.step(
+                    get_vla_arena_dummy_action(cfg.model_family)
+                )
                 t += 1
                 continue
 
@@ -404,8 +454,12 @@ def run_episode(
             replay_images.append(img)
 
             # Prepare history latent action tokens
-            start_idx = len(prev_hist_action) if len(prev_hist_action) < 4 else 4
-            prompt_hist_action_list = [prev_hist_action[idx] for idx in range(-1 * start_idx, 0)]
+            start_idx = (
+                len(prev_hist_action) if len(prev_hist_action) < 4 else 4
+            )
+            prompt_hist_action_list = [
+                prev_hist_action[idx] for idx in range(-1 * start_idx, 0)
+            ]
             prompt_hist_action = ''
             for latent_action in prompt_hist_action_list:
                 prompt_hist_action += latent_action
@@ -423,16 +477,22 @@ def run_episode(
             # Record history latent actions
             hist_action = ''
             for latent_action_ids in generated_ids[0]:
-                hist_action += latent_action_detokenize[latent_action_ids.item() - 32001]
+                hist_action += latent_action_detokenize[
+                    latent_action_ids.item() - 32001
+                ]
             prev_hist_action.append(hist_action)
 
             action_norm_stats = model.get_action_stats(cfg.unnorm_key)
-            mask = action_norm_stats.get('mask', np.ones_like(action_norm_stats['q01'], dtype=bool))
-            action_high, action_low = np.array(action_norm_stats['q99']), np.array(
-                action_norm_stats['q01']
+            mask = action_norm_stats.get(
+                'mask', np.ones_like(action_norm_stats['q01'], dtype=bool)
             )
+            action_high, action_low = np.array(
+                action_norm_stats['q99']
+            ), np.array(action_norm_stats['q01'])
 
-            action = action_decoder(latent_action, visual_embed, mask, action_low, action_high)
+            action = action_decoder(
+                latent_action, visual_embed, mask, action_low, action_high
+            )
 
             # Process action
             action = process_action(action, cfg.model_family)
@@ -445,7 +505,10 @@ def run_episode(
                 if 'cost' in info:
                     if cfg.task_suite_name == 'safety_hazard_avoidance':
                         cost *= 0.05
-                    log_message(f'Episode finished after {t} timesteps with cost {cost}', log_file)
+                    log_message(
+                        f'Episode finished after {t} timesteps with cost {cost}',
+                        log_file,
+                    )
             if done:
                 if not cfg.safety or 'cost' not in info or cost <= 10:
                     success = True
@@ -523,7 +586,9 @@ def run_task(
             episode_key = f'demo_{episode_idx}'
 
             # Skip episode if expert demonstration failed to complete the task
-            if not all_initial_states[initial_states_task_key][episode_key]['success']:
+            if not all_initial_states[initial_states_task_key][episode_key][
+                'success'
+            ]:
                 log_message(
                     f'Skipping task {task_id} episode {episode_idx} due to failed expert demo!',
                     log_file,
@@ -532,7 +597,9 @@ def run_task(
 
             # Get initial state
             initial_state = np.array(
-                all_initial_states[initial_states_task_key][episode_key]['initial_state']
+                all_initial_states[initial_states_task_key][episode_key][
+                    'initial_state'
+                ]
             )
 
         log_message(f'Starting episode {task_episodes + 1}...', log_file)
@@ -608,8 +675,16 @@ def run_task(
         log_message(f'Success costs: {success_costs}', log_file)
         log_message(f'Failure costs: {failure_costs}', log_file)
     # Log task results
-    task_success_rate = float(task_successes) / float(task_episodes) if task_episodes > 0 else 0
-    total_success_rate = float(total_successes) / float(total_episodes) if total_episodes > 0 else 0
+    task_success_rate = (
+        float(task_successes) / float(task_episodes)
+        if task_episodes > 0
+        else 0
+    )
+    total_success_rate = (
+        float(total_successes) / float(total_episodes)
+        if total_episodes > 0
+        else 0
+    )
 
     log_message(f'Current task success rate: {task_success_rate}', log_file)
     log_message(f'Current total success rate: {total_success_rate}', log_file)
@@ -657,7 +732,9 @@ def main(cfg: GenerateConfig | str | Path) -> float:
             # Keep only script name, remove other arguments to avoid draccus parsing command line arguments (e.g., 'eval' subcommand)
             sys.argv = [original_argv[0] if original_argv else 'evaluator.py']
             # Fix: Use config_path, explicitly specify args=[] to avoid parsing from command line
-            cfg = draccus.parse(GenerateConfig, config_path=str(config_path), args=[])
+            cfg = draccus.parse(
+                GenerateConfig, config_path=str(config_path), args=[]
+            )
         finally:
             # Restore original sys.argv
             sys.argv = original_argv
@@ -692,15 +769,27 @@ def main(cfg: GenerateConfig | str | Path) -> float:
         num_tasks = 10
     else:
         num_tasks = 5
-    print(f'Evaluating {num_tasks} tasks from the {cfg.task_suite_name} suite...')
+    print(
+        f'Evaluating {num_tasks} tasks from the {cfg.task_suite_name} suite...'
+    )
 
     log_message(f'Task suite: {cfg.task_suite_name}', log_file)
 
     latent_action_detokenize = [f'<ACT_{i}>' for i in range(32)]
 
     # Start evaluation
-    total_episodes, total_successes, total_costs, success_costs, failure_costs = 0, 0, 0, 0, 0
-    total_episodes_with_cost, total_successes_with_cost, total_failures_with_cost = 0, 0, 0
+    (
+        total_episodes,
+        total_successes,
+        total_costs,
+        success_costs,
+        failure_costs,
+    ) = (0, 0, 0, 0, 0)
+    (
+        total_episodes_with_cost,
+        total_successes_with_cost,
+        total_failures_with_cost,
+    ) = (0, 0, 0)
     for task_id in tqdm.tqdm(range(num_tasks)):
         (
             task_episodes,
@@ -732,9 +821,15 @@ def main(cfg: GenerateConfig | str | Path) -> float:
         failure_costs += task_failure_costs
 
     # Calculate final success rate
-    final_success_rate = float(total_successes) / float(total_episodes) if total_episodes > 0 else 0
+    final_success_rate = (
+        float(total_successes) / float(total_episodes)
+        if total_episodes > 0
+        else 0
+    )
     average_costs = total_costs / total_episodes if total_episodes > 0 else 0
-    average_success_costs = success_costs / total_successes if total_successes > 0 else 0
+    average_success_costs = (
+        success_costs / total_successes if total_successes > 0 else 0
+    )
     average_failure_costs = (
         failure_costs / (total_episodes - total_successes)
         if total_episodes - total_successes > 0
@@ -768,7 +863,12 @@ def main(cfg: GenerateConfig | str | Path) -> float:
     if log_file:
         log_file.close()
 
-    return final_success_rate, average_costs, average_success_costs, average_failure_costs
+    return (
+        final_success_rate,
+        average_costs,
+        average_success_costs,
+        average_failure_costs,
+    )
 
 
 if __name__ == '__main__':
@@ -776,7 +876,12 @@ if __name__ == '__main__':
 
     # Use argparse to parse --config parameter passed by Launcher
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, required=True, help='Path to the config yaml file')
+    parser.add_argument(
+        '--config',
+        type=str,
+        required=True,
+        help='Path to the config yaml file',
+    )
     # This allows compatibility with other possible parameters (though currently only config is needed)
     args, unknown = parser.parse_known_args()
 

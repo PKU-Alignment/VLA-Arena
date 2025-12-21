@@ -15,7 +15,10 @@
 from robosuite.utils.mjcf_utils import new_site
 
 from vla_arena.vla_arena.envs.arenas import AGENTVIEW_CONFIG
-from vla_arena.vla_arena.envs.bddl_base_domain import BDDLBaseDomain, register_problem
+from vla_arena.vla_arena.envs.bddl_base_domain import (
+    BDDLBaseDomain,
+    register_problem,
+)
 from vla_arena.vla_arena.envs.objects import *
 from vla_arena.vla_arena.envs.predicates import *
 from vla_arena.vla_arena.envs.regions import *
@@ -34,13 +37,22 @@ class Tabletop_Manipulation(BDDLBaseDomain):
         self.table_offset = (0, 0, 0.90)
         # For z offset of environment fixtures
         self.z_offset = 0.01 - self.table_full_size[2]
-        kwargs.update({'robots': [f'Mounted{robot_name}' for robot_name in kwargs['robots']]})
+        kwargs.update(
+            {
+                'robots': [
+                    f'Mounted{robot_name}' for robot_name in kwargs['robots']
+                ]
+            }
+        )
         kwargs.update({'workspace_offset': self.table_offset})
         kwargs.update({'arena_type': 'table'})
 
         if 'scene_xml' not in kwargs or kwargs['scene_xml'] is None:
             kwargs.update({'scene_xml': 'scenes/tabletop_warm_style.xml'})
-        if 'scene_properties' not in kwargs or kwargs['scene_properties'] is None:
+        if (
+            'scene_properties' not in kwargs
+            or kwargs['scene_properties'] is None
+        ):
             kwargs.update(
                 {
                     'scene_properties': {
@@ -58,8 +70,12 @@ class Tabletop_Manipulation(BDDLBaseDomain):
             if fixture_category == 'table':
                 continue
 
-            for fixture_instance in self.parsed_problem['fixtures'][fixture_category]:
-                self.fixtures_dict[fixture_instance] = get_object_fn(fixture_category)(
+            for fixture_instance in self.parsed_problem['fixtures'][
+                fixture_category
+            ]:
+                self.fixtures_dict[fixture_instance] = get_object_fn(
+                    fixture_category
+                )(
                     name=fixture_instance,
                     joints=None,
                 )
@@ -68,7 +84,9 @@ class Tabletop_Manipulation(BDDLBaseDomain):
         objects_dict = self.parsed_problem['objects']
         for category_name in objects_dict.keys():
             for object_name in objects_dict[category_name]:
-                self.objects_dict[object_name] = get_object_fn(category_name)(name=object_name)
+                self.objects_dict[object_name] = get_object_fn(category_name)(
+                    name=object_name
+                )
 
     def _load_sites_in_arena(self, mujoco_arena):
         # Create site objects
@@ -79,7 +97,10 @@ class Tabletop_Manipulation(BDDLBaseDomain):
             if 'main_table' in object_region_name:
                 ranges = region_dict[object_region_name]['ranges'][0]
                 assert ranges[2] >= ranges[0] and ranges[3] >= ranges[1]
-                zone_size = ((ranges[2] - ranges[0]) / 2, (ranges[3] - ranges[1]) / 2)
+                zone_size = (
+                    (ranges[2] - ranges[0]) / 2,
+                    (ranges[3] - ranges[1]) / 2,
+                )
                 zone_centroid_xy = (
                     (ranges[2] + ranges[0]) / 2,
                     (ranges[3] + ranges[1]) / 2,
@@ -120,16 +141,21 @@ class Tabletop_Manipulation(BDDLBaseDomain):
                         for site in sites:
                             site_name = site.get('name')
                             if site_name == object_region_name:
-                                object_sites_dict[object_region_name] = SiteObject(
-                                    name=site_name,
-                                    parent_name=body.name,
-                                    joints=[joint.get('name') for joint in joints],
-                                    size=site.get('size'),
-                                    rgba=site.get('rgba'),
-                                    site_type=site.get('type'),
-                                    site_pos=site.get('pos'),
-                                    site_quat=site.get('quat'),
-                                    object_properties=body.object_properties,
+                                object_sites_dict[object_region_name] = (
+                                    SiteObject(
+                                        name=site_name,
+                                        parent_name=body.name,
+                                        joints=[
+                                            joint.get('name')
+                                            for joint in joints
+                                        ],
+                                        size=site.get('size'),
+                                        rgba=site.get('rgba'),
+                                        site_type=site.get('type'),
+                                        site_pos=site.get('pos'),
+                                        site_quat=site.get('quat'),
+                                        object_properties=body.object_properties,
+                                    )
                                 )
         self.object_sites_dict = object_sites_dict
 
@@ -155,11 +181,17 @@ class Tabletop_Manipulation(BDDLBaseDomain):
 
         for object_name in self.visualization_sites_list:
             for _, (site_name, site_visible) in (
-                self.get_object(object_name).object_properties['vis_site_names'].items()
+                self.get_object(object_name)
+                .object_properties['vis_site_names']
+                .items()
             ):
                 vis_g_id = self.sim.model.site_name2id(site_name)
-                if ((self.sim.model.site_rgba[vis_g_id][3] <= 0) and site_visible) or (
-                    (self.sim.model.site_rgba[vis_g_id][3] > 0) and not site_visible
+                if (
+                    (self.sim.model.site_rgba[vis_g_id][3] <= 0)
+                    and site_visible
+                ) or (
+                    (self.sim.model.site_rgba[vis_g_id][3] > 0)
+                    and not site_visible
                 ):
                     # We toggle the alpha value
                     self.sim.model.site_rgba[vis_g_id][3] = (
@@ -172,14 +204,19 @@ class Tabletop_Manipulation(BDDLBaseDomain):
                 continue
             if camera == 'agentview':
                 mujoco_arena.set_camera(
-                    **AGENTVIEW_CONFIG[self.workspace_name], pos_offset=camera_configs[camera],
+                    **AGENTVIEW_CONFIG[self.workspace_name],
+                    pos_offset=camera_configs[camera],
                 )
             else:
-                mujoco_arena.set_camera(camera_name=camera, pos_offset=camera_configs[camera])
+                mujoco_arena.set_camera(
+                    camera_name=camera, pos_offset=camera_configs[camera]
+                )
 
         # For visualization purpose
         mujoco_arena.set_camera(
-            camera_name='frontview', pos=[1.0, 0.0, 1.48], quat=[0.56, 0.43, 0.43, 0.56],
+            camera_name='frontview',
+            pos=[1.0, 0.0, 1.48],
+            quat=[0.56, 0.43, 0.43, 0.56],
         )
         mujoco_arena.set_camera(
             camera_name='galleryview',

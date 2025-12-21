@@ -34,12 +34,15 @@ from lerobot.configs import parser
 from lerobot.configs.train import TrainRLServerPipelineConfig
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
 from lerobot.policies.factory import make_policy
-from lerobot.robots import RobotConfig, make_robot_from_config, so100_follower  # noqa: F401
-from lerobot.scripts.rl.gym_manipulator import make_robot_env
-from lerobot.teleoperators import (
-    gamepad,  # noqa: F401
-    so101_leader,  # noqa: F401
+from lerobot.robots import (  # noqa: F401
+    RobotConfig,
+    make_robot_from_config,
+    so100_follower,
 )
+from lerobot.scripts.rl.gym_manipulator import make_robot_env
+from lerobot.teleoperators import gamepad  # noqa: F401
+from lerobot.teleoperators import so101_leader  # noqa: F401
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -58,7 +61,9 @@ def eval_policy(env, policy, n_episodes):
         sum_reward_episode.append(episode_reward)
 
     logging.info(f'Success after 20 steps {sum_reward_episode}')
-    logging.info(f'success rate {sum(sum_reward_episode) / len(sum_reward_episode)}')
+    logging.info(
+        f'success rate {sum(sum_reward_episode) / len(sum_reward_episode)}'
+    )
 
 
 @parser.wrap()

@@ -17,7 +17,9 @@ from collections import defaultdict
 from pathlib import Path
 
 
-def scan_bddl_files_and_generate_dict(base_path='./vla_arena/vla_arena/bddl_files'):
+def scan_bddl_files_and_generate_dict(
+    base_path='./vla_arena/vla_arena/bddl_files',
+):
     """
     Scan BDDL file directory and generate task dictionary.
 
@@ -84,7 +86,9 @@ def scan_bddl_files_and_generate_dict(base_path='./vla_arena/vla_arena/bddl_file
 
         # Clean up empty lists
         task_map[suite_name] = {
-            level: tasks for level, tasks in task_map[suite_name].items() if tasks
+            level: tasks
+            for level, tasks in task_map[suite_name].items()
+            if tasks
         }
 
     return task_map
@@ -122,9 +126,13 @@ def generate_python_dict_code(task_map):
                         scene_groups['OTHER'].append(task)
 
                 # Output by scene
-                for scene_idx, (scene, scene_tasks) in enumerate(sorted(scene_groups.items())):
+                for scene_idx, (scene, scene_tasks) in enumerate(
+                    sorted(scene_groups.items())
+                ):
                     if scene_idx > 0:
-                        code_lines.append('')  # Add empty line to separate different scenes
+                        code_lines.append(
+                            ''
+                        )  # Add empty line to separate different scenes
                     code_lines.append(f'            # {scene} tasks')
                     for task in sorted(scene_tasks):
                         code_lines.append(f'            "{task}",')
@@ -146,7 +154,9 @@ def main():
     """Main function"""
     import argparse
 
-    parser = argparse.ArgumentParser(description='Scan BDDL files and generate task dictionary')
+    parser = argparse.ArgumentParser(
+        description='Scan BDDL files and generate task dictionary'
+    )
     parser.add_argument(
         '--base-path',
         type=str,
@@ -160,7 +170,9 @@ def main():
         help='Output file path',
     )
     parser.add_argument(
-        '--print-only', action='store_true', help='Only print result, do not save file',
+        '--print-only',
+        action='store_true',
+        help='Only print result, do not save file',
     )
 
     args = parser.parse_args()

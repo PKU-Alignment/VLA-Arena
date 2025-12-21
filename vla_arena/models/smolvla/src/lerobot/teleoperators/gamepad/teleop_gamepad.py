@@ -72,7 +72,12 @@ class GamepadTeleop(Teleoperator):
             return {
                 'dtype': 'float32',
                 'shape': (4,),
-                'names': {'delta_x': 0, 'delta_y': 1, 'delta_z': 2, 'gripper': 3},
+                'names': {
+                    'delta_x': 0,
+                    'delta_y': 1,
+                    'delta_z': 2,
+                    'gripper': 3,
+                },
             }
         else:
             return {
@@ -104,7 +109,9 @@ class GamepadTeleop(Teleoperator):
         delta_x, delta_y, delta_z = self.gamepad.get_deltas()
 
         # Create action from gamepad input
-        gamepad_action = np.array([delta_x, delta_y, delta_z], dtype=np.float32)
+        gamepad_action = np.array(
+            [delta_x, delta_y, delta_z], dtype=np.float32
+        )
 
         action_dict = {
             'delta_x': gamepad_action[0],

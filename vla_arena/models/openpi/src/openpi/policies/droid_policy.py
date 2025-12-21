@@ -16,7 +16,6 @@ import dataclasses
 
 import einops
 import numpy as np
-
 from openpi import transforms
 from openpi.models import model as _model
 
@@ -27,7 +26,9 @@ def make_droid_example() -> dict:
         "observation/exterior_image_1_left": np.random.randint(
             256, size=(224, 224, 3), dtype=np.uint8
         ),
-        "observation/wrist_image_left": np.random.randint(256, size=(224, 224, 3), dtype=np.uint8),
+        "observation/wrist_image_left": np.random.randint(
+            256, size=(224, 224, 3), dtype=np.uint8
+        ),
         "observation/joint_position": np.random.rand(7),
         "observation/gripper_position": np.random.rand(1),
         "prompt": "do something",
@@ -53,7 +54,9 @@ class DroidInputs(transforms.DataTransformFn):
         if gripper_pos.ndim == 0:
             # Ensure gripper position is a 1D array, not a scalar, so we can concatenate with joint positions
             gripper_pos = gripper_pos[np.newaxis]
-        state = np.concatenate([data["observation/joint_position"], gripper_pos])
+        state = np.concatenate(
+            [data["observation/joint_position"], gripper_pos]
+        )
 
         # Possibly need to parse images to uint8 (H,W,C) since LeRobot automatically
         # stores as float32 (C,H,W), gets skipped for policy inference

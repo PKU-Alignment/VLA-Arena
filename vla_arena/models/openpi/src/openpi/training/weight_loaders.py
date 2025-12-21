@@ -19,10 +19,10 @@ from typing import Protocol, runtime_checkable
 
 import flax.traverse_util
 import numpy as np
-
 import openpi.models.model as _model
 import openpi.shared.array_typing as at
 import openpi.shared.download as download
+
 
 logger = logging.getLogger(__name__)
 
@@ -80,18 +80,23 @@ class PaliGemmaWeightLoader(WeightLoader):
 
     def load(self, params: at.Params) -> at.Params:
         path = download.maybe_download(
-            "gs://vertex-model-garden-paligemma-us/paligemma/pt_224.npz", gs={"token": "anon"}
+            "gs://vertex-model-garden-paligemma-us/paligemma/pt_224.npz",
+            gs={"token": "anon"},
         )
         with path.open("rb") as f:
             flat_params = dict(np.load(f, allow_pickle=False))
         loaded_params = {
-            "PaliGemma": flax.traverse_util.unflatten_dict(flat_params, sep="/")["params"]
+            "PaliGemma": flax.traverse_util.unflatten_dict(
+                flat_params, sep="/"
+            )["params"]
         }
         # Add all missing weights.
         return _merge_params(loaded_params, params, missing_regex=".*")
 
 
-def _merge_params(loaded_params: at.Params, params: at.Params, *, missing_regex: str) -> at.Params:
+def _merge_params(
+    loaded_params: at.Params, params: at.Params, *, missing_regex: str
+) -> at.Params:
     """Merges the loaded parameters with the reference parameters.
 
     Args:
@@ -109,7 +114,11 @@ def _merge_params(loaded_params: at.Params, params: at.Params, *, missing_regex:
     result = {}
     for k, v in flat_loaded.items():
         if k in flat_ref:
-            result[k] = v.astype(flat_ref[k].dtype) if v.dtype != flat_ref[k].dtype else v
+            result[k] = (
+                v.astype(flat_ref[k].dtype)
+                if v.dtype != flat_ref[k].dtype
+                else v
+            )
 
     flat_loaded.clear()
 

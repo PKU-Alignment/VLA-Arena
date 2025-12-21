@@ -36,9 +36,19 @@ import logging
 from copy import deepcopy
 from enum import Enum
 
-from lerobot.utils.encoding_utils import decode_twos_complement, encode_twos_complement
+from lerobot.utils.encoding_utils import (
+    decode_twos_complement,
+    encode_twos_complement,
+)
 
-from ..motors_bus import Motor, MotorCalibration, MotorsBus, NameOrID, Value, get_address
+from ..motors_bus import (
+    Motor,
+    MotorCalibration,
+    MotorsBus,
+    NameOrID,
+    Value,
+    get_address,
+)
 from .tables import (
     AVAILABLE_BAUDRATES,
     MODEL_BAUDRATE_TABLE,
@@ -47,6 +57,7 @@ from .tables import (
     MODEL_NUMBER_TABLE,
     MODEL_RESOLUTION,
 )
+
 
 PROTOCOL_VERSION = 2.0
 DEFAULT_BAUDRATE = 1_000_000
@@ -143,8 +154,12 @@ class DynamixelMotorsBus(MotorsBus):
 
         self.port_handler = dxl.PortHandler(self.port)
         self.packet_handler = dxl.PacketHandler(PROTOCOL_VERSION)
-        self.sync_reader = dxl.GroupSyncRead(self.port_handler, self.packet_handler, 0, 0)
-        self.sync_writer = dxl.GroupSyncWrite(self.port_handler, self.packet_handler, 0, 0)
+        self.sync_reader = dxl.GroupSyncRead(
+            self.port_handler, self.packet_handler, 0, 0
+        )
+        self.sync_writer = dxl.GroupSyncWrite(
+            self.port_handler, self.packet_handler, 0, 0
+        )
         self._comm_success = dxl.COMM_SUCCESS
         self._no_error = 0x00
 
@@ -159,7 +174,9 @@ class DynamixelMotorsBus(MotorsBus):
     ) -> tuple[int, int]:
         model = self.motors[motor].model
         search_baudrates = (
-            [initial_baudrate] if initial_baudrate is not None else self.model_baudrate_table[model]
+            [initial_baudrate]
+            if initial_baudrate is not None
+            else self.model_baudrate_table[model]
         )
 
         for baudrate in search_baudrates:
@@ -219,39 +236,73 @@ class DynamixelMotorsBus(MotorsBus):
         if cache:
             self.calibration = calibration_dict
 
-    def disable_torque(self, motors: str | list[str] | None = None, num_retry: int = 0) -> None:
+    def disable_torque(
+        self, motors: str | list[str] | None = None, num_retry: int = 0
+    ) -> None:
         for motor in self._get_motors_list(motors):
-            self.write('Torque_Enable', motor, TorqueMode.DISABLED.value, num_retry=num_retry)
+            self.write(
+                'Torque_Enable',
+                motor,
+                TorqueMode.DISABLED.value,
+                num_retry=num_retry,
+            )
 
-    def _disable_torque(self, motor_id: int, model: str, num_retry: int = 0) -> None:
-        addr, length = get_address(self.model_ctrl_table, model, 'Torque_Enable')
-        self._write(addr, length, motor_id, TorqueMode.DISABLED.value, num_retry=num_retry)
+    def _disable_torque(
+        self, motor_id: int, model: str, num_retry: int = 0
+    ) -> None:
+        addr, length = get_address(
+            self.model_ctrl_table, model, 'Torque_Enable'
+        )
+        self._write(
+            addr,
+            length,
+            motor_id,
+            TorqueMode.DISABLED.value,
+            num_retry=num_retry,
+        )
 
-    def enable_torque(self, motors: str | list[str] | None = None, num_retry: int = 0) -> None:
+    def enable_torque(
+        self, motors: str | list[str] | None = None, num_retry: int = 0
+    ) -> None:
         for motor in self._get_motors_list(motors):
-            self.write('Torque_Enable', motor, TorqueMode.ENABLED.value, num_retry=num_retry)
+            self.write(
+                'Torque_Enable',
+                motor,
+                TorqueMode.ENABLED.value,
+                num_retry=num_retry,
+            )
 
-    def _encode_sign(self, data_name: str, ids_values: dict[int, int]) -> dict[int, int]:
+    def _encode_sign(
+        self, data_name: str, ids_values: dict[int, int]
+    ) -> dict[int, int]:
         for id_ in ids_values:
             model = self._id_to_model(id_)
             encoding_table = self.model_encoding_table.get(model)
             if encoding_table and data_name in encoding_table:
                 n_bytes = encoding_table[data_name]
-                ids_values[id_] = encode_twos_complement(ids_values[id_], n_bytes)
+                ids_values[id_] = encode_twos_complement(
+                    ids_values[id_], n_bytes
+                )
 
         return ids_values
 
-    def _decode_sign(self, data_name: str, ids_values: dict[int, int]) -> dict[int, int]:
+    def _decode_sign(
+        self, data_name: str, ids_values: dict[int, int]
+    ) -> dict[int, int]:
         for id_ in ids_values:
             model = self._id_to_model(id_)
             encoding_table = self.model_encoding_table.get(model)
             if encoding_table and data_name in encoding_table:
                 n_bytes = encoding_table[data_name]
-                ids_values[id_] = decode_twos_complement(ids_values[id_], n_bytes)
+                ids_values[id_] = decode_twos_complement(
+                    ids_values[id_], n_bytes
+                )
 
         return ids_values
 
-    def _get_half_turn_homings(self, positions: dict[NameOrID, Value]) -> dict[NameOrID, Value]:
+    def _get_half_turn_homings(
+        self, positions: dict[NameOrID, Value]
+    ) -> dict[NameOrID, Value]:
         """
         On Dynamixel Motors:
         Present_Position = Actual_Position + Homing_Offset
@@ -271,10 +322,14 @@ class DynamixelMotorsBus(MotorsBus):
         self, num_retry: int = 0, raise_on_error: bool = False
     ) -> dict[int, int] | None:
         for n_try in range(1 + num_retry):
-            data_list, comm = self.packet_handler.broadcastPing(self.port_handler)
+            data_list, comm = self.packet_handler.broadcastPing(
+                self.port_handler
+            )
             if self._is_comm_success(comm):
                 break
-            logger.debug(f"Broadcast ping failed on port '{self.port}' ({n_try=})")
+            logger.debug(
+                f"Broadcast ping failed on port '{self.port}' ({n_try=})"
+            )
             logger.debug(self.packet_handler.getTxRxResult(comm))
 
         if not self._is_comm_success(comm):

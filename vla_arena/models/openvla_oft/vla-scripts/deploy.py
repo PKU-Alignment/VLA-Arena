@@ -22,6 +22,7 @@ Starts VLA server which the client can query to get robot actions.
 # ruff: noqa: E402
 import json_numpy
 
+
 json_numpy.patch()
 import json
 import logging
@@ -32,12 +33,6 @@ from typing import Any
 
 import draccus
 import uvicorn
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
-from vla_arena.models.openvla_oft.prismatic.vla.constants import (
-    PROPRIO_DIM,
-)
-
 from experiments.robot.openvla_utils import (
     get_action_head,
     get_processor,
@@ -46,6 +41,12 @@ from experiments.robot.openvla_utils import (
     get_vla_action,
 )
 from experiments.robot.robot_utils import get_image_resize_size
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+
+from vla_arena.models.openvla_oft.prismatic.vla.constants import (
+    PROPRIO_DIM,
+)
 
 
 def get_openvla_prompt(instruction: str, openvla_path: str | Path) -> str:
@@ -66,7 +67,9 @@ class OpenVLAServer:
         # Load proprio projector
         self.proprio_projector = None
         if cfg.use_proprio:
-            self.proprio_projector = get_proprio_projector(cfg, self.vla.llm_dim, PROPRIO_DIM)
+            self.proprio_projector = get_proprio_projector(
+                cfg, self.vla.llm_dim, PROPRIO_DIM
+            )
 
         # Load continuous action head
         self.action_head = None

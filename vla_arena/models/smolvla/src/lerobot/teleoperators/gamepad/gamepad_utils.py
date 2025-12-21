@@ -176,7 +176,9 @@ class KeyboardController(InputController):
             except AttributeError:
                 pass
 
-        self.listener = keyboard.Listener(on_press=on_press, on_release=on_release)
+        self.listener = keyboard.Listener(
+            on_press=on_press, on_release=on_release
+        )
         self.listener.start()
 
         print('Keyboard controls:')
@@ -222,7 +224,9 @@ class KeyboardController(InputController):
 class GamepadController(InputController):
     """Generate motion deltas from gamepad input."""
 
-    def __init__(self, x_step_size=1.0, y_step_size=1.0, z_step_size=1.0, deadzone=0.1):
+    def __init__(
+        self, x_step_size=1.0, y_step_size=1.0, z_step_size=1.0, deadzone=0.1
+    ):
         super().__init__(x_step_size, y_step_size, z_step_size)
         self.deadzone = deadzone
         self.joystick = None
@@ -236,7 +240,9 @@ class GamepadController(InputController):
         pygame.joystick.init()
 
         if pygame.joystick.get_count() == 0:
-            logging.error('No gamepad detected. Please connect a gamepad and try again.')
+            logging.error(
+                'No gamepad detected. Please connect a gamepad and try again.'
+            )
             self.running = False
             return
 
@@ -373,7 +379,10 @@ class GamepadControllerHID(InputController):
         devices = hid.enumerate()
         for device in devices:
             device_name = device['product_string']
-            if any(controller in device_name for controller in ['Logitech', 'Xbox', 'PS4', 'PS5']):
+            if any(
+                controller in device_name
+                for controller in ['Logitech', 'Xbox', 'PS4', 'PS5']
+            ):
                 return device
 
         logging.error(
@@ -391,7 +400,9 @@ class GamepadControllerHID(InputController):
             return
 
         try:
-            logging.info(f"Connecting to gamepad at path: {self.device_info['path']}")
+            logging.info(
+                f"Connecting to gamepad at path: {self.device_info['path']}"
+            )
             self.device = hid.device()
             self.device.open_path(self.device_info['path'])
             self.device.set_nonblocking(1)
@@ -409,7 +420,9 @@ class GamepadControllerHID(InputController):
 
         except OSError as e:
             logging.error(f'Error opening gamepad: {e}')
-            logging.error('You might need to run this with sudo/admin privileges on some systems')
+            logging.error(
+                'You might need to run this with sudo/admin privileges on some systems'
+            )
             self.running = False
 
     def stop(self):
@@ -444,10 +457,18 @@ class GamepadControllerHID(InputController):
                 self.right_y = (data[4] - 128) / 128.0
 
                 # Apply deadzone
-                self.left_y = 0 if abs(self.left_y) < self.deadzone else self.left_y
-                self.left_x = 0 if abs(self.left_x) < self.deadzone else self.left_x
-                self.right_x = 0 if abs(self.right_x) < self.deadzone else self.right_x
-                self.right_y = 0 if abs(self.right_y) < self.deadzone else self.right_y
+                self.left_y = (
+                    0 if abs(self.left_y) < self.deadzone else self.left_y
+                )
+                self.left_x = (
+                    0 if abs(self.left_x) < self.deadzone else self.left_x
+                )
+                self.right_x = (
+                    0 if abs(self.right_x) < self.deadzone else self.right_x
+                )
+                self.right_y = (
+                    0 if abs(self.right_y) < self.deadzone else self.right_y
+                )
 
                 # Parse button states (byte 5 in the Logitech RumblePad 2)
                 buttons = data[5]

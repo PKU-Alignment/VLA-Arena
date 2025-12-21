@@ -49,13 +49,15 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-from PIL import Image
-
 from lerobot.cameras.configs import ColorMode
 from lerobot.cameras.opencv.camera_opencv import OpenCVCamera
 from lerobot.cameras.opencv.configuration_opencv import OpenCVCameraConfig
 from lerobot.cameras.realsense.camera_realsense import RealSenseCamera
-from lerobot.cameras.realsense.configuration_realsense import RealSenseCameraConfig
+from lerobot.cameras.realsense.configuration_realsense import (
+    RealSenseCameraConfig,
+)
+from PIL import Image
+
 
 logger = logging.getLogger(__name__)
 
@@ -104,7 +106,9 @@ def find_all_realsense_cameras() -> list[dict[str, Any]]:
     return all_realsense_cameras_info
 
 
-def find_and_print_cameras(camera_type_filter: str | None = None) -> list[dict[str, Any]]:
+def find_and_print_cameras(
+    camera_type_filter: str | None = None,
+) -> list[dict[str, Any]]:
     """
     Finds available cameras based on an optional filter and prints their information.
 
@@ -157,7 +161,9 @@ def save_image(
     try:
         img = Image.fromarray(img_array, mode='RGB')
 
-        safe_identifier = str(camera_identifier).replace('/', '_').replace('\\', '_')
+        safe_identifier = (
+            str(camera_identifier).replace('/', '_').replace('\\', '_')
+        )
         filename_prefix = f'{camera_type.lower()}_{safe_identifier}'
         filename = f'{filename_prefix}.png'
 
@@ -193,7 +199,9 @@ def create_camera_instance(cam_meta: dict[str, Any]) -> dict[str, Any] | None:
             )
             instance = RealSenseCamera(rs_config)
         else:
-            logger.warning(f'Unknown camera type: {cam_type} for ID {cam_id}. Skipping.')
+            logger.warning(
+                f'Unknown camera type: {cam_type} for ID {cam_id}. Skipping.'
+            )
             return None
 
         if instance:
@@ -201,7 +209,9 @@ def create_camera_instance(cam_meta: dict[str, Any]) -> dict[str, Any] | None:
             instance.connect(warmup=False)
             return {'instance': instance, 'meta': cam_meta}
     except Exception as e:
-        logger.error(f'Failed to connect or configure {cam_type} camera {cam_id}: {e}')
+        logger.error(
+            f'Failed to connect or configure {cam_type} camera {cam_id}: {e}'
+        )
         if instance and instance.is_connected:
             instance.disconnect()
         return None
@@ -230,7 +240,9 @@ def process_camera_image(
             f'Timeout reading from {cam_type_str} camera {cam_id_str} at time {current_time:.2f}s.'
         )
     except Exception as e:
-        logger.error(f'Error reading from {cam_type_str} camera {cam_id_str}: {e}')
+        logger.error(
+            f'Error reading from {cam_type_str} camera {cam_id_str}: {e}'
+        )
     return None
 
 
@@ -242,7 +254,9 @@ def cleanup_cameras(cameras_to_use: list[dict[str, Any]]):
             if cam_dict['instance'] and cam_dict['instance'].is_connected:
                 cam_dict['instance'].disconnect()
         except Exception as e:
-            logger.error(f"Error disconnecting camera {cam_dict['meta'].get('id')}: {e}")
+            logger.error(
+                f"Error disconnecting camera {cam_dict['meta'].get('id')}: {e}"
+            )
 
 
 def save_images_from_all_cameras(
@@ -262,10 +276,14 @@ def save_images_from_all_cameras(
     """
     output_dir.mkdir(parents=True, exist_ok=True)
     logger.info(f'Saving images to {output_dir}')
-    all_camera_metadata = find_and_print_cameras(camera_type_filter=camera_type)
+    all_camera_metadata = find_and_print_cameras(
+        camera_type_filter=camera_type
+    )
 
     if not all_camera_metadata:
-        logger.warning('No cameras detected matching the criteria. Cannot save images.')
+        logger.warning(
+            'No cameras detected matching the criteria. Cannot save images.'
+        )
         return
 
     cameras_to_use = []
@@ -283,14 +301,18 @@ def save_images_from_all_cameras(
     )
     start_time = time.perf_counter()
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(cameras_to_use) * 2) as executor:
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=len(cameras_to_use) * 2
+    ) as executor:
         try:
             while time.perf_counter() - start_time < record_time_s:
                 futures = []
                 current_capture_time = time.perf_counter()
 
                 for cam_dict in cameras_to_use:
-                    future = process_camera_image(cam_dict, output_dir, current_capture_time)
+                    future = process_camera_image(
+                        cam_dict, output_dir, current_capture_time
+                    )
                     if future:
                         futures.append(future)
 

@@ -23,11 +23,16 @@ from lightning import LightningModule
 from torch import Tensor
 from torch.optim import AdamW, Optimizer
 
+
 OptimizerCallable = Callable[[Iterable], Optimizer]
 
 import logging
 
-from genie.modules import ControllableDINOLatentActionModel, UncontrolledDINOLatentActionModel
+from genie.modules import (
+    ControllableDINOLatentActionModel,
+    UncontrolledDINOLatentActionModel,
+)
+
 
 logging.basicConfig(format='%(message)s', level=logging.INFO)
 
@@ -117,16 +122,22 @@ class DINO_LAM(LightningModule):
         # Optimize uncontrollable queries in stage-2 (the codebook is frozen though)
         if 'z_q_uncontrol' in outputs.keys():
             q_loss_uncontrol = (
-                (outputs['emb_uncontrol'].detach() - outputs['z_uncontrol']) ** 2
+                (outputs['emb_uncontrol'].detach() - outputs['z_uncontrol'])
+                ** 2
             ).mean()
             commit_loss_uncontrol = (
-                (outputs['emb_uncontrol'] - outputs['z_uncontrol'].detach()) ** 2
+                (outputs['emb_uncontrol'] - outputs['z_uncontrol'].detach())
+                ** 2
             ).mean()
-            loss = loss + q_loss_uncontrol + self.vq_beta * commit_loss_uncontrol
+            loss = (
+                loss + q_loss_uncontrol + self.vq_beta * commit_loss_uncontrol
+            )
 
         # Compute code usage
         unique, counts = torch.unique(outputs['indices'], return_counts=True)
-        index_counts = torch.zeros(self.lam_num_latents, dtype=torch.long).cuda()
+        index_counts = torch.zeros(
+            self.lam_num_latents, dtype=torch.long
+        ).cuda()
         index_counts[unique] = counts
         code_usage = (index_counts != 0).float().mean()
 
@@ -138,7 +149,9 @@ class DINO_LAM(LightningModule):
         )
 
         if 'indices_uncontrol' in outputs.keys():
-            unique, counts = torch.unique(outputs['indices_uncontrol'], return_counts=True)
+            unique, counts = torch.unique(
+                outputs['indices_uncontrol'], return_counts=True
+            )
             index_counts = torch.zeros(32, dtype=torch.long).cuda()
             index_counts[unique] = counts
             uncontrol_code_usage = (index_counts != 0).float().mean()
@@ -161,7 +174,10 @@ class DINO_LAM(LightningModule):
 
         # Log the training loss
         self.log_dict(
-            {**{'train_loss': loss}, **{f'train/{k}': v for k, v in aux_losses}},
+            {
+                **{'train_loss': loss},
+                **{f'train/{k}': v for k, v in aux_losses},
+            },
             prog_bar=True,
             logger=True,
             on_step=True,
@@ -170,7 +186,12 @@ class DINO_LAM(LightningModule):
         )
 
         if self.distributed_state.is_main_process:
-            wandb.log({**{'train_loss': loss}, **{f'train/{k}': v for k, v in aux_losses}})
+            wandb.log(
+                {
+                    **{'train_loss': loss},
+                    **{f'train/{k}': v for k, v in aux_losses},
+                }
+            )
 
         return loss
 
@@ -200,14 +221,18 @@ class DINO_LAM(LightningModule):
             completed = len(listdir('output_pairs'))
             todo_name = listdir('../data/retro')[completed]
             makedirs(f'output_pairs/{todo_name}')
-            top_indices = torch.topk(self.lam.vq.usage, 16, largest=True, sorted=True).indices
+            top_indices = torch.topk(
+                self.lam.vq.usage, 16, largest=True, sorted=True
+            ).indices
             top_latents = self.lam.vq.codebook(top_indices)
             torch.save(top_latents, f'output_pairs/{todo_name}/top_16.pt')
             with open(f'output_pairs/{todo_name}/top_16.txt', 'w') as f:
                 f.write(' '.join([str(i) for i in top_indices.tolist()]))
 
         self.plot_usage_distribution(self.lam.vq.usage, 'unsorted_usage')
-        self.plot_usage_distribution(self.lam.vq.usage.sort().values, 'sorted_usage')
+        self.plot_usage_distribution(
+            self.lam.vq.usage.sort().values, 'sorted_usage'
+        )
 
     def plot_usage_distribution(self, usage, filename):
         data = usage.cpu().numpy()
@@ -221,7 +246,9 @@ class DINO_LAM(LightningModule):
         fig.colorbar(cax)
         plt.axis('off')
         plt.gca().set_axis_off()
-        plt.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
+        plt.subplots_adjust(
+            top=1, bottom=0, right=1, left=0, hspace=0, wspace=0
+        )
         plt.margins(0, 0)
         plt.gca().xaxis.set_major_locator(plt.NullLocator())
         plt.gca().yaxis.set_major_locator(plt.NullLocator())

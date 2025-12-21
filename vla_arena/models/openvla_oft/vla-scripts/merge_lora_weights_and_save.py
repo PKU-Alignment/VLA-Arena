@@ -36,8 +36,16 @@ from pathlib import Path
 import draccus
 import torch
 from peft import PeftModel
-from transformers import AutoConfig, AutoImageProcessor, AutoModelForVision2Seq, AutoProcessor
-from vla_arena.models.openvla_oft.prismatic.extern.hf.configuration_prismatic import OpenVLAConfig
+from transformers import (
+    AutoConfig,
+    AutoImageProcessor,
+    AutoModelForVision2Seq,
+    AutoProcessor,
+)
+
+from vla_arena.models.openvla_oft.prismatic.extern.hf.configuration_prismatic import (
+    OpenVLAConfig,
+)
 from vla_arena.models.openvla_oft.prismatic.extern.hf.modeling_prismatic import (
     OpenVLAForActionPrediction,
 )
@@ -82,8 +90,12 @@ def main(cfg: ConvertConfig) -> None:
     ).to('cuda')
     merged_vla = merged_vla.merge_and_unload()
     merged_vla.save_pretrained(cfg.lora_finetuned_checkpoint_dir)
-    print(f'\nMerging complete! Time elapsed (sec): {time.time() - start_time}')
-    print(f'\nSaved merged model checkpoint at:\n{cfg.lora_finetuned_checkpoint_dir}')
+    print(
+        f'\nMerging complete! Time elapsed (sec): {time.time() - start_time}'
+    )
+    print(
+        f'\nSaved merged model checkpoint at:\n{cfg.lora_finetuned_checkpoint_dir}'
+    )
 
 
 if __name__ == '__main__':

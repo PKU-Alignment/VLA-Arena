@@ -33,7 +33,6 @@ import jsonlines
 import pyarrow.compute as pc
 import pyarrow.parquet as pq
 import pytest
-
 from lerobot.datasets.utils import (
     EPISODES_PATH,
     EPISODES_STATS_PATH,
@@ -103,7 +102,9 @@ def tasks_path(tasks_factory):
 
 @pytest.fixture(scope='session')
 def episode_path(episodes_factory):
-    def _create_episodes_jsonl_file(dir: Path, episodes: list | None = None) -> Path:
+    def _create_episodes_jsonl_file(
+        dir: Path, episodes: list | None = None
+    ) -> Path:
         if not episodes:
             episodes = episodes_factory()
         fpath = dir / EPISODES_PATH
@@ -131,7 +132,9 @@ def single_episode_parquet_path(hf_dataset_factory, info_factory):
         data_path = info['data_path']
         chunks_size = info['chunks_size']
         ep_chunk = ep_idx // chunks_size
-        fpath = dir / data_path.format(episode_chunk=ep_chunk, episode_index=ep_idx)
+        fpath = dir / data_path.format(
+            episode_chunk=ep_chunk, episode_index=ep_idx
+        )
         fpath.parent.mkdir(parents=True, exist_ok=True)
         table = hf_dataset.data.table
         ep_table = table.filter(pc.equal(table['episode_index'], ep_idx))
@@ -144,7 +147,9 @@ def single_episode_parquet_path(hf_dataset_factory, info_factory):
 @pytest.fixture(scope='session')
 def multi_episode_parquet_path(hf_dataset_factory, info_factory):
     def _create_multi_episode_parquet(
-        dir: Path, hf_dataset: datasets.Dataset | None = None, info: dict | None = None
+        dir: Path,
+        hf_dataset: datasets.Dataset | None = None,
+        info: dict | None = None,
     ) -> Path:
         if not info:
             info = info_factory()
@@ -156,7 +161,9 @@ def multi_episode_parquet_path(hf_dataset_factory, info_factory):
         total_episodes = info['total_episodes']
         for ep_idx in range(total_episodes):
             ep_chunk = ep_idx // chunks_size
-            fpath = dir / data_path.format(episode_chunk=ep_chunk, episode_index=ep_idx)
+            fpath = dir / data_path.format(
+                episode_chunk=ep_chunk, episode_index=ep_idx
+            )
             fpath.parent.mkdir(parents=True, exist_ok=True)
             table = hf_dataset.data.table
             ep_table = table.filter(pc.equal(table['episode_index'], ep_idx))

@@ -28,6 +28,7 @@ import fsspec
 import fsspec.generic
 import tqdm_loggable.auto as tqdm
 
+
 # Environment variable to control cache directory path, ~/.cache/openpi will be used by default.
 _OPENPI_DATA_HOME = "OPENPI_DATA_HOME"
 DEFAULT_CACHE_DIR = "~/.cache/openpi"
@@ -36,13 +37,19 @@ logger = logging.getLogger(__name__)
 
 
 def get_cache_dir() -> pathlib.Path:
-    cache_dir = pathlib.Path(os.getenv(_OPENPI_DATA_HOME, DEFAULT_CACHE_DIR)).expanduser().resolve()
+    cache_dir = (
+        pathlib.Path(os.getenv(_OPENPI_DATA_HOME, DEFAULT_CACHE_DIR))
+        .expanduser()
+        .resolve()
+    )
     cache_dir.mkdir(parents=True, exist_ok=True)
     _set_folder_permission(cache_dir)
     return cache_dir
 
 
-def maybe_download(url: str, *, force_download: bool = False, **kwargs) -> pathlib.Path:
+def maybe_download(
+    url: str, *, force_download: bool = False, **kwargs
+) -> pathlib.Path:
     """Download a file or directory from a remote filesystem to the local cache, and return the local path.
 
     If the local file already exists, it will be returned directly.
@@ -118,17 +125,22 @@ def _download_fsspec(url: str, local_path: pathlib.Path, **kwargs) -> None:
     info = fs.info(url)
     # Folders are represented by 0-byte objects with a trailing forward slash.
     if is_dir := (
-        info["type"] == "directory" or (info["size"] == 0 and info["name"].endswith("/"))
+        info["type"] == "directory"
+        or (info["size"] == 0 and info["name"].endswith("/"))
     ):
         total_size = fs.du(url)
     else:
         total_size = info["size"]
-    with tqdm.tqdm(total=total_size, unit="iB", unit_scale=True, unit_divisor=1024) as pbar:
+    with tqdm.tqdm(
+        total=total_size, unit="iB", unit_scale=True, unit_divisor=1024
+    ) as pbar:
         executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
         future = executor.submit(fs.get, url, local_path, recursive=is_dir)
         while not future.done():
             current_size = sum(
-                f.stat().st_size for f in [*local_path.rglob("*"), local_path] if f.is_file()
+                f.stat().st_size
+                for f in [*local_path.rglob("*"), local_path]
+                if f.is_file()
             )
             pbar.update(current_size - pbar.n)
             time.sleep(1)
@@ -138,7 +150,9 @@ def _download_fsspec(url: str, local_path: pathlib.Path, **kwargs) -> None:
 def _set_permission(path: pathlib.Path, target_permission: int):
     """chmod requires executable permission to be set, so we skip if the permission is already match with the target."""
     if path.stat().st_mode & target_permission == target_permission:
-        logger.debug(f"Skipping {path} because it already has correct permissions")
+        logger.debug(
+            f"Skipping {path} because it already has correct permissions"
+        )
         return
     path.chmod(target_permission)
     logger.debug(f"Set {path} to {target_permission}")
@@ -154,7 +168,9 @@ def _ensure_permissions(path: pathlib.Path) -> None:
     ensure that the cache directory has the correct permissions.
     """
 
-    def _setup_folder_permission_between_cache_dir_and_path(path: pathlib.Path) -> None:
+    def _setup_folder_permission_between_cache_dir_and_path(
+        path: pathlib.Path,
+    ) -> None:
         cache_dir = get_cache_dir()
         relative_path = path.relative_to(cache_dir)
         moving_path = cache_dir
@@ -165,10 +181,17 @@ def _ensure_permissions(path: pathlib.Path) -> None:
     def _set_file_permission(file_path: pathlib.Path) -> None:
         """Set all files to be read & writable, if it is a script, keep it as a script."""
         file_rw = (
-            stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH
+            stat.S_IRUSR
+            | stat.S_IWUSR
+            | stat.S_IRGRP
+            | stat.S_IWGRP
+            | stat.S_IROTH
+            | stat.S_IWOTH
         )
         if file_path.stat().st_mode & 0o100:
-            _set_permission(file_path, file_rw | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+            _set_permission(
+                file_path, file_rw | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+            )
         else:
             _set_permission(file_path, file_rw)
 
@@ -194,13 +217,17 @@ def _get_mtime(year: int, month: int, day: int) -> float:
 # Partial matching will be used from top to bottom and the first match will be chosen.
 # Cached entries will be retained only if they are newer than the expiration timestamp.
 _INVALIDATE_CACHE_DIRS: dict[re.Pattern, float] = {
-    re.compile("openpi-assets/checkpoints/pi0_aloha_pen_uncap"): _get_mtime(2025, 2, 17),
+    re.compile("openpi-assets/checkpoints/pi0_aloha_pen_uncap"): _get_mtime(
+        2025, 2, 17
+    ),
     re.compile("openpi-assets/checkpoints/pi0_libero"): _get_mtime(2025, 2, 6),
     re.compile("openpi-assets/checkpoints/"): _get_mtime(2025, 2, 3),
 }
 
 
-def _should_invalidate_cache(cache_dir: pathlib.Path, local_path: pathlib.Path) -> bool:
+def _should_invalidate_cache(
+    cache_dir: pathlib.Path, local_path: pathlib.Path
+) -> bool:
     """Invalidate the cache if it is expired. Return True if the cache was invalidated."""
 
     assert local_path.exists(), f"File not found at {local_path}"

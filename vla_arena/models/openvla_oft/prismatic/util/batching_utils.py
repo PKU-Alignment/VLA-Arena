@@ -46,18 +46,27 @@ class SplitModalitySampler(Sampler):
         drop_last: bool = False,
     ) -> None:
         super().__init__()
-        self.num_replicas = num_replicas if num_replicas is not None else dist.get_world_size()
+        self.num_replicas = (
+            num_replicas if num_replicas is not None else dist.get_world_size()
+        )
         self.rank = rank if rank is not None else dist.get_rank()
         self.seed, self.epoch = seed, 0
 
         # Custom Parameters
-        self.dataset, self.modality_lengths, self.drop_last = dataset, modality_lengths, drop_last
+        self.dataset, self.modality_lengths, self.drop_last = (
+            dataset,
+            modality_lengths,
+            drop_last,
+        )
         self.global_batch_size = global_batch_size
 
         # For our purposes, `drop_last` is always False!
-        assert not self.drop_last, 'SplitModalitySampler must set `drop_last = False`!'
+        assert (
+            not self.drop_last
+        ), 'SplitModalitySampler must set `drop_last = False`!'
         self.total_size = (
-            math.ceil(len(self.dataset) / self.global_batch_size) * self.global_batch_size
+            math.ceil(len(self.dataset) / self.global_batch_size)
+            * self.global_batch_size
         )
         self.num_samples = self.total_size // self.num_replicas
 
@@ -66,7 +75,9 @@ class SplitModalitySampler(Sampler):
         batch_idxs: list[int], idx2lengths: list[int], n_buckets: int
     ) -> list[list[int]]:
         """Re-indexes a batch in a way that is conducive to DistributedSampler + grouping by seqlen per rank."""
-        assert len(batch_idxs) % n_buckets == 0, 'Batch length is not divisible by `num_replicas`!'
+        assert (
+            len(batch_idxs) % n_buckets == 0
+        ), 'Batch length is not divisible by `num_replicas`!'
 
         # Establish initial buckets, capacities, and max number of elements per bucket
         n_examples_per_bucket = len(batch_idxs) // n_buckets
@@ -80,12 +91,17 @@ class SplitModalitySampler(Sampler):
 
             # Update `bucket_lengths` --> set length to infinity if at capacity!
             bucket_lengths[shortest_bucket_idx] += idx2lengths[idx]
-            if len(bucket_indices[shortest_bucket_idx]) == n_examples_per_bucket:
+            if (
+                len(bucket_indices[shortest_bucket_idx])
+                == n_examples_per_bucket
+            ):
                 bucket_lengths[shortest_bucket_idx] = float('inf')
 
         return bucket_indices
 
-    def get_modality_and_length_grouped_indices(self, generator: torch.Generator) -> list[int]:
+    def get_modality_and_length_grouped_indices(
+        self, generator: torch.Generator
+    ) -> list[int]:
         """
         Returns a list of indices so that each slice of `global_batch_size` consecutive indices corresponds to elements
         of the same modality with each sub-sequence of `per_replica_batch_size` (the batch size each unique device sees
@@ -94,7 +110,9 @@ class SplitModalitySampler(Sampler):
         multimodal_indices, multimodal_lengths = zip(
             *[
                 (idx, length)
-                for idx, (is_multimodal, length) in enumerate(self.modality_lengths)
+                for idx, (is_multimodal, length) in enumerate(
+                    self.modality_lengths
+                )
                 if is_multimodal
             ]
         )
@@ -102,7 +120,9 @@ class SplitModalitySampler(Sampler):
         # Handle Special Case --> no "unimodal" inputs
         unimodal_split = [
             (idx, length)
-            for idx, (is_multimodal, length) in enumerate(self.modality_lengths)
+            for idx, (is_multimodal, length) in enumerate(
+                self.modality_lengths
+            )
             if not is_multimodal
         ]
         if len(unimodal_split) == 0:
@@ -111,15 +131,20 @@ class SplitModalitySampler(Sampler):
             unimodal_indices, unimodal_lengths = zip(*unimodal_split)
 
         # Create a permutation of indices for each of the multimodal and unimodal data
-        mm_shuffled_idxs = torch.randperm(len(multimodal_indices), generator=generator)
-        uni_shuffled_idxs = torch.randperm(len(unimodal_indices), generator=generator)
+        mm_shuffled_idxs = torch.randperm(
+            len(multimodal_indices), generator=generator
+        )
+        uni_shuffled_idxs = torch.randperm(
+            len(unimodal_indices), generator=generator
+        )
 
         # We're going to be running sorting/grouping relative to `self.global_batch_size` and `self.num_replicas`
         g_bsz = self.global_batch_size
 
         # Break each of the permutations into batches of length `global_batch_size`
         mm_batch_idxs = [
-            mm_shuffled_idxs[i : i + g_bsz].tolist() for i in range(0, len(mm_shuffled_idxs), g_bsz)
+            mm_shuffled_idxs[i : i + g_bsz].tolist()
+            for i in range(0, len(mm_shuffled_idxs), g_bsz)
         ]
         uni_batch_idxs = [
             uni_shuffled_idxs[i : i + g_bsz].tolist()
@@ -137,10 +162,12 @@ class SplitModalitySampler(Sampler):
 
         # Now we're going to sort each batch by length --> this will aid in grouping by length by rank (efficiency!)
         mm_sorted_batch_idxs = [
-            sorted(b, key=lambda i: multimodal_lengths[i], reverse=True) for b in mm_batch_idxs
+            sorted(b, key=lambda i: multimodal_lengths[i], reverse=True)
+            for b in mm_batch_idxs
         ]
         uni_sorted_batch_idxs = [
-            sorted(b, key=lambda i: unimodal_lengths[i], reverse=True) for b in uni_batch_idxs
+            sorted(b, key=lambda i: unimodal_lengths[i], reverse=True)
+            for b in uni_batch_idxs
         ]
 
         # IMPORTANT :: At this point, for each modality, we have a list of "batches" (made up of indices) where indices
@@ -192,16 +219,28 @@ class SplitModalitySampler(Sampler):
         # Note :: Because of the initial `randperm` --> we're indexing both sets from 0 (we're clobbering the range)
         #   => Flatten indices --> index into original `{modality}_indices` then re-batch!
         mm_output_idxs = [
-            idx for batch in mm_length_bucketed_idxs for bucket in batch for idx in bucket
+            idx
+            for batch in mm_length_bucketed_idxs
+            for bucket in batch
+            for idx in bucket
         ]
         mm_reindexed = [multimodal_indices[idx] for idx in mm_output_idxs]
-        mm_batches = [mm_reindexed[i : i + g_bsz] for i in range(0, len(mm_reindexed), g_bsz)]
+        mm_batches = [
+            mm_reindexed[i : i + g_bsz]
+            for i in range(0, len(mm_reindexed), g_bsz)
+        ]
 
         uni_output_idxs = [
-            idx for batch in uni_length_bucketed_idxs for bucket in batch for idx in bucket
+            idx
+            for batch in uni_length_bucketed_idxs
+            for bucket in batch
+            for idx in bucket
         ]
         uni_reindexed = [unimodal_indices[idx] for idx in uni_output_idxs]
-        uni_batches = [uni_reindexed[i : i + g_bsz] for i in range(0, len(uni_reindexed), g_bsz)]
+        uni_batches = [
+            uni_reindexed[i : i + g_bsz]
+            for i in range(0, len(uni_reindexed), g_bsz)
+        ]
 
         # Finally, randomly permute the multimodal & unimodal batches, merging into a single stream of indices
         merged_batches = mm_batches + uni_batches
@@ -215,7 +254,9 @@ class SplitModalitySampler(Sampler):
         ]
         all_batches_max_lengths = []
         for batch in all_batches:
-            all_batches_max_lengths.append(max([all_lengths[idx] for idx in batch]))
+            all_batches_max_lengths.append(
+                max([all_lengths[idx] for idx in batch])
+            )
 
         # Identify Batch with "max length" --> Swap into Index 0
         longest_batch_idx = np.argmax(all_batches_max_lengths)
@@ -233,7 +274,11 @@ class SplitModalitySampler(Sampler):
         g = torch.Generator()
         g.manual_seed(self.seed + self.epoch)
         indices = self.get_modality_and_length_grouped_indices(g)
-        assert len(set(indices)) == len(self.modality_lengths) == len(self.dataset), 'Oops!'
+        assert (
+            len(set(indices))
+            == len(self.modality_lengths)
+            == len(self.dataset)
+        ), 'Oops!'
         assert (len(indices) % self.global_batch_size == 0) and (
             len(indices) % self.num_replicas
         ) == 0, 'Oops'
@@ -245,8 +290,12 @@ class SplitModalitySampler(Sampler):
         # Tensorize & Unravel --> rather than yielding via a `take_every` --> we want to partition a global batch
         # across replicas by assigning each a contiguous sub-sequence.
         indices_t = torch.as_tensor(indices)
-        per_replica_batch_indices_t = indices_t.reshape(-1, per_replica_batch_size)
-        replica_indices_t = per_replica_batch_indices_t[self.rank :: self.num_replicas]
+        per_replica_batch_indices_t = indices_t.reshape(
+            -1, per_replica_batch_size
+        )
+        replica_indices_t = per_replica_batch_indices_t[
+            self.rank :: self.num_replicas
+        ]
 
         replica_indices = replica_indices_t.flatten().tolist()
         return iter(replica_indices)

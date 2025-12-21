@@ -68,9 +68,6 @@ from queue import Empty
 
 import grpc
 import torch
-from torch import nn
-from torch.multiprocessing import Event, Queue
-
 from lerobot.cameras import opencv  # noqa: F401
 from lerobot.configs import parser
 from lerobot.configs.train import TrainRLServerPipelineConfig
@@ -97,7 +94,14 @@ from lerobot.utils.transition import (
     move_state_dict_to_device,
     move_transition_to_device,
 )
-from lerobot.utils.utils import TimerManager, get_safe_torch_device, init_logging
+from lerobot.utils.utils import (
+    TimerManager,
+    get_safe_torch_device,
+    init_logging,
+)
+from torch import nn
+from torch.multiprocessing import Event, Queue
+
 
 ACTOR_SHUTDOWN_TIMEOUT = 30
 
@@ -127,7 +131,9 @@ def actor_cli(cfg: TrainRLServerPipelineConfig):
     logging.info(f'Actor logging initialized, writing to {log_file}')
 
     is_threaded = use_threads(cfg)
-    shutdown_event = ProcessSignalHandler(is_threaded, display_pid=display_pid).shutdown_event
+    shutdown_event = ProcessSignalHandler(
+        is_threaded, display_pid=display_pid
+    ).shutdown_event
 
     learner_client, grpc_channel = learner_service_client(
         host=cfg.policy.actor_learner_config.learner_host,
@@ -291,7 +297,9 @@ def act_with_policy(
             policy_fps = policy_timer.fps_last
 
             log_policy_frequency_issue(
-                policy_fps=policy_fps, cfg=cfg, interaction_step=interaction_step
+                policy_fps=policy_fps,
+                cfg=cfg,
+                interaction_step=interaction_step,
             )
 
         else:
@@ -348,7 +356,9 @@ def act_with_policy(
             # Calculate intervention rate
             intervention_rate = 0.0
             if episode_total_steps > 0:
-                intervention_rate = episode_intervention_steps / episode_total_steps
+                intervention_rate = (
+                    episode_intervention_steps / episode_total_steps
+                )
 
             # Send episodic reward to the learner
             interactions_queue.put(
@@ -450,7 +460,9 @@ def receive_policy(
         # Create a process-specific log file
         log_dir = os.path.join(cfg.output_dir, 'logs')
         os.makedirs(log_dir, exist_ok=True)
-        log_file = os.path.join(log_dir, f'actor_receive_policy_{os.getpid()}.log')
+        log_file = os.path.join(
+            log_dir, f'actor_receive_policy_{os.getpid()}.log'
+        )
 
         # Initialize logging with explicit log file
         init_logging(log_file=log_file, display_pid=True)
@@ -505,7 +517,9 @@ def send_transitions(
         # Create a process-specific log file
         log_dir = os.path.join(cfg.output_dir, 'logs')
         os.makedirs(log_dir, exist_ok=True)
-        log_file = os.path.join(log_dir, f'actor_transitions_{os.getpid()}.log')
+        log_file = os.path.join(
+            log_dir, f'actor_transitions_{os.getpid()}.log'
+        )
 
         # Initialize logging with explicit log file
         init_logging(log_file=log_file, display_pid=True)
@@ -520,7 +534,9 @@ def send_transitions(
     try:
         learner_client.SendTransitions(
             transitions_stream(
-                shutdown_event, transitions_queue, cfg.policy.actor_learner_config.queue_get_timeout
+                shutdown_event,
+                transitions_queue,
+                cfg.policy.actor_learner_config.queue_get_timeout,
             )
         )
     except grpc.RpcError as e:
@@ -554,7 +570,9 @@ def send_interactions(
         # Create a process-specific log file
         log_dir = os.path.join(cfg.output_dir, 'logs')
         os.makedirs(log_dir, exist_ok=True)
-        log_file = os.path.join(log_dir, f'actor_interactions_{os.getpid()}.log')
+        log_file = os.path.join(
+            log_dir, f'actor_interactions_{os.getpid()}.log'
+        )
 
         # Initialize logging with explicit log file
         init_logging(log_file=log_file, display_pid=True)
@@ -597,7 +615,9 @@ def transitions_stream(shutdown_event: Event, transitions_queue: Queue, timeout:
             continue
 
         yield from send_bytes_in_chunks(
-            message, services_pb2.Transition, log_prefix='[ACTOR] Send transitions'
+            message,
+            services_pb2.Transition,
+            log_prefix='[ACTOR] Send transitions',
         )
 
     return services_pb2.Empty()
@@ -629,7 +649,9 @@ def interactions_stream(
 #################################################
 
 
-def update_policy_parameters(policy: SACPolicy, parameters_queue: Queue, device):
+def update_policy_parameters(
+    policy: SACPolicy, parameters_queue: Queue, device
+):
     bytes_state_dict = get_last_item_from_queue(parameters_queue, block=False)
     if bytes_state_dict is not None:
         logging.info('[ACTOR] Load new parameters from Learner.')
@@ -646,16 +668,23 @@ def update_policy_parameters(policy: SACPolicy, parameters_queue: Queue, device)
         # - Ensure discrete_critic gets correct encoder state (currently uses encoder_critic)
 
         # Load actor state dict
-        actor_state_dict = move_state_dict_to_device(state_dicts['policy'], device=device)
+        actor_state_dict = move_state_dict_to_device(
+            state_dicts['policy'], device=device
+        )
         policy.actor.load_state_dict(actor_state_dict)
 
         # Load discrete critic if present
-        if hasattr(policy, 'discrete_critic') and 'discrete_critic' in state_dicts:
+        if (
+            hasattr(policy, 'discrete_critic')
+            and 'discrete_critic' in state_dicts
+        ):
             discrete_critic_state_dict = move_state_dict_to_device(
                 state_dicts['discrete_critic'], device=device
             )
             policy.discrete_critic.load_state_dict(discrete_critic_state_dict)
-            logging.info('[ACTOR] Loaded discrete critic parameters from Learner.')
+            logging.info(
+                '[ACTOR] Loaded discrete critic parameters from Learner.'
+            )
 
 
 #################################################

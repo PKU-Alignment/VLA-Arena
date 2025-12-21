@@ -34,7 +34,8 @@ from draccus import ChoiceRegistry
 def get_default_dataset_root() -> Path:
     """Get the default dataset root directory from environment variable or use a generic default."""
     default_root = os.environ.get(
-        'PRISMATIC_DATASET_ROOT', os.environ.get('DATASET_ROOT', './datasets/prismatic-vlms')
+        'PRISMATIC_DATASET_ROOT',
+        os.environ.get('DATASET_ROOT', './datasets/prismatic-vlms'),
     )
     return Path(default_root)
 
@@ -126,7 +127,9 @@ class LLaVa_LVIS4V_LRV_Config(DatasetConfig):
         Path('download/llava-laion-cc-sbu-558k/'),
     )
     finetune_stage_components: tuple[Path, Path] = (
-        Path('download/llava-v1.5-instruct/llava_v1_5_lvis4v_lrv_mix1231k.json'),
+        Path(
+            'download/llava-v1.5-instruct/llava_v1_5_lvis4v_lrv_mix1231k.json'
+        ),
         Path('download/llava-v1.5-instruct/'),
     )
     dataset_root_dir: Path = get_default_dataset_root()
@@ -152,4 +155,6 @@ class DatasetRegistry(Enum):
 
 # Register Datasets in Choice Registry
 for dataset_variant in DatasetRegistry:
-    DatasetConfig.register_subclass(dataset_variant.dataset_id, dataset_variant.value)
+    DatasetConfig.register_subclass(
+        dataset_variant.dataset_id, dataset_variant.value
+    )

@@ -41,8 +41,11 @@ import torch.nn as nn
 from huggingface_hub import hf_hub_download
 from timm.models.vision_transformer import LayerScale
 from transformers import AutoTokenizer
+
 from vla_arena.models.openvla.prismatic.conf import ModelConfig
-from vla_arena.models.openvla.prismatic.extern.hf.configuration_prismatic import OpenVLAConfig
+from vla_arena.models.openvla.prismatic.extern.hf.configuration_prismatic import (
+    OpenVLAConfig,
+)
 from vla_arena.models.openvla.prismatic.extern.hf.modeling_prismatic import (
     OpenVLAForActionPrediction,
 )
@@ -117,7 +120,9 @@ def remap_state_dicts_for_hf(
     # Iterate through Vision Backbone =>> add "vision_backbone." prefix
     if not use_fused_vision_backbone:
         for key, value in prismatic_vision_backbone_state_dict.items():
-            hf_state_dict[key.replace('featurizer.', 'vision_backbone.featurizer.')] = value
+            hf_state_dict[
+                key.replace('featurizer.', 'vision_backbone.featurizer.')
+            ] = value
     else:
         # Note =>> Assumes that backbones are always DINO + SigLIP...
         for key, value in prismatic_vision_backbone_state_dict.items():
@@ -125,12 +130,17 @@ def remap_state_dicts_for_hf(
                 if key.endswith('.gamma'):
                     # Handle `LayerScale gamma` =>> DINOv2 only!
                     key = key.replace('.gamma', '.scale_factor')
-                hf_state_dict[key.replace('dino_featurizer.', 'vision_backbone.featurizer.')] = (
-                    value
-                )
+                hf_state_dict[
+                    key.replace(
+                        'dino_featurizer.', 'vision_backbone.featurizer.'
+                    )
+                ] = value
             elif key.startswith('siglip_featurizer'):
                 hf_state_dict[
-                    key.replace('siglip_featurizer.', 'vision_backbone.fused_featurizer.')
+                    key.replace(
+                        'siglip_featurizer.',
+                        'vision_backbone.fused_featurizer.',
+                    )
                 ] = value
 
     return hf_state_dict
@@ -145,14 +155,18 @@ def convert_openvla_weights_to_hf(cfg: HFConvertConfig) -> None:
 
     # Get `config.json`, 'dataset_statistics.json' and `checkpoint_pt` -- mirrors logic in `vla_arena.models.openvla.prismatic.models.load.py`
     if os.path.isdir(cfg.openvla_model_path_or_id):
-        print(f'[*] Loading from Local Path `{(run_dir := Path(cfg.openvla_model_path_or_id))}`')
+        print(
+            f'[*] Loading from Local Path `{(run_dir := Path(cfg.openvla_model_path_or_id))}`'
+        )
         config_json, checkpoint_pt = (
             run_dir / 'config.json',
             run_dir / 'checkpoints' / 'latest-checkpoint.pt',
         )
         dataset_statistics_json = run_dir / 'dataset_statistics.json'
 
-        assert config_json.exists(), f'Missing `config.json` for `{run_dir = }`'
+        assert (
+            config_json.exists()
+        ), f'Missing `config.json` for `{run_dir = }`'
         assert checkpoint_pt.exists(), f'Missing checkpoint for `{run_dir = }`'
         assert (
             dataset_statistics_json.exists()
@@ -162,20 +176,24 @@ def convert_openvla_weights_to_hf(cfg: HFConvertConfig) -> None:
             f'[*] Downloading Prismatic Checkpoint from HF Hub :: `TRI-ML/{cfg.openvla_model_path_or_id}`'
         )
         config_json = hf_hub_download(
-            'openvla/openvla-dev', f'{cfg.openvla_model_path_or_id}/config.json'
+            'openvla/openvla-dev',
+            f'{cfg.openvla_model_path_or_id}/config.json',
         )
         checkpoint_pt = hf_hub_download(
             'openvla/openvla-dev',
             f'{cfg.openvla_model_path_or_id}/checkpoints/latest-checkpoint.pt',
         )
         dataset_statistics_json = hf_hub_download(
-            'openvla/openvla-dev', f'{cfg.openvla_model_path_or_id}/dataset_statistics.json'
+            'openvla/openvla-dev',
+            f'{cfg.openvla_model_path_or_id}/dataset_statistics.json',
         )
 
     # Load "Native" Config JSON =>> Create LLM Config & Instantiate Tokenizer
     with open(config_json) as f:
         vla_cfg = json.load(f)['vla']
-        prismatic_config = ModelConfig.get_choice_class(vla_cfg['base_vlm'])().__dict__
+        prismatic_config = ModelConfig.get_choice_class(
+            vla_cfg['base_vlm']
+        )().__dict__
 
     # Load Normalization Statistics
     with open(dataset_statistics_json) as f:
@@ -205,7 +223,9 @@ def convert_openvla_weights_to_hf(cfg: HFConvertConfig) -> None:
     tokenizer.init_kwargs.pop(
         'add_prefix_space', None
     )  # Pop to prevent unnecessary warning on reload...
-    assert tokenizer.pad_token_id == hf_config.pad_token_id, 'Incorrect Pad Token ID!'
+    assert (
+        tokenizer.pad_token_id == hf_config.pad_token_id
+    ), 'Incorrect Pad Token ID!'
     assert (
         len(tokenizer) > hf_config.text_config.vocab_size
     ), 'Tokenizer vocabulary must be larger than LLM vocabulary!'
@@ -235,7 +255,9 @@ def convert_openvla_weights_to_hf(cfg: HFConvertConfig) -> None:
 
         # Get Per-Backbone Image Processing
         data_cfg = timm.data.resolve_model_data_config(timm_vision_backbone)
-        input_sizes.append((3, hf_config.image_sizes[idx], hf_config.image_sizes[idx]))
+        input_sizes.append(
+            (3, hf_config.image_sizes[idx], hf_config.image_sizes[idx])
+        )
         interpolations.append(data_cfg['interpolation'])
         means.append(data_cfg['mean'])
         stds.append(data_cfg['std'])
@@ -256,8 +278,12 @@ def convert_openvla_weights_to_hf(cfg: HFConvertConfig) -> None:
     )
 
     # Create top-level PrismaticProcessor (`transformers.ProcessorMixin` =>> enables registry w/ AutoProcessor)
-    print('[*] Creating PrismaticProcessor Instance from Tokenizer and PrismaticImageProcessor')
-    hf_processor = PrismaticProcessor(image_processor=hf_image_processor, tokenizer=tokenizer)
+    print(
+        '[*] Creating PrismaticProcessor Instance from Tokenizer and PrismaticImageProcessor'
+    )
+    hf_processor = PrismaticProcessor(
+        image_processor=hf_image_processor, tokenizer=tokenizer
+    )
 
     # Load Prismatic Model State Dictionary (in preparation for conversion)
     print('[*] Loading Prismatic VLM State Dictionary from Checkpoint')
@@ -266,7 +292,10 @@ def convert_openvla_weights_to_hf(cfg: HFConvertConfig) -> None:
         len(model_state_dict['downsampler']) == 0
     ), 'Downsampler?'
     assert all(
-        [k in model_state_dict for k in ['vision_backbone', 'projector', 'llm_backbone']]
+        [
+            k in model_state_dict
+            for k in ['vision_backbone', 'projector', 'llm_backbone']
+        ]
     ), 'Missing keys!'
 
     # Convert
@@ -279,7 +308,9 @@ def convert_openvla_weights_to_hf(cfg: HFConvertConfig) -> None:
     )
 
     # Create PrismaticForConditionalGeneration =>> Note that we can't initialize on `meta` device because TIMM
-    print('[*] Building (Randomly Initialized) Model =>> OpenVLAForActionPrediction')
+    print(
+        '[*] Building (Randomly Initialized) Model =>> OpenVLAForActionPrediction'
+    )
     hf_model = OpenVLAForActionPrediction(hf_config)
     hf_model.load_state_dict(converted_state_dict, strict=True, assign=True)
 
@@ -288,15 +319,21 @@ def convert_openvla_weights_to_hf(cfg: HFConvertConfig) -> None:
 
     # Save Pretrained Versions to Local Path
     print('[*] Saving Model & Processor to Local Path')
-    hf_model.save_pretrained(cfg.output_hf_model_local_path, max_shard_size='7GB')
+    hf_model.save_pretrained(
+        cfg.output_hf_model_local_path, max_shard_size='7GB'
+    )
     hf_image_processor.save_pretrained(cfg.output_hf_model_local_path)
     hf_processor.save_pretrained(cfg.output_hf_model_local_path)
 
     # Copy `dataset_statistics.json` File to Converted Checkpoint Directory
-    output_dataset_statistics_json = cfg.output_hf_model_local_path / 'dataset_statistics.json'
+    output_dataset_statistics_json = (
+        cfg.output_hf_model_local_path / 'dataset_statistics.json'
+    )
     shutil.copyfile(dataset_statistics_json, output_dataset_statistics_json)
 
-    print(f'[*] Saving Complete! Saved converted checkpoint to: {cfg.output_hf_model_local_path}')
+    print(
+        f'[*] Saving Complete! Saved converted checkpoint to: {cfg.output_hf_model_local_path}'
+    )
 
     #####################################################################################
     # Optional: Push Model to Hugging Face Hub

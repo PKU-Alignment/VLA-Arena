@@ -27,7 +27,9 @@ from vla_arena.vla_arena import get_vla_arena_path
 from vla_arena.vla_arena.envs import *
 
 
-def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_demo_counter):
+def process_single_demo_file(
+    demo_file_path, env_kwargs_template, args, global_demo_counter
+):
     """
     Process a single demo HDF5 file and return processed data.
 
@@ -111,7 +113,9 @@ def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_d
                     break
                 except:
                     if attempt == max_reset_attempts - 1:
-                        print(f'    Unable to reset environment, skipping {ep}')
+                        print(
+                            f'    Unable to reset environment, skipping {ep}'
+                        )
                     continue
 
             if not reset_success:
@@ -179,9 +183,13 @@ def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_d
                 if not args.not_use_camera_obs:
                     if args.use_depth:
                         for camera in camera_names:
-                            camera_list[camera]['depths'].append(obs[camera + '_depth'])
+                            camera_list[camera]['depths'].append(
+                                obs[camera + '_depth']
+                            )
                     for camera in camera_names:
-                        camera_list[camera]['images'].append(obs[camera + '_image'])
+                        camera_list[camera]['images'].append(
+                            obs[camera + '_image']
+                        )
 
             # Prepare final data
             states = states[valid_index]
@@ -198,7 +206,9 @@ def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_d
                 'actions': actions,
                 'rewards': rewards,
                 'dones': dones,
-                'robot_states': np.stack(robot_states, axis=0) if robot_states else None,
+                'robot_states': (
+                    np.stack(robot_states, axis=0) if robot_states else None
+                ),
                 'model_file': model_xml,
                 'init_state': states[init_idx] if len(states) > 0 else None,
                 'num_samples': len(camera_list[camera_names[0]]['images']),
@@ -217,13 +227,16 @@ def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_d
             if not args.not_use_camera_obs:
                 for camera in camera_names:
                     if camera_list[camera]['images']:
-                        demo_data[camera + '_rgb'] = np.stack(camera_list[camera]['images'], axis=0)
+                        demo_data[camera + '_rgb'] = np.stack(
+                            camera_list[camera]['images'], axis=0
+                        )
 
                 if args.use_depth:
                     for camera in camera_names:
                         if camera_list[camera]['depths']:
                             demo_data[camera + '_depth'] = np.stack(
-                                camera_list[camera]['depths'], axis=0,
+                                camera_list[camera]['depths'],
+                                axis=0,
                             )
 
             processed_demos.append(demo_data)
@@ -264,13 +277,18 @@ def main():
         help='Output directory, default is automatically determined based on BDDL file',
     )
     parser.add_argument(
-        '--pattern', type=str, default='*.hdf5', help='Filename pattern to process (default: .hdf5)',
+        '--pattern',
+        type=str,
+        default='*.hdf5',
+        help='Filename pattern to process (default: .hdf5)',
     )
     parser.add_argument('--not-use-camera-obs', action='store_true')
     parser.add_argument('--no-proprio', action='store_true')
     parser.add_argument('--use-depth', action='store_true')
     parser.add_argument(
-        '--not-recursive', action='store_true', help='Do not recursively search subdirectories',
+        '--not-recursive',
+        action='store_true',
+        help='Do not recursively search subdirectories',
     )
 
     args = parser.parse_args()
@@ -294,7 +312,10 @@ def main():
 
     for demo_file in demo_files:
         demos, _, metadata = process_single_demo_file(
-            str(demo_file), env_kwargs_template, args, 0,  # Each BDDL file counts independently
+            str(demo_file),
+            env_kwargs_template,
+            args,
+            0,  # Each BDDL file counts independently
         )
 
         if metadata and demos:
@@ -324,7 +345,9 @@ def main():
                 relative_dir = os.path.basename(demo_dir)
 
             hdf5_file_name = bddl_base_name.replace('.bddl', '_demo.hdf5')
-            hdf5_path = os.path.join(get_vla_arena_path('datasets'), relative_dir, hdf5_file_name)
+            hdf5_path = os.path.join(
+                get_vla_arena_path('datasets'), relative_dir, hdf5_file_name
+            )
             hdf5_path = Path(hdf5_path)
             if hdf5_path.exists():
                 stem = hdf5_path.stem
@@ -374,24 +397,38 @@ def main():
                 obs_grp = ep_data_grp.create_group('obs')
 
                 # Proprioception data
-                for key in ['gripper_states', 'joint_states', 'ee_states', 'ee_pos', 'ee_ori']:
+                for key in [
+                    'gripper_states',
+                    'joint_states',
+                    'ee_states',
+                    'ee_pos',
+                    'ee_ori',
+                ]:
                     if key in demo_data:
                         obs_grp.create_dataset(key, data=demo_data[key])
 
                 # Image data
                 for camera in metadata['camera_names']:
-                    for key in [camera + suffix for suffix in ['_rgb', '_depth']]:
+                    for key in [
+                        camera + suffix for suffix in ['_rgb', '_depth']
+                    ]:
                         if key in demo_data:
                             obs_grp.create_dataset(key, data=demo_data[key])
 
                 # Write action and state data
-                ep_data_grp.create_dataset('actions', data=demo_data['actions'])
+                ep_data_grp.create_dataset(
+                    'actions', data=demo_data['actions']
+                )
                 ep_data_grp.create_dataset('states', data=demo_data['states'])
-                ep_data_grp.create_dataset('rewards', data=demo_data['rewards'])
+                ep_data_grp.create_dataset(
+                    'rewards', data=demo_data['rewards']
+                )
                 ep_data_grp.create_dataset('dones', data=demo_data['dones'])
 
                 if demo_data['robot_states'] is not None:
-                    ep_data_grp.create_dataset('robot_states', data=demo_data['robot_states'])
+                    ep_data_grp.create_dataset(
+                        'robot_states', data=demo_data['robot_states']
+                    )
 
                 # Write attributes
                 ep_data_grp.attrs['num_samples'] = demo_data['num_samples']

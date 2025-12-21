@@ -50,12 +50,16 @@ def get_affordance_regions(objects, verbose=False):
                 site_name = site.get('name')
                 if 'site' not in site_name and (
                     object_name not in EXCEPTION_DICT
-                    or (object_name in EXCEPTION_DICT
-                    and site_name not in EXCEPTION_DICT[object_name])
+                    or (
+                        object_name in EXCEPTION_DICT
+                        and site_name not in EXCEPTION_DICT[object_name]
+                    )
                 ):
                     # print(site_name)
                     # object name is already added as prefix when the object is initialized. remove them for consistency in bddl files
-                    object_affordance.append(site_name.replace(f'{object_name}_', ''))
+                    object_affordance.append(
+                        site_name.replace(f'{object_name}_', '')
+                    )
             if len(object_affordance) > 0:
                 affordances[object_name] = object_affordance
         except:

@@ -48,7 +48,8 @@ def mock_vla_arena_paths(monkeypatch, temp_dir):
         return paths.get(key, temp_dir)
 
     monkeypatch.setattr(
-        'vla_arena.vla_arena.benchmark.__init__.get_vla_arena_path', mock_get_vla_arena_path,
+        'vla_arena.vla_arena.benchmark.__init__.get_vla_arena_path',
+        mock_get_vla_arena_path,
     )
     return temp_dir
 
@@ -119,7 +120,12 @@ def mock_env():
     """Create a mock environment for testing."""
     env = Mock()
     env.reset.return_value = {'image': Mock(), 'state': Mock()}
-    env.step.return_value = ({'image': Mock(), 'state': Mock()}, 0.0, False, {})
+    env.step.return_value = (
+        {'image': Mock(), 'state': Mock()},
+        0.0,
+        False,
+        {},
+    )
     env.render.return_value = Mock()
     return env
 
@@ -137,7 +143,9 @@ def mock_h5py_file():
     with h5py.File(temp_file.name, 'w') as f:
         # Create sample data structure
         demo_group = f.create_group('data')
-        demo_group.attrs['problem_info'] = '{"language_instruction": ["pick up the cup"]}'
+        demo_group.attrs['problem_info'] = (
+            '{"language_instruction": ["pick up the cup"]}'
+        )
         demo_group.attrs['env_args'] = '{"env_name": "test_env"}'
 
         # Create a sample episode

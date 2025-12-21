@@ -38,10 +38,13 @@ from collections.abc import Callable
 import numpy as np
 import torch
 
+
 # === Randomness ===
 
 
-def set_global_seed(seed: int, get_worker_init_fn: bool = False) -> Callable[[int], None] | None:
+def set_global_seed(
+    seed: int, get_worker_init_fn: bool = False
+) -> Callable[[int], None] | None:
     """Sets seed for all randomness libraries (mostly random, numpy, torch) and produces a `worker_init_fn`"""
     assert (
         np.iinfo(np.uint32).min < seed < np.iinfo(np.uint32).max
@@ -67,7 +70,10 @@ def worker_init_function(worker_id: int) -> None:
     :param worker_id: Identifier for the given worker [0, num_workers) for the Dataloader in question.
     """
     # Get current `rank` (if running distributed) and `process_seed`
-    global_rank, process_seed = int(os.environ['LOCAL_RANK']), torch.initial_seed()
+    global_rank, process_seed = (
+        int(os.environ['LOCAL_RANK']),
+        torch.initial_seed(),
+    )
 
     # Back out the "base" (original) seed - the per-worker seed is set in PyTorch:
     #   > https://pytorch.org/docs/stable/data.html#data-loading-randomness
@@ -87,7 +93,8 @@ def worker_init_function(worker_id: int) -> None:
 
     # Use 128 Bits for `random`, but express as integer instead of as an array
     random_seed = (
-        random_seed_seq.generate_state(2, dtype=np.uint64).astype(list) * [1 << 64, 1]
+        random_seed_seq.generate_state(2, dtype=np.uint64).astype(list)
+        * [1 << 64, 1]
     ).sum()
     random.seed(random_seed)
 
@@ -104,7 +111,9 @@ def check_bloat16_supported() -> bool:
         return (
             (torch.version.cuda is not None)
             and torch.cuda.is_bf16_supported()
-            and (packaging.version.parse(torch.version.cuda).release >= (11, 0))
+            and (
+                packaging.version.parse(torch.version.cuda).release >= (11, 0)
+            )
             and dist.is_nccl_available()
             and (nccl.version() >= (2, 10))
         )

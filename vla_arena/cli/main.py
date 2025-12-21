@@ -27,7 +27,9 @@ def main():
     train_p.add_argument('--model', required=True)
     train_p.add_argument('--config', default=None)
     train_p.add_argument(
-        '--overwrite', action='store_true', help='Overwrite existing checkpoint directory',
+        '--overwrite',
+        action='store_true',
+        help='Overwrite existing checkpoint directory',
     )
 
     # eval

@@ -22,8 +22,16 @@ import numpy as np
 import tensorflow as tf
 import torch
 from PIL import Image
-from transformers import AutoConfig, AutoImageProcessor, AutoModelForVision2Seq, AutoProcessor
-from vla_arena.models.univla.prismatic.extern.hf.configuration_prismatic import OpenVLAConfig
+from transformers import (
+    AutoConfig,
+    AutoImageProcessor,
+    AutoModelForVision2Seq,
+    AutoProcessor,
+)
+
+from vla_arena.models.univla.prismatic.extern.hf.configuration_prismatic import (
+    OpenVLAConfig,
+)
 from vla_arena.models.univla.prismatic.extern.hf.modeling_prismatic import (
     OpenVLAForActionPrediction,
 )
@@ -32,11 +40,16 @@ from vla_arena.models.univla.prismatic.extern.hf.processing_prismatic import (
     PrismaticProcessor,
 )
 
+
 # Initialize important constants and pretty-printing mode in NumPy.
 ACTION_DIM = 7
 DATE = time.strftime('%Y_%m_%d')
 DATE_TIME = time.strftime('%Y_%m_%d-%H_%M_%S')
-DEVICE = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
+DEVICE = (
+    torch.device('cuda:0')
+    if torch.cuda.is_available()
+    else torch.device('cpu')
+)
 np.set_printoptions(formatter={'float': lambda x: f'{x:0.3f}'})
 
 # Initialize system prompt for OpenVLA v0.1.
@@ -80,7 +93,9 @@ def get_vla(cfg):
         vla = vla.to(DEVICE)
 
     # Load dataset stats used during finetuning (for action un-normalization).
-    dataset_statistics_path = os.path.join(cfg.pretrained_checkpoint, 'dataset_statistics.json')
+    dataset_statistics_path = os.path.join(
+        cfg.pretrained_checkpoint, 'dataset_statistics.json'
+    )
     if os.path.isfile(dataset_statistics_path):
         with open(dataset_statistics_path) as f:
             norm_stats = json.load(f)
@@ -125,7 +140,9 @@ def get_vla_for_vla_arena(cfg):
         vla = vla.to(DEVICE)
 
     # Load dataset stats used during finetuning (for action un-normalization).
-    dataset_statistics_path = os.path.join(cfg.pretrained_checkpoint, 'dataset_statistics.json')
+    dataset_statistics_path = os.path.join(
+        cfg.pretrained_checkpoint, 'dataset_statistics.json'
+    )
     if os.path.isfile(dataset_statistics_path):
         with open(dataset_statistics_path) as f:
             norm_stats = json.load(f)
@@ -142,7 +159,9 @@ def get_vla_for_vla_arena(cfg):
 
 def get_processor(cfg):
     """Get VLA model's Hugging Face processor."""
-    processor = AutoProcessor.from_pretrained(cfg.pretrained_checkpoint, trust_remote_code=True)
+    processor = AutoProcessor.from_pretrained(
+        cfg.pretrained_checkpoint, trust_remote_code=True
+    )
     return processor
 
 
@@ -166,8 +185,12 @@ def crop_and_resize(image, crop_scale, batch_size):
         expanded_dims = True
 
     # Get height and width of crop
-    new_heights = tf.reshape(tf.clip_by_value(tf.sqrt(crop_scale), 0, 1), shape=(batch_size,))
-    new_widths = tf.reshape(tf.clip_by_value(tf.sqrt(crop_scale), 0, 1), shape=(batch_size,))
+    new_heights = tf.reshape(
+        tf.clip_by_value(tf.sqrt(crop_scale), 0, 1), shape=(batch_size,)
+    )
+    new_widths = tf.reshape(
+        tf.clip_by_value(tf.sqrt(crop_scale), 0, 1), shape=(batch_size,)
+    )
 
     # Get bounding box representing crop
     height_offsets = (1 - new_heights) / 2
@@ -183,7 +206,9 @@ def crop_and_resize(image, crop_scale, batch_size):
     )
 
     # Crop and then resize back up
-    image = tf.image.crop_and_resize(image, bounding_boxes, tf.range(batch_size), (224, 224))
+    image = tf.image.crop_and_resize(
+        image, bounding_boxes, tf.range(batch_size), (224, 224)
+    )
 
     # Convert back to 3D Tensor (H, W, C)
     if expanded_dims:
@@ -192,7 +217,15 @@ def crop_and_resize(image, crop_scale, batch_size):
     return image
 
 
-def get_vla_action(vla, processor, base_vla_name, obs, task_label, unnorm_key, center_crop=False):
+def get_vla_action(
+    vla,
+    processor,
+    base_vla_name,
+    obs,
+    task_label,
+    unnorm_key,
+    center_crop=False,
+):
     """Generates an action with the VLA policy."""
     image = Image.fromarray(obs['full_image'])
     image = image.convert('RGB')
@@ -232,12 +265,21 @@ def get_vla_action(vla, processor, base_vla_name, obs, task_label, unnorm_key, c
     inputs = processor(prompt, image).to(DEVICE, dtype=torch.bfloat16)
 
     # Get action.
-    action = vla.predict_action(**inputs, unnorm_key=unnorm_key, do_sample=True, top_p=0.75)
+    action = vla.predict_action(
+        **inputs, unnorm_key=unnorm_key, do_sample=True, top_p=0.75
+    )
     return action
 
 
 def get_vla_latent_action(
-    vla, processor, base_vla_name, obs, task_label, unnorm_key, center_crop=False, hist_action=''
+    vla,
+    processor,
+    base_vla_name,
+    obs,
+    task_label,
+    unnorm_key,
+    center_crop=False,
+    hist_action='',
 ):
     """Generates an action with the VLA policy."""
     image = Image.fromarray(obs['full_image'])
@@ -282,7 +324,11 @@ def get_vla_latent_action(
 
     # Get latent action.
     action = vla.predict_latent_action(
-        **inputs, unnorm_key=unnorm_key, do_sample=True, temperature=0.75, top_p=0.9
+        **inputs,
+        unnorm_key=unnorm_key,
+        do_sample=True,
+        temperature=0.75,
+        top_p=0.9,
     )
 
     return action

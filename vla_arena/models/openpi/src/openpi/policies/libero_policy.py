@@ -16,7 +16,6 @@ import dataclasses
 
 import einops
 import numpy as np
-
 from openpi import transforms
 from openpi.models import model as _model
 
@@ -25,8 +24,12 @@ def make_libero_example() -> dict:
     """Creates a random input example for the Libero policy."""
     return {
         "observation/state": np.random.rand(8),
-        "observation/image": np.random.randint(256, size=(224, 224, 3), dtype=np.uint8),
-        "observation/wrist_image": np.random.randint(256, size=(224, 224, 3), dtype=np.uint8),
+        "observation/image": np.random.randint(
+            256, size=(224, 224, 3), dtype=np.uint8
+        ),
+        "observation/wrist_image": np.random.randint(
+            256, size=(224, 224, 3), dtype=np.uint8
+        ),
         "prompt": "do something",
     }
 
@@ -80,7 +83,9 @@ class LiberoInputs(transforms.DataTransformFn):
                 "left_wrist_0_rgb": np.True_,
                 # We only mask padding images for pi0 model, not pi0-FAST. Do not change this for your own dataset.
                 "right_wrist_0_rgb": (
-                    np.True_ if self.model_type == _model.ModelType.PI0_FAST else np.False_
+                    np.True_
+                    if self.model_type == _model.ModelType.PI0_FAST
+                    else np.False_
                 ),
             },
         }

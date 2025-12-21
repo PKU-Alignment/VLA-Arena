@@ -83,7 +83,9 @@ class RewardClassifierConfig(PreTrainedConfig):
 
     def validate_features(self) -> None:
         """Validate feature configurations."""
-        has_image = any(key.startswith('observation.image') for key in self.input_features)
+        has_image = any(
+            key.startswith('observation.image') for key in self.input_features
+        )
         if not has_image:
             raise ValueError(
                 "You must provide an image observation (key starting with 'observation.image') in the input features"

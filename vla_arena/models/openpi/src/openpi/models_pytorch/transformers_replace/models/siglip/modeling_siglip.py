@@ -44,10 +44,24 @@ from torch.nn.init import _calculate_fan_in_and_fan_out
 from ...activations import ACT2FN
 from ...modeling_attn_mask_utils import _prepare_4d_attention_mask
 from ...modeling_layers import GradientCheckpointingLayer
-from ...modeling_outputs import BaseModelOutput, BaseModelOutputWithPooling, ImageClassifierOutput
+from ...modeling_outputs import (
+    BaseModelOutput,
+    BaseModelOutputWithPooling,
+    ImageClassifierOutput,
+)
 from ...modeling_utils import ALL_ATTENTION_FUNCTIONS, PreTrainedModel
-from ...utils import ModelOutput, auto_docstring, can_return_tuple, logging, torch_int
-from .configuration_siglip import SiglipConfig, SiglipTextConfig, SiglipVisionConfig
+from ...utils import (
+    ModelOutput,
+    auto_docstring,
+    can_return_tuple,
+    logging,
+    torch_int,
+)
+from .configuration_siglip import (
+    SiglipConfig,
+    SiglipTextConfig,
+    SiglipVisionConfig,
+)
 
 
 logger = logging.get_logger(__name__)
@@ -90,7 +104,11 @@ def _trunc_normal_(tensor, mean, std, a, b):
 
 
 def trunc_normal_tf_(
-    tensor: torch.Tensor, mean: float = 0.0, std: float = 1.0, a: float = -2.0, b: float = 2.0
+    tensor: torch.Tensor,
+    mean: float = 0.0,
+    std: float = 1.0,
+    a: float = -2.0,
+    b: float = 2.0,
 ) -> torch.Tensor:
     """Fills the input Tensor with values drawn from a truncated
     normal distribution. The values are effectively drawn from the
@@ -246,9 +264,13 @@ class SiglipVisionEmbeddings(nn.Module):
 
         self.num_patches = (self.image_size // self.patch_size) ** 2
         self.num_positions = self.num_patches
-        self.position_embedding = nn.Embedding(self.num_positions, self.embed_dim)
+        self.position_embedding = nn.Embedding(
+            self.num_positions, self.embed_dim
+        )
         self.register_buffer(
-            'position_ids', torch.arange(self.num_positions).expand((1, -1)), persistent=False
+            'position_ids',
+            torch.arange(self.num_positions).expand((1, -1)),
+            persistent=False,
         )
 
     def interpolate_pos_encoding(
@@ -267,7 +289,11 @@ class SiglipVisionEmbeddings(nn.Module):
         num_positions = self.position_embedding.weight.shape[0]
 
         # always interpolate when tracing to ensure the exported model works for dynamic input shapes
-        if not torch.jit.is_tracing() and num_patches == num_positions and height == width:
+        if (
+            not torch.jit.is_tracing()
+            and num_patches == num_positions
+            and height == width
+        ):
             return self.position_embedding(self.position_ids)
 
         patch_pos_embed = self.position_embedding.weight.unsqueeze(0)
@@ -278,7 +304,9 @@ class SiglipVisionEmbeddings(nn.Module):
         new_width = width // self.patch_size
 
         sqrt_num_positions = torch_int(num_positions**0.5)
-        patch_pos_embed = patch_pos_embed.reshape(1, sqrt_num_positions, sqrt_num_positions, dim)
+        patch_pos_embed = patch_pos_embed.reshape(
+            1, sqrt_num_positions, sqrt_num_positions, dim
+        )
         patch_pos_embed = patch_pos_embed.permute(0, 3, 1, 2)
 
         patch_pos_embed = nn.functional.interpolate(
@@ -302,9 +330,13 @@ class SiglipVisionEmbeddings(nn.Module):
         embeddings = patch_embeds.flatten(2).transpose(1, 2)
 
         if interpolate_pos_encoding:
-            embeddings = embeddings + self.interpolate_pos_encoding(embeddings, height, width)
+            embeddings = embeddings + self.interpolate_pos_encoding(
+                embeddings, height, width
+            )
         else:
-            embeddings = embeddings + self.position_embedding(self.position_ids)
+            embeddings = embeddings + self.position_embedding(
+                self.position_ids
+            )
         return embeddings
 
 
@@ -315,7 +347,9 @@ class SiglipTextEmbeddings(nn.Module):
         embed_dim = config.hidden_size
 
         self.token_embedding = nn.Embedding(config.vocab_size, embed_dim)
-        self.position_embedding = nn.Embedding(config.max_position_embeddings, embed_dim)
+        self.position_embedding = nn.Embedding(
+            config.max_position_embeddings, embed_dim
+        )
 
         # position_ids (1, len position emb) is contiguous in memory and exported when serialized
         self.register_buffer(
@@ -330,7 +364,11 @@ class SiglipTextEmbeddings(nn.Module):
         position_ids: torch.LongTensor | None = None,
         inputs_embeds: torch.FloatTensor | None = None,
     ) -> torch.Tensor:
-        seq_length = input_ids.shape[-1] if input_ids is not None else inputs_embeds.shape[-2]
+        seq_length = (
+            input_ids.shape[-1]
+            if input_ids is not None
+            else inputs_embeds.shape[-2]
+        )
         max_position_embedding = self.position_embedding.weight.shape[0]
 
         if seq_length > max_position_embedding:
@@ -365,8 +403,12 @@ def eager_attention_forward(
     if attention_mask is not None:
         attn_weights = attn_weights + attention_mask
 
-    attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(query.dtype)
-    attn_weights = nn.functional.dropout(attn_weights, p=dropout, training=module.training)
+    attn_weights = nn.functional.softmax(
+        attn_weights, dim=-1, dtype=torch.float32
+    ).to(query.dtype)
+    attn_weights = nn.functional.dropout(
+        attn_weights, p=dropout, training=module.training
+    )
 
     attn_output = torch.matmul(attn_weights, value)
     attn_output = attn_output.transpose(1, 2).contiguous()
@@ -411,21 +453,30 @@ class SiglipAttention(nn.Module):
         keys = self.k_proj(hidden_states)
         values = self.v_proj(hidden_states)
 
-        queries = queries.view(batch_size, seq_length, self.num_heads, self.head_dim).transpose(
-            1, 2
-        )
-        keys = keys.view(batch_size, seq_length, self.num_heads, self.head_dim).transpose(1, 2)
-        values = values.view(batch_size, seq_length, self.num_heads, self.head_dim).transpose(1, 2)
+        queries = queries.view(
+            batch_size, seq_length, self.num_heads, self.head_dim
+        ).transpose(1, 2)
+        keys = keys.view(
+            batch_size, seq_length, self.num_heads, self.head_dim
+        ).transpose(1, 2)
+        values = values.view(
+            batch_size, seq_length, self.num_heads, self.head_dim
+        ).transpose(1, 2)
 
         attention_interface: Callable = eager_attention_forward
         if self.config._attn_implementation != 'eager':
-            if self.config._attn_implementation == 'sdpa' and output_attentions:
+            if (
+                self.config._attn_implementation == 'sdpa'
+                and output_attentions
+            ):
                 logger.warning_once(
                     '`torch.nn.functional.scaled_dot_product_attention` does not support `output_attentions=True`. Falling back to '
                     'eager attention. This warning can be removed using the argument `attn_implementation="eager"` when loading the model.'
                 )
             else:
-                attention_interface = ALL_ATTENTION_FUNCTIONS[self.config._attn_implementation]
+                attention_interface = ALL_ATTENTION_FUNCTIONS[
+                    self.config._attn_implementation
+                ]
 
         attn_output, attn_weights = attention_interface(
             self,
@@ -438,7 +489,9 @@ class SiglipAttention(nn.Module):
             dropout=0.0 if not self.training else self.dropout,
         )
 
-        attn_output = attn_output.reshape(batch_size, seq_length, embed_dim).contiguous()
+        attn_output = attn_output.reshape(
+            batch_size, seq_length, embed_dim
+        ).contiguous()
         attn_output = self.out_proj(attn_output)
 
         if not output_attentions:
@@ -467,9 +520,13 @@ class SiglipEncoderLayer(GradientCheckpointingLayer):
     def __init__(self, config: SiglipVisionConfig | SiglipTextConfig):
         super().__init__()
         self.embed_dim = config.hidden_size
-        self.layer_norm1 = nn.LayerNorm(self.embed_dim, eps=config.layer_norm_eps)
+        self.layer_norm1 = nn.LayerNorm(
+            self.embed_dim, eps=config.layer_norm_eps
+        )
         self.self_attn = SiglipAttention(config)
-        self.layer_norm2 = nn.LayerNorm(self.embed_dim, eps=config.layer_norm_eps)
+        self.layer_norm2 = nn.LayerNorm(
+            self.embed_dim, eps=config.layer_norm_eps
+        )
         self.mlp = SiglipMLP(config)
 
     def forward(
@@ -537,7 +594,9 @@ class SiglipPreTrainedModel(PreTrainedModel):
                 if isinstance(self.config, SiglipConfig)
                 else self.config.hidden_size
             )
-            nn.init.normal_(module.position_embedding.weight, std=1 / np.sqrt(width))
+            nn.init.normal_(
+                module.position_embedding.weight, std=1 / np.sqrt(width)
+            )
         elif isinstance(module, nn.Embedding):
             default_flax_embed_init(module.weight)
         elif isinstance(module, SiglipAttention):
@@ -565,7 +624,8 @@ class SiglipPreTrainedModel(PreTrainedModel):
         elif isinstance(module, SiglipForImageClassification):
             nn.init.normal_(
                 module.classifier.weight,
-                std=self.config.vision_config.hidden_size**-0.5 * self.config.initializer_factor,
+                std=self.config.vision_config.hidden_size**-0.5
+                * self.config.initializer_factor,
             )
         elif isinstance(module, (nn.Linear, nn.Conv2d)):
             lecun_normal_(module.weight)
@@ -590,7 +650,10 @@ class SiglipEncoder(nn.Module):
         super().__init__()
         self.config = config
         self.layers = nn.ModuleList(
-            [SiglipEncoderLayer(config) for _ in range(config.num_hidden_layers)]
+            [
+                SiglipEncoderLayer(config)
+                for _ in range(config.num_hidden_layers)
+            ]
         )
         self.gradient_checkpointing = False
 
@@ -626,7 +689,9 @@ class SiglipEncoder(nn.Module):
                 Whether or not to return a [`~utils.ModelOutput`] instead of a plain tuple.
         """
         output_attentions = (
-            output_attentions if output_attentions is not None else self.config.output_attentions
+            output_attentions
+            if output_attentions is not None
+            else self.config.output_attentions
         )
         output_hidden_states = (
             output_hidden_states
@@ -670,10 +735,14 @@ class SiglipTextTransformer(nn.Module):
         embed_dim = config.hidden_size
         self.embeddings = SiglipTextEmbeddings(config)
         self.encoder = SiglipEncoder(config)
-        self.final_layer_norm = nn.LayerNorm(embed_dim, eps=config.layer_norm_eps)
+        self.final_layer_norm = nn.LayerNorm(
+            embed_dim, eps=config.layer_norm_eps
+        )
 
         self.head = nn.Linear(embed_dim, config.projection_size)
-        self._use_flash_attention_2 = config._attn_implementation == 'flash_attention_2'
+        self._use_flash_attention_2 = (
+            config._attn_implementation == 'flash_attention_2'
+        )
 
     @can_return_tuple
     @auto_docstring
@@ -686,7 +755,9 @@ class SiglipTextTransformer(nn.Module):
         output_hidden_states: bool | None = None,
     ) -> BaseModelOutputWithPooling:
         output_attentions = (
-            output_attentions if output_attentions is not None else self.config.output_attentions
+            output_attentions
+            if output_attentions is not None
+            else self.config.output_attentions
         )
         output_hidden_states = (
             output_hidden_states
@@ -700,13 +771,17 @@ class SiglipTextTransformer(nn.Module):
         input_shape = input_ids.size()
         input_ids = input_ids.view(-1, input_shape[-1])
 
-        hidden_states = self.embeddings(input_ids=input_ids, position_ids=position_ids)
+        hidden_states = self.embeddings(
+            input_ids=input_ids, position_ids=position_ids
+        )
 
         # note: SigLIP's text model does not use a causal mask, unlike the original CLIP model.
         # expand attention_mask
         if attention_mask is not None and not self._use_flash_attention_2:
             # [batch_size, seq_len] -> [batch_size, 1, tgt_seq_len, src_seq_len]
-            attention_mask = _prepare_4d_attention_mask(attention_mask, hidden_states.dtype)
+            attention_mask = _prepare_4d_attention_mask(
+                attention_mask, hidden_states.dtype
+            )
 
         encoder_outputs: BaseModelOutput = self.encoder(
             inputs_embeds=hidden_states,
@@ -794,8 +869,14 @@ class SiglipVisionTransformer(nn.Module):
 
         self.embeddings = SiglipVisionEmbeddings(config)
         self.encoder = SiglipEncoder(config)
-        self.post_layernorm = nn.LayerNorm(embed_dim, eps=config.layer_norm_eps)
-        self.use_head = True if not hasattr(config, 'vision_use_head') else config.vision_use_head
+        self.post_layernorm = nn.LayerNorm(
+            embed_dim, eps=config.layer_norm_eps
+        )
+        self.use_head = (
+            True
+            if not hasattr(config, 'vision_use_head')
+            else config.vision_use_head
+        )
         if self.use_head:
             self.head = SiglipMultiheadAttentionPoolingHead(config)
 
@@ -809,7 +890,9 @@ class SiglipVisionTransformer(nn.Module):
         interpolate_pos_encoding: bool | None = False,
     ) -> BaseModelOutputWithPooling:
         output_attentions = (
-            output_attentions if output_attentions is not None else self.config.output_attentions
+            output_attentions
+            if output_attentions is not None
+            else self.config.output_attentions
         )
         output_hidden_states = (
             output_hidden_states
@@ -823,7 +906,8 @@ class SiglipVisionTransformer(nn.Module):
         # Convert to bfloat16 if the encoder uses bfloat16
         if (
             len(self.encoder.layers) > 0
-            and self.encoder.layers[0].self_attn.q_proj.weight.dtype == torch.bfloat16
+            and self.encoder.layers[0].self_attn.q_proj.weight.dtype
+            == torch.bfloat16
         ):
             hidden_states = hidden_states.to(torch.bfloat16)
 
@@ -856,7 +940,9 @@ class SiglipMultiheadAttentionPoolingHead(nn.Module):
         self.attention = torch.nn.MultiheadAttention(
             config.hidden_size, config.num_attention_heads, batch_first=True
         )
-        self.layernorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+        self.layernorm = nn.LayerNorm(
+            config.hidden_size, eps=config.layer_norm_eps
+        )
         self.mlp = SiglipMLP(config)
 
     def forward(self, hidden_state):
@@ -996,7 +1082,9 @@ class SiglipModel(SiglipPreTrainedModel):
         ```"""
         # Use SigLIP model's config for some fields (if specified) instead of those of vision & text components.
         output_attentions = (
-            output_attentions if output_attentions is not None else self.config.output_attentions
+            output_attentions
+            if output_attentions is not None
+            else self.config.output_attentions
         )
         output_hidden_states = (
             output_hidden_states
@@ -1050,7 +1138,9 @@ class SiglipModel(SiglipPreTrainedModel):
         ```"""
         # Use SiglipModel's config for some fields (if specified) instead of those of vision & text components.
         output_attentions = (
-            output_attentions if output_attentions is not None else self.config.output_attentions
+            output_attentions
+            if output_attentions is not None
+            else self.config.output_attentions
         )
         output_hidden_states = (
             output_hidden_states
@@ -1114,7 +1204,9 @@ class SiglipModel(SiglipPreTrainedModel):
         ```"""
         # Use SigLIP model's config for some fields (if specified) instead of those of vision & text components.
         output_attentions = (
-            output_attentions if output_attentions is not None else self.config.output_attentions
+            output_attentions
+            if output_attentions is not None
+            else self.config.output_attentions
         )
         output_hidden_states = (
             output_hidden_states
@@ -1141,15 +1233,19 @@ class SiglipModel(SiglipPreTrainedModel):
         text_embeds = text_outputs.pooler_output
 
         # normalized features
-        image_embeds = image_embeds / image_embeds.norm(p=2, dim=-1, keepdim=True)
+        image_embeds = image_embeds / image_embeds.norm(
+            p=2, dim=-1, keepdim=True
+        )
         text_embeds = text_embeds / text_embeds.norm(p=2, dim=-1, keepdim=True)
 
         # cosine similarity as logits
-        logits_per_text = torch.matmul(text_embeds, image_embeds.t().to(text_embeds.device))
-
-        logit_scale, logit_bias = self.logit_scale.to(text_embeds.device), self.logit_bias.to(
-            text_embeds.device
+        logits_per_text = torch.matmul(
+            text_embeds, image_embeds.t().to(text_embeds.device)
         )
+
+        logit_scale, logit_bias = self.logit_scale.to(
+            text_embeds.device
+        ), self.logit_bias.to(text_embeds.device)
         logits_per_text = logits_per_text * logit_scale.exp() + logit_bias
 
         logits_per_image = logits_per_text.t()
@@ -1157,7 +1253,9 @@ class SiglipModel(SiglipPreTrainedModel):
         loss = None
         if return_loss:
             # Adapted from https://github.com/google-research/big_vision/blob/01edb81a4716f93a48be43b3a4af14e29cdb3a7f/big_vision/trainers/proj/image_text/siglip.py#L287
-            eye = torch.eye(logits_per_text.size(0), device=logits_per_text.device)
+            eye = torch.eye(
+                logits_per_text.size(0), device=logits_per_text.device
+            )
             m1_diag1 = -torch.ones_like(logits_per_text) + 2 * eye
             loglik = torch.nn.functional.logsigmoid(m1_diag1 * logits_per_text)
             nll = -torch.sum(loglik, dim=-1)
@@ -1245,7 +1343,9 @@ class SiglipForImageClassification(SiglipPreTrainedModel):
         Predicted class: LABEL_1
         ```"""
         output_attentions = (
-            output_attentions if output_attentions is not None else self.config.output_attentions
+            output_attentions
+            if output_attentions is not None
+            else self.config.output_attentions
         )
         output_hidden_states = (
             output_hidden_states
@@ -1289,7 +1389,9 @@ class SiglipForImageClassification(SiglipPreTrainedModel):
                     loss = loss_fct(logits, labels)
             elif self.config.problem_type == 'single_label_classification':
                 loss_fct = CrossEntropyLoss()
-                loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+                loss = loss_fct(
+                    logits.view(-1, self.num_labels), labels.view(-1)
+                )
             elif self.config.problem_type == 'multi_label_classification':
                 loss_fct = BCEWithLogitsLoss()
                 loss = loss_fct(logits, labels)

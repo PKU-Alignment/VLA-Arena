@@ -67,7 +67,6 @@ import numpy as np
 import orbax.checkpoint as ocp
 import torch
 from jax.sharding import SingleDeviceSharding
-
 from lerobot.policies.pi0.configuration_pi0 import PI0Config
 from lerobot.policies.pi0.conversion_scripts.conversion_utils import (
     get_gemma_config,
@@ -75,7 +74,12 @@ from lerobot.policies.pi0.conversion_scripts.conversion_utils import (
 )
 from lerobot.policies.pi0.modeling_pi0 import PI0Policy
 
-PRECISIONS = {'bfloat16': torch.bfloat16, 'float32': torch.float32, 'float16': torch.float16}
+
+PRECISIONS = {
+    'bfloat16': torch.bfloat16,
+    'float32': torch.float32,
+    'float16': torch.float16,
+}
 
 
 def slice_paligemma_state_dict(state_dict, config):
@@ -276,7 +280,9 @@ def flatten_for_memory(tree, parent_key=''):
         if isinstance(v, dict):
             out.update(flatten_for_memory(v, new_key))
         else:
-            out[new_key] = np.array(v)  # Ensure conversion to np.array for consistency
+            out[new_key] = np.array(
+                v
+            )  # Ensure conversion to np.array for consistency
     return out
 
 
@@ -336,7 +342,9 @@ def convert_pi0_checkpoint(
     checkpoint_dir: str, precision: str, tokenizer_id: str, output_path: str
 ):
     # Break down orbax ckpts - they are in OCDBT
-    initial_params = slice_initial_orbax_checkpoint(checkpoint_dir=checkpoint_dir)
+    initial_params = slice_initial_orbax_checkpoint(
+        checkpoint_dir=checkpoint_dir
+    )
     # process projection params
     keys = [
         'state_proj',
@@ -356,7 +364,9 @@ def convert_pi0_checkpoint(
         else:
             weight = kernel_params
             bias = bias_params
-        projection_params[f'{key}.weight'] = torch.from_numpy(np.array(weight)).T
+        projection_params[f'{key}.weight'] = torch.from_numpy(
+            np.array(weight)
+        ).T
         projection_params[f'{key}.bias'] = torch.from_numpy(np.array(bias))
 
     # Process PaliGemma weights
@@ -367,7 +377,9 @@ def convert_pi0_checkpoint(
 
     # Process Gemma  weights (at this stage they are unused)
     gemma_config = get_gemma_config(precision)
-    gemma_params = slice_gemma_state_dict(gemma_raw_dictionary, config=gemma_config)
+    gemma_params = slice_gemma_state_dict(
+        gemma_raw_dictionary, config=gemma_config
+    )
 
     # Instantiate model from configs
 
@@ -394,13 +406,19 @@ def convert_pi0_checkpoint(
     # gemma_config=gemma_config, paligemma_config=paligemma_config)
     pi0_model = PI0Policy(pi0_config)
 
-    paligemma_params = update_keys_with_prefix(paligemma_params, 'model.paligemma_with_expert.')
-    gemma_params = update_keys_with_prefix(gemma_params, 'model.paligemma_with_expert.')
+    paligemma_params = update_keys_with_prefix(
+        paligemma_params, 'model.paligemma_with_expert.'
+    )
+    gemma_params = update_keys_with_prefix(
+        gemma_params, 'model.paligemma_with_expert.'
+    )
     projection_params = update_keys_with_prefix(projection_params, 'model.')
 
     # load state dict
     torch_dtype = PRECISIONS[precision]
-    pi0_model.load_state_dict({**paligemma_params, **gemma_params, **projection_params})
+    pi0_model.load_state_dict(
+        {**paligemma_params, **gemma_params, **projection_params}
+    )
     pi0_model = pi0_model.to(torch_dtype)
     # pi0_tokenizer = AutoTokenizer.from_pretrained(tokenizer_id)
 

@@ -25,6 +25,7 @@ import torch
 from PIL import Image
 from transformers import AutoModelForVision2Seq, AutoProcessor
 
+
 # === Verification Arguments
 MODEL_PATH = 'openvla/openvla-7b'
 SYSTEM_PROMPT = (
@@ -43,12 +44,20 @@ def get_openvla_prompt(instruction: str) -> str:
 
 @torch.inference_mode()
 def verify_openvla() -> None:
-    print(f'[*] Verifying OpenVLAForActionPrediction using Model `{MODEL_PATH}`')
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    print(
+        f'[*] Verifying OpenVLAForActionPrediction using Model `{MODEL_PATH}`'
+    )
+    device = (
+        torch.device('cuda')
+        if torch.cuda.is_available()
+        else torch.device('cpu')
+    )
 
     # Load Processor & VLA
     print('[*] Instantiating Processor and Pretrained OpenVLA')
-    processor = AutoProcessor.from_pretrained(MODEL_PATH, trust_remote_code=True)
+    processor = AutoProcessor.from_pretrained(
+        MODEL_PATH, trust_remote_code=True
+    )
 
     # === BFLOAT16 + FLASH-ATTN MODE ===
     print('[*] Loading in BF16 with Flash-Attention Enabled')
@@ -85,7 +94,9 @@ def verify_openvla() -> None:
     print('[*] Iterating with Randomly Generated Images')
     for _ in range(100):
         prompt = get_openvla_prompt(INSTRUCTION)
-        image = Image.fromarray(np.asarray(np.random.rand(256, 256, 3) * 255, dtype=np.uint8))
+        image = Image.fromarray(
+            np.asarray(np.random.rand(256, 256, 3) * 255, dtype=np.uint8)
+        )
 
         # === BFLOAT16 MODE ===
         inputs = processor(prompt, image).to(device, dtype=torch.bfloat16)
@@ -95,8 +106,12 @@ def verify_openvla() -> None:
 
         # Run OpenVLA Inference
         start_time = time.time()
-        action = vla.predict_action(**inputs, unnorm_key='bridge_orig', do_sample=False)
-        print(f'\t=>> Time: {time.time() - start_time:.4f} || Action: {action}')
+        action = vla.predict_action(
+            **inputs, unnorm_key='bridge_orig', do_sample=False
+        )
+        print(
+            f'\t=>> Time: {time.time() - start_time:.4f} || Action: {action}'
+        )
 
 
 if __name__ == '__main__':

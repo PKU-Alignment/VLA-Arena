@@ -34,6 +34,7 @@ It should be able to run without any of LeRobot's dependencies or LeRobot itself
 
 import platform
 
+
 HAS_HF_HUB = True
 HAS_HF_DATASETS = True
 HAS_NP = True
@@ -74,7 +75,9 @@ np_version = np.__version__ if HAS_NP else 'N/A'
 torch_version = torch.__version__ if HAS_TORCH else 'N/A'
 torch_cuda_available = torch.cuda.is_available() if HAS_TORCH else 'N/A'
 cuda_version = (
-    torch._C._cuda_getCompiledVersion() if HAS_TORCH and torch.version.cuda is not None else 'N/A'
+    torch._C._cuda_getCompiledVersion()
+    if HAS_TORCH and torch.version.cuda is not None
+    else 'N/A'
 )
 
 
@@ -93,7 +96,9 @@ def display_sys_info() -> dict:
         'Using GPU in script?': '<fill in>',
         # "Using distributed or parallel set-up in script?": "<fill in>",
     }
-    print('\nCopy-and-paste the text below in your GitHub issue and FILL OUT the last point.\n')
+    print(
+        '\nCopy-and-paste the text below in your GitHub issue and FILL OUT the last point.\n'
+    )
     print(format_dict(info))
     return info
 

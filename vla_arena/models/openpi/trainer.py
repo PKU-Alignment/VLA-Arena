@@ -36,14 +36,13 @@ With YAML config:
 import dataclasses
 import functools
 import logging
-from pathlib import Path
 import platform
 import sys
+from pathlib import Path
 from typing import Any
 
 import etils.epath as epath
 import flax.nnx as nnx
-from flax.training import common_utils
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -51,6 +50,8 @@ import optax
 import tqdm_loggable.auto as tqdm
 import wandb
 import yaml
+from flax.training import common_utils
+
 
 # Add openpi src directory to Python path if needed
 _openpi_src = Path(__file__).parent / "src"
@@ -71,11 +72,19 @@ import openpi.training.weight_loaders as _weight_loaders
 
 def init_logging():
     """Custom logging format for better readability."""
-    level_mapping = {"DEBUG": "D", "INFO": "I", "WARNING": "W", "ERROR": "E", "CRITICAL": "C"}
+    level_mapping = {
+        "DEBUG": "D",
+        "INFO": "I",
+        "WARNING": "W",
+        "ERROR": "E",
+        "CRITICAL": "C",
+    }
 
     class CustomFormatter(logging.Formatter):
         def format(self, record):
-            record.levelname = level_mapping.get(record.levelname, record.levelname)
+            record.levelname = level_mapping.get(
+                record.levelname, record.levelname
+            )
             return super().format(record)
 
     formatter = CustomFormatter(
@@ -92,7 +101,9 @@ def init_logging():
         logger.handlers[0].setFormatter(formatter)
 
 
-def init_wandb(config: _config.TrainConfig, *, resuming: bool, enabled: bool = True):
+def init_wandb(
+    config: _config.TrainConfig, *, resuming: bool, enabled: bool = True
+):
     """Initialize wandb logging."""
     if not enabled:
         wandb.init(mode="disabled")
@@ -100,7 +111,9 @@ def init_wandb(config: _config.TrainConfig, *, resuming: bool, enabled: bool = T
 
     ckpt_dir = config.checkpoint_dir
     if not ckpt_dir.exists():
-        raise FileNotFoundError(f"Checkpoint directory {ckpt_dir} does not exist.")
+        raise FileNotFoundError(
+            f"Checkpoint directory {ckpt_dir} does not exist."
+        )
 
     if resuming:
         run_id = (ckpt_dir / "wandb_id.txt").read_text().strip()
@@ -120,7 +133,10 @@ def _load_weights_and_validate(
     """Loads and validates the weights. Returns a loaded subset of the weights."""
     loaded_params = loader.load(params_shape)
     at.check_pytree_equality(
-        expected=params_shape, got=loaded_params, check_shapes=True, check_dtypes=True
+        expected=params_shape,
+        got=loaded_params,
+        check_shapes=True,
+        check_dtypes=True,
     )
 
     # Remove jax.ShapeDtypeStruct from the loaded params
@@ -137,10 +153,16 @@ def _load_weights_and_validate(
 
 @at.typecheck
 def init_train_state(
-    config: _config.TrainConfig, init_rng: at.KeyArrayLike, mesh: jax.sharding.Mesh, *, resume: bool
+    config: _config.TrainConfig,
+    init_rng: at.KeyArrayLike,
+    mesh: jax.sharding.Mesh,
+    *,
+    resume: bool,
 ) -> tuple[training_utils.TrainState, Any]:
     """Initialize training state."""
-    tx = _optimizer.create_optimizer(config.optimizer, config.lr_schedule, weight_decay_mask=None)
+    tx = _optimizer.create_optimizer(
+        config.optimizer, config.lr_schedule, weight_decay_mask=None
+    )
 
     def init(
         rng: at.KeyArrayLike, partial_params: at.Params | None = None
@@ -159,7 +181,9 @@ def init_train_state(
         params = nnx.state(model)
         # Convert frozen params to bfloat16.
         params = nnx_utils.state_map(
-            params, config.freeze_filter, lambda p: p.replace(p.value.astype(jnp.bfloat16))
+            params,
+            config.freeze_filter,
+            lambda p: p.replace(p.value.astype(jnp.bfloat16)),
         )
 
         return training_utils.TrainState(
@@ -181,7 +205,9 @@ def init_train_state(
     partial_params = _load_weights_and_validate(
         config.weight_loader, train_state_shape.params.to_pure_dict()
     )
-    replicated_sharding = jax.sharding.NamedSharding(mesh, jax.sharding.PartitionSpec())
+    replicated_sharding = jax.sharding.NamedSharding(
+        mesh, jax.sharding.PartitionSpec()
+    )
 
     # Initialize the train state and mix in the partial params.
     train_state = jax.jit(
@@ -212,7 +238,9 @@ def train_step(
         observation: _model.Observation,
         actions: _model.Actions,
     ):
-        chunked_loss = model.compute_loss(rng, observation, actions, train=True)
+        chunked_loss = model.compute_loss(
+            rng, observation, actions, train=True
+        )
         return jnp.mean(chunked_loss)
 
     train_rng = jax.random.fold_in(rng, state.step)
@@ -239,7 +267,8 @@ def train_step(
         new_state = dataclasses.replace(
             new_state,
             ema_params=jax.tree.map(
-                lambda old, new: state.ema_decay * old + (1 - state.ema_decay) * new,
+                lambda old, new: state.ema_decay * old
+                + (1 - state.ema_decay) * new,
                 state.ema_params,
                 new_params,
             ),
@@ -250,7 +279,11 @@ def train_step(
         model,
         nnx.All(
             nnx.Param,
-            nnx.Not(nnx_utils.PathRegex(".*/(bias|scale|pos_embedding|input_embedding)")),
+            nnx.Not(
+                nnx_utils.PathRegex(
+                    ".*/(bias|scale|pos_embedding|input_embedding)"
+                )
+            ),
             lambda _, x: x.value.ndim > 1,
         ),
     )
@@ -268,7 +301,9 @@ def train_loop(config: _config.TrainConfig):
     is_main = jax.process_index() == 0
 
     if is_main:
-        logging.info(f"Running on: {platform.node()} | world_size={jax.process_count()}")
+        logging.info(
+            f"Running on: {platform.node()} | world_size={jax.process_count()}"
+        )
         logging.info(
             f"Training config: batch_size={config.batch_size}, num_train_steps={config.num_train_steps}"
         )
@@ -281,14 +316,21 @@ def train_loop(config: _config.TrainConfig):
             f"Batch size {config.batch_size} must be divisible by the number of devices {jax.device_count()}."
         )
 
-    jax.config.update("jax_compilation_cache_dir", str(epath.Path("~/.cache/jax").expanduser()))
+    jax.config.update(
+        "jax_compilation_cache_dir",
+        str(epath.Path("~/.cache/jax").expanduser()),
+    )
 
     rng = jax.random.key(config.seed)
     train_rng, init_rng = jax.random.split(rng)
 
     mesh = sharding.make_mesh(config.fsdp_devices)
-    data_sharding = jax.sharding.NamedSharding(mesh, jax.sharding.PartitionSpec(sharding.DATA_AXIS))
-    replicated_sharding = jax.sharding.NamedSharding(mesh, jax.sharding.PartitionSpec())
+    data_sharding = jax.sharding.NamedSharding(
+        mesh, jax.sharding.PartitionSpec(sharding.DATA_AXIS)
+    )
+    replicated_sharding = jax.sharding.NamedSharding(
+        mesh, jax.sharding.PartitionSpec()
+    )
 
     checkpoint_manager, resuming = _checkpoints.initialize_checkpoint_dir(
         config.checkpoint_dir,
@@ -310,19 +352,26 @@ def train_loop(config: _config.TrainConfig):
     batch = next(data_iter)
 
     if is_main:
-        logging.info(f"Initialized data loader:\n{training_utils.array_tree_to_info(batch)}")
+        logging.info(
+            f"Initialized data loader:\n{training_utils.array_tree_to_info(batch)}"
+        )
 
     # Log images from first batch to sanity check.
     if is_main and config.wandb_enabled and not resuming:
         images_to_log = [
             wandb.Image(
-                np.concatenate([np.array(img[i]) for img in batch[0].images.values()], axis=1)
+                np.concatenate(
+                    [np.array(img[i]) for img in batch[0].images.values()],
+                    axis=1,
+                )
             )
             for i in range(min(5, len(next(iter(batch[0].images.values())))))
         ]
         wandb.log({"camera_views": images_to_log}, step=0)
 
-    train_state, train_state_sharding = init_train_state(config, init_rng, mesh, resume=resuming)
+    train_state, train_state_sharding = init_train_state(
+        config, init_rng, mesh, resume=resuming
+    )
     jax.block_until_ready(train_state)
 
     if is_main:
@@ -331,11 +380,17 @@ def train_loop(config: _config.TrainConfig):
         )
 
     if resuming:
-        train_state = _checkpoints.restore_state(checkpoint_manager, train_state, data_loader)
+        train_state = _checkpoints.restore_state(
+            checkpoint_manager, train_state, data_loader
+        )
 
     ptrain_step = jax.jit(
         functools.partial(train_step, config),
-        in_shardings=(replicated_sharding, train_state_sharding, data_sharding),
+        in_shardings=(
+            replicated_sharding,
+            train_state_sharding,
+            data_sharding,
+        ),
         out_shardings=(train_state_sharding, replicated_sharding),
         donate_argnums=(1,),
     )
@@ -356,7 +411,9 @@ def train_loop(config: _config.TrainConfig):
     start_time = None
     for step in range(start_step, config.num_train_steps):
         if step == start_step:
-            start_time = jax.device_get(jax.block_until_ready(jax.numpy.array(jax.device_count())))
+            start_time = jax.device_get(
+                jax.block_until_ready(jax.numpy.array(jax.device_count()))
+            )
             if is_main:
                 import time
 
@@ -372,8 +429,12 @@ def train_loop(config: _config.TrainConfig):
             elapsed = time.time() - start_time if start_time else 0
 
             stacked_infos = common_utils.stack_forest(infos)
-            reduced_info = jax.device_get(jax.tree.map(jnp.mean, stacked_infos))
-            info_str = ", ".join(f"{k}={v:.4f}" for k, v in reduced_info.items())
+            reduced_info = jax.device_get(
+                jax.tree.map(jnp.mean, stacked_infos)
+            )
+            info_str = ", ".join(
+                f"{k}={v:.4f}" for k, v in reduced_info.items()
+            )
 
             logging.info(f"step={step} {info_str} time={elapsed:.1f}s")
 
@@ -382,7 +443,9 @@ def train_loop(config: _config.TrainConfig):
                 log_payload = dict(reduced_info)
                 log_payload["step"] = step
                 log_payload["time_per_step"] = (
-                    elapsed / config.log_interval if config.log_interval > 0 else 0
+                    elapsed / config.log_interval
+                    if config.log_interval > 0
+                    else 0
                 )
                 wandb.log(log_payload, step=step)
 
@@ -396,7 +459,9 @@ def train_loop(config: _config.TrainConfig):
             step % config.save_interval == 0 and step > start_step
         ) or step == config.num_train_steps - 1:
             if is_main:
-                _checkpoints.save_state(checkpoint_manager, train_state, data_loader, step)
+                _checkpoints.save_state(
+                    checkpoint_manager, train_state, data_loader, step
+                )
                 logging.info(f"Saved checkpoint at step {step}")
 
         # Update progress bar
@@ -425,7 +490,9 @@ def train_loop(config: _config.TrainConfig):
     checkpoint_manager.wait_until_finished()
 
 
-def main(config: _config.TrainConfig | str | Path | None = None, **override_kwargs):
+def main(
+    config: _config.TrainConfig | str | Path | None = None, **override_kwargs
+):
     """
     Main entry point for training.
 
@@ -471,7 +538,9 @@ def main(config: _config.TrainConfig | str | Path | None = None, **override_kwar
                         args.extend(dict_to_args(full_key, value))
                     elif isinstance(value, (list, tuple)):
                         # Handle lists/tuples
-                        args.append(f"--{full_key}={','.join(str(v) for v in value)}")
+                        args.append(
+                            f"--{full_key}={','.join(str(v) for v in value)}"
+                        )
                     elif isinstance(value, bool):
                         # Handle booleans: only add flag if True
                         # For False, skip (use default) since tyro doesn't accept --key=false
@@ -499,7 +568,9 @@ def main(config: _config.TrainConfig | str | Path | None = None, **override_kwar
                 sys.argv = original_argv
         else:
             # Fallback: use CLI if yaml doesn't have expected structure
-            print("Warning: Config file doesn't have expected structure, falling back to CLI")
+            print(
+                "Warning: Config file doesn't have expected structure, falling back to CLI"
+            )
             cfg = _config.cli()
 
         print(
@@ -524,7 +595,9 @@ if __name__ == "__main__":
 
     # Use argparse to parse --config parameter passed by Launcher
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, default=None, help="Path to the config yaml file")
+    parser.add_argument(
+        "--config", type=str, default=None, help="Path to the config yaml file"
+    )
     # This allows compatibility with other possible parameters (though currently only config is needed)
     args, unknown = parser.parse_known_args()
 

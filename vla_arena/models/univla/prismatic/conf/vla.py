@@ -148,7 +148,9 @@ class VLARegistry(Enum):
     DINOSIGLIP_224PX_MX_HUMAN = Exp_DinoSigLIP_224px_Human
 
     # Pre-training on full dataset
-    DINOSIGLIP_224PX_MX_OXE_MAGIC_SOUP_PLUS = Exp_DinoSigLIP_224px_OXE_Magic_Soup_Plus
+    DINOSIGLIP_224PX_MX_OXE_MAGIC_SOUP_PLUS = (
+        Exp_DinoSigLIP_224px_OXE_Magic_Soup_Plus
+    )
 
     @property
     def vla_id(self) -> str:

@@ -33,13 +33,27 @@ from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
     apply_activation_checkpointing,
     checkpoint_wrapper,
 )
-from torch.distributed.fsdp import FullStateDictConfig, MixedPrecision, ShardingStrategy, StateDictType
+from torch.distributed.fsdp import (
+    FullStateDictConfig,
+)
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+from torch.distributed.fsdp import (
+    MixedPrecision,
+    ShardingStrategy,
+    StateDictType,
+)
 from torch.optim import AdamW
-from transformers.optimization import get_constant_schedule, get_cosine_schedule_with_warmup
+from transformers.optimization import (
+    get_constant_schedule,
+    get_cosine_schedule_with_warmup,
+)
+
 from vla_arena.models.univla.prismatic.models.vlms import PrismaticVLM
 from vla_arena.models.univla.prismatic.overwatch import initialize_overwatch
-from vla_arena.models.univla.prismatic.training.strategies.base_strategy import TrainingStrategy
+from vla_arena.models.univla.prismatic.training.strategies.base_strategy import (
+    TrainingStrategy,
+)
+
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)
@@ -94,13 +108,17 @@ class FSDPStrategy(TrainingStrategy):
         elif sharding_strategy == 'full-shard':
             self.fsdp_sharding_strategy = ShardingStrategy.HYBRID_SHARD
         else:
-            raise ValueError(f'FSDP Sharding Strategy {sharding_strategy} is not supported!')
+            raise ValueError(
+                f'FSDP Sharding Strategy {sharding_strategy} is not supported!'
+            )
 
         assert (
             state_dict_type == StateDictType.FULL_STATE_DICT
         ), 'Sharded state saving is not yet implemented!'
         self.fsdp_state_dict_type = state_dict_type
-        self.fsdp_save_policy = FullStateDictConfig(offload_to_cpu=True, rank0_only=True)
+        self.fsdp_save_policy = FullStateDictConfig(
+            offload_to_cpu=True, rank0_only=True
+        )
 
     def save_checkpoint(
         self,
@@ -116,25 +134,34 @@ class FSDPStrategy(TrainingStrategy):
         ), 'FSDPStrategy.save_checkpoint assumes VLM is already wrapped in FSDP!'
 
         # Summon Full State Dictionary =>> Reconstitute from Shards
-        with FSDP.state_dict_type(self.vlm, self.fsdp_state_dict_type, self.fsdp_save_policy):
+        with FSDP.state_dict_type(
+            self.vlm, self.fsdp_state_dict_type, self.fsdp_save_policy
+        ):
             full_vlm_state_dict = self.vlm.state_dict()
             model_state_dicts = {
                 mkey: OrderedDict()
-                for mkey in (self.trainable_module_keys if only_trainable else self.all_module_keys)
+                for mkey in (
+                    self.trainable_module_keys
+                    if only_trainable
+                    else self.all_module_keys
+                )
             }
 
             # Iterate through `full_vlm_state_dict` and split `mkey.{full_dotted_path}` -> `mkey: {full_dotted_path}`
             for key, param in full_vlm_state_dict.items():
                 for mkey in model_state_dicts:
                     if key.startswith(mprefix := f'{mkey}.'):
-                        model_state_dicts[mkey][key.removeprefix(mprefix)] = param
+                        model_state_dicts[mkey][
+                            key.removeprefix(mprefix)
+                        ] = param
 
             # Save on rank zero *only*
             if overwatch.is_rank_zero():
                 checkpoint_dir = run_dir / 'checkpoints'
                 if train_loss is None:
                     checkpoint_path = (
-                        checkpoint_dir / f'step-{global_step:06d}-epoch-{epoch:02d}-loss=inf.pt'
+                        checkpoint_dir
+                        / f'step-{global_step:06d}-epoch-{epoch:02d}-loss=inf.pt'
                     )
                 else:
                     checkpoint_path = (
@@ -153,11 +180,16 @@ class FSDPStrategy(TrainingStrategy):
         vlm_fsdp_wrapping_policy = self.vlm.get_fsdp_wrapping_policy()
 
         # Assemble the Default FSDP Mixed Precision Policy
-        if self.enable_mixed_precision_training and self.mixed_precision_dtype == torch.bfloat16:
+        if (
+            self.enable_mixed_precision_training
+            and self.mixed_precision_dtype == torch.bfloat16
+        ):
             # MixedPrecision `param_dtype` specifies *compute* dtype (for forward/backward only)
             #   => Reference: https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.MixedPrecision
             reduce_buffer_dtype = (
-                torch.bfloat16 if not self.reduce_in_full_precision else torch.float32
+                torch.bfloat16
+                if not self.reduce_in_full_precision
+                else torch.float32
             )
             fsdp_precision_policy = MixedPrecision(
                 param_dtype=torch.bfloat16,
@@ -166,14 +198,24 @@ class FSDPStrategy(TrainingStrategy):
             )
 
             # When running FSDP with a frozen vision backbone --> move to half precision!
-            if self.stage not in {'full-finetune', 'vla-full-train', 'vla-sandwich-train'}:
-                overwatch.info('Casting Vision Backbone to *Half Precision* via `.to(dtype=...)`')
-                self.vlm.vision_backbone.to(dtype=self.vlm.vision_backbone.half_precision_dtype)
+            if self.stage not in {
+                'full-finetune',
+                'vla-full-train',
+                'vla-sandwich-train',
+            }:
+                overwatch.info(
+                    'Casting Vision Backbone to *Half Precision* via `.to(dtype=...)`'
+                )
+                self.vlm.vision_backbone.to(
+                    dtype=self.vlm.vision_backbone.half_precision_dtype
+                )
 
         else:
             # If we're not using mixed precision, everything is in default full precision!
             fsdp_precision_policy = MixedPrecision(
-                param_dtype=torch.float32, reduce_dtype=torch.float32, buffer_dtype=torch.float32
+                param_dtype=torch.float32,
+                reduce_dtype=torch.float32,
+                buffer_dtype=torch.float32,
             )
 
         # <FSDP> => note that FSDP will automatically take care of device placement (similar to `autocast`)
@@ -203,7 +245,9 @@ class FSDPStrategy(TrainingStrategy):
 
             # Note that the terms "activation checkpointing" and "gradient checkpointing" are synonymous!
             apply_activation_checkpointing(
-                self.vlm, checkpoint_wrapper_fn=non_reentrant_wrapper, check_fn=check_fn
+                self.vlm,
+                checkpoint_wrapper_fn=non_reentrant_wrapper,
+                check_fn=check_fn,
             )
 
         # Barrier =>> Sharding takes a minute?
@@ -212,10 +256,13 @@ class FSDPStrategy(TrainingStrategy):
         # Create Optimizer and LR Scheduler =>> note that most of the LR Schedulers we use require `max_steps/epochs`
         #   => Optimizer should only operate on parameters that are *unfrozen* / trainable!
         n_train_examples = (
-            math.ceil(n_train_examples / self.global_batch_size) * self.global_batch_size
+            math.ceil(n_train_examples / self.global_batch_size)
+            * self.global_batch_size
         )
         if self.max_steps is None:
-            num_training_steps = (n_train_examples * self.epochs) // self.global_batch_size
+            num_training_steps = (
+                n_train_examples * self.epochs
+            ) // self.global_batch_size
         else:
             num_training_steps = self.max_steps
 

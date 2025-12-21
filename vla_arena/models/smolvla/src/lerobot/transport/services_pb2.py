@@ -25,7 +25,12 @@ from google.protobuf.internal import builder as _builder
 
 
 _runtime_version.ValidateProtobufRuntimeVersion(
-    _runtime_version.Domain.PUBLIC, 6, 31, 0, '', 'lerobot/transport/services.proto'
+    _runtime_version.Domain.PUBLIC,
+    6,
+    31,
+    0,
+    '',
+    'lerobot/transport/services.proto',
 )
 # @@protoc_insertion_point(imports)
 
@@ -38,7 +43,9 @@ DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
-_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'lerobot.transport.services_pb2', _globals)
+_builder.BuildTopDescriptorsAndMessages(
+    DESCRIPTOR, 'lerobot.transport.services_pb2', _globals
+)
 if not _descriptor._USE_C_DESCRIPTORS:
     DESCRIPTOR._loaded_options = None
     _globals['_TRANSFERSTATE']._serialized_start = 431

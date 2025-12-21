@@ -25,19 +25,33 @@ from tqdm import tqdm
 
 def parse_arguments():
     """Parse command line arguments for the Ego4D data processing script."""
-    parser = argparse.ArgumentParser(description='Process Ego4D data to create fake episodes.')
+    parser = argparse.ArgumentParser(
+        description='Process Ego4D data to create fake episodes.'
+    )
 
     parser.add_argument(
-        '--source_dir', type=str, required=True, help='Directory containing the source video clips'
+        '--source_dir',
+        type=str,
+        required=True,
+        help='Directory containing the source video clips',
     )
     parser.add_argument(
-        '--target_dir', type=str, required=True, help='Directory to save the processed episodes'
+        '--target_dir',
+        type=str,
+        required=True,
+        help='Directory to save the processed episodes',
     )
     parser.add_argument(
-        '--annotation_file', type=str, required=True, help='Path to the annotation JSON file'
+        '--annotation_file',
+        type=str,
+        required=True,
+        help='Path to the annotation JSON file',
     )
     parser.add_argument(
-        '--processes', type=int, default=96, help='Number of worker processes to use (default: 96)'
+        '--processes',
+        type=int,
+        default=96,
+        help='Number of worker processes to use (default: 96)',
     )
     parser.add_argument(
         '--target_size',
@@ -47,7 +61,9 @@ def parse_arguments():
         help='Target size for resizing images as "height width" (default: 224 224)',
     )
     parser.add_argument(
-        '--verify', action='store_true', help='Verify saved episodes by loading them after creation'
+        '--verify',
+        action='store_true',
+        help='Verify saved episodes by loading them after creation',
     )
 
     return parser.parse_args()
@@ -79,7 +95,9 @@ def center_crop_and_resize(image, target_size=(224, 224)):
         start_y = (height - crop_size) // 2
 
     # Perform center crop
-    cropped_image = image[start_y : start_y + crop_size, start_x : start_x + crop_size, :]
+    cropped_image = image[
+        start_y : start_y + crop_size, start_x : start_x + crop_size, :
+    ]
 
     # Convert to PIL Image for high-quality resizing
     pil_image = Image.fromarray(cropped_image)
@@ -88,7 +106,9 @@ def center_crop_and_resize(image, target_size=(224, 224)):
     return np.array(resized_image)
 
 
-def create_fake_episode(clip_dir, save_dir, annotation, target_size, verify=False):
+def create_fake_episode(
+    clip_dir, save_dir, annotation, target_size, verify=False
+):
     """
     Create a fake episode from a video clip by processing all frames.
 
@@ -110,7 +130,10 @@ def create_fake_episode(clip_dir, save_dir, annotation, target_size, verify=Fals
     caption = None
     episode_id = None
     for anno in annotation:
-        if anno['video_name'] == video_name and anno['action_name'] == clip_name:
+        if (
+            anno['video_name'] == video_name
+            and anno['action_name'] == clip_name
+        ):
             caption = anno['language'][5:]  # Remove first 5 characters '#C C '
             episode_id = anno['id']
             break
@@ -132,7 +155,9 @@ def create_fake_episode(clip_dir, save_dir, annotation, target_size, verify=Fals
             episode_data.append(
                 {
                     'image': np.asarray(frame, dtype=np.uint8),
-                    'wrist_image': np.asarray(np.zeros([1, 1, 1]), dtype=np.uint8),
+                    'wrist_image': np.asarray(
+                        np.zeros([1, 1, 1]), dtype=np.uint8
+                    ),
                     'state': np.asarray(np.zeros(7), dtype=np.float32),
                     'action': np.asarray(np.zeros(7), dtype=np.float32),
                     'language_instruction': caption,
@@ -155,7 +180,9 @@ def create_fake_episode(clip_dir, save_dir, annotation, target_size, verify=Fals
             print(f'Failed to verify saved episode {episode_id}: {e!s}')
 
 
-def process_video(video_dir, target_dir, annotation, target_size, verify=False):
+def process_video(
+    video_dir, target_dir, annotation, target_size, verify=False
+):
     """
     Process all clips within a single video directory.
 
@@ -199,7 +226,9 @@ def main():
         if os.path.isdir(os.path.join(args.source_dir, d))
     ]
 
-    print(f'Processing {len(video_dirs)} videos using {args.processes} workers...')
+    print(
+        f'Processing {len(video_dirs)} videos using {args.processes} workers...'
+    )
 
     # Process videos in parallel
     with Pool(processes=args.processes) as pool:

@@ -12,21 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections.abc import Callable
 import dataclasses
 import functools
 import inspect
 import re
+from collections.abc import Callable
 from typing import Any, ParamSpec, TypeVar
 
 import flax.nnx as nnx
 import jax
 
+
 P = ParamSpec("P")
 R = TypeVar("R")
 
 
-def module_jit(meth: Callable[P, R], *jit_args, **jit_kwargs) -> Callable[P, R]:
+def module_jit(
+    meth: Callable[P, R], *jit_args, **jit_kwargs
+) -> Callable[P, R]:
     """A higher-order function to JIT-compile `nnx.Module` methods, freezing the module's state in the process.
 
     Why not `nnx.jit`? For some reason, naively applying `nnx.jit` to `nnx.Module` methods, bound or unbound, uses much
@@ -40,7 +43,9 @@ def module_jit(meth: Callable[P, R], *jit_args, **jit_kwargs) -> Callable[P, R]:
     after the method call completes.
     """
     if not (inspect.ismethod(meth) and isinstance(meth.__self__, nnx.Module)):
-        raise ValueError("module_jit must only be used on bound methods of nnx.Modules.")
+        raise ValueError(
+            "module_jit must only be used on bound methods of nnx.Modules."
+        )
 
     graphdef, state = nnx.split(meth.__self__)
 

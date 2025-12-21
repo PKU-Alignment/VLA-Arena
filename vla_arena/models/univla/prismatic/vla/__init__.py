@@ -12,4 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .materialize import get_latent_vla_dataset_and_collator, get_vla_dataset_and_collator
+from .materialize import (
+    get_latent_vla_dataset_and_collator,
+    get_vla_dataset_and_collator,
+)

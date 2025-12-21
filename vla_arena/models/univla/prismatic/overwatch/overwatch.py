@@ -26,6 +26,7 @@ from contextlib import nullcontext
 from logging import LoggerAdapter
 from typing import Any, ClassVar
 
+
 # Overwatch Default Format String
 RICH_FORMATTER, DATEFMT = '| >> %(message)s', '%m/%d [%H:%M:%S]'
 
@@ -33,7 +34,9 @@ RICH_FORMATTER, DATEFMT = '| >> %(message)s', '%m/%d [%H:%M:%S]'
 LOG_CONFIG = {
     'version': 1,
     'disable_existing_loggers': True,
-    'formatters': {'simple-console': {'format': RICH_FORMATTER, 'datefmt': DATEFMT}},
+    'formatters': {
+        'simple-console': {'format': RICH_FORMATTER, 'datefmt': DATEFMT}
+    },
     'handlers': {
         'console': {
             'class': 'rich.logging.RichHandler',
@@ -85,7 +88,9 @@ class DistributedOverwatch:
 
         # Logging Defaults =>> only Log `INFO` on Main Process, `ERROR` on others!
         self.logger.setLevel(
-            logging.INFO if self.distributed_state.is_main_process else logging.ERROR
+            logging.INFO
+            if self.distributed_state.is_main_process
+            else logging.ERROR
         )
 
     @property

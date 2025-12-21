@@ -24,19 +24,27 @@ from dataclasses import dataclass
 import torch
 from torch.nn.utils.rnn import pad_sequence
 
+
 # HuggingFace Default / LLaMa-2 IGNORE_INDEX (for labels)
 IGNORE_INDEX = -100
 
 
 def tree_map(fn: Callable, tree: dict) -> dict:
     """Maps a function over a nested dictionary."""
-    return {k: tree_map(fn, v) if isinstance(v, dict) else fn(v) for k, v in tree.items()}
+    return {
+        k: tree_map(fn, v) if isinstance(v, dict) else fn(v)
+        for k, v in tree.items()
+    }
 
 
 def tree_map_with_key(fn: Callable, tree: dict, keys: Sequence = ()) -> dict:
     """Maps a function over a nested dictionary."""
     return {
-        k: tree_map_with_key(fn, v, (*keys, k)) if isinstance(v, dict) else fn((*keys, k), v)
+        k: (
+            tree_map_with_key(fn, v, (*keys, k))
+            if isinstance(v, dict)
+            else fn((*keys, k), v)
+        )
         for k, v in tree.items()
     }
 
@@ -54,16 +62,23 @@ class PaddedCollatorForLanguageModeling:
             self.default_image_resolution, dtype=self.pixel_values_dtype
         )
 
-    def __call__(self, instances: Sequence[dict[str, torch.Tensor]]) -> dict[str, torch.Tensor]:
+    def __call__(
+        self, instances: Sequence[dict[str, torch.Tensor]]
+    ) -> dict[str, torch.Tensor]:
         input_ids, labels = tuple(
-            [instance[key] for instance in instances] for key in ('input_ids', 'labels')
+            [instance[key] for instance in instances]
+            for key in ('input_ids', 'labels')
         )
         pixel_values = [instance['pixel_values'] for instance in instances]
 
         # For now, we only support Tokenizers with `padding_side = "right"` during Training (but plan to extend!)
         #   => Handle padding via RNN Utils => `pad_sequence`
-        input_ids = pad_sequence(input_ids, batch_first=True, padding_value=self.pad_token_id)
-        labels = pad_sequence(labels, batch_first=True, padding_value=IGNORE_INDEX)
+        input_ids = pad_sequence(
+            input_ids, batch_first=True, padding_value=self.pad_token_id
+        )
+        labels = pad_sequence(
+            labels, batch_first=True, padding_value=IGNORE_INDEX
+        )
 
         # Truncate (if necessary)
         input_ids, labels = (
@@ -78,17 +93,29 @@ class PaddedCollatorForLanguageModeling:
 
         # Some examples are "language-only" --> build a Tensor of `multimodal_indices` that we can slice into easily
         multimodal_indices = torch.tensor(
-            [idx for idx in range(len(pixel_values)) if pixel_values[idx] is not None],
+            [
+                idx
+                for idx in range(len(pixel_values))
+                if pixel_values[idx] is not None
+            ],
             dtype=torch.long,
         )
 
         # Stack all `pixel_values` --> depending on type (torch.Tensor, or Dict[str, torch.Tensor]) & presence of None
         if len(multimodal_indices) == 0:
-            pixel_values = torch.stack([self.dummy_pixel_values for _ in range(len(input_ids))])
-        elif isinstance(pv_example := pixel_values[multimodal_indices[0]], torch.Tensor):
+            pixel_values = torch.stack(
+                [self.dummy_pixel_values for _ in range(len(input_ids))]
+            )
+        elif isinstance(
+            pv_example := pixel_values[multimodal_indices[0]], torch.Tensor
+        ):
             pixel_values = torch.stack(
                 [
-                    pixel_values[idx] if idx in multimodal_indices else self.dummy_pixel_values
+                    (
+                        pixel_values[idx]
+                        if idx in multimodal_indices
+                        else self.dummy_pixel_values
+                    )
                     for idx in range(len(input_ids))
                 ]
             )
@@ -107,7 +134,9 @@ class PaddedCollatorForLanguageModeling:
                 for k in pv_example
             }
         else:
-            raise ValueError(f'Unsupported `pixel_values` type = {type(pixel_values)}')
+            raise ValueError(
+                f'Unsupported `pixel_values` type = {type(pixel_values)}'
+            )
 
         return dict(
             pixel_values=pixel_values,
@@ -125,21 +154,32 @@ class PaddedCollatorForActionPrediction:
     padding_side: str = 'right'
     pixel_values_dtype: torch.dtype = torch.float32
 
-    def __call__(self, instances: Sequence[dict[str, torch.Tensor]]) -> dict[str, torch.Tensor]:
+    def __call__(
+        self, instances: Sequence[dict[str, torch.Tensor]]
+    ) -> dict[str, torch.Tensor]:
         input_ids, labels = tuple(
-            [instance[key] for instance in instances] for key in ('input_ids', 'labels')
+            [instance[key] for instance in instances]
+            for key in ('input_ids', 'labels')
         )
         pixel_values = [instance['pixel_values'] for instance in instances]
         if 'dataset_name' in instances[0]:
-            dataset_names = [instance['dataset_name'] for instance in instances]
+            dataset_names = [
+                instance['dataset_name'] for instance in instances
+            ]
         else:
             dataset_names = None
 
         # For now, we only support Tokenizers with `padding_side = "right"` during training
         #   => Handle padding via RNN Utils => `pad_sequence`
-        assert self.padding_side == 'right', f'Invalid Tokenizer `{self.padding_side = }`'
-        input_ids = pad_sequence(input_ids, batch_first=True, padding_value=self.pad_token_id)
-        labels = pad_sequence(labels, batch_first=True, padding_value=IGNORE_INDEX)
+        assert (
+            self.padding_side == 'right'
+        ), f'Invalid Tokenizer `{self.padding_side = }`'
+        input_ids = pad_sequence(
+            input_ids, batch_first=True, padding_value=self.pad_token_id
+        )
+        labels = pad_sequence(
+            labels, batch_first=True, padding_value=IGNORE_INDEX
+        )
 
         # Truncate (if necessary)
         input_ids, labels = (
@@ -160,11 +200,15 @@ class PaddedCollatorForActionPrediction:
             pixel_values = torch.stack(pixel_values)
         elif isinstance(pixel_values[0], dict):
             pixel_values = {
-                k: torch.stack([pixel_values[idx][k] for idx in range(len(input_ids))])
+                k: torch.stack(
+                    [pixel_values[idx][k] for idx in range(len(input_ids))]
+                )
                 for k in pixel_values[0]
             }
         else:
-            raise ValueError(f'Unsupported `pixel_values` type = {type(pixel_values)}')
+            raise ValueError(
+                f'Unsupported `pixel_values` type = {type(pixel_values)}'
+            )
 
         output = dict(
             pixel_values=pixel_values,

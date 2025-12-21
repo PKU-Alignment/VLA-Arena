@@ -29,7 +29,9 @@ from tensorflow_datasets.core import (
 )
 from tensorflow_datasets.core import split_builder as split_builder_lib
 from tensorflow_datasets.core import splits as splits_lib
-from tensorflow_datasets.core import utils
+from tensorflow_datasets.core import (
+    utils,
+)
 from tensorflow_datasets.core import writer as writer_lib
 
 
@@ -46,12 +48,17 @@ class MultiThreadedDatasetBuilder(tfds.core.GeneratorBasedBuilder):
     MAX_PATHS_IN_MEMORY = 100  # number of paths converted & stored in memory before writing to disk
     # -> the higher the faster / more parallel conversion, adjust based on avilable RAM
     # note that one path may yield multiple episodes and adjust accordingly
-    PARSE_FCN = None  # needs to be filled with path-to-record-episode parse function
+    PARSE_FCN = (
+        None  # needs to be filled with path-to-record-episode parse function
+    )
 
     def _split_generators(self, dl_manager: tfds.download.DownloadManager):
         """Define data splits."""
         split_paths = self._split_paths()
-        return {split: type(self).PARSE_FCN(paths=split_paths[split]) for split in split_paths}
+        return {
+            split: type(self).PARSE_FCN(paths=split_paths[split])
+            for split in split_paths
+        }
 
     def _generate_examples(self):
         pass  # this is implemented in global method to enable multiprocessing
@@ -86,7 +93,9 @@ class MultiThreadedDatasetBuilder(tfds.core.GeneratorBasedBuilder):
         dataset_builder._check_split_names(split_generators.keys())
 
         # Start generating data for all splits
-        path_suffix = file_adapters.ADAPTER_FOR_FORMAT[self.info.file_format].FILE_SUFFIX
+        path_suffix = file_adapters.ADAPTER_FOR_FORMAT[
+            self.info.file_format
+        ].FILE_SUFFIX
 
         split_info_futures = []
         for split_name, generator in utils.tqdm(
@@ -127,7 +136,9 @@ class _SplitInfoFuture:
         return self._callback()
 
 
-def parse_examples_from_generator(paths, fcn, split_name, total_num_examples, features, serializer):
+def parse_examples_from_generator(
+    paths, fcn, split_name, total_num_examples, features, serializer
+):
     generator = fcn(paths)
     outputs = []
     for sample in utils.tqdm(
@@ -151,7 +162,13 @@ def parse_examples_from_generator(paths, fcn, split_name, total_num_examples, fe
 
 class ParallelSplitBuilder(split_builder_lib.SplitBuilder):
     def __init__(
-        self, *args, split_paths, parse_function, n_workers, max_paths_in_memory, **kwargs,
+        self,
+        *args,
+        split_paths,
+        parse_function,
+        n_workers,
+        max_paths_in_memory,
+        **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self._split_paths = split_paths
@@ -191,7 +208,9 @@ class ParallelSplitBuilder(split_builder_lib.SplitBuilder):
         del generator  # use parallel generators instead
         paths = self._split_paths[split_name]
         path_lists = chunk_max(
-            paths, self._n_workers, self._max_paths_in_memory,
+            paths,
+            self._n_workers,
+            self._max_paths_in_memory,
         )  # generate N file lists
         print(f'Generating with {self._n_workers} workers!')
         pool = Pool(processes=self._n_workers)

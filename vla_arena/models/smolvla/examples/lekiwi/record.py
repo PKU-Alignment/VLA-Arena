@@ -23,6 +23,7 @@ from lerobot.utils.control_utils import init_keyboard_listener
 from lerobot.utils.utils import log_say
 from lerobot.utils.visualization_utils import _init_rerun
 
+
 NUM_EPISODES = 3
 FPS = 30
 EPISODE_TIME_SEC = 30
@@ -42,7 +43,9 @@ keyboard = KeyboardTeleop(keyboard_config)
 
 # Configure the dataset features
 action_features = hw_to_dataset_features(robot.action_features, 'action')
-obs_features = hw_to_dataset_features(robot.observation_features, 'observation')
+obs_features = hw_to_dataset_features(
+    robot.observation_features, 'observation'
+)
 dataset_features = {**action_features, **obs_features}
 
 # Create the dataset
@@ -64,7 +67,11 @@ _init_rerun(session_name='lekiwi_record')
 
 listener, events = init_keyboard_listener()
 
-if not robot.is_connected or not leader_arm.is_connected or not keyboard.is_connected:
+if (
+    not robot.is_connected
+    or not leader_arm.is_connected
+    or not keyboard.is_connected
+):
     raise ValueError('Robot, leader arm of keyboard is not connected!')
 
 recorded_episodes = 0

@@ -23,15 +23,18 @@ import openpi.models.tokenizer as _tokenizer
 import openpi.policies.droid_policy as droid_policy
 import openpi.transforms as _transforms
 
+
 ModelType: TypeAlias = _model.ModelType
 
 
 def get_roboarena_configs():
     # Import here to avoid circular imports.
-    from openpi.training.config import AssetsConfig
-    from openpi.training.config import DataConfig
-    from openpi.training.config import SimpleDataConfig
-    from openpi.training.config import TrainConfig
+    from openpi.training.config import (
+        AssetsConfig,
+        DataConfig,
+        SimpleDataConfig,
+        TrainConfig,
+    )
 
     return [
         #
@@ -51,7 +54,8 @@ def get_roboarena_configs():
                 data_transforms=lambda model: _transforms.Group(
                     inputs=[
                         droid_policy.DroidInputs(
-                            action_dim=model.action_dim, model_type=ModelType.PI0_FAST
+                            action_dim=model.action_dim,
+                            model_type=ModelType.PI0_FAST,
                         )
                     ],
                     outputs=[droid_policy.DroidOutputs()],
@@ -70,7 +74,8 @@ def get_roboarena_configs():
                 data_transforms=lambda model: _transforms.Group(
                     inputs=[
                         droid_policy.DroidInputs(
-                            action_dim=model.action_dim, model_type=ModelType.PI0_FAST
+                            action_dim=model.action_dim,
+                            model_type=ModelType.PI0_FAST,
                         )
                     ],
                     outputs=[droid_policy.DroidOutputs()],
@@ -87,14 +92,17 @@ def get_roboarena_configs():
                 action_dim=8,
                 action_horizon=15,
                 fast_model_tokenizer=_tokenizer.FASTTokenizer,
-                fast_model_tokenizer_kwargs={"fast_tokenizer_path": "KarlP/fast_droid_specialist"},
+                fast_model_tokenizer_kwargs={
+                    "fast_tokenizer_path": "KarlP/fast_droid_specialist"
+                },
             ),
             data=SimpleDataConfig(
                 assets=AssetsConfig(asset_id="droid"),
                 data_transforms=lambda model: _transforms.Group(
                     inputs=[
                         droid_policy.DroidInputs(
-                            action_dim=model.action_dim, model_type=ModelType.PI0_FAST
+                            action_dim=model.action_dim,
+                            model_type=ModelType.PI0_FAST,
                         )
                     ],
                     outputs=[droid_policy.DroidOutputs()],
@@ -120,7 +128,8 @@ def get_roboarena_configs():
                 data_transforms=lambda model: _transforms.Group(
                     inputs=[
                         droid_policy.DroidInputs(
-                            action_dim=model.action_dim, model_type=ModelType.PI0_FAST
+                            action_dim=model.action_dim,
+                            model_type=ModelType.PI0_FAST,
                         )
                     ],
                     outputs=[droid_policy.DroidOutputs()],
@@ -137,7 +146,9 @@ def get_roboarena_configs():
             data=SimpleDataConfig(
                 assets=AssetsConfig(asset_id="droid"),
                 data_transforms=lambda model: _transforms.Group(
-                    inputs=[droid_policy.DroidInputs(action_dim=model.action_dim)],
+                    inputs=[
+                        droid_policy.DroidInputs(action_dim=model.action_dim)
+                    ],
                     outputs=[droid_policy.DroidOutputs()],
                 ),
                 base_config=DataConfig(

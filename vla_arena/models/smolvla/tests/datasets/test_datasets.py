@@ -34,22 +34,25 @@ from copy import deepcopy
 from itertools import chain
 from pathlib import Path
 
+import lerobot
 import numpy as np
 import pytest
 import torch
 from huggingface_hub import HfApi
-from PIL import Image
-from safetensors.torch import load_file
-
-import lerobot
 from lerobot.configs.default import DatasetConfig
 from lerobot.configs.train import TrainPipelineConfig
 from lerobot.datasets.factory import make_dataset
 from lerobot.datasets.image_writer import image_array_to_pil_image
-from lerobot.datasets.lerobot_dataset import LeRobotDataset, MultiLeRobotDataset
+from lerobot.datasets.lerobot_dataset import (
+    LeRobotDataset,
+    MultiLeRobotDataset,
+)
 from lerobot.datasets.utils import create_branch, flatten_dict, unflatten_dict
 from lerobot.envs.factory import make_env_config
 from lerobot.policies.factory import make_policy_config
+from PIL import Image
+from safetensors.torch import load_file
+
 from tests.fixtures.constants import DUMMY_CHW, DUMMY_HWC, DUMMY_REPO_ID
 from tests.utils import require_x86_64_kernel
 
@@ -67,7 +70,9 @@ def image_dataset(tmp_path, empty_lerobot_dataset_factory):
             ],
         }
     }
-    return empty_lerobot_dataset_factory(root=tmp_path / 'test', features=features)
+    return empty_lerobot_dataset_factory(
+        root=tmp_path / 'test', features=features
+    )
 
 
 def test_same_attributes_defined(tmp_path, lerobot_dataset_factory):
@@ -110,35 +115,50 @@ def test_dataset_initialization(tmp_path, lerobot_dataset_factory):
 
 def test_add_frame_missing_feature(tmp_path, empty_lerobot_dataset_factory):
     features = {'state': {'dtype': 'float32', 'shape': (1,), 'names': None}}
-    dataset = empty_lerobot_dataset_factory(root=tmp_path / 'test', features=features)
+    dataset = empty_lerobot_dataset_factory(
+        root=tmp_path / 'test', features=features
+    )
     with pytest.raises(
-        ValueError, match="Feature mismatch in `frame` dictionary:\nMissing features: {'state'}\n"
+        ValueError,
+        match="Feature mismatch in `frame` dictionary:\nMissing features: {'state'}\n",
     ):
         dataset.add_frame({'wrong_feature': torch.randn(1)}, task='Dummy task')
 
 
 def test_add_frame_extra_feature(tmp_path, empty_lerobot_dataset_factory):
     features = {'state': {'dtype': 'float32', 'shape': (1,), 'names': None}}
-    dataset = empty_lerobot_dataset_factory(root=tmp_path / 'test', features=features)
+    dataset = empty_lerobot_dataset_factory(
+        root=tmp_path / 'test', features=features
+    )
     with pytest.raises(
-        ValueError, match="Feature mismatch in `frame` dictionary:\nExtra features: {'extra'}\n"
+        ValueError,
+        match="Feature mismatch in `frame` dictionary:\nExtra features: {'extra'}\n",
     ):
-        dataset.add_frame({'state': torch.randn(1), 'extra': 'dummy_extra'}, task='Dummy task')
+        dataset.add_frame(
+            {'state': torch.randn(1), 'extra': 'dummy_extra'},
+            task='Dummy task',
+        )
 
 
 def test_add_frame_wrong_type(tmp_path, empty_lerobot_dataset_factory):
     features = {'state': {'dtype': 'float32', 'shape': (1,), 'names': None}}
-    dataset = empty_lerobot_dataset_factory(root=tmp_path / 'test', features=features)
+    dataset = empty_lerobot_dataset_factory(
+        root=tmp_path / 'test', features=features
+    )
     with pytest.raises(
         ValueError,
         match="The feature 'state' of dtype 'float16' is not of the expected dtype 'float32'.\n",
     ):
-        dataset.add_frame({'state': torch.randn(1, dtype=torch.float16)}, task='Dummy task')
+        dataset.add_frame(
+            {'state': torch.randn(1, dtype=torch.float16)}, task='Dummy task'
+        )
 
 
 def test_add_frame_wrong_shape(tmp_path, empty_lerobot_dataset_factory):
     features = {'state': {'dtype': 'float32', 'shape': (2,), 'names': None}}
-    dataset = empty_lerobot_dataset_factory(root=tmp_path / 'test', features=features)
+    dataset = empty_lerobot_dataset_factory(
+        root=tmp_path / 'test', features=features
+    )
     with pytest.raises(
         ValueError,
         match=re.escape(
@@ -148,9 +168,13 @@ def test_add_frame_wrong_shape(tmp_path, empty_lerobot_dataset_factory):
         dataset.add_frame({'state': torch.randn(1)}, task='Dummy task')
 
 
-def test_add_frame_wrong_shape_python_float(tmp_path, empty_lerobot_dataset_factory):
+def test_add_frame_wrong_shape_python_float(
+    tmp_path, empty_lerobot_dataset_factory
+):
     features = {'state': {'dtype': 'float32', 'shape': (1,), 'names': None}}
-    dataset = empty_lerobot_dataset_factory(root=tmp_path / 'test', features=features)
+    dataset = empty_lerobot_dataset_factory(
+        root=tmp_path / 'test', features=features
+    )
     with pytest.raises(
         ValueError,
         match=re.escape(
@@ -160,9 +184,13 @@ def test_add_frame_wrong_shape_python_float(tmp_path, empty_lerobot_dataset_fact
         dataset.add_frame({'state': 1.0}, task='Dummy task')
 
 
-def test_add_frame_wrong_shape_torch_ndim_0(tmp_path, empty_lerobot_dataset_factory):
+def test_add_frame_wrong_shape_torch_ndim_0(
+    tmp_path, empty_lerobot_dataset_factory
+):
     features = {'state': {'dtype': 'float32', 'shape': (1,), 'names': None}}
-    dataset = empty_lerobot_dataset_factory(root=tmp_path / 'test', features=features)
+    dataset = empty_lerobot_dataset_factory(
+        root=tmp_path / 'test', features=features
+    )
     with pytest.raises(
         ValueError,
         match=re.escape(
@@ -172,9 +200,13 @@ def test_add_frame_wrong_shape_torch_ndim_0(tmp_path, empty_lerobot_dataset_fact
         dataset.add_frame({'state': torch.tensor(1.0)}, task='Dummy task')
 
 
-def test_add_frame_wrong_shape_numpy_ndim_0(tmp_path, empty_lerobot_dataset_factory):
+def test_add_frame_wrong_shape_numpy_ndim_0(
+    tmp_path, empty_lerobot_dataset_factory
+):
     features = {'state': {'dtype': 'float32', 'shape': (1,), 'names': None}}
-    dataset = empty_lerobot_dataset_factory(root=tmp_path / 'test', features=features)
+    dataset = empty_lerobot_dataset_factory(
+        root=tmp_path / 'test', features=features
+    )
     with pytest.raises(
         ValueError,
         match=re.escape(
@@ -186,7 +218,9 @@ def test_add_frame_wrong_shape_numpy_ndim_0(tmp_path, empty_lerobot_dataset_fact
 
 def test_add_frame(tmp_path, empty_lerobot_dataset_factory):
     features = {'state': {'dtype': 'float32', 'shape': (1,), 'names': None}}
-    dataset = empty_lerobot_dataset_factory(root=tmp_path / 'test', features=features)
+    dataset = empty_lerobot_dataset_factory(
+        root=tmp_path / 'test', features=features
+    )
     dataset.add_frame({'state': torch.randn(1)}, task='Dummy task')
     dataset.save_episode()
 
@@ -198,7 +232,9 @@ def test_add_frame(tmp_path, empty_lerobot_dataset_factory):
 
 def test_add_frame_state_1d(tmp_path, empty_lerobot_dataset_factory):
     features = {'state': {'dtype': 'float32', 'shape': (2,), 'names': None}}
-    dataset = empty_lerobot_dataset_factory(root=tmp_path / 'test', features=features)
+    dataset = empty_lerobot_dataset_factory(
+        root=tmp_path / 'test', features=features
+    )
     dataset.add_frame({'state': torch.randn(2)}, task='Dummy task')
     dataset.save_episode()
 
@@ -207,7 +243,9 @@ def test_add_frame_state_1d(tmp_path, empty_lerobot_dataset_factory):
 
 def test_add_frame_state_2d(tmp_path, empty_lerobot_dataset_factory):
     features = {'state': {'dtype': 'float32', 'shape': (2, 4), 'names': None}}
-    dataset = empty_lerobot_dataset_factory(root=tmp_path / 'test', features=features)
+    dataset = empty_lerobot_dataset_factory(
+        root=tmp_path / 'test', features=features
+    )
     dataset.add_frame({'state': torch.randn(2, 4)}, task='Dummy task')
     dataset.save_episode()
 
@@ -215,8 +253,12 @@ def test_add_frame_state_2d(tmp_path, empty_lerobot_dataset_factory):
 
 
 def test_add_frame_state_3d(tmp_path, empty_lerobot_dataset_factory):
-    features = {'state': {'dtype': 'float32', 'shape': (2, 4, 3), 'names': None}}
-    dataset = empty_lerobot_dataset_factory(root=tmp_path / 'test', features=features)
+    features = {
+        'state': {'dtype': 'float32', 'shape': (2, 4, 3), 'names': None}
+    }
+    dataset = empty_lerobot_dataset_factory(
+        root=tmp_path / 'test', features=features
+    )
     dataset.add_frame({'state': torch.randn(2, 4, 3)}, task='Dummy task')
     dataset.save_episode()
 
@@ -224,8 +266,12 @@ def test_add_frame_state_3d(tmp_path, empty_lerobot_dataset_factory):
 
 
 def test_add_frame_state_4d(tmp_path, empty_lerobot_dataset_factory):
-    features = {'state': {'dtype': 'float32', 'shape': (2, 4, 3, 5), 'names': None}}
-    dataset = empty_lerobot_dataset_factory(root=tmp_path / 'test', features=features)
+    features = {
+        'state': {'dtype': 'float32', 'shape': (2, 4, 3, 5), 'names': None}
+    }
+    dataset = empty_lerobot_dataset_factory(
+        root=tmp_path / 'test', features=features
+    )
     dataset.add_frame({'state': torch.randn(2, 4, 3, 5)}, task='Dummy task')
     dataset.save_episode()
 
@@ -233,8 +279,12 @@ def test_add_frame_state_4d(tmp_path, empty_lerobot_dataset_factory):
 
 
 def test_add_frame_state_5d(tmp_path, empty_lerobot_dataset_factory):
-    features = {'state': {'dtype': 'float32', 'shape': (2, 4, 3, 5, 1), 'names': None}}
-    dataset = empty_lerobot_dataset_factory(root=tmp_path / 'test', features=features)
+    features = {
+        'state': {'dtype': 'float32', 'shape': (2, 4, 3, 5, 1), 'names': None}
+    }
+    dataset = empty_lerobot_dataset_factory(
+        root=tmp_path / 'test', features=features
+    )
     dataset.add_frame({'state': torch.randn(2, 4, 3, 5, 1)}, task='Dummy task')
     dataset.save_episode()
 
@@ -243,8 +293,12 @@ def test_add_frame_state_5d(tmp_path, empty_lerobot_dataset_factory):
 
 def test_add_frame_state_numpy(tmp_path, empty_lerobot_dataset_factory):
     features = {'state': {'dtype': 'float32', 'shape': (1,), 'names': None}}
-    dataset = empty_lerobot_dataset_factory(root=tmp_path / 'test', features=features)
-    dataset.add_frame({'state': np.array([1], dtype=np.float32)}, task='Dummy task')
+    dataset = empty_lerobot_dataset_factory(
+        root=tmp_path / 'test', features=features
+    )
+    dataset.add_frame(
+        {'state': np.array([1], dtype=np.float32)}, task='Dummy task'
+    )
     dataset.save_episode()
 
     assert dataset[0]['state'].ndim == 0
@@ -252,7 +306,9 @@ def test_add_frame_state_numpy(tmp_path, empty_lerobot_dataset_factory):
 
 def test_add_frame_string(tmp_path, empty_lerobot_dataset_factory):
     features = {'caption': {'dtype': 'string', 'shape': (1,), 'names': None}}
-    dataset = empty_lerobot_dataset_factory(root=tmp_path / 'test', features=features)
+    dataset = empty_lerobot_dataset_factory(
+        root=tmp_path / 'test', features=features
+    )
     dataset.add_frame({'caption': 'Dummy caption'}, task='Dummy task')
     dataset.save_episode()
 
@@ -281,7 +337,9 @@ def test_add_frame_image_wrong_range(image_dataset):
     Hence the image won't be saved on disk and save_episode will raise `FileNotFoundError`.
     """
     dataset = image_dataset
-    dataset.add_frame({'image': np.random.rand(*DUMMY_CHW) * 255}, task='Dummy task')
+    dataset.add_frame(
+        {'image': np.random.rand(*DUMMY_CHW) * 255}, task='Dummy task'
+    )
     with pytest.raises(FileNotFoundError):
         dataset.save_episode()
 
@@ -379,7 +437,9 @@ def test_factory(env_name, repo_id, policy_name):
             if required:
                 assert key in item, f'{key}'
             else:
-                logging.warning(f'Missing key in dataset: "{key}" not in {dataset}.')
+                logging.warning(
+                    f'Missing key in dataset: "{key}" not in {dataset}.'
+                )
                 continue
 
         if delta_timestamps is not None and key in delta_timestamps:
@@ -489,7 +549,9 @@ def test_backward_compatibility(repo_id):
 
     def load_and_compare(i):
         new_frame = dataset[i]  # noqa: B023
-        old_frame = load_file(test_dir / f'frame_{i}.safetensors')  # noqa: B023
+        old_frame = load_file(
+            test_dir / f'frame_{i}.safetensors'
+        )  # noqa: B023
 
         # ignore language instructions (if exists) in language conditioned datasets
         # TODO (michel-aractingi): transform language obs to language embeddings via tokenizer
@@ -505,7 +567,9 @@ def test_backward_compatibility(repo_id):
 
         new_keys = set(new_frame.keys())
         old_keys = set(old_frame.keys())
-        assert new_keys == old_keys, f'{new_keys=} and {old_keys=} are not the same'
+        assert (
+            new_keys == old_keys
+        ), f'{new_keys=} and {old_keys=} are not the same'
 
         for key in new_frame:
             assert torch.isclose(
@@ -519,7 +583,10 @@ def test_backward_compatibility(repo_id):
 
     # test 2 frames at the middle of first episode
     i = int(
-        (dataset.episode_data_index['to'][0].item() - dataset.episode_data_index['from'][0].item())
+        (
+            dataset.episode_data_index['to'][0].item()
+            - dataset.episode_data_index['from'][0].item()
+        )
         / 2
     )
     load_and_compare(i)

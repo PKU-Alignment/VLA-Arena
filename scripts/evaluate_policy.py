@@ -103,7 +103,10 @@ def get_args():
     )
 
     parser.add_argument(
-        '--n-episode', default=1, type=int, help='The number of episodes to evaluate for each task',
+        '--n-episode',
+        default=1,
+        type=int,
+        help='The number of episodes to evaluate for each task',
     )
     parser.add_argument(
         '--policy',
@@ -112,9 +115,13 @@ def get_args():
         choices=PolicyRegistry.list_policies(),
         help='The policy to evaluate',
     )
-    parser.add_argument('--model_ckpt', default=None, help='The base model checkpoint path')
     parser.add_argument(
-        '--save-dir', default='logs', help='The directory to save the evaluation results',
+        '--model_ckpt', default=None, help='The base model checkpoint path'
+    )
+    parser.add_argument(
+        '--save-dir',
+        default='logs',
+        help='The directory to save the evaluation results',
     )
     parser.add_argument(
         '--visualization',
@@ -126,14 +133,26 @@ def get_args():
         '--metrics',
         nargs='+',
         default=['success_rate', 'cumulative_cost', 'safe_success_rate'],
-        choices=['success_rate', 'cumulative_cost', 'safe_success_rate', 'episode_length'],
+        choices=[
+            'success_rate',
+            'cumulative_cost',
+            'safe_success_rate',
+            'episode_length',
+        ],
         help='The metrics to evaluate',
     )
     parser.add_argument(
-        '--host', default='localhost', type=str, help='The host to the remote server',
+        '--host',
+        default='localhost',
+        type=str,
+        help='The host to the remote server',
     )
-    parser.add_argument('--port', default=5555, type=int, help='The port to the remote server')
-    parser.add_argument('--replanstep', default=4, type=int, help='The step to replan')
+    parser.add_argument(
+        '--port', default=5555, type=int, help='The port to the remote server'
+    )
+    parser.add_argument(
+        '--replanstep', default=4, type=int, help='The step to replan'
+    )
 
     # Additional arguments for batch evaluation
     parser.add_argument(
@@ -143,7 +162,10 @@ def get_args():
         help='Whether to run level evaluations in parallel (experimental)',
     )
     parser.add_argument(
-        '--episode_config', default=None, type=str, help='Path to episode configuration file',
+        '--episode_config',
+        default=None,
+        type=str,
+        help='Path to episode configuration file',
     )
 
     args = parser.parse_args()
@@ -223,10 +245,13 @@ def evaluate(args):
         )
     if args.policy != 'openpi':
         policy = PolicyRegistry.get(
-            args.policy, model_ckpt=args.model_ckpt if args.model_ckpt else None,
+            args.policy,
+            model_ckpt=args.model_ckpt if args.model_ckpt else None,
         )
     else:
-        policy = PolicyRegistry.get(args.policy, host=args.host, port=args.port)
+        policy = PolicyRegistry.get(
+            args.policy, host=args.host, port=args.port
+        )
 
     # Run evaluation
     results = evaluator.evaluate(policy)
@@ -245,7 +270,9 @@ def evaluate(args):
                 if 'success_rate' in metrics:
                     print(f"    Success Rate: {metrics['success_rate']:.2%}")
                 if 'safe_success_rate' in metrics:
-                    print(f"    Safe Success Rate: {metrics['safe_success_rate']:.2%}")
+                    print(
+                        f"    Safe Success Rate: {metrics['safe_success_rate']:.2%}"
+                    )
                 if 'cumulative_cost' in metrics:
                     print(f"    Avg Cost: {metrics['cumulative_cost']:.2f}")
         else:
@@ -279,7 +306,9 @@ def main():
     # Validate arguments
     if not args.task_suite:
         print('Error: --task_suite is required!')
-        print('Available options: static_obstacles, preposition_generalization')
+        print(
+            'Available options: static_obstacles, preposition_generalization'
+        )
         return 1
 
     try:

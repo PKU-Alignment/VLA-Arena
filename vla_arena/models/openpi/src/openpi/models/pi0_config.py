@@ -14,16 +14,16 @@
 
 import dataclasses
 from typing import TYPE_CHECKING
+from typing_extensions import override
 
 import flax.nnx as nnx
 import jax
 import jax.numpy as jnp
-from typing_extensions import override
-
-from openpi.models import model as _model
 import openpi.models.gemma as _gemma
-from openpi.shared import array_typing as at
 import openpi.shared.nnx_utils as nnx_utils
+from openpi.models import model as _model
+from openpi.shared import array_typing as at
+
 
 if TYPE_CHECKING:
     from openpi.models.pi0 import Pi0
@@ -66,8 +66,12 @@ class Pi0Config(_model.BaseModelConfig):
         return Pi0(self, rngs=nnx.Rngs(rng))
 
     @override
-    def inputs_spec(self, *, batch_size: int = 1) -> tuple[_model.Observation, _model.Actions]:
-        image_spec = jax.ShapeDtypeStruct([batch_size, *_model.IMAGE_RESOLUTION, 3], jnp.float32)
+    def inputs_spec(
+        self, *, batch_size: int = 1
+    ) -> tuple[_model.Observation, _model.Actions]:
+        image_spec = jax.ShapeDtypeStruct(
+            [batch_size, *_model.IMAGE_RESOLUTION, 3], jnp.float32
+        )
         image_mask_spec = jax.ShapeDtypeStruct([batch_size], jnp.bool_)
 
         with at.disable_typechecking():
@@ -82,9 +86,15 @@ class Pi0Config(_model.BaseModelConfig):
                     "left_wrist_0_rgb": image_mask_spec,
                     "right_wrist_0_rgb": image_mask_spec,
                 },
-                state=jax.ShapeDtypeStruct([batch_size, self.action_dim], jnp.float32),
-                tokenized_prompt=jax.ShapeDtypeStruct([batch_size, self.max_token_len], jnp.int32),
-                tokenized_prompt_mask=jax.ShapeDtypeStruct([batch_size, self.max_token_len], bool),
+                state=jax.ShapeDtypeStruct(
+                    [batch_size, self.action_dim], jnp.float32
+                ),
+                tokenized_prompt=jax.ShapeDtypeStruct(
+                    [batch_size, self.max_token_len], jnp.int32
+                ),
+                tokenized_prompt_mask=jax.ShapeDtypeStruct(
+                    [batch_size, self.max_token_len], bool
+                ),
             )
         action_spec = jax.ShapeDtypeStruct(
             [batch_size, self.action_horizon, self.action_dim], jnp.float32

@@ -33,22 +33,28 @@ from collections.abc import Callable
 
 import scservo_sdk as scs
 import serial
+from lerobot.motors.feetech.feetech import (
+    _split_into_byte_chunks,
+    patch_setPacketTimeout,
+)
 from mock_serial import MockSerial
-
-from lerobot.motors.feetech.feetech import _split_into_byte_chunks, patch_setPacketTimeout
 
 from .mock_serial_patch import WaitableStub
 
 
 class MockFeetechPacket(abc.ABC):
     @classmethod
-    def build(cls, scs_id: int, params: list[int], length: int, *args, **kwargs) -> bytes:
+    def build(
+        cls, scs_id: int, params: list[int], length: int, *args, **kwargs
+    ) -> bytes:
         packet = cls._build(scs_id, params, length, *args, **kwargs)
         packet = cls._add_checksum(packet)
         return bytes(packet)
 
     @abc.abstractclassmethod
-    def _build(cls, scs_id: int, params: list[int], length: int, *args, **kwargs) -> list[int]:
+    def _build(
+        cls, scs_id: int, params: list[int], length: int, *args, **kwargs
+    ) -> list[int]:
         pass
 
     @staticmethod
@@ -76,7 +82,9 @@ class MockInstructionPacket(MockFeetechPacket):
     """
 
     @classmethod
-    def _build(cls, scs_id: int, params: list[int], length: int, instruction: int) -> list[int]:
+    def _build(
+        cls, scs_id: int, params: list[int], length: int, instruction: int
+    ) -> list[int]:
         return [
             0xFF, 0xFF,   # header
             scs_id,       # servo id
@@ -96,7 +104,9 @@ class MockInstructionPacket(MockFeetechPacket):
 
         No parameters required.
         """
-        return cls.build(scs_id=scs_id, params=[], length=2, instruction=scs.INST_PING)
+        return cls.build(
+            scs_id=scs_id, params=[], length=2, instruction=scs.INST_PING
+        )
 
     @classmethod
     def read(
@@ -120,7 +130,12 @@ class MockInstructionPacket(MockFeetechPacket):
         """
         params = [start_address, data_length]
         length = 4
-        return cls.build(scs_id=scs_id, params=params, length=length, instruction=scs.INST_READ)
+        return cls.build(
+            scs_id=scs_id,
+            params=params,
+            length=length,
+            instruction=scs.INST_READ,
+        )
 
     @classmethod
     def write(
@@ -149,7 +164,12 @@ class MockInstructionPacket(MockFeetechPacket):
         data = _split_into_byte_chunks(value, data_length)
         params = [start_address, *data]
         length = data_length + 3
-        return cls.build(scs_id=scs_id, params=params, length=length, instruction=scs.INST_WRITE)
+        return cls.build(
+            scs_id=scs_id,
+            params=params,
+            length=length,
+            instruction=scs.INST_WRITE,
+        )
 
     @classmethod
     def sync_read(
@@ -175,7 +195,10 @@ class MockInstructionPacket(MockFeetechPacket):
         params = [start_address, data_length, *scs_ids]
         length = len(scs_ids) + 4
         return cls.build(
-            scs_id=scs.BROADCAST_ID, params=params, length=length, instruction=scs.INST_SYNC_READ
+            scs_id=scs.BROADCAST_ID,
+            params=params,
+            length=length,
+            instruction=scs.INST_SYNC_READ,
         )
 
     @classmethod
@@ -215,7 +238,10 @@ class MockInstructionPacket(MockFeetechPacket):
         params = [start_address, data_length, *data]
         length = len(ids_values) * (1 + data_length) + 4
         return cls.build(
-            scs_id=scs.BROADCAST_ID, params=params, length=length, instruction=scs.INST_SYNC_WRITE
+            scs_id=scs.BROADCAST_ID,
+            params=params,
+            length=length,
+            instruction=scs.INST_SYNC_WRITE,
         )
 
 
@@ -233,7 +259,9 @@ class MockStatusPacket(MockFeetechPacket):
     """
 
     @classmethod
-    def _build(cls, scs_id: int, params: list[int], length: int, error: int = 0) -> list[int]:
+    def _build(
+        cls, scs_id: int, params: list[int], length: int, error: int = 0
+    ) -> list[int]:
         return [
             0xFF, 0xFF,  # header
             scs_id,      # servo id
@@ -257,7 +285,9 @@ class MockStatusPacket(MockFeetechPacket):
         return cls.build(scs_id, params=[], length=2, error=error)
 
     @classmethod
-    def read(cls, scs_id: int, value: int, param_length: int, error: int = 0) -> bytes:
+    def read(
+        cls, scs_id: int, value: int, param_length: int, error: int = 0
+    ) -> bytes:
         """Builds a 'Read' status packet.
 
         Args:
@@ -333,7 +363,9 @@ class MockMotors(MockSerial):
         )
         return stub_name
 
-    def build_ping_stub(self, scs_id: int, num_invalid_try: int = 0, error: int = 0) -> str:
+    def build_ping_stub(
+        self, scs_id: int, num_invalid_try: int = 0, error: int = 0
+    ) -> str:
         ping_request = MockInstructionPacket.ping(scs_id)
         return_packet = MockStatusPacket.ping(scs_id, error)
         ping_response = self._build_send_fn(return_packet, num_invalid_try)
@@ -356,7 +388,11 @@ class MockMotors(MockSerial):
         num_invalid_try: int = 0,
     ) -> str:
         read_request = MockInstructionPacket.read(scs_id, address, length)
-        return_packet = MockStatusPacket.read(scs_id, value, length, error) if reply else b''
+        return_packet = (
+            MockStatusPacket.read(scs_id, value, length, error)
+            if reply
+            else b''
+        )
         read_response = self._build_send_fn(return_packet, num_invalid_try)
         stub_name = f'Read_{address}_{length}_{scs_id}_{value}_{error}'
         self.stub(
@@ -376,9 +412,13 @@ class MockMotors(MockSerial):
         error: int = 0,
         num_invalid_try: int = 0,
     ) -> str:
-        sync_read_request = MockInstructionPacket.write(scs_id, value, address, length)
+        sync_read_request = MockInstructionPacket.write(
+            scs_id, value, address, length
+        )
         return_packet = (
-            MockStatusPacket.build(scs_id, params=[], length=2, error=error) if reply else b''
+            MockStatusPacket.build(scs_id, params=[], length=2, error=error)
+            if reply
+            else b''
         )
         stub_name = f'Write_{address}_{length}_{scs_id}'
         self.stub(
@@ -396,14 +436,23 @@ class MockMotors(MockSerial):
         reply: bool = True,
         num_invalid_try: int = 0,
     ) -> str:
-        sync_read_request = MockInstructionPacket.sync_read(list(ids_values), address, length)
+        sync_read_request = MockInstructionPacket.sync_read(
+            list(ids_values), address, length
+        )
         return_packets = (
-            b''.join(MockStatusPacket.read(id_, pos, length) for id_, pos in ids_values.items())
+            b''.join(
+                MockStatusPacket.read(id_, pos, length)
+                for id_, pos in ids_values.items()
+            )
             if reply
             else b''
         )
-        sync_read_response = self._build_send_fn(return_packets, num_invalid_try)
-        stub_name = f'Sync_Read_{address}_{length}_' + '_'.join([str(id_) for id_ in ids_values])
+        sync_read_response = self._build_send_fn(
+            return_packets, num_invalid_try
+        )
+        stub_name = f'Sync_Read_{address}_{length}_' + '_'.join(
+            [str(id_) for id_ in ids_values]
+        )
         self.stub(
             name=stub_name,
             receive_bytes=sync_read_request,
@@ -412,11 +461,19 @@ class MockMotors(MockSerial):
         return stub_name
 
     def build_sequential_sync_read_stub(
-        self, address: int, length: int, ids_values: dict[int, list[int]] | None = None
+        self,
+        address: int,
+        length: int,
+        ids_values: dict[int, list[int]] | None = None,
     ) -> str:
         sequence_length = len(next(iter(ids_values.values())))
-        assert all(len(positions) == sequence_length for positions in ids_values.values())
-        sync_read_request = MockInstructionPacket.sync_read(list(ids_values), address, length)
+        assert all(
+            len(positions) == sequence_length
+            for positions in ids_values.values()
+        )
+        sync_read_request = MockInstructionPacket.sync_read(
+            list(ids_values), address, length
+        )
         sequential_packets = []
         for count in range(sequence_length):
             return_packets = b''.join(
@@ -437,10 +494,18 @@ class MockMotors(MockSerial):
         return stub_name
 
     def build_sync_write_stub(
-        self, address: int, length: int, ids_values: dict[int, int], num_invalid_try: int = 0
+        self,
+        address: int,
+        length: int,
+        ids_values: dict[int, int],
+        num_invalid_try: int = 0,
     ) -> str:
-        sync_read_request = MockInstructionPacket.sync_write(ids_values, address, length)
-        stub_name = f'Sync_Write_{address}_{length}_' + '_'.join([str(id_) for id_ in ids_values])
+        sync_read_request = MockInstructionPacket.sync_write(
+            ids_values, address, length
+        )
+        stub_name = f'Sync_Write_{address}_{length}_' + '_'.join(
+            [str(id_) for id_ in ids_values]
+        )
         self.stub(
             name=stub_name,
             receive_bytes=sync_read_request,
@@ -449,7 +514,9 @@ class MockMotors(MockSerial):
         return stub_name
 
     @staticmethod
-    def _build_send_fn(packet: bytes, num_invalid_try: int = 0) -> Callable[[int], bytes]:
+    def _build_send_fn(
+        packet: bytes, num_invalid_try: int = 0
+    ) -> Callable[[int], bytes]:
         def send_fn(_call_count: int) -> bytes:
             if num_invalid_try >= _call_count:
                 return b''
@@ -458,7 +525,9 @@ class MockMotors(MockSerial):
         return send_fn
 
     @staticmethod
-    def _build_sequential_send_fn(packets: list[bytes]) -> Callable[[int], bytes]:
+    def _build_sequential_send_fn(
+        packets: list[bytes],
+    ) -> Callable[[int], bytes]:
         def send_fn(_call_count: int) -> bytes:
             return packets[_call_count - 1]
 

@@ -33,7 +33,6 @@ import time
 from typing import Any
 
 import numpy as np
-
 from lerobot.cameras import make_cameras_from_configs
 from lerobot.errors import DeviceNotConnectedError
 from lerobot.model.kinematics import RobotKinematics
@@ -42,6 +41,7 @@ from lerobot.motors.feetech import FeetechMotorsBus
 
 from . import SO100Follower
 from .config_so100_follower import SO100FollowerEndEffectorConfig
+
 
 logger = logging.getLogger(__name__)
 
@@ -126,9 +126,12 @@ class SO100FollowerEndEffector(SO100Follower):
             if all(k in action for k in ['delta_x', 'delta_y', 'delta_z']):
                 delta_ee = np.array(
                     [
-                        action['delta_x'] * self.config.end_effector_step_sizes['x'],
-                        action['delta_y'] * self.config.end_effector_step_sizes['y'],
-                        action['delta_z'] * self.config.end_effector_step_sizes['z'],
+                        action['delta_x']
+                        * self.config.end_effector_step_sizes['x'],
+                        action['delta_y']
+                        * self.config.end_effector_step_sizes['y'],
+                        action['delta_z']
+                        * self.config.end_effector_step_sizes['z'],
                     ],
                     dtype=np.float32,
                 )
@@ -144,15 +147,21 @@ class SO100FollowerEndEffector(SO100Follower):
         if self.current_joint_pos is None:
             # Read current joint positions
             current_joint_pos = self.bus.sync_read('Present_Position')
-            self.current_joint_pos = np.array([current_joint_pos[name] for name in self.bus.motors])
+            self.current_joint_pos = np.array(
+                [current_joint_pos[name] for name in self.bus.motors]
+            )
 
         # Calculate current end-effector position using forward kinematics
         if self.current_ee_pos is None:
-            self.current_ee_pos = self.kinematics.forward_kinematics(self.current_joint_pos)
+            self.current_ee_pos = self.kinematics.forward_kinematics(
+                self.current_joint_pos
+            )
 
         # Set desired end-effector position by adding delta
         desired_ee_pos = np.eye(4)
-        desired_ee_pos[:3, :3] = self.current_ee_pos[:3, :3]  # Keep orientation
+        desired_ee_pos[:3, :3] = self.current_ee_pos[
+            :3, :3
+        ]  # Keep orientation
 
         # Add delta to position and clip to bounds
         desired_ee_pos[:3, 3] = self.current_ee_pos[:3, 3] + action[:3]
@@ -178,7 +187,8 @@ class SO100FollowerEndEffector(SO100Follower):
         # Gripper delta action is in the range 0 - 2,
         # We need to shift the action to the range -1, 1 so that we can expand it to -Max_gripper_pos, Max_gripper_pos
         joint_action['gripper.pos'] = np.clip(
-            self.current_joint_pos[-1] + (action[-1] - 1) * self.config.max_gripper_pos,
+            self.current_joint_pos[-1]
+            + (action[-1] - 1) * self.config.max_gripper_pos,
             5,
             self.config.max_gripper_pos,
         )

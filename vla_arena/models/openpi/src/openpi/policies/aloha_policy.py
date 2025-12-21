@@ -17,7 +17,6 @@ from typing import ClassVar
 
 import einops
 import numpy as np
-
 from openpi import transforms
 
 
@@ -26,10 +25,18 @@ def make_aloha_example() -> dict:
     return {
         "state": np.ones((14,)),
         "images": {
-            "cam_high": np.random.randint(256, size=(3, 224, 224), dtype=np.uint8),
-            "cam_low": np.random.randint(256, size=(3, 224, 224), dtype=np.uint8),
-            "cam_left_wrist": np.random.randint(256, size=(3, 224, 224), dtype=np.uint8),
-            "cam_right_wrist": np.random.randint(256, size=(3, 224, 224), dtype=np.uint8),
+            "cam_high": np.random.randint(
+                256, size=(3, 224, 224), dtype=np.uint8
+            ),
+            "cam_low": np.random.randint(
+                256, size=(3, 224, 224), dtype=np.uint8
+            ),
+            "cam_left_wrist": np.random.randint(
+                256, size=(3, 224, 224), dtype=np.uint8
+            ),
+            "cam_right_wrist": np.random.randint(
+                256, size=(3, 224, 224), dtype=np.uint8
+            ),
         },
         "prompt": "do something",
     }
@@ -99,7 +106,9 @@ class AlohaInputs(transforms.DataTransformFn):
         # Actions are only available during training.
         if "actions" in data:
             actions = np.asarray(data["actions"])
-            actions = _encode_actions_inv(actions, adapt_to_pi=self.adapt_to_pi)
+            actions = _encode_actions_inv(
+                actions, adapt_to_pi=self.adapt_to_pi
+            )
             inputs["actions"] = actions
 
         if "prompt" in data:
@@ -119,7 +128,9 @@ class AlohaOutputs(transforms.DataTransformFn):
     def __call__(self, data: dict) -> dict:
         # Only return the first 14 dims.
         actions = np.asarray(data["actions"][:, :14])
-        return {"actions": _encode_actions(actions, adapt_to_pi=self.adapt_to_pi)}
+        return {
+            "actions": _encode_actions(actions, adapt_to_pi=self.adapt_to_pi)
+        }
 
 
 def _joint_flip_mask() -> np.ndarray:
@@ -201,7 +212,9 @@ def _decode_aloha(data: dict, *, adapt_to_pi: bool = False) -> dict:
     return data
 
 
-def _decode_state(state: np.ndarray, *, adapt_to_pi: bool = False) -> np.ndarray:
+def _decode_state(
+    state: np.ndarray, *, adapt_to_pi: bool = False
+) -> np.ndarray:
     if adapt_to_pi:
         # Flip the joints.
         state = _joint_flip_mask() * state
@@ -210,7 +223,9 @@ def _decode_state(state: np.ndarray, *, adapt_to_pi: bool = False) -> np.ndarray
     return state
 
 
-def _encode_actions(actions: np.ndarray, *, adapt_to_pi: bool = False) -> np.ndarray:
+def _encode_actions(
+    actions: np.ndarray, *, adapt_to_pi: bool = False
+) -> np.ndarray:
     if adapt_to_pi:
         # Flip the joints.
         actions = _joint_flip_mask() * actions
@@ -218,7 +233,9 @@ def _encode_actions(actions: np.ndarray, *, adapt_to_pi: bool = False) -> np.nda
     return actions
 
 
-def _encode_actions_inv(actions: np.ndarray, *, adapt_to_pi: bool = False) -> np.ndarray:
+def _encode_actions_inv(
+    actions: np.ndarray, *, adapt_to_pi: bool = False
+) -> np.ndarray:
     if adapt_to_pi:
         actions = _joint_flip_mask() * actions
         actions[:, [6, 13]] = _gripper_from_angular_inv(actions[:, [6, 13]])

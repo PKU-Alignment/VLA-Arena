@@ -28,7 +28,9 @@ import jsonlines
 import numpy as np
 import torch
 import wandb
+
 from vla_arena.models.openvla.prismatic.overwatch import initialize_overwatch
+
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)
@@ -38,14 +40,18 @@ overwatch = initialize_overwatch(__name__)
 class Tracker(Protocol):
     def write_hyperparameters(self) -> None: ...
 
-    def write(self, global_step: int, metrics: dict[str, int | float]) -> None: ...
+    def write(
+        self, global_step: int, metrics: dict[str, int | float]
+    ) -> None: ...
 
     def finalize(self) -> None: ...
 
 
 # === Individual Tracker Definitions ===
 class JSONLinesTracker:
-    def __init__(self, run_id: str, run_dir: Path, hparams: dict[str, Any]) -> None:
+    def __init__(
+        self, run_id: str, run_dir: Path, hparams: dict[str, Any]
+    ) -> None:
         self.run_id, self.run_dir, self.hparams = run_id, run_dir, hparams
 
     @overwatch.rank_zero_only
@@ -79,7 +85,12 @@ class WeightsBiasesTracker:
         self.run_id, self.run_dir, self.hparams = run_id, run_dir, hparams
 
         # Get W&B-Specific Initialization Parameters
-        self.project, self.entity, self.group, self.wandb_dir = project, entity, group, self.run_dir
+        self.project, self.entity, self.group, self.wandb_dir = (
+            project,
+            entity,
+            group,
+            self.run_dir,
+        )
 
         # Call W&B.init()
         self.initialize()
@@ -128,7 +139,12 @@ class Metrics:
         grad_accumulation_steps: int = 1,
         window_size: int = 128,
     ) -> None:
-        self.run_id, self.run_dir, self.hparams, self.stage = run_id, run_dir, hparams, stage
+        self.run_id, self.run_dir, self.hparams, self.stage = (
+            run_id,
+            run_dir,
+            hparams,
+            stage,
+        )
 
         # Initialize Trackers
         self.trackers = []
@@ -145,14 +161,20 @@ class Metrics:
                     group=self.stage,
                 )
             else:
-                raise ValueError(f'Tracker with type `{tracker_type} is not supported!')
+                raise ValueError(
+                    f'Tracker with type `{tracker_type} is not supported!'
+                )
 
             # Add Hyperparameters --> add to `self.trackers`
             tracker.write_hyperparameters()
             self.trackers.append(tracker)
 
         # Create Universal Metrics Buffers
-        self.global_step, self.start_time, self.step_start_time = 0, time.time(), time.time()
+        self.global_step, self.start_time, self.step_start_time = (
+            0,
+            time.time(),
+            time.time(),
+        )
         self.state = {
             'loss_raw': deque(maxlen=grad_accumulation_steps),
             'loss': deque(maxlen=window_size),
@@ -167,7 +189,9 @@ class Metrics:
     def get_status(self, loss: torch.Tensor | None = None) -> str:
         lr = self.state['lr'][-1] if len(self.state['lr']) > 0 else 0
         if loss is None:
-            return f'=>> [Global Step] {self.global_step:06d} =>> LR :: {lr:.6f}'
+            return (
+                f'=>> [Global Step] {self.global_step:06d} =>> LR :: {lr:.6f}'
+            )
 
         # Otherwise, embed `loss` in status report!
         return f'=>> [Global Step] {self.global_step:06d} =>> LR :: {lr:.6f} -- Loss :: {loss:.4f}'
@@ -210,7 +234,10 @@ class Metrics:
         # Note :: Raw Loss is an Average over Gradient Accumulation Steps --> No Smoothing!
         loss_raw = torch.stack(list(self.state['loss_raw'])).mean().item()
         loss = torch.stack(list(self.state['loss'])).mean().item()
-        step_time, lr = np.mean(list(self.state['step_time'])), self.state['lr'][-1]
+        step_time, lr = (
+            np.mean(list(self.state['step_time'])),
+            self.state['lr'][-1],
+        )
         status = self.get_status(loss)
 
         # Fire to Trackers
@@ -263,7 +290,9 @@ class VLAMetrics:
                     group='vla-train',
                 )
             else:
-                raise ValueError(f'Tracker with type `{tracker_type} is not supported!')
+                raise ValueError(
+                    f'Tracker with type `{tracker_type} is not supported!'
+                )
 
             # Add Hyperparameters --> add to `self.trackers`
             tracker.write_hyperparameters()
@@ -343,8 +372,13 @@ class VLAMetrics:
         loss_raw = torch.stack(list(self.state['loss_raw'])).mean().item()
         loss = torch.stack(list(self.state['loss'])).mean().item()
         l1_loss = torch.stack(list(self.state['l1_loss'])).mean().item()
-        action_accuracy = torch.stack(list(self.state['action_accuracy'])).mean().item()
-        step_time, lr = np.mean(list(self.state['step_time'])), self.state['lr'][-1]
+        action_accuracy = (
+            torch.stack(list(self.state['action_accuracy'])).mean().item()
+        )
+        step_time, lr = (
+            np.mean(list(self.state['step_time'])),
+            self.state['lr'][-1],
+        )
         status = self.get_status(loss)
 
         # Get metrics per dataset
@@ -352,7 +386,11 @@ class VLAMetrics:
         for ds, tracker in self.dataset_trackers.items():
             dataset_metrics.update(
                 {
-                    f'{ds}/L1 Loss': torch.stack(list(tracker.state['l1_loss'])).mean().item(),
+                    f'{ds}/L1 Loss': torch.stack(
+                        list(tracker.state['l1_loss'])
+                    )
+                    .mean()
+                    .item(),
                     f'{ds}/Action Token Accuracy': torch.stack(
                         list(tracker.state['action_accuracy'])
                     )

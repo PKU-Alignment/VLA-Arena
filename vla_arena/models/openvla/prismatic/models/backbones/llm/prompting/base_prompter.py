@@ -22,7 +22,9 @@ from abc import ABC, abstractmethod
 
 
 class PromptBuilder(ABC):
-    def __init__(self, model_family: str, system_prompt: str | None = None) -> None:
+    def __init__(
+        self, model_family: str, system_prompt: str | None = None
+    ) -> None:
         self.model_family = model_family
 
         # Only some models define a system prompt => let subclasses handle this logic!
@@ -39,7 +41,9 @@ class PromptBuilder(ABC):
 
 
 class PurePromptBuilder(PromptBuilder):
-    def __init__(self, model_family: str, system_prompt: str | None = None) -> None:
+    def __init__(
+        self, model_family: str, system_prompt: str | None = None
+    ) -> None:
         super().__init__(model_family, system_prompt)
 
         # TODO (siddk) =>> Can't always assume LlamaTokenizer --> FIX ME!
@@ -53,7 +57,11 @@ class PurePromptBuilder(PromptBuilder):
         self.prompt, self.turn_count = '', 0
 
     def add_turn(self, role: str, message: str) -> str:
-        assert (role == 'human') if (self.turn_count % 2 == 0) else (role == 'gpt')
+        assert (
+            (role == 'human')
+            if (self.turn_count % 2 == 0)
+            else (role == 'gpt')
+        )
         message = message.replace('<image>', '').strip()
 
         if (self.turn_count % 2) == 0:

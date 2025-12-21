@@ -28,7 +28,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import pytest
-
 from lerobot.scripts.visualize_dataset import visualize_dataset
 
 

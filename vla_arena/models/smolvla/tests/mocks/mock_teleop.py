@@ -52,8 +52,13 @@ class MockTeleopConfig(TeleoperatorConfig):
         if self.random_values and self.static_values is not None:
             raise ValueError('Choose either random values or static values')
 
-        if self.static_values is not None and len(self.static_values) != self.n_motors:
-            raise ValueError('Specify the same number of static values as motors')
+        if (
+            self.static_values is not None
+            and len(self.static_values) != self.n_motors
+        ):
+            raise ValueError(
+                'Specify the same number of static values as motors'
+            )
 
 
 class MockTeleop(Teleoperator):
@@ -107,11 +112,16 @@ class MockTeleop(Teleoperator):
             raise DeviceNotConnectedError(f'{self} is not connected.')
 
         if self.config.random_values:
-            return {f'{motor}.pos': random.uniform(-100, 100) for motor in self.motors}
+            return {
+                f'{motor}.pos': random.uniform(-100, 100)
+                for motor in self.motors
+            }
         else:
             return {
                 f'{motor}.pos': val
-                for motor, val in zip(self.motors, self.config.static_values, strict=True)
+                for motor, val in zip(
+                    self.motors, self.config.static_values, strict=True
+                )
             }
 
     def send_feedback(self, feedback: dict[str, Any]) -> None:

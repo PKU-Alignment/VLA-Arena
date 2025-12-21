@@ -28,7 +28,6 @@ class RandomizationError(Exception):
     """Custom exception raised when randomization fails (e.g., object placement)."""
 
 
-
 class MultiRegionRandomSampler(ObjectPositionSampler):
     """
     Places all objects within the table uniformly random.
@@ -123,17 +122,25 @@ class MultiRegionRandomSampler(ObjectPositionSampler):
         if self.rotation is None:
             rot_angle = np.random.uniform(high=2 * np.pi, low=0)
         elif isinstance(self.rotation, collections.abc.Iterable):
-            rot_angle = np.random.uniform(high=max(self.rotation), low=min(self.rotation))
+            rot_angle = np.random.uniform(
+                high=max(self.rotation), low=min(self.rotation)
+            )
         else:
             rot_angle = self.rotation
 
         # Return angle based on axis requested
         if self.rotation_axis == 'x':
-            return np.array([np.cos(rot_angle / 2), np.sin(rot_angle / 2), 0, 0])
+            return np.array(
+                [np.cos(rot_angle / 2), np.sin(rot_angle / 2), 0, 0]
+            )
         if self.rotation_axis == 'y':
-            return np.array([np.cos(rot_angle / 2), 0, np.sin(rot_angle / 2), 0])
+            return np.array(
+                [np.cos(rot_angle / 2), 0, np.sin(rot_angle / 2), 0]
+            )
         if self.rotation_axis == 'z':
-            return np.array([np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)])
+            return np.array(
+                [np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)]
+            )
         # Invalid axis specified, raise error
         raise ValueError(
             f"Invalid rotation axis specified. Must be 'x', 'y', or 'z'. Got: {self.rotation_axis}",
@@ -180,7 +187,9 @@ class MultiRegionRandomSampler(ObjectPositionSampler):
         # Sample pos and quat for all objects assigned to this sampler
         for obj in self.mujoco_objects:
             # First make sure the currently sampled object hasn't already been sampled
-            assert obj.name not in placed_objects, f"Object '{obj.name}' has already been sampled!"
+            assert (
+                obj.name not in placed_objects
+            ), f"Object '{obj.name}' has already been sampled!"
 
             horizontal_radius = obj.horizontal_radius
             bottom_offset = obj.bottom_offset
@@ -200,7 +209,10 @@ class MultiRegionRandomSampler(ObjectPositionSampler):
                         if (
                             np.linalg.norm((object_x - x, object_y - y))
                             <= other_obj.horizontal_radius + horizontal_radius
-                        ) and (object_z - z <= other_obj.top_offset[-1] - bottom_offset[-1]):
+                        ) and (
+                            object_z - z
+                            <= other_obj.top_offset[-1] - bottom_offset[-1]
+                        ):
                             location_valid = False
                             break
 
@@ -282,21 +294,27 @@ def postprocess_model_xml(xml_str, cameras_dict={}, demo_generation=False):
         old_path_split = old_path.split('/')
         if 'robosuite' in old_path_split:
             ind = max(
-                loc for loc, val in enumerate(old_path_split) if val == 'robosuite'
+                loc
+                for loc, val in enumerate(old_path_split)
+                if val == 'robosuite'
             )  # last occurrence index
             new_path_split = path_split + old_path_split[ind + 1 :]
             new_path = '/'.join(new_path_split)
             elem.set('file', new_path)
         elif 'libero' in old_path_split and demo_generation:
             ind = max(
-                loc for loc, val in enumerate(old_path_split) if val == 'libero'
+                loc
+                for loc, val in enumerate(old_path_split)
+                if val == 'libero'
             )  # last occurrence index
             new_path_split = libero_path_split + old_path_split[ind + 1 :]
             new_path = '/'.join(new_path_split)
             elem.set('file', new_path)
         elif 'vla_arena' in old_path_split and demo_generation:
             ind = max(
-                loc for loc, val in enumerate(old_path_split) if val == 'vla_arena'
+                loc
+                for loc, val in enumerate(old_path_split)
+                if val == 'vla_arena'
             )  # last occurrence index
             new_path_split = vla_arena_path_split + old_path_split[ind + 1 :]
             new_path = '/'.join(new_path_split)
@@ -327,7 +345,9 @@ def rectangle2xyrange(rect_ranges):
 
 
 class LinearMotionGenerator:
-    def __init__(self, start_pos, start_quat, direction, cycle_time, travel_dist, dt=1):
+    def __init__(
+        self, start_pos, start_quat, direction, cycle_time, travel_dist, dt=1
+    ):
         """
         Linear motion generator for back-and-forth movement along a specified direction.
 
@@ -346,14 +366,18 @@ class LinearMotionGenerator:
         self.start_pos = np.asarray(start_pos, dtype=float)
         self.start_quat = np.asarray(start_quat, dtype=float)
         self.direction = np.asarray(direction, dtype=float)
-        self.direction /= np.linalg.norm(self.direction)  # Normalize direction vector
+        self.direction /= np.linalg.norm(
+            self.direction
+        )  # Normalize direction vector
         self.cycle_time = float(cycle_time)
         self.travel_dist = float(travel_dist)
         self.dt = float(dt)
 
         # Calculate number of steps per cycle
         self.steps_per_cycle = float(round(self.cycle_time / self.dt))
-        self.half_steps = self.steps_per_cycle // 2  # Number of steps for one-way motion
+        self.half_steps = (
+            self.steps_per_cycle // 2
+        )  # Number of steps for one-way motion
 
         # Displacement per step
         self.step_disp = self.direction * (self.travel_dist / self.half_steps)
@@ -403,7 +427,9 @@ class LinearMotionGenerator:
 
 
 class CircularMotionGenerator:
-    def __init__(self, start_pos, center_pos, start_quat, period, dt=1, normal=None):
+    def __init__(
+        self, start_pos, center_pos, start_quat, period, dt=1, normal=None
+    ):
         """
         Circular motion generator for objects moving along a circular path.
 
@@ -507,7 +533,9 @@ def direction_to_quaternion(target_dir):
     # The quaternion has magnitude 2, which we will maintain
     base_quat = np.array([1.0, 1.0, 1.0, 1.0])
     base_dir = np.array([0.0, 1.0, 0.0])  # Reference direction
-    ref_dir = np.array([0.0, 0.1])  # Original reference direction (positive Z-axis)
+    ref_dir = np.array(
+        [0.0, 0.1]
+    )  # Original reference direction (positive Z-axis)
 
     # Calculate rotation from base direction to target direction
     # 1. Compute rotation axis (cross product of base and target directions)
@@ -543,8 +571,12 @@ def direction_to_quaternion(target_dir):
     )
 
     # 5. Multiply normalized base quaternion with incremental quaternion
-    base_unit = base_quat / np.linalg.norm(base_quat)  # Normalized base quaternion
-    composite = quaternion_multiply(delta_quat, base_unit)  # Composite rotation
+    base_unit = base_quat / np.linalg.norm(
+        base_quat
+    )  # Normalized base quaternion
+    composite = quaternion_multiply(
+        delta_quat, base_unit
+    )  # Composite rotation
 
     # 6. Scale back to original magnitude (maintain magnitude of 2)
     result = composite * 2.0
@@ -577,7 +609,9 @@ def quaternion_multiply(q1, q2):
 
 
 class SmoothWaypointMotionGenerator:
-    def __init__(self, waypoints, start_quat, segment_time=10, dt=0.01, loop=False):
+    def __init__(
+        self, waypoints, start_quat, segment_time=10, dt=0.01, loop=False
+    ):
         """
         Smooth trajectory generator with support for position and orientation interpolation.
 
@@ -599,7 +633,8 @@ class SmoothWaypointMotionGenerator:
             list(map(float, wp[0])) for wp in waypoints
         ]  # Extract position information
         self.quaternions = [
-            direction_to_quaternion(list(map(float, wp[1]))) for wp in waypoints
+            direction_to_quaternion(list(map(float, wp[1])))
+            for wp in waypoints
         ]  # Extract orientation information
 
         self.n_segments = len(waypoints) - 1
@@ -607,7 +642,8 @@ class SmoothWaypointMotionGenerator:
         self.segment_time = float(segment_time)
         self.dt = float(dt)
         self.steps_per_segment = max(
-            1, int(self.segment_time / self.dt),
+            1,
+            int(self.segment_time / self.dt),
         )  # Convert to integer steps
         self.loop = bool(loop)
 
@@ -632,7 +668,11 @@ class SmoothWaypointMotionGenerator:
 
         # Get start and end waypoints of current segment
         p0 = np.array(self.positions[self.seg_idx])
-        p1 = np.array(self.positions[(self.seg_idx + self.direction) % len(self.positions)])
+        p1 = np.array(
+            self.positions[
+                (self.seg_idx + self.direction) % len(self.positions)
+            ]
+        )
 
         # Interpolation ratio alpha (between 0 and 1)
         alpha = self.step_idx / self.steps_per_segment
@@ -642,14 +682,18 @@ class SmoothWaypointMotionGenerator:
 
         # Spherical linear interpolation (SLERP) for quaternion orientation
         q0 = self.quaternions[self.seg_idx]
-        q1 = self.quaternions[(self.seg_idx + self.direction) % len(self.quaternions)]
+        q1 = self.quaternions[
+            (self.seg_idx + self.direction) % len(self.quaternions)
+        ]
         norm0 = np.linalg.norm(q0)
         norm1 = np.linalg.norm(q1)
         q0 = q0 / norm0 if norm0 != 0 else [1.0, 0.0, 0.0, 0.0]
         q1 = q1 / norm1 if norm1 != 0 else [1.0, 0.0, 0.0, 0.0]
 
         # 2. Calculate dot product
-        dot_product = q0[0] * q1[0] + q0[1] * q1[1] + q0[2] * q1[2] + q0[3] * q1[3]
+        dot_product = (
+            q0[0] * q1[0] + q0[1] * q1[1] + q0[2] * q1[2] + q0[3] * q1[3]
+        )
 
         # 3. Ensure shortest path (negate if dot product is negative)
         if dot_product < 0.0:
@@ -667,10 +711,14 @@ class SmoothWaypointMotionGenerator:
             ]
             # Renormalize
             norm = np.linalg.norm(interpolated)
-            self.current_quat = interpolated / norm if norm != 0 else [1.0, 0.0, 0.0, 0.0]
+            self.current_quat = (
+                interpolated / norm if norm != 0 else [1.0, 0.0, 0.0, 0.0]
+            )
         else:
             # 5. Calculate rotation angle
-            theta_0 = np.arccos(dot_product)  # Initial angle between quaternions
+            theta_0 = np.arccos(
+                dot_product
+            )  # Initial angle between quaternions
             theta = theta_0 * alpha  # Interpolated angle
             sin_theta = np.sin(theta)
             sin_theta_0 = np.sin(theta_0)
@@ -693,7 +741,9 @@ class SmoothWaypointMotionGenerator:
         # If current segment is complete, move to next segment
         if self.step_idx >= self.steps_per_segment:
             self.step_idx = 0
-            self.seg_idx += self.direction  # Update segment index based on direction
+            self.seg_idx += (
+                self.direction
+            )  # Update segment index based on direction
 
             # Check if boundary is reached and direction change is needed
             if self.seg_idx >= self.n_segments:
@@ -717,7 +767,15 @@ class SmoothWaypointMotionGenerator:
 
 
 class ParabolicMotionGenerator:
-    def __init__(self, start_pos, start_quat, initial_speed, direction, dt=0.01, gravity=None):
+    def __init__(
+        self,
+        start_pos,
+        start_quat,
+        initial_speed,
+        direction,
+        dt=0.01,
+        gravity=None,
+    ):
         """
         Parabolic motion generator for projectile motion under gravity.
 
@@ -760,7 +818,11 @@ class ParabolicMotionGenerator:
     def __next__(self):
         # Kinematic equation: pos(t) = p0 + v0 * t + 0.5 * g * t^2
         self.t += self.dt
-        self.pos = self.start_pos + self.initial_velocity * self.t + 0.5 * self.gravity * self.t**2
+        self.pos = (
+            self.start_pos
+            + self.initial_velocity * self.t
+            + 0.5 * self.gravity * self.t**2
+        )
         return self.pos.copy(), self.quat.copy()
 
     def reset(self):
@@ -803,11 +865,14 @@ def make_xml_processor(body_names, random_color):
             mocap_body_name = f'{full_body_name}_mocap'  # Mocap body name
 
             # Check if mocap body already exists
-            existing_mocap = worldbody.find(f".//body[@name='{mocap_body_name}']")
+            existing_mocap = worldbody.find(
+                f".//body[@name='{mocap_body_name}']"
+            )
             if existing_mocap is None:
                 # If not exists, append mocap body
                 mocap_body = ET.Element(
-                    'body', {'mocap': 'true', 'name': mocap_body_name, 'pos': '0 0 0'},
+                    'body',
+                    {'mocap': 'true', 'name': mocap_body_name, 'pos': '0 0 0'},
                 )
                 worldbody.append(mocap_body)
                 weld = ET.Element(
@@ -831,9 +896,14 @@ def make_xml_processor(body_names, random_color):
             if 'material' in element.attrib:
                 material_value = element.attrib['material']
                 # If material doesn't contain "robot0" and doesn't have rgba attribute, add it
-                if 'robot0' not in material_value and 'rgba' not in element.attrib:
+                if (
+                    'robot0' not in material_value
+                    and 'rgba' not in element.attrib
+                ):
                     # Add default rgba value (random color with full opacity)
-                    color = np.append(np.random.uniform(low=0.2, high=0.8, size=3), 1)
+                    color = np.append(
+                        np.random.uniform(low=0.2, high=0.8, size=3), 1
+                    )
                     color_string = ' '.join(map(str, color))
                     element.set('rgba', color_string)
 

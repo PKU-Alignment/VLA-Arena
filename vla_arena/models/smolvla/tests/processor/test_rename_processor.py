@@ -32,9 +32,14 @@ from pathlib import Path
 
 import numpy as np
 import torch
-
 from lerobot.configs.types import FeatureType
-from lerobot.processor import ProcessorStepRegistry, RenameProcessor, RobotProcessor, TransitionKey
+from lerobot.processor import (
+    ProcessorStepRegistry,
+    RenameProcessor,
+    RobotProcessor,
+    TransitionKey,
+)
+
 from tests.conftest import assert_contract_is_typed
 
 
@@ -84,8 +89,12 @@ def test_basic_renaming():
     assert 'old_key2' not in processed_obs
 
     # Check values are preserved
-    torch.testing.assert_close(processed_obs['new_key1'], torch.tensor([1.0, 2.0]))
-    np.testing.assert_array_equal(processed_obs['new_key2'], np.array([3.0, 4.0]))
+    torch.testing.assert_close(
+        processed_obs['new_key1'], torch.tensor([1.0, 2.0])
+    )
+    np.testing.assert_array_equal(
+        processed_obs['new_key2'], np.array([3.0, 4.0])
+    )
 
     # Check unchanged key is preserved
     assert processed_obs['unchanged_key'] == 'keep_me'
@@ -312,12 +321,16 @@ def test_registry_based_save_load():
         # Verify config uses registry name
         import json
 
-        with open(Path(tmp_dir) / 'robotprocessor.json') as f:  # Default name is "RobotProcessor"
+        with open(
+            Path(tmp_dir) / 'robotprocessor.json'
+        ) as f:  # Default name is "RobotProcessor"
             config = json.load(f)
 
         assert 'registry_name' in config['steps'][0]
         assert config['steps'][0]['registry_name'] == 'rename_processor'
-        assert 'class' not in config['steps'][0]  # Should use registry, not module path
+        assert (
+            'class' not in config['steps'][0]
+        )  # Should use registry, not module path
 
         # Load should work
         loaded_pipeline = RobotProcessor.from_pretrained(tmp_dir)
@@ -409,7 +422,11 @@ def test_nested_observation_rename():
 
 def test_value_types_preserved():
     """Test that various value types are preserved during renaming."""
-    rename_map = {'old_tensor': 'new_tensor', 'old_array': 'new_array', 'old_scalar': 'new_scalar'}
+    rename_map = {
+        'old_tensor': 'new_tensor',
+        'old_array': 'new_array',
+        'old_scalar': 'new_scalar',
+    }
     processor = RenameProcessor(rename_map=rename_map)
 
     tensor_value = torch.randn(3, 3)
@@ -474,9 +491,14 @@ def test_feature_contract_overlapping_keys(policy_feature_factory):
 
 def test_feature_contract_chained_processors(policy_feature_factory):
     # Chain two rename processors at the contract level
-    processor1 = RenameProcessor(rename_map={'pos': 'agent_position', 'img': 'camera_image'})
+    processor1 = RenameProcessor(
+        rename_map={'pos': 'agent_position', 'img': 'camera_image'}
+    )
     processor2 = RenameProcessor(
-        rename_map={'agent_position': 'observation.state', 'camera_image': 'observation.image'}
+        rename_map={
+            'agent_position': 'observation.state',
+            'camera_image': 'observation.image',
+        }
     )
     pipeline = RobotProcessor([processor1, processor2])
 

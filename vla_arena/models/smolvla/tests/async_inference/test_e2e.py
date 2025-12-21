@@ -49,6 +49,7 @@ from concurrent import futures
 import pytest
 import torch
 
+
 # Skip entire module if grpc is not available
 pytest.importorskip('grpc')
 
@@ -61,16 +62,19 @@ def test_async_inference_e2e(monkeypatch):
     """Tests the full asynchronous inference pipeline."""
     # Import grpc-dependent modules inside the test function
     import grpc
-
     from lerobot.robots.utils import make_robot_from_config
-    from lerobot.scripts.server.configs import PolicyServerConfig, RobotClientConfig
-    from lerobot.scripts.server.helpers import map_robot_keys_to_lerobot_features
+    from lerobot.scripts.server.configs import (
+        PolicyServerConfig,
+        RobotClientConfig,
+    )
+    from lerobot.scripts.server.helpers import (
+        map_robot_keys_to_lerobot_features,
+    )
     from lerobot.scripts.server.policy_server import PolicyServer
     from lerobot.scripts.server.robot_client import RobotClient
-    from lerobot.transport import (
-        services_pb2,  # type: ignore
-        services_pb2_grpc,  # type: ignore
-    )
+    from lerobot.transport import services_pb2  # type: ignore
+    from lerobot.transport import services_pb2_grpc  # type: ignore
+
     from tests.mocks.mock_robot import MockRobotConfig
 
     # Create a stub policy similar to test_policy_server.py
@@ -123,21 +127,30 @@ def test_async_inference_e2e(monkeypatch):
 
         return torch.zeros(batch_size, actions_per_chunk, action_dim)
 
-    monkeypatch.setattr(PolicyServer, '_get_action_chunk', _fake_get_action_chunk, raising=True)
+    monkeypatch.setattr(
+        PolicyServer, '_get_action_chunk', _fake_get_action_chunk, raising=True
+    )
 
     # Bypass potentially heavy model loading inside SendPolicyInstructions
     def _fake_send_policy_instructions(self, request, context):  # noqa: N802
         return services_pb2.Empty()
 
     monkeypatch.setattr(
-        PolicyServer, 'SendPolicyInstructions', _fake_send_policy_instructions, raising=True
+        PolicyServer,
+        'SendPolicyInstructions',
+        _fake_send_policy_instructions,
+        raising=True,
     )
 
     # Build gRPC server running a PolicyServer
     server = grpc.server(
-        futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix='policy_server')
+        futures.ThreadPoolExecutor(
+            max_workers=1, thread_name_prefix='policy_server'
+        )
     )
-    services_pb2_grpc.add_AsyncInferenceServicer_to_server(policy_server, server)
+    services_pb2_grpc.add_AsyncInferenceServicer_to_server(
+        policy_server, server
+    )
 
     # Use the host/port specified in the fixture's config
     server_address = f'{policy_server.config.host}:{policy_server.config.port}'
@@ -171,8 +184,12 @@ def test_async_inference_e2e(monkeypatch):
     monkeypatch.setattr(client, '_aggregate_action_queues', counting_aggregate)
 
     # Start client threads
-    action_thread = threading.Thread(target=client.receive_actions, daemon=True)
-    control_thread = threading.Thread(target=client.control_loop, args=({'task': ''}), daemon=True)
+    action_thread = threading.Thread(
+        target=client.receive_actions, daemon=True
+    )
+    control_thread = threading.Thread(
+        target=client.control_loop, args=({'task': ''}), daemon=True
+    )
     action_thread.start()
     control_thread.start()
 
@@ -182,7 +199,9 @@ def test_async_inference_e2e(monkeypatch):
     # Wait for 5 seconds
     server.wait_for_termination(timeout=5)
 
-    assert action_chunks_received['count'] > 0, 'Client did not receive any action chunks'
+    assert (
+        action_chunks_received['count'] > 0
+    ), 'Client did not receive any action chunks'
     assert (
         len(policy_server._predicted_timesteps) > 0
     ), 'Server did not record any predicted timesteps'

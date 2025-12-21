@@ -37,9 +37,13 @@ for demo_file_name in Path(get_vla_arena_path('datasets')).rglob('*hdf5'):
         action_min = np.inf
         action_max = -np.inf
         for demo_name in demo_file['data'].keys():
-            traj_lengths.append(demo_file[f'data/{demo_name}/actions'].shape[0])
+            traj_lengths.append(
+                demo_file[f'data/{demo_name}/actions'].shape[0]
+            )
         traj_lengths = np.array(traj_lengths)
-        print(f'[info] dataset {demo_file_name} is in tact, test passed \u2714')
+        print(
+            f'[info] dataset {demo_file_name} is in tact, test passed \u2714'
+        )
         print(np.mean(traj_lengths), ' +- ', np.std(traj_lengths))
         if demo_file['data'].attrs['tag'] == 'vla_arena-v1':
             print('Version correct')

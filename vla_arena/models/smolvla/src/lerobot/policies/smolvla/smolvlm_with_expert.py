@@ -48,9 +48,13 @@ def apply_rope(x, positions, max_wavelength=10_000):
     dtype = x.dtype
     x = x.to(torch.float32)
 
-    freq_exponents = (2.0 / x.shape[-1]) * torch.arange(d_half, dtype=torch.float32, device=device)
+    freq_exponents = (2.0 / x.shape[-1]) * torch.arange(
+        d_half, dtype=torch.float32, device=device
+    )
     timescale = max_wavelength**freq_exponents
-    radians = positions[..., None].to(torch.float32) / timescale[None, None, :].to(torch.float32)
+    radians = positions[..., None].to(torch.float32) / timescale[
+        None, None, :
+    ].to(torch.float32)
 
     radians = radians[..., None, :]
 
@@ -101,9 +105,9 @@ class SmolVLMWithExpertModel(nn.Module):
         self.processor = AutoProcessor.from_pretrained(model_id)
         if num_vlm_layers > 0:
             print(f'Reducing the number of VLM layers to {num_vlm_layers} ...')
-            self.get_vlm_model().text_model.layers = self.get_vlm_model().text_model.layers[
-                :num_vlm_layers
-            ]
+            self.get_vlm_model().text_model.layers = (
+                self.get_vlm_model().text_model.layers[:num_vlm_layers]
+            )
         self.num_vlm_layers = len(self.get_vlm_model().text_model.layers)
         self.config = config
         # Smaller lm expert
@@ -118,7 +122,8 @@ class SmolVLMWithExpertModel(nn.Module):
         lm_expert_config.num_hidden_layers = self.num_vlm_layers
         if num_expert_layers > 0:
             assert (
-                len(self.get_vlm_model().text_model.layers) % num_expert_layers == 0
+                len(self.get_vlm_model().text_model.layers) % num_expert_layers
+                == 0
             ), f'Number of layers in the VLM {len(self.get_vlm_model().text_model.layers)} are not multiple of num_expert_layers {num_expert_layers}'
             lm_expert_config.num_hidden_layers = num_expert_layers
         self.lm_expert = AutoModel.from_config(lm_expert_config)
@@ -134,13 +139,17 @@ class SmolVLMWithExpertModel(nn.Module):
                 ):
                     continue
                 self.lm_expert.layers[layer_idx].self_attn.k_proj = nn.Linear(
-                    config.text_config.num_key_value_heads * config.text_config.head_dim,
-                    lm_expert_config.num_key_value_heads * lm_expert_config.head_dim,
+                    config.text_config.num_key_value_heads
+                    * config.text_config.head_dim,
+                    lm_expert_config.num_key_value_heads
+                    * lm_expert_config.head_dim,
                     bias=lm_expert_config.attention_bias,
                 )
                 self.lm_expert.layers[layer_idx].self_attn.v_proj = nn.Linear(
-                    config.text_config.num_key_value_heads * config.text_config.head_dim,
-                    lm_expert_config.num_key_value_heads * lm_expert_config.head_dim,
+                    config.text_config.num_key_value_heads
+                    * config.text_config.head_dim,
+                    lm_expert_config.num_key_value_heads
+                    * lm_expert_config.head_dim,
                     bias=lm_expert_config.attention_bias,
                 )
         # Remove unused embed_tokens
@@ -205,13 +214,17 @@ class SmolVLMWithExpertModel(nn.Module):
         image_hidden_states = (
             self.get_vlm_model()
             .vision_model(
-                pixel_values=image.to(dtype=self.get_vlm_model().vision_model.dtype),
+                pixel_values=image.to(
+                    dtype=self.get_vlm_model().vision_model.dtype
+                ),
                 patch_attention_mask=patch_attention_mask,
             )
             .last_hidden_state
         )
         # Modality projection & resampling
-        image_hidden_states = self.get_vlm_model().connector(image_hidden_states)
+        image_hidden_states = self.get_vlm_model().connector(
+            image_hidden_states
+        )
         return image_hidden_states
 
     def embed_language_tokens(self, tokens: torch.Tensor):
@@ -242,10 +255,18 @@ class SmolVLMWithExpertModel(nn.Module):
             input_shape = hidden_states.shape[:-1]
             hidden_shape = (*input_shape, -1, layer.self_attn.head_dim)
 
-            hidden_states = hidden_states.to(dtype=layer.self_attn.q_proj.weight.dtype)
-            query_state = layer.self_attn.q_proj(hidden_states).view(hidden_shape)
-            key_state = layer.self_attn.k_proj(hidden_states).view(hidden_shape)
-            value_state = layer.self_attn.v_proj(hidden_states).view(hidden_shape)
+            hidden_states = hidden_states.to(
+                dtype=layer.self_attn.q_proj.weight.dtype
+            )
+            query_state = layer.self_attn.q_proj(hidden_states).view(
+                hidden_shape
+            )
+            key_state = layer.self_attn.k_proj(hidden_states).view(
+                hidden_shape
+            )
+            value_state = layer.self_attn.v_proj(hidden_states).view(
+                hidden_shape
+            )
 
             query_states.append(query_state)
             key_states.append(key_state)
@@ -285,16 +306,23 @@ class SmolVLMWithExpertModel(nn.Module):
                 # the max len, then we (for instance) double the cache size. This implementation already exists
                 # in `transformers`. (molbap)
                 key_states = torch.cat(
-                    [past_key_values[layer_idx]['key_states'], key_states], dim=1
+                    [past_key_values[layer_idx]['key_states'], key_states],
+                    dim=1,
                 )
                 value_states = torch.cat(
-                    [past_key_values[layer_idx]['value_states'], value_states], dim=1
+                    [past_key_values[layer_idx]['value_states'], value_states],
+                    dim=1,
                 )
 
         attention_interface = self.get_attention_interface()
 
         att_output = attention_interface(
-            attention_mask_, batch_size, head_dim, query_states, key_states, value_states
+            attention_mask_,
+            batch_size,
+            head_dim,
+            query_states,
+            key_states,
+            value_states,
         )
         return [att_output], past_key_values
 
@@ -321,7 +349,10 @@ class SmolVLMWithExpertModel(nn.Module):
         if len(inputs_embeds) == 2 and not past_key_values:
             # Prefix attention
             seq_len = inputs_embeds[0].shape[1]
-            position_id, expert_position_id = position_ids[:, :seq_len], position_ids[:, seq_len:]
+            position_id, expert_position_id = (
+                position_ids[:, :seq_len],
+                position_ids[:, seq_len:],
+            )
             prefix_attention_mask = attention_mask[:, :seq_len, :seq_len]
 
             layer = model_layers[0][layer_idx]
@@ -331,17 +362,30 @@ class SmolVLMWithExpertModel(nn.Module):
             input_shape = hidden_states.shape[:-1]
             hidden_shape = (*input_shape, -1, layer.self_attn.head_dim)
 
-            hidden_states = hidden_states.to(dtype=layer.self_attn.q_proj.weight.dtype)
-            query_state = layer.self_attn.q_proj(hidden_states).view(hidden_shape)
-            key_state = layer.self_attn.k_proj(hidden_states).view(hidden_shape)
-            value_states = layer.self_attn.v_proj(hidden_states).view(hidden_shape)
+            hidden_states = hidden_states.to(
+                dtype=layer.self_attn.q_proj.weight.dtype
+            )
+            query_state = layer.self_attn.q_proj(hidden_states).view(
+                hidden_shape
+            )
+            key_state = layer.self_attn.k_proj(hidden_states).view(
+                hidden_shape
+            )
+            value_states = layer.self_attn.v_proj(hidden_states).view(
+                hidden_shape
+            )
 
             # B,L,H,D with L sequence length, H number of heads, D head dim
             query_states = apply_rope(query_state, position_id)
             key_states = apply_rope(key_state, position_id)
 
             att_output = attention_interface(
-                prefix_attention_mask, batch_size, head_dim, query_states, key_states, value_states
+                prefix_attention_mask,
+                batch_size,
+                head_dim,
+                query_states,
+                key_states,
+                value_states,
             )
             att_outputs.append(att_output)
         else:
@@ -367,40 +411,53 @@ class SmolVLMWithExpertModel(nn.Module):
         # Expert
         expert_layer = model_layers[1][layer_idx]
         if expert_layer is not None:
-            expert_hidden_states = expert_layer.input_layernorm(inputs_embeds[1])
+            expert_hidden_states = expert_layer.input_layernorm(
+                inputs_embeds[1]
+            )
 
             expert_input_shape = expert_hidden_states.shape[:-1]
-            expert_hidden_shape = (*expert_input_shape, -1, expert_layer.self_attn.head_dim)
+            expert_hidden_shape = (
+                *expert_input_shape,
+                -1,
+                expert_layer.self_attn.head_dim,
+            )
 
             expert_hidden_states = expert_hidden_states.to(
                 dtype=expert_layer.self_attn.q_proj.weight.dtype
             )
-            expert_query_state = expert_layer.self_attn.q_proj(expert_hidden_states).view(
-                expert_hidden_shape
-            )
+            expert_query_state = expert_layer.self_attn.q_proj(
+                expert_hidden_states
+            ).view(expert_hidden_shape)
 
-            _key_states = key_states.to(dtype=expert_layer.self_attn.k_proj.weight.dtype).view(
-                *key_states.shape[:2], -1
-            )
-            expert_key_states = expert_layer.self_attn.k_proj(_key_states).view(
+            _key_states = key_states.to(
+                dtype=expert_layer.self_attn.k_proj.weight.dtype
+            ).view(*key_states.shape[:2], -1)
+            expert_key_states = expert_layer.self_attn.k_proj(
+                _key_states
+            ).view(
                 *_key_states.shape[:-1], -1, expert_layer.self_attn.head_dim
             )  # k_proj should have same dim as kv
 
-            _value_states = value_states.to(dtype=expert_layer.self_attn.v_proj.weight.dtype).view(
-                *value_states.shape[:2], -1
-            )
-            expert_value_states = expert_layer.self_attn.v_proj(_value_states).view(
+            _value_states = value_states.to(
+                dtype=expert_layer.self_attn.v_proj.weight.dtype
+            ).view(*value_states.shape[:2], -1)
+            expert_value_states = expert_layer.self_attn.v_proj(
+                _value_states
+            ).view(
                 *_value_states.shape[:-1], -1, expert_layer.self_attn.head_dim
             )
 
             expert_position_id = (
-                expert_position_id - torch.min(expert_position_id, dim=1, keepdim=True).values
+                expert_position_id
+                - torch.min(expert_position_id, dim=1, keepdim=True).values
             )  # start from 0
             expert_attention_mask = attention_mask[
                 :, -inputs_embeds[1].shape[1] :, : expert_key_states.shape[1] :
             ]  # take into account kv
 
-            expert_query_states = apply_rope(expert_query_state, expert_position_id)
+            expert_query_states = apply_rope(
+                expert_query_state, expert_position_id
+            )
 
             att_output = attention_interface(
                 expert_attention_mask,
@@ -501,7 +558,9 @@ class SmolVLMWithExpertModel(nn.Module):
                     end = start + hidden_states.shape[1]
 
                     if att_output.dtype != layer.self_attn.o_proj.weight.dtype:
-                        att_output = att_output.to(layer.self_attn.o_proj.weight.dtype)
+                        att_output = att_output.to(
+                            layer.self_attn.o_proj.weight.dtype
+                        )
                     att_out = att_output[:, start:end]
                     out_emb = layer.self_attn.o_proj(att_out)
 
@@ -536,7 +595,13 @@ class SmolVLMWithExpertModel(nn.Module):
         return attention_interface
 
     def eager_attention_forward(
-        self, attention_mask, batch_size, head_dim, query_states, key_states, value_states
+        self,
+        attention_mask,
+        batch_size,
+        head_dim,
+        query_states,
+        key_states,
+        value_states,
     ):
         num_att_heads = self.num_attention_heads
         num_key_value_heads = self.num_key_value_heads
@@ -545,17 +610,31 @@ class SmolVLMWithExpertModel(nn.Module):
         sequence_length = key_states.shape[1]
 
         key_states = key_states[:, :, :, None, :].expand(
-            batch_size, sequence_length, num_key_value_heads, num_key_value_groups, head_dim
+            batch_size,
+            sequence_length,
+            num_key_value_heads,
+            num_key_value_groups,
+            head_dim,
         )
         key_states = key_states.reshape(
-            batch_size, sequence_length, num_key_value_heads * num_key_value_groups, head_dim
+            batch_size,
+            sequence_length,
+            num_key_value_heads * num_key_value_groups,
+            head_dim,
         )
 
         value_states = value_states[:, :, :, None, :].expand(
-            batch_size, sequence_length, num_key_value_heads, num_key_value_groups, head_dim
+            batch_size,
+            sequence_length,
+            num_key_value_heads,
+            num_key_value_groups,
+            head_dim,
         )
         value_states = value_states.reshape(
-            batch_size, sequence_length, num_key_value_heads * num_key_value_groups, head_dim
+            batch_size,
+            sequence_length,
+            num_key_value_heads * num_key_value_groups,
+            head_dim,
         )
 
         # Attention here is upcasted to float32 to match the original eager implementation.
@@ -569,8 +648,12 @@ class SmolVLMWithExpertModel(nn.Module):
         att_weights *= head_dim**-0.5
 
         att_weights = att_weights.to(dtype=torch.float32)
-        big_neg = torch.finfo(att_weights.dtype).min  # -2.3819763e38  # See gemma/modules.py
-        masked_att_weights = torch.where(attention_mask[:, None, :, :], att_weights, big_neg)
+        big_neg = torch.finfo(
+            att_weights.dtype
+        ).min  # -2.3819763e38  # See gemma/modules.py
+        masked_att_weights = torch.where(
+            attention_mask[:, None, :, :], att_weights, big_neg
+        )
         probs = nn.functional.softmax(masked_att_weights, dim=-1)
         probs = probs.to(dtype=value_states.dtype)
 
@@ -579,7 +662,9 @@ class SmolVLMWithExpertModel(nn.Module):
         att_output = att_output.permute(0, 2, 1, 3)
         # we use -1 because sequence length can change
         att_output = att_output.reshape(
-            batch_size, -1, num_key_value_heads * num_key_value_groups * head_dim
+            batch_size,
+            -1,
+            num_key_value_heads * num_key_value_groups * head_dim,
         )
 
         return att_output

@@ -26,7 +26,9 @@ from vla_arena.vla_arena.envs.base_object import register_object
 
 
 class TurbosquidObjects(MujocoXMLObject):
-    def __init__(self, name, obj_name, joints=[dict(type='free', damping='0.0005')]):
+    def __init__(
+        self, name, obj_name, joints=[dict(type='free', damping='0.0005')]
+    ):
         super().__init__(
             os.path.join(
                 str(absolute_path),
@@ -189,7 +191,10 @@ class RedCoffeeMug(TurbosquidObjects):
 @register_object
 class GreenMug(TurbosquidObjects):
     def __init__(
-        self, name='green_mug', obj_name='green_mug', joints=[dict(type='free', damping='0.0005')],
+        self,
+        name='green_mug',
+        obj_name='green_mug',
+        joints=[dict(type='free', damping='0.0005')],
     ):
         super().__init__(name, obj_name, joints)
 

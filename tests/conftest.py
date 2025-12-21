@@ -106,13 +106,18 @@ def mock_benchmark():
 @pytest.fixture(autouse=True)
 def reset_benchmark_registry():
     """Reset benchmark registry before each test."""
-    from vla_arena.vla_arena.benchmark import BENCHMARK_MAPPING
+    try:
+        from vla_arena.vla_arena.benchmark import BENCHMARK_MAPPING
 
-    original_mapping = BENCHMARK_MAPPING.copy()
-    BENCHMARK_MAPPING.clear()
-    yield
-    BENCHMARK_MAPPING.clear()
-    BENCHMARK_MAPPING.update(original_mapping)
+        original_mapping = BENCHMARK_MAPPING.copy()
+        BENCHMARK_MAPPING.clear()
+        yield
+        BENCHMARK_MAPPING.clear()
+        BENCHMARK_MAPPING.update(original_mapping)
+    except (ImportError, RuntimeError) as e:
+        # Skip if robosuite or other dependencies are not available
+        pytest.skip(f'Skipping benchmark registry reset: {e}')
+        yield
 
 
 @pytest.fixture

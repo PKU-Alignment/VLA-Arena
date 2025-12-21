@@ -1743,7 +1743,7 @@ class TaskCloudManager:
         package_name: str,
         overwrite: bool = False,
         skip_existing_assets: bool = False,
-        token: Optional[str] = None,
+        token: str = None,
     ) -> bool:
         """
         Download and install a package in one step.

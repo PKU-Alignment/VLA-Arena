@@ -17,6 +17,7 @@ except ImportError:
 
 
 @pytest.mark.skipif(not BDDL_UTILS_AVAILABLE, reason='bddl_generation_utils not available')
+@pytest.mark.requires_torch
 class TestBDDLGenerationUtils:
     """Test cases for bddl_generation_utils.py"""
 

@@ -25,15 +25,6 @@ def get_default_path_dict(custom_location=None):
     else:
         benchmark_root_path = custom_location
 
-    # This is a default path for localizing all the default bddl files
-    bddl_files_default_path = os.path.join(benchmark_root_path, './bddl_files')
-
-    # This is a default path for localizing all the default bddl files
-    init_states_default_path = os.path.join(benchmark_root_path, './init_files')
-
-    # This is a default path for localizing all the default assets
-    assets_default_path = os.path.join(benchmark_root_path, './assets')
-
     return {
         'benchmark_root': benchmark_root_path,
         'bddl_files': os.path.join(benchmark_root_path, 'bddl_files'),

@@ -11,20 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 # ==============================================================================
 
 """
@@ -46,6 +32,7 @@ import zipfile
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
+from typing import Dict, List, Optional, Set, Tuple
 
 
 try:
@@ -160,7 +147,7 @@ def lightweight_parse_bddl(bddl_path: str) -> dict:
     return result
 
 
-def find_problem_class_file(problem_name: str) -> str | None:
+def find_problem_class_file(problem_name: str) -> Optional[str]:
     """
     Find the Python file containing the Problem class.
 
@@ -201,7 +188,7 @@ def find_problem_class_file(problem_name: str) -> str | None:
     return None
 
 
-def extract_scene_xml_from_problem(problem_file: str) -> str | None:
+def extract_scene_xml_from_problem(problem_file: str) -> Optional[str]:
     """
     Extract scene_xml path from a Problem class file.
 
@@ -236,7 +223,7 @@ def extract_scene_xml_from_problem(problem_file: str) -> str | None:
         return None
 
 
-def parse_scene_xml_assets(scene_xml_path: str) -> dict[str, list[str]]:
+def parse_scene_xml_assets(scene_xml_path: str) -> Dict[str, List[str]]:
     """
     Parse a scene XML file to extract referenced assets (textures, meshes).
 
@@ -301,11 +288,11 @@ class SceneInfo:
     """Information about a scene and its assets."""
 
     problem_name: str
-    problem_file: str | None
-    scene_xml: str | None
-    scene_xml_full_path: str | None
-    textures: list[str] = field(default_factory=list)
-    meshes: list[str] = field(default_factory=list)
+    problem_file: Optional[str]
+    scene_xml: Optional[str]
+    scene_xml_full_path: Optional[str]
+    textures: List[str] = field(default_factory=list)
+    meshes: List[str] = field(default_factory=list)
 
     def has_custom_scene(self) -> bool:
         """Check if this is a custom scene that needs to be packaged."""
@@ -436,26 +423,26 @@ class TaskManifest:
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
 
     # Contents
-    bddl_files: list[str] = field(default_factory=list)
-    init_files: list[str] = field(default_factory=list)
-    problem_files: list[str] = field(default_factory=list)  # Custom Problem class files
-    scene_files: list[str] = field(default_factory=list)  # Scene XML files
-    scene_assets: list[str] = field(default_factory=list)  # Scene textures/meshes
-    assets: list[dict] = field(default_factory=list)  # Object assets
+    bddl_files: List[str] = field(default_factory=list)
+    init_files: List[str] = field(default_factory=list)
+    problem_files: List[str] = field(default_factory=list)  # Custom Problem class files
+    scene_files: List[str] = field(default_factory=list)  # Scene XML files
+    scene_assets: List[str] = field(default_factory=list)  # Scene textures/meshes
+    assets: List[Dict] = field(default_factory=list)  # Object assets
 
     # Dependencies
-    fixtures: list[str] = field(default_factory=list)
-    objects: list[str] = field(default_factory=list)
+    fixtures: List[str] = field(default_factory=list)
+    objects: List[str] = field(default_factory=list)
 
     # Checksums
     total_size_bytes: int = 0
     package_checksum: str = ''
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: dict) -> 'TaskManifest':
+    def from_dict(cls, data: Dict) -> 'TaskManifest':
         return cls(**data)
 
     def save(self, path: str):
@@ -535,7 +522,7 @@ class AssetDependencyAnalyzer:
                         if asset_name not in self.asset_mapping:
                             self.asset_mapping[asset_name] = (category, dir_name)
 
-    def analyze_bddl(self, bddl_path: str) -> tuple[set[str], set[str], dict]:
+    def analyze_bddl(self, bddl_path: str) -> Tuple[Set[str], Set[str], Dict]:
         """
         Analyze a BDDL file to extract required assets.
 
@@ -569,7 +556,7 @@ class AssetDependencyAnalyzer:
 
         return fixtures, objects, parsed
 
-    def get_asset_paths(self, object_names: set[str]) -> list[AssetInfo]:
+    def get_asset_paths(self, object_names: Set[str]) -> List[AssetInfo]:
         """
         Get asset file paths for given object names.
 
@@ -683,7 +670,7 @@ class TaskPackager:
     def __init__(self):
         self.analyzer = AssetDependencyAnalyzer()
 
-    def _find_init_file_for_bddl(self, bddl_path: str) -> str | None:
+    def _find_init_file_for_bddl(self, bddl_path: str) -> Optional[str]:
         """
         Auto-detect the corresponding init file for a BDDL file.
 
@@ -729,8 +716,8 @@ class TaskPackager:
         self,
         bddl_path: str,
         output_dir: str,
-        init_path: str | None = None,
-        package_name: str | None = None,
+        init_path: Optional[str] = None,
+        package_name: Optional[str] = None,
         author: str = '',
         email: str = '',
         description: str = '',
@@ -1084,7 +1071,7 @@ class TaskInstaller:
 
         return manifest
 
-    def check_conflicts(self, package_path: str) -> dict[str, list[str]]:
+    def check_conflicts(self, package_path: str) -> Dict[str, List[str]]:
         """
         Check for potential conflicts with existing assets.
 
@@ -1331,8 +1318,8 @@ class TaskCloudManager:
     def upload_with_git(
         self,
         package_path: str,
-        token: str | None = None,
-        commit_message: str | None = None,
+        token: Optional[str] = None,
+        commit_message: Optional[str] = None,
     ) -> str:
         """
         Upload a task package using Git LFS (fallback method when API fails).
@@ -1444,7 +1431,7 @@ class TaskCloudManager:
         self,
         package_path: str,
         private: bool = False,
-        token: str | None = None,
+        token: Optional[str] = None,
         use_git: bool = False,
     ) -> str:
         """
@@ -1507,7 +1494,7 @@ class TaskCloudManager:
             # For other errors, raise them
             raise
 
-    def list_packages(self) -> list[str]:
+    def list_packages(self) -> List[str]:
         """List available packages in the repository."""
         try:
             files = self.api.list_repo_files(
@@ -1527,8 +1514,8 @@ class TaskCloudManager:
     def download(
         self,
         package_name: str,
-        output_dir: str | None = None,
-        token: str | None = None,
+        output_dir: Optional[str] = None,
+        token: Optional[str] = None,
     ) -> str:
         """
         Download a task package from HuggingFace Hub.
@@ -1569,7 +1556,7 @@ class TaskCloudManager:
         self,
         package_name: str,
         overwrite: bool = False,
-        token: str | None = None,
+        token: Optional[str] = None,
     ) -> bool:
         """
         Download and install a package in one step.
@@ -1603,16 +1590,16 @@ def main():
 Examples:
   # Pack a single task
   python -m vla_arena.vla_arena.utils.asset_manager pack task.bddl -o ./packages
-
+  
   # Pack a task suite
   python -m vla_arena.vla_arena.utils.asset_manager pack-suite robustness_dynamic_distractors -o ./packages
-
+  
   # Install a package
   python -m vla_arena.vla_arena.utils.asset_manager install package.vlap
-
+  
   # Upload to HuggingFace (specify your repo)
   python -m vla_arena.vla_arena.utils.asset_manager upload package.vlap --repo username/task-assets
-
+  
   # Download and install from cloud
   python -m vla_arena.vla_arena.utils.asset_manager download my_task --repo username/task-assets --install
         """,

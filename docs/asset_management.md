@@ -139,7 +139,7 @@ python scripts/manage_assets.py upload <package_path> \
 
 ### Prerequisites
 1. **HuggingFace Account**: Sign up at https://huggingface.co
-2. **Create a Repository**: 
+2. **Create a Repository**:
    - Go to https://huggingface.co/new-dataset
    - Create a dataset repository (e.g., `username/vla-arena-tasks`)
 3. **Get Access Token**:
@@ -451,4 +451,3 @@ python scripts/manage_assets.py download my_task \
 - [Data Collection Guide](data_collection.md) - How to collect demonstrations
 - [Evaluation Guide](evaluation.md) - How to evaluate policies
 - [HuggingFace Hub Documentation](https://huggingface.co/docs/hub/index) - Cloud storage
-

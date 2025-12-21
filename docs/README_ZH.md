@@ -137,5 +137,3 @@ docs/
 1. 按照 `asset_management_zh.md` 打包你的自定义任务
 2. 使用 `scripts/manage_assets.py` 上传到云端
 3. 与社区分享你的任务套件
-
-

@@ -1117,6 +1117,7 @@ class TaskInstaller:
         package_path: str,
         overwrite: bool = False,
         skip_assets: bool = False,
+        skip_existing_assets: bool = False,
         dry_run: bool = False,
     ) -> bool:
         """
@@ -1126,6 +1127,7 @@ class TaskInstaller:
             package_path: Path to the .vlap package
             overwrite: Whether to overwrite existing files
             skip_assets: Skip installing assets (useful if already installed)
+            skip_existing_assets: Skip existing assets but install new ones (useful for install-all)
             dry_run: Only show what would be installed
 
         Returns:
@@ -1140,7 +1142,17 @@ class TaskInstaller:
 
         # Check conflicts
         conflicts = self.check_conflicts(package_path)
-        has_conflicts = any(len(v) > 0 for v in conflicts.values())
+
+        # If skip_existing_assets is True, ignore asset conflicts
+        if skip_existing_assets:
+            conflicts_to_check = {
+                'bddl_files': conflicts['bddl_files'],
+                'init_files': conflicts['init_files'],
+            }
+        else:
+            conflicts_to_check = conflicts
+
+        has_conflicts = any(len(v) > 0 for v in conflicts_to_check.values())
 
         if has_conflicts and not overwrite:
             print(colored('\n⚠ Conflicts detected:', 'yellow'))
@@ -1229,6 +1241,7 @@ class TaskInstaller:
                     src_assets = os.path.join(pkg_root, 'assets')
                     if os.path.exists(src_assets):
                         installed_count = 0
+                        skipped_count = 0
 
                         # Recursively copy all assets
                         for root, dirs, files in os.walk(src_assets):
@@ -1245,13 +1258,21 @@ class TaskInstaller:
                                 if os.path.exists(dest_file):
                                     if overwrite:
                                         os.remove(dest_file)
+                                    elif skip_existing_assets:
+                                        skipped_count += 1
+                                        continue
                                     else:
                                         continue
 
                                 shutil.copy2(src_file, dest_file)
                                 installed_count += 1
 
-                        print(f'  ✓ Assets installed: {installed_count} files')
+                        if skip_existing_assets and skipped_count > 0:
+                            print(
+                                f'  ✓ Assets: {installed_count} installed, {skipped_count} skipped (already exist)'
+                            )
+                        else:
+                            print(f'  ✓ Assets installed: {installed_count} files')
 
         print(colored(f'\n✓ Installation complete: {manifest.package_name}', 'green'))
         return True
@@ -1556,6 +1577,7 @@ class TaskCloudManager:
         self,
         package_name: str,
         overwrite: bool = False,
+        skip_existing_assets: bool = False,
         token: Optional[str] = None,
     ) -> bool:
         """
@@ -1564,6 +1586,7 @@ class TaskCloudManager:
         Args:
             package_name: Name of the package
             overwrite: Whether to overwrite existing files
+            skip_existing_assets: Skip existing assets but install new ones
             token: HuggingFace API token
 
         Returns:
@@ -1571,7 +1594,11 @@ class TaskCloudManager:
         """
         package_path = self.download(package_name, token=token)
         installer = TaskInstaller()
-        return installer.install(package_path, overwrite=overwrite)
+        return installer.install(
+            package_path,
+            overwrite=overwrite,
+            skip_existing_assets=skip_existing_assets,
+        )
 
 
 # =============================================================================

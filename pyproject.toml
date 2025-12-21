@@ -51,7 +51,7 @@ dependencies = [
     "tensorflow_graphics",
     "jsonlines",
     "json_numpy",
-    "torch>=2.6.0",
+    "torch",
     "pyyaml>=6.0",
 ]
 dynamic = ["version"]
@@ -99,12 +99,14 @@ docs = [
 "vla-arena-eval" = "vla_arena.evaluate:main"
 "vla-arena-config-copy" = "scripts.config_copy:main"
 "vla-arena-create-template" = "scripts.create_template:main"
+"vla-arena-download-tasks" = "scripts.download_tasks:main"
+"vla-arena-manage-assets" = "scripts.manage_assets:main"
 
 [tool.setuptools]
 include-package-data = true
 
 [tool.setuptools.packages.find]
-include = ["vla_arena", "vla_arena.*"]
+include = ["vla_arena", "vla_arena.*", "scripts"]
 
 [tool.setuptools.dynamic]
 version = {attr = "vla_arena.__version__"}

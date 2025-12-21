@@ -57,8 +57,21 @@ VLA-Arena 专注于四个关键领域：
 ## 快速开始
 
 ### 1. 安装
+
+#### 从 PyPI 安装 (推荐)
 ```bash
-# 克隆仓库
+# 1. 安装 VLA-Arena
+pip install vla-arena
+
+# 2. 下载任务套件 (必需)
+vla-arena-download-tasks install-all --repo vla-arena/tasks
+```
+
+> **📦 重要**: 为减小 PyPI 包大小，任务套件和资产文件需要在安装后单独下载。
+
+#### 从源代码安装
+```bash
+# 克隆仓库（包含所有任务和资产文件）
 git clone https://github.com/PKU-Alignment/VLA-Arena.git
 cd VLA-Arena
 
@@ -236,6 +249,60 @@ VLA-Arena为框架的所有方面提供全面的文档。选择最适合你需�
 #### 文档索引
 - **中文**：[`README_ZH.md`](docs/README_ZH.md) - 完整中文文档索引
 - **English**：[`README_EN.md`](docs/README_EN.md) - 完整英文文档索引
+
+### 📦 下载任务套件
+
+#### 方法 1: 使用命令行工具 (推荐)
+
+安装后,你可以使用以下命令查看和下载任务套件:
+
+```bash
+# 查看已安装的任务
+vla-arena-download-tasks installed
+
+# 列出可用的任务套件
+vla-arena-download-tasks list --repo vla-arena/tasks
+
+# 安装单个任务套件
+vla-arena-download-tasks install robustness_dynamic_distractors --repo vla-arena/tasks
+
+# 安装所有任务套件 (推荐)
+vla-arena-download-tasks install-all --repo vla-arena/tasks
+```
+
+#### 方法 2: 使用 Python 脚本
+
+```bash
+# 查看已安装的任务
+python -m scripts.download_tasks installed
+
+# 安装所有任务
+python -m scripts.download_tasks install-all --repo vla-arena/tasks
+```
+
+### 🔧 自定义任务仓库
+
+如果您想使用自己的任务仓库:
+
+```bash
+# 使用自定义 HuggingFace 仓库
+vla-arena-download-tasks install-all --repo your-username/your-task-repo
+```
+
+### 📝 创建和分享自定义任务
+
+您可以创建并分享自己的任务套件:
+
+```bash
+# 打包单个任务
+vla-arena-manage-assets pack path/to/task.bddl --output ./packages
+
+# 打包所有任务
+python scripts/package_all_suites.py --output ./packages
+
+# 上传到 HuggingFace Hub
+vla-arena-manage-assets upload ./packages/my_task.vlap --repo your-username/your-repo
+```
 
 ## 排行榜
 

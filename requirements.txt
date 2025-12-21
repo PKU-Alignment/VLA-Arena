@@ -25,5 +25,5 @@
  tensorflow_graphics
  jsonlines
  json_numpy
- torch>=2.6.0
+ torch
  dlimp @ git+https://github.com/moojink/dlimp_openvla

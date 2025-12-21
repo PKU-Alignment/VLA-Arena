@@ -52,8 +52,21 @@ If you find VLA-Arena useful, please cite it in your publications.
 ## Quick Start
 
 ### 1. Installation
+
+#### Install from PyPI (Recommended)
 ```bash
-# Clone repository
+# 1. Install VLA-Arena
+pip install vla-arena
+
+# 2. Download task suites (required)
+vla-arena-download-tasks install-all --repo vla-arena/tasks
+```
+
+> **📦 Important**: To reduce PyPI package size, task suites and asset files must be downloaded separately after installation (~850 MB).
+
+#### Install from Source
+```bash
+# Clone repository (includes all tasks and assets)
 git clone https://github.com/PKU-Alignment/VLA-Arena.git
 cd VLA-Arena
 
@@ -231,6 +244,61 @@ Evaluate VLA models and adding custom models to VLA-Arena.
 #### Documentation Index
 - **English**: [`README_EN.md`](docs/README_EN.md) - Complete English documentation index
 - **中文**: [`README_ZH.md`](docs/README_ZH.md) - 完整中文文档索引
+
+### 📦 Download Task Suites
+
+#### Method 1: Using CLI Tool (Recommended)
+
+After installation, you can use the following commands to view and download task suites:
+
+```bash
+# View installed tasks
+vla-arena-download-tasks installed
+
+# List available task suites
+vla-arena-download-tasks list --repo vla-arena/tasks
+
+# Install a single task suite
+vla-arena-download-tasks install robustness_dynamic_distractors --repo vla-arena/tasks
+
+# Install all task suites (recommended)
+vla-arena-download-tasks install-all --repo vla-arena/tasks
+```
+
+#### Method 2: Using Python Script
+
+```bash
+# View installed tasks
+python -m scripts.download_tasks installed
+
+# Install all tasks
+python -m scripts.download_tasks install-all --repo vla-arena/tasks
+```
+
+### 🔧 Custom Task Repository
+
+If you want to use your own task repository:
+
+```bash
+# Use custom HuggingFace repository
+vla-arena-download-tasks install-all --repo your-username/your-task-repo
+```
+
+### 📝 Create and Share Custom Tasks
+
+You can create and share your own task suites:
+
+```bash
+# Package a single task
+vla-arena-manage-assets pack path/to/task.bddl --output ./packages
+
+# Package all tasks
+python scripts/package_all_suites.py --output ./packages
+
+# Upload to HuggingFace Hub
+vla-arena-manage-assets upload ./packages/my_task.vlap --repo your-username/your-repo
+```
+
 
 ## Leaderboard
 

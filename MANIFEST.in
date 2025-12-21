@@ -13,20 +13,63 @@ include Makefile
 include requirements.txt
 include conversion_requirements.txt
 
-# Include package data
-recursive-include vla_arena *.yaml *.yml *.json *.txt
-recursive-include vla_arena/vla_arena/assets *
-recursive-include vla_arena/vla_arena/bddl_files *.bddl
-recursive-include vla_arena/vla_arena/init_files *.pruned_init
-recursive-include vla_arena/configs *.yaml
+# Include package data - Python code only
+recursive-include vla_arena *.py
+recursive-include vla_arena/configs *.yaml *.yml *.json
+
+# IMPORTANT: Explicitly EXCLUDE large asset files from PyPI package
+# These files are downloaded separately after installation
+global-exclude *.obj
+global-exclude *.stl
+global-exclude *.dae
+global-exclude *.mtl
+global-exclude *.bddl
+global-exclude *.pruned_init
+
+# Keep the placeholder files to preserve directory structure
+global-include .gitkeep
+include vla_arena/vla_arena/assets/.gitkeep
+include vla_arena/vla_arena/bddl_files/.gitkeep
+include vla_arena/vla_arena/init_files/.gitkeep
+
+# Explicitly exclude asset directories (belt and suspenders approach)
+prune vla_arena/vla_arena/assets/stable_scanned_objects
+prune vla_arena/vla_arena/assets/stable_hope_objects
+prune vla_arena/vla_arena/assets/turbosquid_objects
+prune vla_arena/vla_arena/assets/articulated_objects
+prune vla_arena/vla_arena/assets/textures
+prune vla_arena/vla_arena/bddl_files/generalization_object_preposition_combinations
+prune vla_arena/vla_arena/bddl_files/generalization_task_workflows
+prune vla_arena/vla_arena/bddl_files/generalization_unseen_objects
+prune vla_arena/vla_arena/bddl_files/libero_10
+prune vla_arena/vla_arena/bddl_files/libero_90
+prune vla_arena/vla_arena/bddl_files/libero_goal
+prune vla_arena/vla_arena/bddl_files/libero_object
+prune vla_arena/vla_arena/bddl_files/libero_spatial
+prune vla_arena/vla_arena/bddl_files/long_horizon
+prune vla_arena/vla_arena/bddl_files/robustness_dynamic_distractors
+prune vla_arena/vla_arena/bddl_files/robustness_static_distractors
+prune vla_arena/vla_arena/bddl_files/safety_dynamic_obstacles
+prune vla_arena/vla_arena/bddl_files/safety_static_obstacles
+prune vla_arena/vla_arena/bddl_files/safety_hazard_avoidance
+prune vla_arena/vla_arena/bddl_files/safety_risk_aware_grasping
+prune vla_arena/vla_arena/bddl_files/safety_object_state_preservation
+prune vla_arena/vla_arena/init_files
+
+# Include helper scripts
+include scripts/download_tasks.py
+include scripts/package_all_suites.py
+include scripts/__init__.py
+include scripts/manage_assets.py
 
 # Exclude unnecessary files
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 recursive-exclude * .DS_Store
-recursive-exclude * .git*
 exclude .gitignore
 exclude .pre-commit-config.yaml
+exclude .gitattributes
+# Note: .gitkeep files are explicitly included above, not excluded
 
 # Exclude test and development files
 recursive-exclude tests *

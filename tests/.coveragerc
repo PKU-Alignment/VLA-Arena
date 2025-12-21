@@ -1,0 +1,27 @@
+[run]
+branch = True
+data_file = tests/.coverage
+source =
+    vla_arena
+omit =
+    */tests/*
+    */conftest.py
+    */__main__.py
+
+[report]
+skip_empty = True
+show_missing = True
+precision = 2
+exclude_lines =
+    pragma: no cover
+    if __name__ == "__main__":
+    if TYPE_CHECKING:
+    raise NotImplementedError
+
+[xml]
+output = tests/coverage.xml
+
+[paths]
+source =
+    vla_arena
+    */site-packages/vla_arena

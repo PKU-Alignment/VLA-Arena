@@ -95,15 +95,15 @@
 
 ```
 docs/
-├── data_collection.md                    # 数据收集指南（英文）
-├── data_collection_zh.md                 # 数据收集指南（中文）
-├── scene_construction.md                 # 场景构建指南（英文）
-├── scene_construction_zh.md             # 场景构建指南（中文）
 ├── finetuning_and_evaluation.md         # 模型微调与评估指南（英文）
 ├── finetuning_and_evaluation_zh.md      # 模型微调与评估指南（中文）
-├── README_EN.md                          # 文档目录（英文）
-├── README_ZH.md                          # 文档目录（中文）
-└── image/                                # 文档图片和 GIF
+├── data_collection.md          # 数据收集指南（英文）
+├── data_collection_zh.md       # 数据收集指南（中文）
+├── scene_construction.md       # 场景构建指南（英文）
+├── scene_construction_zh.md    # 场景构建指南（中文）
+├── asset_management.md         # 任务资产管理指南（英文）
+├── asset_management_zh.md      # 任务资产管理指南（中文）
+└── image/                      # 文档图片和 GIF
 ```
 
 ---
@@ -112,7 +112,7 @@ docs/
 
 ### 1. 场景构建
 1. 阅读 `scene_construction_zh.md` 了解 BDDL 文件结构
-2. 使用 BDDL 语法定义您的任务场景
+2. 使用 BDDL 语法定义你的任务场景
 3. 使用 `scripts/visualize_bddl.py` 预览场景
 
 ### 2. 数据收集
@@ -127,3 +127,15 @@ docs/
 4. 使用 `vla-arena eval` 命令评估模型性能
 5. 通过 WandB 监控训练进度
 6. 分析结果并迭代改进模型
+
+### 4. 模型评估
+1. 按照 `evaluation_zh.md` 进行模型评估程序
+2. 使用 `scripts/evaluate_policy.py` 进行全面评估
+3. 分析结果并迭代改进模型
+
+### 5. 任务分享（可选）
+1. 按照 `asset_management_zh.md` 打包你的自定义任务
+2. 使用 `scripts/manage_assets.py` 上传到云端
+3. 与社区分享你的任务套件
+
+

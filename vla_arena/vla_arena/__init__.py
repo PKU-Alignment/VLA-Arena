@@ -14,17 +14,14 @@
 
 import os
 
-import yaml
 
-
-# This is a default path for localizing all the benchmark related files
-vla_arena_config_path = os.environ.get('VLA_ARENA_CONFIG_PATH', os.path.expanduser('~/.vla_arena'))
-config_file = os.path.join(vla_arena_config_path, 'config.yaml')
+# All paths are relative to this file's location
+_BENCHMARK_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
 def get_default_path_dict(custom_location=None):
     if custom_location is None:
-        benchmark_root_path = os.path.dirname(os.path.abspath(__file__))
+        benchmark_root_path = _BENCHMARK_ROOT
     else:
         benchmark_root_path = custom_location
 
@@ -39,47 +36,18 @@ def get_default_path_dict(custom_location=None):
 
     return {
         'benchmark_root': benchmark_root_path,
-        'bddl_files': bddl_files_default_path,
-        'init_states': init_states_default_path,
-        'assets': assets_default_path,
+        'bddl_files': os.path.join(benchmark_root_path, 'bddl_files'),
+        'init_states': os.path.join(benchmark_root_path, 'init_files'),
+        'datasets': os.path.join(benchmark_root_path, '..', 'datasets'),
+        'assets': os.path.join(benchmark_root_path, 'assets'),
     }
 
 
 def get_vla_arena_path(query_key):
-    with open(config_file) as f:
-        config = dict(yaml.load(f.read(), Loader=yaml.FullLoader))
+    """Get path for a VLA-Arena resource, resolved relative to this file."""
+    paths = get_default_path_dict()
 
-    # Give warnings in case the user needs to access the paths
-    for key in config:
-        if not os.path.exists(config[key]):
-            print(f'[Warning]: {key} path {config[key]} does not exist!')
+    if query_key not in paths:
+        raise KeyError(f"Key '{query_key}' not found. Available keys: {list(paths.keys())}")
 
-    assert (
-        query_key in config
-    ), f'Key {query_key} not found in config file {config_file}. You need to modify it. Available keys are: {config.keys()}'
-    return config[query_key]
-
-
-def set_vla_arena_default_path(custom_location=os.path.dirname(os.path.abspath(__file__))):
-    print(
-        f'[Warning] You are changing the default path for vla_arena config. This will affect all the paths in the config file.'
-    )
-    new_config = get_default_path_dict(custom_location)
-    with open(config_file, 'w') as f:
-        yaml.dump(new_config, f)
-
-
-if not os.path.exists(vla_arena_config_path):
-    os.makedirs(vla_arena_config_path)
-
-if not os.path.exists(config_file):
-    # Create a default config file
-
-    default_path_dict = get_default_path_dict()
-    print('Initializing the default config file...')
-    print(f'The following information is stored in the config file: {config_file}')
-    # write all the paths into a yaml file
-    with open(config_file, 'w') as f:
-        yaml.dump(default_path_dict, f)
-    for key, value in default_path_dict.items():
-        print(f'{key}: {value}')
+    return os.path.abspath(paths[query_key])

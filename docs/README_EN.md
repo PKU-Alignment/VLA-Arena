@@ -91,10 +91,98 @@ Comprehensive guide for fine-tuning and evaluating VLA models using VLA-Arena ge
 
 ---
 
+### 4. Model Evaluation Guide
+**File:** `evaluation.md`
+
+Complete guide for evaluating VLA models and adding custom models to VLA-Arena.
+
+#### Table of Contents:
+1. [Quick Start](#quick-start)
+   - Environment preparation
+   - Basic evaluation commands
+2. [Model Evaluation](#model-evaluation)
+   - Supported models
+   - Evaluation procedures
+   - Performance metrics
+   - Result interpretation
+3. [Adding Custom Models](#adding-custom-models)
+   - Custom model integration
+   - Configuration requirements
+   - Implementation guidelines
+4. [Configuration Instructions](#configuration-instructions)
+   - Detailed configuration options
+   - Parameter descriptions
+   - Best practices
+5. [Troubleshooting](#troubleshooting)
+   - Common issues and solutions
+   - Debugging techniques
+   - Performance optimization
+
+---
+
+### 5. Task Asset Management Guide
+**File:** `asset_management.md`
+
+Comprehensive guide for packaging, sharing, and installing custom tasks and scenes.
+
+#### Table of Contents:
+1. [Overview](#1-overview)
+   - Complete workflow: Design → Pack → Upload → Download → Install → Use
+   - Key features and capabilities
+   - What gets packaged
+2. [Package a Single Task](#2-package-a-single-task)
+   - Packaging commands and options
+   - Automatic dependency detection
+   - Examples and output
+3. [Package a Task Suite](#3-package-a-task-suite)
+   - Multi-task packaging
+   - Suite organization
+4. [Inspect a Package](#4-inspect-a-package)
+   - Package content preview
+   - Metadata inspection
+5. [Install a Package](#5-install-a-package)
+   - Installation procedures
+   - Conflict handling
+   - Options and flags
+6. [Upload to Cloud](#6-upload-to-cloud)
+   - HuggingFace Hub integration
+   - Authentication setup
+   - Automatic fallback methods
+7. [Download from Cloud](#7-download-from-cloud)
+   - Package discovery
+   - Download and installation
+8. [Uninstall a Package](#8-uninstall-a-package)
+   - Safe removal procedures
+9. [Package Structure](#9-package-structure)
+   - `.vlap` file format
+   - Manifest specification
+10. [Troubleshooting](#10-troubleshooting)
+    - Common issues and solutions
+    - Best practices
+
+---
+
+## 🔧 Script Files
+
+### Fine-tuning Scripts
+- **`finetune_openvla.sh`**: Standard OpenVLA fine-tuning script
+- **`finetune_openvla_oft.sh`**: OpenVLA OFT fine-tuning script with advanced options
+
+### Key Features:
+- Automated dataset configuration
+- Parameter validation
+- Multi-GPU support
+- Comprehensive error handling
+- Flexible training options
+
+---
+
 ## 📁 Directory Structure
 
 ```
 docs/
+├── asset_management.md         # Task asset management guide (English)
+├── asset_management_zh.md      # Task asset management guide (Chinese)
 ├── data_collection.md                    # Data collection guide (English)
 ├── data_collection_zh.md                 # Data collection guide (Chinese)
 ├── scene_construction.md                 # Scene construction guide (English)
@@ -120,10 +208,17 @@ docs/
 2. Use `scripts/collect_demonstration.py` for interactive data collection
 3. Convert data format using `scripts/group_create_dataset.py`
 
-### 3. Model Training and Evaluation
-1. Follow `finetuning_and_evaluation.md` to install model dependencies
-2. Use `vla-arena train` command for model fine-tuning
-3. Configure training parameters according to your needs
-4. Use `vla-arena eval` command to evaluate model performance
-5. Monitor training progress through WandB
-6. Analyze results and iterate on model improvements
+### 3. Model Training
+1. Use `finetune_openvla.sh` or `finetune_openvla_oft.sh` for model fine-tuning
+2. Configure training parameters according to your needs
+3. Monitor training progress through WandB
+
+### 4. Model Evaluation
+1. Follow `evaluation.md` for model evaluation procedures
+2. Use `scripts/evaluate_policy.py` for comprehensive evaluation
+3. Analyze results and iterate on model improvements
+
+### 5. Task Sharing (Optional)
+1. Follow `asset_management.md` to package your custom tasks
+2. Use `scripts/manage_assets.py` to upload to cloud
+3. Share your task packages with the community

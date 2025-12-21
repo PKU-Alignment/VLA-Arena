@@ -119,7 +119,7 @@ jobs:
         run: |
           make test
         env:
-          MUJOCO_GL: osmesa
+          MUJOCO_GL: egl
 
       - name: Upload coverage reports
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10'

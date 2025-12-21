@@ -10,14 +10,13 @@ import pytest
 
 try:
     from vla_arena.vla_arena.utils import bddl_generation_utils
-
+    import torch
     BDDL_UTILS_AVAILABLE = True
 except ImportError:
     BDDL_UTILS_AVAILABLE = False
 
 
 @pytest.mark.skipif(not BDDL_UTILS_AVAILABLE, reason='bddl_generation_utils not available')
-@pytest.mark.requires_torch
 class TestBDDLGenerationUtils:
     """Test cases for bddl_generation_utils.py"""
 

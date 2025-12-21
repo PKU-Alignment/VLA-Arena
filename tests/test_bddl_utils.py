@@ -10,7 +10,7 @@ import pytest
 
 try:
     from vla_arena.vla_arena.utils import bddl_generation_utils
-    import torch
+
     BDDL_UTILS_AVAILABLE = True
 except ImportError:
     BDDL_UTILS_AVAILABLE = False

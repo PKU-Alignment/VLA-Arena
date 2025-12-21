@@ -17,6 +17,7 @@ import os
 import re
 from typing import List, NamedTuple, Optional
 
+import torch
 
 from vla_arena.vla_arena import get_vla_arena_path
 from vla_arena.vla_arena.benchmark.vla_arena_suite_task_map import vla_arena_task_map
@@ -496,7 +497,6 @@ class Benchmark(abc.ABC):
         return self._get_task_file_path(level, level_id, 'bddl_files', '.bddl')
 
     def get_task_init_states_by_level_id(self, level: int, level_id: int):
-        import torch
         """Get init states by level and level_id."""
         init_states_path = self._get_task_file_path(level, level_id, 'init_states', '.pruned_init')
         if init_states_path is None:

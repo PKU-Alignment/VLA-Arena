@@ -1,29 +1,29 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
+    model_family: "openvla"                    # Model family
+    # Set OPENVLA_PRETRAINED_CHECKPOINT env var or modify the value to point to your checkpoint
+    pretrained_checkpoint: "your-openvla-checkpoint"
+    center_crop: true                          # Center crop? (if trained with random crop augmentation)
+    num_open_loop_steps: 8                     # Open-loop steps before requerying policy
+    unnorm_key: "libero_spatial"              # Action un-normalization key
+    load_in_8bit: false                         # Load with 8-bit quantization
+    load_in_4bit: false                         # Load with 4-bit quantization
+    seed: 7                                     # Random seed for reproducibility
 
-# Model-specific parameters
-model_family: "openvla"                    # Model family
+    task_suite_name: "libero_spatial" # Task suite name
+    task_level: 0
+    num_steps_wait: 10                          # Steps to wait for objects to stabilize
+    num_trials_per_task: 10                     # Rollouts per task
+    initial_states_path: "DEFAULT"             # "DEFAULT" or path to an initial states JSON
+    env_img_res: 256                            # Resolution for rendered environment images
+    add_noise: false
+    adjust_light: false
+    randomize_color: false
+    camera_offset: false
+    safety: false
 
-center_crop: true                          # Center crop? (if trained w/ random crop image aug)
-num_open_loop_steps: 8                     # Number of actions to execute open-loop before requerying policy
-
-lora_rank: 32                              # Rank of LoRA weight matrix (MAKE SURE THIS MATCHES TRAINING!)
-
-unnorm_key: ""                             # Action un-normalization key
-
-load_in_8bit: false                        # (For OpenVLA only) Load with 8-bit quantization
-load_in_4bit: false                        # (For OpenVLA only) Load with 4-bit quantization
-
-seed: 7                                    # Random Seed (for reproducibility)
+    run_id_note: null                           # Extra note appended to the run ID
+    local_log_dir: "./experiments/logs"       # Local directory for evaluation logs
+    use_wandb: false                            # Whether to log results to Weights & Biases
+    wandb_entity: "your-wandb-entity"
+    wandb_project: "your-wandb-project"
+    seed: 7                                     # Random seed for reproducibility
+    save_video_mode: "first_success_failure"  # Video saving mode: "all", "first_success_failure", "none"

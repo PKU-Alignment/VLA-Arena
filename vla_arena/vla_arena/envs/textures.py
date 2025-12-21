@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 import os
 
@@ -63,13 +62,19 @@ def get_texture_file_list(type=None, texture_path='../'):
     for key, value in sorted(TEXTURE_MAPPING.items()):
         if type.lower() == 'table':
             # Only those with "table" in the name or no other element name will be included
-            if 'table' in key.lower() or ('wall' not in key.lower() and 'floor' not in key.lower()):
+            if 'table' in key.lower() or (
+                'wall' not in key.lower() and 'floor' not in key.lower()
+            ):
                 texture_mapping_dict[key] = value
         elif type.lower() == 'wall':
-            if 'wall' in key.lower() or ('table' not in key.lower() and 'floor' not in key.lower()):
+            if 'wall' in key.lower() or (
+                'table' not in key.lower() and 'floor' not in key.lower()
+            ):
                 texture_mapping_dict[key] = value
         elif type.lower() == 'floor':
-            if 'floor' in key.lower() or ('wall' not in key.lower() and 'table' not in key.lower()):
+            if 'floor' in key.lower() or (
+                'wall' not in key.lower() and 'table' not in key.lower()
+            ):
                 texture_mapping_dict[key] = value
 
     texture_list = []

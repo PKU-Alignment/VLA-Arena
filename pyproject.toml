@@ -1,60 +1,187 @@
-# Package ######################################################################
-
 [build-system]
-requires = ["setuptools >= 60.0.0"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "vla-arena"
-description = "A Comprehensive Benchmark for Vision-Language-Action Models in Robotic Manipulation"
+version = "0.1.0"
+authors = [
+    {name = "Jiahao Li", email = "jiahaoli2077@gmail.com"},
+    {name = "Borong Zhang"},
+    {name = "Jiachen Shen"},
+]
+description = "VLA-Arena: A Comprehensive Benchmark for Vision-Language-Action Models in Robotic Manipulation"
 readme = "README.md"
-requires-python = ">= 3.8"
-authors = []
-license = { text = "MIT License" }
+license = {text = "Apache-2.0"}
+requires-python = "==3.11"
 keywords = ["Vision-Language-Action", "VLA Models", "Robotic Manipulation", "Benchmark"]
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
+
 dependencies = [
-    "hydra-core>=1.2.0",
-    "numpy>=1.23.0",
-    "wandb>=0.13.0",
-    "easydict>=1.9",
-    "opencv-python>=4.6.0",
-    "einops>=0.4.1",
-    "thop",
-    "robosuite>=1.5.0",
-    "bddl>=1.0.1",
-    "future>=0.18.2",
-    "matplotlib>=3.5.0",
-    "cloudpickle>=2.1.0",
+    "imageio[ffmpeg]",
+    "robosuite==1.5.1",
+    "bddl",
+    "easydict",
+    "cloudpickle",
     "gym",
-    "tensorflow",
-    "IPython",
-    "timm>=0.9.10",
-    "transformers>=4.40.0",
-    "accelerate",
-    "imageio",
-    "imageio-ffmpeg",
-    "colorlog",
-    "rich",
-    "draccus",
-    "tensorflow_graphics",
-    "jsonlines",
-    "json_numpy",
+    "numpy==1.26.4",
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0",
     "torch",
-    "pyyaml>=6.0",
+    "h5py",
+    "matplotlib",
+    "tensorflow",
 ]
-dynamic = ["version"]
+
+[project.scripts]
+"vla-arena" = "vla_arena.cli.main:main"
+"vla-arena.main" = "vla_arena.main:main"
+"vla-arena.eval" = "vla_arena.evaluate:main"
+"vla-arena.config_copy" = "scripts.config_copy:main"
+"vla-arena.create_template" = "scripts.create_template:main"
+"vla-arena-download-tasks" = "scripts.download_tasks:main"
+"vla-arena-manage-assets" = "scripts.manage_assets:main"
+
+[project.optional-dependencies]
+openvla = [
+    "accelerate>=0.25.0",
+    "draccus==0.8.0",
+    "einops",
+    # "flash_attn==2.5.5",      # Here for documentation -- install *AFTER* editable install (follow README)
+    "huggingface_hub",
+    "json-numpy",
+    "jsonlines",
+    "matplotlib",
+    "peft==0.11.1",
+    "protobuf",
+    "rich",
+    "sentencepiece==0.1.99",
+    "timm==0.9.10",
+    "tokenizers==0.19.1",
+    "torch==2.2.0",
+    "torchvision==0.17.0",
+    "torchaudio==2.2.0",
+    "transformers==4.40.1",
+    "wandb",
+    "tensorflow==2.15.0",
+    "tensorflow_datasets==4.9.3",
+    "tensorflow_graphics==2021.12.3",
+    "dlimp @ git+https://github.com/moojink/dlimp_openvla"
+]
+
+openvla-oft = [
+    "accelerate>=0.25.0",
+    "draccus==0.8.0",
+    "einops",
+    # "flash_attn==2.5.5",      # Here for documentation -- install *AFTER* editable install (follow README)
+    "huggingface_hub",
+    "json-numpy",
+    "jsonlines",
+    "matplotlib",
+    "peft==0.11.1",
+    "protobuf",
+    "rich",
+    "sentencepiece==0.1.99",
+    "timm==0.9.10",
+    "tokenizers==0.19.1",
+    "torch==2.2.0",
+    "torchvision==0.17.0",
+    "torchaudio==2.2.0",
+    "transformers @ git+https://github.com/moojink/transformers-openvla-oft.git",  # IMPORTANT: Use this fork for bidirectional attn (for parallel decoding)
+    "wandb",
+    "tensorflow==2.15.0",
+    "tensorflow_datasets==4.9.3",
+    "tensorflow_graphics==2021.12.3",
+    "dlimp @ git+https://github.com/moojink/dlimp_openvla",
+    "diffusers==0.30.3",
+    "imageio",
+    "uvicorn",
+    "fastapi",
+    "json-numpy",
+]
+
+univla = [
+    "absl-py==2.1.0",
+    "accelerate==0.32.1",
+    "braceexpand==0.1.7",
+    "dlimp @ git+https://github.com/moojink/dlimp_openvla",
+    "draccus==0.8.0",
+    "einops==0.8.1",
+    "ema-pytorch==0.5.1",
+    "gym==0.26.2",
+    "h5py==3.11.0",
+    "huggingface-hub==0.26.1",
+    "hydra-core==1.3.2",
+    "imageio==2.34.2",
+    "jsonlines==4.0.0",
+    "lightning==2.4.0",
+    "matplotlib==3.10.1",
+    "moviepy==1.0.3",
+    "numpy==1.26.4",
+    "omegaconf==2.3.0",
+    "opencv-python==4.10.0.84",
+    "packaging==24.1",
+    "peft==0.11.1",
+    "Pillow==11.2.1",
+    "piq==0.8.0",
+    "pyquaternion==0.9.9",
+    "pytorch-lightning==1.8.6",
+    "PyYAML==6.0.1",
+    "Requests==2.32.3",
+    "rich==14.0.0",
+    "robosuite==1.5.1",
+    "rotary-embedding-torch==0.8.4",
+    "setuptools==57.5.0",
+    "tensorflow==2.15.0",
+    "tensorflow-datasets==4.9.3",
+    "tensorflow-graphics==2021.12.3",
+    "termcolor==3.0.1",
+    "timm==0.9.10",
+    "tokenizers==0.19.1",
+    "torch==2.2.0",
+    "torchvision==0.17.0",
+    "tqdm==4.66.4",
+    "transformers==4.40.1",
+    "webdataset==0.2.111",
+    "wandb",
+]
+
+smolvla = [
+    "datasets>=2.19.0,<=3.6.0",
+    "diffusers>=0.27.2",
+    "huggingface-hub[hf-transfer,cli]==0.34.2",
+    "cmake>=3.29.0.1",
+    "einops>=0.8.0",
+    "opencv-python-headless>=4.9.0",
+    "av>=14.2.0",
+    "jsonlines>=4.0.0",
+    "packaging>=24.2",
+    "pynput>=1.7.7",
+    "pyserial>=3.5",
+    "wandb==0.20.0",
+    "torch==2.7.1",
+    "torchcodec>=0.2.1,<0.6.0; sys_platform != 'win32' and (sys_platform != 'linux' or (platform_machine != 'aarch64' and platform_machine != 'arm64' and platform_machine != 'armv7l')) and (sys_platform != 'darwin' or platform_machine != 'x86_64')",
+    "torchvision==0.22.1",
+    "draccus==0.10.0",
+    "gymnasium==0.29.1",
+    "rerun-sdk==0.22.1",
+    "deepdiff>=7.0.1,<9.0.0",
+    "flask>=3.0.3,<4.0.0",
+    "imageio[ffmpeg]==2.37.0",
+    "termcolor==3.1.0",
+    "transformers==4.51.3",
+    "num2words==0.5.14",
+    "accelerate==1.7.0",
+    "safetensors==0.4.3",
+    "lerobot @ git+https://github.com/propellanesjc/smolvla_vla-arena",
+    "draccus",
+]
 
 [project.urls]
 Homepage = "https://github.com/PKU-Alignment/VLA-Arena"
@@ -62,7 +189,41 @@ Repository = "https://github.com/PKU-Alignment/VLA-Arena"
 Documentation = "https://github.com/PKU-Alignment/VLA-Arena/docs"
 "Bug Report" = "https://github.com/PKU-Alignment/VLA-Arena/issues"
 
-[project.optional-dependencies]
+openpi = [
+    "augmax>=0.3.4",
+    "dm-tree>=0.1.8",
+    "einops>=0.8.0",
+    "equinox>=0.11.8",
+    "flatbuffers>=24.3.25",
+    "flax==0.10.2",
+    "fsspec[gcs]>=2024.6.0",
+    "gym-aloha>=0.1.1",
+    "imageio>=2.36.1",
+    "jax[cuda12]==0.5.3",
+    "jaxtyping==0.2.36",
+    "lerobot",
+    "ml_collections==1.0.0",
+    "numpy>=1.22.4,<2.0.0",
+    "numpydantic>=1.6.6",
+    "opencv-python>=4.10.0.84",
+    "openpi-client",
+    "orbax-checkpoint==0.11.13",
+    "pillow>=11.0.0",
+    "sentencepiece>=0.2.0",
+    "torch==2.7.1",
+    "tqdm-loggable>=0.2",
+    "typing-extensions>=4.12.2",
+    "tyro>=0.9.5",
+    "wandb>=0.19.1",
+    "filelock>=3.16.1",
+    "beartype==0.19.0",
+    "treescope>=0.1.7",
+    "transformers==4.53.2",
+    "rich>=14.0.0",
+    "polars>=1.30.0",
+]
+
+# Integrated Dev/Tool Dependencies from File B
 lint = [
     "isort >= 5.11.0",
     "black >= 23.1.0",
@@ -94,18 +255,12 @@ docs = [
     "myst-parser",
 ]
 
-[project.scripts]
-"vla-arena" = "vla_arena.main:main"
-"vla-arena-eval" = "vla_arena.evaluate:main"
-"vla-arena-config-copy" = "scripts.config_copy:main"
-"vla-arena-create-template" = "scripts.create_template:main"
-"vla-arena-download-tasks" = "scripts.download_tasks:main"
-"vla-arena-manage-assets" = "scripts.manage_assets:main"
-
 [tool.setuptools]
 include-package-data = true
+eager-resources = ["*"]
 
 [tool.setuptools.packages.find]
+where = ["."]
 include = ["vla_arena", "vla_arena.*", "scripts"]
 
 [tool.setuptools.dynamic]
@@ -114,11 +269,9 @@ version = {attr = "vla_arena.__version__"}
 # Linter tools #################################################################
 
 [tool.black]
-safe = true
-line-length = 100
+line-length = 79
 skip-string-normalization = true
-# Sync with requires-python
-target-version = ["py38", "py39", "py310", "py311"]
+target-version = ["py311"]
 
 [tool.isort]
 atomic = true
@@ -131,7 +284,7 @@ lines_after_imports = 2
 multi_line_output = 3
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.11"
 pretty = true
 show_error_codes = true
 show_error_context = true
@@ -160,64 +313,24 @@ max-line-length = 500
 ignore-words = "docs/spelling_wordlist.txt"
 
 [tool.ruff]
-# Sync with requires-python
-target-version = "py38"
+target-version = "py311"
 line-length = 100
 src = ["vla_arena", "scripts", "tests"]
 select = [
-    "E", "W",  # pycodestyle
-    "F",       # pyflakes
-    "UP",      # pyupgrade
-    "ANN",     # flake8-annotations
-    "S",       # flake8-bandit
-    "BLE",     # flake8-blind-except
-    "B",       # flake8-bugbear
-    "COM",     # flake8-commas
-    "C4",      # flake8-comprehensions
-    "EXE",     # flake8-executable
-    "ISC",     # flake8-implicit-str-concat
-    "PIE",     # flake8-pie
-    "PYI",     # flake8-pyi
-    "Q",       # flake8-quotes
-    "RSE",     # flake8-raise
-    "RET",     # flake8-return
-    "SIM",     # flake8-simplify
-    "TID",     # flake8-tidy-imports
-    "RUF",     # ruff
+    "E", "W", "F", "UP", "ANN", "S", "BLE", "B", "COM", "C4", "EXE",
+    "ISC", "PIE", "PYI", "Q", "RSE", "RET", "SIM", "TID", "RUF"
 ]
 ignore = [
-    # E501: line too long
-    # W505: doc line too long
-    "E501",
-    "W505",
-    # ANN001: missing type annotation for function argument
-    # ANN002: missing type annotation for `*args`
-    # ANN003: missing type annotation for `**kwargs`
-    # ANN201: missing return type annotation for public function
-    # ANN202: missing return type annotation for private function
-    "ANN001", "ANN002", "ANN003", "ANN201", "ANN202",
-    # ANN101: missing type annotation for `self` in method
-    # ANN102: missing type annotation for `cls` in classmethod
-    "ANN101",
-    "ANN102",
-    # ANN401: dynamically typed expressions (typing.Any) are disallowed
-    "ANN401",
-    # S101: use of `assert` detected
-    "S101",
+    "E501", "W505", # Line length handled by black
+    "ANN001", "ANN002", "ANN003", "ANN201", "ANN202", # Relax strict type annotations
+    "ANN101", "ANN102", "ANN401",
+    "S101", # Allow assert
 ]
 
 [tool.ruff.per-file-ignores]
-"__init__.py" = [
-    "F401",  # unused-import
-]
-"tests/**/*.py" = [
-    "ANN",   # flake8-annotations
-    "S",     # flake8-bandit
-    "BLE",   # flake8-blind-except
-]
-"scripts/**/*.py" = [
-    "ANN",   # flake8-annotations
-]
+"__init__.py" = ["F401"]
+"tests/**/*.py" = ["ANN", "S", "BLE"]
+"scripts/**/*.py" = ["ANN"]
 
 [tool.ruff.flake8-annotations]
 allow-star-arg-any = true
@@ -233,4 +346,24 @@ ban-relative-imports = "all"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = "--verbose --color=yes --cov=vla_arena --cov-report=xml --cov-report=term-missing"
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+    "--cov=vla_arena",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+]
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]

@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 import collections
 from copy import copy
@@ -116,16 +115,24 @@ class MultiRegionRandomSampler(ObjectPositionSampler):
         if self.rotation is None:
             rot_angle = np.random.uniform(high=2 * np.pi, low=0)
         elif isinstance(self.rotation, collections.abc.Iterable):
-            rot_angle = np.random.uniform(high=max(self.rotation), low=min(self.rotation))
+            rot_angle = np.random.uniform(
+                high=max(self.rotation), low=min(self.rotation)
+            )
         else:
             rot_angle = self.rotation
 
         if self.rotation_axis == 'x':
-            return np.array([np.cos(rot_angle / 2), np.sin(rot_angle / 2), 0, 0])
+            return np.array(
+                [np.cos(rot_angle / 2), np.sin(rot_angle / 2), 0, 0]
+            )
         if self.rotation_axis == 'y':
-            return np.array([np.cos(rot_angle / 2), 0, np.sin(rot_angle / 2), 0])
+            return np.array(
+                [np.cos(rot_angle / 2), 0, np.sin(rot_angle / 2), 0]
+            )
         if self.rotation_axis == 'z':
-            return np.array([np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)])
+            return np.array(
+                [np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)]
+            )
         # Invalid axis specified, raise error
         raise ValueError(
             f"Invalid rotation axis specified. Must be 'x', 'y', or 'z'. Got: {self.rotation_axis}",
@@ -172,7 +179,9 @@ class MultiRegionRandomSampler(ObjectPositionSampler):
         # Sample pos and quat for all objects assigned to this sampler
         for obj in self.mujoco_objects:
             # First make sure the currently sampled object hasn't already been sampled
-            assert obj.name not in placed_objects, f"Object '{obj.name}' has already been sampled!"
+            assert (
+                obj.name not in placed_objects
+            ), f"Object '{obj.name}' has already been sampled!"
 
             horizontal_radius = obj.horizontal_radius
             bottom_offset = obj.bottom_offset
@@ -192,7 +201,10 @@ class MultiRegionRandomSampler(ObjectPositionSampler):
                         if (
                             np.linalg.norm((object_x - x, object_y - y))
                             <= other_obj.horizontal_radius + horizontal_radius
-                        ) and (object_z - z <= other_obj.top_offset[-1] - bottom_offset[-1]):
+                        ) and (
+                            object_z - z
+                            <= other_obj.top_offset[-1] - bottom_offset[-1]
+                        ):
                             location_valid = False
                             break
 
@@ -310,11 +322,17 @@ class SiteRegionRandomSampler(ObjectPositionSampler):
         """
         if self.rotation is None:
             rot_angle = np.random.uniform(high=2 * np.pi, low=0)
-        elif isinstance(self.rotation, tuple) or isinstance(self.rotation, list):
-            rot_angle = np.random.uniform(high=max(self.rotation), low=min(self.rotation))
+        elif isinstance(self.rotation, tuple) or isinstance(
+            self.rotation, list
+        ):
+            rot_angle = np.random.uniform(
+                high=max(self.rotation), low=min(self.rotation)
+            )
         # multiple rotations
         elif isinstance(self.rotation, dict):
-            quat = np.array([0.0, 0.0, 0.0, 1.0])  # \theta=0, in robosuite, quat = (x, y, z), w
+            quat = np.array(
+                [0.0, 0.0, 0.0, 1.0]
+            )  # \theta=0, in robosuite, quat = (x, y, z), w
             for i in range(len(self.rotation.keys())):
                 rotation_axis = list(self.rotation.keys())[i]
                 rot_angle = np.random.uniform(
@@ -323,11 +341,17 @@ class SiteRegionRandomSampler(ObjectPositionSampler):
                 )
 
                 if rotation_axis == 'x':
-                    current_quat = np.array([np.sin(rot_angle / 2), 0, 0, np.cos(rot_angle / 2)])
+                    current_quat = np.array(
+                        [np.sin(rot_angle / 2), 0, 0, np.cos(rot_angle / 2)]
+                    )
                 elif rotation_axis == 'y':
-                    current_quat = np.array([0, np.sin(rot_angle / 2), 0, np.cos(rot_angle / 2)])
+                    current_quat = np.array(
+                        [0, np.sin(rot_angle / 2), 0, np.cos(rot_angle / 2)]
+                    )
                 elif rotation_axis == 'z':
-                    current_quat = np.array([0, 0, np.sin(rot_angle / 2), np.cos(rot_angle / 2)])
+                    current_quat = np.array(
+                        [0, 0, np.sin(rot_angle / 2), np.cos(rot_angle / 2)]
+                    )
 
                 quat = quat_multiply(current_quat, quat)
 
@@ -337,17 +361,25 @@ class SiteRegionRandomSampler(ObjectPositionSampler):
 
         # Return angle based on axis requested
         if self.rotation_axis == 'x':
-            return np.array([np.sin(rot_angle / 2), 0, 0, np.cos(rot_angle / 2)])
+            return np.array(
+                [np.sin(rot_angle / 2), 0, 0, np.cos(rot_angle / 2)]
+            )
         if self.rotation_axis == 'y':
-            return np.array([0, np.sin(rot_angle / 2), 0, np.cos(rot_angle / 2)])
+            return np.array(
+                [0, np.sin(rot_angle / 2), 0, np.cos(rot_angle / 2)]
+            )
         if self.rotation_axis == 'z':
-            return np.array([0, 0, np.sin(rot_angle / 2), np.cos(rot_angle / 2)])
+            return np.array(
+                [0, 0, np.sin(rot_angle / 2), np.cos(rot_angle / 2)]
+            )
         # Invalid axis specified, raise error
         raise ValueError(
             f"Invalid rotation axis specified. Must be 'x', 'y', or 'z'. Got: {self.rotation_axis}",
         )
 
-    def sample(self, sim, fixtures=None, reference=None, site_name='', on_top=True):
+    def sample(
+        self, sim, fixtures=None, reference=None, site_name='', on_top=True
+    ):
         """
         Uniformly sample relative to this sampler's reference_pos or @reference (if specified).
         Args:
@@ -388,7 +420,9 @@ class SiteRegionRandomSampler(ObjectPositionSampler):
         # Sample pos and quat for all objects assigned to this sampler
         for obj in self.mujoco_objects:
             # First make sure the currently sampled object hasn't already been sampled
-            assert obj.name not in placed_objects, f"Object '{obj.name}' has already been sampled!"
+            assert (
+                obj.name not in placed_objects
+            ), f"Object '{obj.name}' has already been sampled!"
 
             horizontal_radius = obj.horizontal_radius
             bottom_offset = obj.bottom_offset
@@ -398,8 +432,12 @@ class SiteRegionRandomSampler(ObjectPositionSampler):
             ) @ sim.data.get_site_xpos(site_name)
             for i in range(5000):  # 5000 retries
                 self.idx = np.random.randint(self.num_ranges)
-                object_x = self._sample_x(horizontal_radius) + base_offset[0] + site_x
-                object_y = self._sample_y(horizontal_radius) + base_offset[1] + site_y
+                object_x = (
+                    self._sample_x(horizontal_radius) + base_offset[0] + site_x
+                )
+                object_y = (
+                    self._sample_y(horizontal_radius) + base_offset[1] + site_y
+                )
                 object_z = self.z_offset + base_offset[2] + site_z
                 if on_top:
                     object_z -= bottom_offset[-1]
@@ -411,7 +449,10 @@ class SiteRegionRandomSampler(ObjectPositionSampler):
                         if (
                             np.linalg.norm((object_x - x, object_y - y))
                             <= other_obj.horizontal_radius + horizontal_radius
-                        ) and (object_z - z <= other_obj.top_offset[-1] - bottom_offset[-1]):
+                        ) and (
+                            object_z - z
+                            <= other_obj.top_offset[-1] - bottom_offset[-1]
+                        ):
                             location_valid = False
                             break
 
@@ -496,11 +537,17 @@ class InSiteRegionRandomSampler(SiteRegionRandomSampler):
         """
         if self.rotation is None:
             rot_angle = np.random.uniform(high=2 * np.pi, low=0)
-        elif isinstance(self.rotation, tuple) or isinstance(self.rotation, list):
-            rot_angle = np.random.uniform(high=max(self.rotation), low=min(self.rotation))
+        elif isinstance(self.rotation, tuple) or isinstance(
+            self.rotation, list
+        ):
+            rot_angle = np.random.uniform(
+                high=max(self.rotation), low=min(self.rotation)
+            )
         # multiple rotations
         elif isinstance(self.rotation, dict):
-            quat = np.array([0.0, 0.0, 0.0, 1.0])  # \theta=0, in robosuite, quat = (x, y, z), w
+            quat = np.array(
+                [0.0, 0.0, 0.0, 1.0]
+            )  # \theta=0, in robosuite, quat = (x, y, z), w
             for i in range(len(self.rotation.keys())):
                 rotation_axis = list(self.rotation.keys())[i]
                 rot_angle = np.random.uniform(
@@ -509,11 +556,17 @@ class InSiteRegionRandomSampler(SiteRegionRandomSampler):
                 )
 
                 if rotation_axis == 'x':
-                    current_quat = np.array([np.sin(rot_angle / 2), 0, 0, np.cos(rot_angle / 2)])
+                    current_quat = np.array(
+                        [np.sin(rot_angle / 2), 0, 0, np.cos(rot_angle / 2)]
+                    )
                 elif rotation_axis == 'y':
-                    current_quat = np.array([0, np.sin(rot_angle / 2), 0, np.cos(rot_angle / 2)])
+                    current_quat = np.array(
+                        [0, np.sin(rot_angle / 2), 0, np.cos(rot_angle / 2)]
+                    )
                 elif rotation_axis == 'z':
-                    current_quat = np.array([0, 0, np.sin(rot_angle / 2), np.cos(rot_angle / 2)])
+                    current_quat = np.array(
+                        [0, 0, np.sin(rot_angle / 2), np.cos(rot_angle / 2)]
+                    )
 
                 quat = quat_multiply(current_quat, quat)
 
@@ -523,17 +576,25 @@ class InSiteRegionRandomSampler(SiteRegionRandomSampler):
 
         # Return angle based on axis requested
         if self.rotation_axis == 'x':
-            return np.array([np.sin(rot_angle / 2), 0, 0, np.cos(rot_angle / 2)])
+            return np.array(
+                [np.sin(rot_angle / 2), 0, 0, np.cos(rot_angle / 2)]
+            )
         if self.rotation_axis == 'y':
-            return np.array([0, np.sin(rot_angle / 2), 0, np.cos(rot_angle / 2)])
+            return np.array(
+                [0, np.sin(rot_angle / 2), 0, np.cos(rot_angle / 2)]
+            )
         if self.rotation_axis == 'z':
-            return np.array([0, 0, np.sin(rot_angle / 2), np.cos(rot_angle / 2)])
+            return np.array(
+                [0, 0, np.sin(rot_angle / 2), np.cos(rot_angle / 2)]
+            )
         # Invalid axis specified, raise error
         raise ValueError(
             f"Invalid rotation axis specified. Must be 'x', 'y', or 'z'. Got: {self.rotation_axis}",
         )
 
-    def sample(self, sim, fixtures=None, reference=None, site_name='', on_top=True):
+    def sample(
+        self, sim, fixtures=None, reference=None, site_name='', on_top=True
+    ):
         """
         Uniformly sample relative to this sampler's reference_pos or @reference (if specified).
         Args:
@@ -574,7 +635,9 @@ class InSiteRegionRandomSampler(SiteRegionRandomSampler):
         # Sample pos and quat for all objects assigned to this sampler
         for obj in self.mujoco_objects:
             # First make sure the currently sampled object hasn't already been sampled
-            assert obj.name not in placed_objects, f"Object '{obj.name}' has already been sampled!"
+            assert (
+                obj.name not in placed_objects
+            ), f"Object '{obj.name}' has already been sampled!"
 
             horizontal_radius = obj.horizontal_radius
             bottom_offset = obj.bottom_offset
@@ -684,7 +747,9 @@ class SiteSequentialCompositeSampler(ObjectPositionSampler):
         """
         Override super method to make sure user doesn't call this (all objects should implicitly belong to sub-samplers)
         """
-        raise AttributeError('add_objects() should not be called for SequentialCompsiteSamplers!')
+        raise AttributeError(
+            'add_objects() should not be called for SequentialCompsiteSamplers!'
+        )
 
     def add_objects_to_sampler(self, sampler_name, mujoco_objects):
         """
@@ -695,7 +760,9 @@ class SiteSequentialCompositeSampler(ObjectPositionSampler):
         """
         # First verify that all mujoco objects haven't already been added, and add to this sampler's objects dict
         mujoco_objects = (
-            [mujoco_objects] if isinstance(mujoco_objects, MujocoObject) else mujoco_objects
+            [mujoco_objects]
+            if isinstance(mujoco_objects, MujocoObject)
+            else mujoco_objects
         )
         for obj in mujoco_objects:
             assert (
@@ -743,15 +810,21 @@ class SiteSequentialCompositeSampler(ObjectPositionSampler):
         placed_objects = {} if fixtures is None else copy(fixtures)
 
         # Iterate through all samplers to sample
-        for sampler, s_args in zip(self.samplers.values(), self.sample_args.values()):
+        for sampler, s_args in zip(
+            self.samplers.values(), self.sample_args.values()
+        ):
             # Pre-process sampler args
             if s_args is None:
                 s_args = {}
-            for arg_name, arg in zip(('reference', 'on_top'), (reference, on_top)):
+            for arg_name, arg in zip(
+                ('reference', 'on_top'), (reference, on_top)
+            ):
                 if arg_name not in s_args:
                     s_args[arg_name] = arg
             # Run sampler
-            new_placements = sampler.sample(sim=sim, fixtures=placed_objects, **s_args)
+            new_placements = sampler.sample(
+                sim=sim, fixtures=placed_objects, **s_args
+            )
             # Update placements
             placed_objects.update(new_placements)
 

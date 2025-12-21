@@ -1,0 +1,159 @@
+(define (problem Tabletop_Manipulation)
+  (:domain robosuite)
+  (:language Pick the tomato in the top layer of the drawer and place it on the bowl between the vase and the teapot)
+    (:regions
+      (cutting_board_region
+          (:target main_table)
+          (:ranges (
+              (-0.29 -0.35 -0.27 -0.33)
+            )
+          )
+      )
+      (next_to_cutting_board_region
+          (:target main_table)
+          (:ranges (
+              (-0.0805 -0.1605 -0.08 -0.16)
+            )
+          )
+      )
+      (cereal_region
+          (:target main_table)
+          (:ranges (
+              (0.21 -0.25 0.215 -0.245)
+            )
+          )
+          (:yaw_rotation (
+              (-1.4 -1.4)
+            )
+          )
+      )
+      (next_to_cereal_region
+          (:target main_table)
+          (:ranges (
+              (0.12 -0.19 0.125 -0.185)
+            )
+          )
+      )
+      (table_center
+          (:target main_table)
+          (:ranges (
+              (-0.04 -0.01 -0.03 0.01)
+            )
+          )
+      )
+      (table_front
+          (:target main_table)
+          (:ranges (
+              (0.19 -0.07 0.21 -0.05)
+            )
+          )
+      )
+      (table_back
+          (:target main_table)
+          (:ranges (
+              (-0.21 -0.01 -0.19 0.01)
+            )
+          )
+      )
+      (table_left
+          (:target main_table)
+          (:ranges (
+              (-0.01 0.19 0.01 0.21)
+            )
+          )
+      )
+      (table_right
+          (:target main_table)
+          (:ranges (
+              (-0.01 -0.21 0.01 -0.19)
+            )
+          )
+      )
+      (cabinet_region
+          (:target main_table)
+          (:ranges (
+              (-0.04 0.27 -0.02 0.29)
+            )
+          )
+          (:yaw_rotation (
+              (0.5 0.5)
+            )
+          )
+      )
+      (teapot_region
+          (:target main_table)
+          (:ranges (
+              (-0.36 -0.09 -0.34 -0.07)
+            )
+          )
+          (:yaw_rotation (
+              (0.5 0.5)
+            )
+          )
+      )
+      (vase_region
+          (:target main_table)
+          (:ranges (
+              (-0.35 0.28 -0.33 0.3)
+            )
+          )
+      )
+      (between_vase_and_teapot_region
+          (:target main_table)
+          (:ranges (
+              (-0.34 0.065 -0.32 0.085)
+            )
+          )
+      )
+      (top_region
+          (:target white_cabinet_1)
+      )
+      (middle_region
+          (:target white_cabinet_1)
+      )
+      (bottom_region
+          (:target white_cabinet_1)
+      )
+      (top_side
+          (:target white_cabinet_1)
+      )
+    )
+
+  (:fixtures
+    main_table - table
+    white_cabinet_1 - white_cabinet
+  )
+
+  (:objects
+    porcelain_bowl_1 porcelain_bowl_2 porcelain_bowl_3 - porcelain_bowl
+    vase_1 - vase
+    cutting_board_1 - cutting_board
+    teapot_1 - teapot
+    tomato_1 tomato_2 tomato_3 - tomato
+    cereal_1 - cereal
+  )
+
+  (:obj_of_interest
+    tomato_2
+  )
+
+  (:init
+    (On cereal_1 main_table_cereal_region)
+    (On cutting_board_1 main_table_cutting_board_region)
+    (On porcelain_bowl_2 cutting_board_1)
+    (On tomato_2 main_table_next_to_cutting_board_region)
+    (On tomato_1 main_table_next_to_cereal_region)
+    (On vase_1 main_table_vase_region)
+    (On teapot_1 main_table_teapot_region)
+    (On white_cabinet_1 main_table_cabinet_region)
+    (On porcelain_bowl_1 white_cabinet_1_top_side)
+    (Open white_cabinet_1_top_region)
+    (In tomato_3 white_cabinet_1_top_region)
+    (On porcelain_bowl_3 main_table_between_vase_and_teapot_region)
+  )
+
+  (:goal
+    (And (On tomato_3 porcelain_bowl_3))
+  )
+
+)

@@ -18,7 +18,7 @@
       )
       (region_10_-10
           (:target main_table)
-          (:ranges (  
+          (:ranges (
               (0.18 -0.2 0.2 -0.18)
             )
           )
@@ -39,13 +39,13 @@
       )
       (region_0_-10
           (:target main_table)
-          (:ranges (      
+          (:ranges (
               (-0.02 -0.2 0.02 -0.18)
             )
           )
       )
       (region_0_10
-          (:target main_table)    
+          (:target main_table)
           (:ranges (
               (-0.02 0.18 0.02 0.2)
             )
@@ -53,13 +53,13 @@
       )
       (region_10_0
           (:target main_table)
-          (:ranges (      
+          (:ranges (
               (0.18 -0.02 0.2 0.02)
             )
           )
       )
       (region_0_0
-          (:target main_table)    
+          (:target main_table)
           (:ranges (
               (-0.02 -0.02 0.02 0.02)
             )
@@ -70,7 +70,7 @@
           (:ranges (
               (-0.21 0.17 -0.19 0.19)
             )
-          ) 
+          )
       )
       (region_2_2
           (:target main_table)

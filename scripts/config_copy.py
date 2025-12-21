@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 import os
 import shutil
@@ -23,11 +22,16 @@ def main():
     target_path = os.path.abspath(os.path.join('./', 'configs'))
     print(f'Copying configs to {target_path}')
     if os.path.exists(target_path):
-        response = input('The target directory already exists. Overwrite it? (y/n) ')
+        response = input(
+            'The target directory already exists. Overwrite it? (y/n) '
+        )
         if response.lower() != 'y':
             return
         shutil.rmtree(target_path)
-    shutil.copytree(os.path.join(get_vla_arena_path('benchmark_root'), '../configs'), target_path)
+    shutil.copytree(
+        os.path.join(get_vla_arena_path('benchmark_root'), '../configs'),
+        target_path,
+    )
 
 
 if __name__ == '__main__':

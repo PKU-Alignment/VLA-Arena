@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ import zipfile
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
 
 
 try:
@@ -65,7 +64,9 @@ def _lazy_load_bddl_utils():
     global _bddl_utils_loaded
     if not _bddl_utils_loaded:
         try:
-            from vla_arena.vla_arena.envs.bddl_utils import robosuite_parse_problem
+            from vla_arena.vla_arena.envs.bddl_utils import (
+                robosuite_parse_problem,
+            )
 
             globals()['robosuite_parse_problem'] = robosuite_parse_problem
             _bddl_utils_loaded = True
@@ -88,7 +89,7 @@ def _lazy_load_objects():
     return _objects_loaded
 
 
-def lightweight_parse_bddl(bddl_path: str) -> Dict:
+def lightweight_parse_bddl(bddl_path: str) -> dict:
     """
     Lightweight BDDL parser that doesn't require robosuite.
     Parses BDDL files using simple regex patterns.
@@ -139,7 +140,11 @@ def lightweight_parse_bddl(bddl_path: str) -> Dict:
             result['objects'][obj_type].append(obj_name)
 
     # Extract objects of interest
-    interest_match = re.search(r'\(:obj_of_interest([^)]*)\)', content, re.DOTALL)
+    interest_match = re.search(
+        r'\(:obj_of_interest([^)]*)\)',
+        content,
+        re.DOTALL,
+    )
     if interest_match:
         interest_content = interest_match.group(1).strip()
         result['obj_of_interest'] = interest_content.split()
@@ -147,7 +152,7 @@ def lightweight_parse_bddl(bddl_path: str) -> Dict:
     return result
 
 
-def find_problem_class_file(problem_name: str) -> Optional[str]:
+def find_problem_class_file(problem_name: str) -> str | None:
     """
     Find the Python file containing the Problem class.
 
@@ -158,7 +163,11 @@ def find_problem_class_file(problem_name: str) -> Optional[str]:
         Path to the .py file, or None if not found
     """
     try:
-        problems_dir = os.path.join(get_vla_arena_path('benchmark_root'), 'envs', 'problems')
+        problems_dir = os.path.join(
+            get_vla_arena_path('benchmark_root'),
+            'envs',
+            'problems',
+        )
     except:
         return None
 
@@ -188,7 +197,7 @@ def find_problem_class_file(problem_name: str) -> Optional[str]:
     return None
 
 
-def extract_scene_xml_from_problem(problem_file: str) -> Optional[str]:
+def extract_scene_xml_from_problem(problem_file: str) -> str | None:
     """
     Extract scene_xml path from a Problem class file.
 
@@ -223,7 +232,7 @@ def extract_scene_xml_from_problem(problem_file: str) -> Optional[str]:
         return None
 
 
-def parse_scene_xml_assets(scene_xml_path: str) -> Dict[str, List[str]]:
+def parse_scene_xml_assets(scene_xml_path: str) -> dict[str, list[str]]:
     """
     Parse a scene XML file to extract referenced assets (textures, meshes).
 
@@ -265,7 +274,9 @@ def parse_scene_xml_assets(scene_xml_path: str) -> Dict[str, List[str]]:
         for pattern in mesh_patterns:
             for match in re.finditer(pattern, content):
                 mesh_path = match.group(1)
-                full_path = os.path.normpath(os.path.join(scene_dir, mesh_path))
+                full_path = os.path.normpath(
+                    os.path.join(scene_dir, mesh_path),
+                )
                 if os.path.exists(full_path):
                     result['meshes'].append(full_path)
 
@@ -288,15 +299,17 @@ class SceneInfo:
     """Information about a scene and its assets."""
 
     problem_name: str
-    problem_file: Optional[str]
-    scene_xml: Optional[str]
-    scene_xml_full_path: Optional[str]
-    textures: List[str] = field(default_factory=list)
-    meshes: List[str] = field(default_factory=list)
+    problem_file: str | None
+    scene_xml: str | None
+    scene_xml_full_path: str | None
+    textures: list[str] = field(default_factory=list)
+    meshes: list[str] = field(default_factory=list)
 
     def has_custom_scene(self) -> bool:
         """Check if this is a custom scene that needs to be packaged."""
-        return self.scene_xml is not None and self.scene_xml_full_path is not None
+        return (
+            self.scene_xml is not None and self.scene_xml_full_path is not None
+        )
 
 
 def analyze_problem_and_scene(bddl_path: str) -> SceneInfo:
@@ -316,7 +329,9 @@ def analyze_problem_and_scene(bddl_path: str) -> SceneInfo:
     problem_file = find_problem_class_file(problem_name)
 
     # Extract scene_xml from problem class
-    scene_xml = extract_scene_xml_from_problem(problem_file) if problem_file else None
+    scene_xml = (
+        extract_scene_xml_from_problem(problem_file) if problem_file else None
+    )
 
     # Resolve full path of scene_xml
     scene_xml_full_path = None
@@ -423,26 +438,30 @@ class TaskManifest:
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
 
     # Contents
-    bddl_files: List[str] = field(default_factory=list)
-    init_files: List[str] = field(default_factory=list)
-    problem_files: List[str] = field(default_factory=list)  # Custom Problem class files
-    scene_files: List[str] = field(default_factory=list)  # Scene XML files
-    scene_assets: List[str] = field(default_factory=list)  # Scene textures/meshes
-    assets: List[Dict] = field(default_factory=list)  # Object assets
+    bddl_files: list[str] = field(default_factory=list)
+    init_files: list[str] = field(default_factory=list)
+    problem_files: list[str] = field(
+        default_factory=list,
+    )  # Custom Problem class files
+    scene_files: list[str] = field(default_factory=list)  # Scene XML files
+    scene_assets: list[str] = field(
+        default_factory=list,
+    )  # Scene textures/meshes
+    assets: list[dict] = field(default_factory=list)  # Object assets
 
     # Dependencies
-    fixtures: List[str] = field(default_factory=list)
-    objects: List[str] = field(default_factory=list)
+    fixtures: list[str] = field(default_factory=list)
+    objects: list[str] = field(default_factory=list)
 
     # Checksums
     total_size_bytes: int = 0
     package_checksum: str = ''
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: Dict) -> 'TaskManifest':
+    def from_dict(cls, data: dict) -> 'TaskManifest':
         return cls(**data)
 
     def save(self, path: str):
@@ -485,13 +504,22 @@ class AssetDependencyAnalyzer:
             for name, cls in self.object_dict.items():
                 module_name = cls.__module__
                 if 'google_scanned' in module_name:
-                    self.asset_mapping[name] = ('google_scanned', 'stable_scanned_objects')
+                    self.asset_mapping[name] = (
+                        'google_scanned',
+                        'stable_scanned_objects',
+                    )
                 elif 'hope' in module_name:
                     self.asset_mapping[name] = ('hope', 'stable_hope_objects')
                 elif 'turbosquid' in module_name:
-                    self.asset_mapping[name] = ('turbosquid', 'turbosquid_objects')
+                    self.asset_mapping[name] = (
+                        'turbosquid',
+                        'turbosquid_objects',
+                    )
                 elif 'articulated' in module_name:
-                    self.asset_mapping[name] = ('articulated', 'articulated_objects')
+                    self.asset_mapping[name] = (
+                        'articulated',
+                        'articulated_objects',
+                    )
 
         # Also build mapping from filesystem scanning (fallback/supplement)
         self._build_asset_mapping_from_filesystem()
@@ -520,9 +548,12 @@ class AssetDependencyAnalyzer:
                         # Register the asset name
                         asset_name = item.lower()
                         if asset_name not in self.asset_mapping:
-                            self.asset_mapping[asset_name] = (category, dir_name)
+                            self.asset_mapping[asset_name] = (
+                                category,
+                                dir_name,
+                            )
 
-    def analyze_bddl(self, bddl_path: str) -> Tuple[Set[str], Set[str], Dict]:
+    def analyze_bddl(self, bddl_path: str) -> tuple[set[str], set[str], dict]:
         """
         Analyze a BDDL file to extract required assets.
 
@@ -556,7 +587,7 @@ class AssetDependencyAnalyzer:
 
         return fixtures, objects, parsed
 
-    def get_asset_paths(self, object_names: Set[str]) -> List[AssetInfo]:
+    def get_asset_paths(self, object_names: set[str]) -> list[AssetInfo]:
         """
         Get asset file paths for given object names.
 
@@ -586,7 +617,11 @@ class AssetDependencyAnalyzer:
                     'turbosquid_objects',
                     'articulated_objects',
                 ]:
-                    asset_path = os.path.join(assets_root, source_dir, name_lower)
+                    asset_path = os.path.join(
+                        assets_root,
+                        source_dir,
+                        name_lower,
+                    )
                     if os.path.exists(asset_path):
                         category = {
                             'stable_scanned_objects': 'google_scanned',
@@ -670,7 +705,7 @@ class TaskPackager:
     def __init__(self):
         self.analyzer = AssetDependencyAnalyzer()
 
-    def _find_init_file_for_bddl(self, bddl_path: str) -> Optional[str]:
+    def _find_init_file_for_bddl(self, bddl_path: str) -> str | None:
         """
         Auto-detect the corresponding init file for a BDDL file.
 
@@ -695,7 +730,11 @@ class TaskPackager:
             rel_dir = os.path.dirname(rel_path)
 
             # Construct potential init file path
-            init_file = os.path.join(init_root, rel_dir, f'{bddl_name}.pruned_init')
+            init_file = os.path.join(
+                init_root,
+                rel_dir,
+                f'{bddl_name}.pruned_init',
+            )
 
             if os.path.exists(init_file):
                 return init_file
@@ -716,8 +755,8 @@ class TaskPackager:
         self,
         bddl_path: str,
         output_dir: str,
-        init_path: Optional[str] = None,
-        package_name: Optional[str] = None,
+        init_path: str | None = None,
+        package_name: str | None = None,
         author: str = '',
         email: str = '',
         description: str = '',
@@ -748,7 +787,11 @@ class TaskPackager:
 
         # Get object asset infos
         all_objects = fixtures | objects
-        asset_infos = self.analyzer.get_asset_paths(all_objects) if include_assets else []
+        asset_infos = (
+            self.analyzer.get_asset_paths(all_objects)
+            if include_assets
+            else []
+        )
 
         # Analyze problem class and scene
         scene_info = analyze_problem_and_scene(bddl_path)
@@ -767,7 +810,9 @@ class TaskPackager:
         scene_assets_list = []
 
         if include_problem and scene_info.problem_file:
-            problem_files_list.append(os.path.basename(scene_info.problem_file))
+            problem_files_list.append(
+                os.path.basename(scene_info.problem_file),
+            )
 
         if include_scene and scene_info.scene_xml:
             scene_files_list.append(scene_info.scene_xml)
@@ -788,7 +833,9 @@ class TaskPackager:
         manifest = TaskManifest(
             package_name=package_name,
             task_name=parsed.get('problem_name', ''),
-            language_instruction=' '.join(parsed.get('language_instruction', [])),
+            language_instruction=' '.join(
+                parsed.get('language_instruction', []),
+            ),
             description=description,
             problem_class=scene_info.problem_name,
             author=author,
@@ -806,7 +853,10 @@ class TaskPackager:
 
         # Create package
         os.makedirs(output_dir, exist_ok=True)
-        package_path = os.path.join(output_dir, f'{package_name}{PACKAGE_EXTENSION}')
+        package_path = os.path.join(
+            output_dir,
+            f'{package_name}{PACKAGE_EXTENSION}',
+        )
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create package structure
@@ -829,7 +879,9 @@ class TaskPackager:
                 problems_dir = os.path.join(pkg_root, 'problems')
                 os.makedirs(problems_dir, exist_ok=True)
                 shutil.copy2(scene_info.problem_file, problems_dir)
-                print(f'  + Problem class: {os.path.basename(scene_info.problem_file)}')
+                print(
+                    f'  + Problem class: {os.path.basename(scene_info.problem_file)}',
+                )
 
             # Copy scene XML and its assets
             if include_scene and scene_info.scene_xml_full_path:
@@ -837,7 +889,9 @@ class TaskPackager:
                 os.makedirs(assets_dir, exist_ok=True)
 
                 # Copy scene XML (preserve directory structure under assets/)
-                scene_rel_dir = os.path.dirname(scene_info.scene_xml)  # e.g., "scenes"
+                scene_rel_dir = os.path.dirname(
+                    scene_info.scene_xml,
+                )  # e.g., "scenes"
                 scene_dest_dir = os.path.join(assets_dir, scene_rel_dir)
                 os.makedirs(scene_dest_dir, exist_ok=True)
                 shutil.copy2(scene_info.scene_xml_full_path, scene_dest_dir)
@@ -876,7 +930,10 @@ class TaskPackager:
                     # Create category subdirectory
                     category_dir = os.path.join(
                         assets_dir,
-                        ASSET_SOURCE_MAPPING.get(asset.category, asset.category),
+                        ASSET_SOURCE_MAPPING.get(
+                            asset.category,
+                            asset.category,
+                        ),
                     )
                     os.makedirs(category_dir, exist_ok=True)
 
@@ -889,7 +946,11 @@ class TaskPackager:
             manifest.save(os.path.join(pkg_root, MANIFEST_FILENAME))
 
             # Create ZIP archive
-            with zipfile.ZipFile(package_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+            with zipfile.ZipFile(
+                package_path,
+                'w',
+                zipfile.ZIP_DEFLATED,
+            ) as zf:
                 for root, dirs, files in os.walk(pkg_root):
                     for file in files:
                         file_path = os.path.join(root, file)
@@ -949,7 +1010,9 @@ class TaskPackager:
             for f in files:
                 if f.endswith('.bddl'):
                     bddl_path = os.path.join(root, f)
-                    fixtures, objects, _ = self.analyzer.analyze_bddl(bddl_path)
+                    fixtures, objects, _ = self.analyzer.analyze_bddl(
+                        bddl_path,
+                    )
                     all_fixtures |= fixtures
                     all_objects |= objects
 
@@ -960,7 +1023,10 @@ class TaskPackager:
         for root, dirs, files in os.walk(suite_init_dir):
             for f in files:
                 if f.endswith('.pruned_init'):
-                    rel_path = os.path.relpath(os.path.join(root, f), suite_init_dir)
+                    rel_path = os.path.relpath(
+                        os.path.join(root, f),
+                        suite_init_dir,
+                    )
                     init_files.append(rel_path)
 
         # Get all assets
@@ -984,7 +1050,10 @@ class TaskPackager:
 
         # Create package
         os.makedirs(output_dir, exist_ok=True)
-        package_path = os.path.join(output_dir, f'{task_suite_name}{PACKAGE_EXTENSION}')
+        package_path = os.path.join(
+            output_dir,
+            f'{task_suite_name}{PACKAGE_EXTENSION}',
+        )
 
         with tempfile.TemporaryDirectory() as temp_dir:
             pkg_root = os.path.join(temp_dir, task_suite_name)
@@ -1017,7 +1086,11 @@ class TaskPackager:
             manifest.save(os.path.join(pkg_root, MANIFEST_FILENAME))
 
             # Create ZIP
-            with zipfile.ZipFile(package_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+            with zipfile.ZipFile(
+                package_path,
+                'w',
+                zipfile.ZIP_DEFLATED,
+            ) as zf:
                 for root, dirs, files in os.walk(pkg_root):
                     for file in files:
                         file_path = os.path.join(root, file)
@@ -1071,7 +1144,7 @@ class TaskInstaller:
 
         return manifest
 
-    def check_conflicts(self, package_path: str) -> Dict[str, List[str]]:
+    def check_conflicts(self, package_path: str) -> dict[str, list[str]]:
         """
         Check for potential conflicts with existing assets.
 
@@ -1091,8 +1164,15 @@ class TaskInstaller:
         # Check assets - store relative paths
         for asset in manifest.assets:
             asset_info = AssetInfo(**asset)
-            category_dir = ASSET_SOURCE_MAPPING.get(asset_info.category, asset_info.category)
-            existing_path = os.path.join(self.assets_root, category_dir, asset_info.name)
+            category_dir = ASSET_SOURCE_MAPPING.get(
+                asset_info.category,
+                asset_info.category,
+            )
+            existing_path = os.path.join(
+                self.assets_root,
+                category_dir,
+                asset_info.name,
+            )
             if os.path.exists(existing_path):
                 # Store relative path from assets root
                 relative_path = os.path.join(category_dir, asset_info.name)
@@ -1100,13 +1180,21 @@ class TaskInstaller:
 
         # Check BDDL files
         for bddl_file in manifest.bddl_files:
-            existing_path = os.path.join(self.bddl_root, manifest.package_name, bddl_file)
+            existing_path = os.path.join(
+                self.bddl_root,
+                manifest.package_name,
+                bddl_file,
+            )
             if os.path.exists(existing_path):
                 conflicts['bddl_files'].append(bddl_file)
 
         # Check init files
         for init_file in manifest.init_files:
-            existing_path = os.path.join(self.init_root, manifest.package_name, init_file)
+            existing_path = os.path.join(
+                self.init_root,
+                manifest.package_name,
+                init_file,
+            )
             if os.path.exists(existing_path):
                 conflicts['init_files'].append(init_file)
 
@@ -1135,7 +1223,9 @@ class TaskInstaller:
         """
         manifest = self.inspect(package_path)
 
-        print(f"\n{'[DRY RUN] ' if dry_run else ''}Installing: {manifest.package_name}")
+        print(
+            f"\n{'[DRY RUN] ' if dry_run else ''}Installing: {manifest.package_name}",
+        )
         print(f'  Task: {manifest.task_name}')
         print(f'  Description: {manifest.description}')
         print(f'  Author: {manifest.author}')
@@ -1162,14 +1252,18 @@ class TaskInstaller:
                 for bddl_file in conflicts['bddl_files'][:5]:
                     print(f'  - BDDL: {bddl_file} (already exists)')
                 if len(conflicts['bddl_files']) > 5:
-                    print(f"  - ... and {len(conflicts['bddl_files'])-5} more BDDL files")
+                    print(
+                        f"  - ... and {len(conflicts['bddl_files'])-5} more BDDL files",
+                    )
 
             # Display init file conflicts
             if conflicts['init_files']:
                 for init_file in conflicts['init_files'][:5]:
                     print(f'  - Init: {init_file} (already exists)')
                 if len(conflicts['init_files']) > 5:
-                    print(f"  - ... and {len(conflicts['init_files'])-5} more init files")
+                    print(
+                        f"  - ... and {len(conflicts['init_files'])-5} more init files",
+                    )
 
             # Display asset conflicts
             if conflicts['assets']:
@@ -1177,13 +1271,25 @@ class TaskInstaller:
                     print(f'  - Asset: {asset_path} (already exists)')
 
                 if len(conflicts['assets']) > 5:
-                    print(f"  - ... and {len(conflicts['assets'])-5} more assets")
+                    print(
+                        f"  - ... and {len(conflicts['assets'])-5} more assets",
+                    )
 
-            print(colored('\nUse --overwrite to replace existing files.', 'yellow'))
+            print(
+                colored(
+                    '\nUse --overwrite to replace existing files.',
+                    'yellow',
+                ),
+            )
             return False
 
         if dry_run:
-            print(colored('\n✓ Dry run complete. No files were modified.', 'blue'))
+            print(
+                colored(
+                    '\n✓ Dry run complete. No files were modified.',
+                    'blue',
+                ),
+            )
             return True
 
         # Extract and install
@@ -1196,7 +1302,10 @@ class TaskInstaller:
                 # Install BDDL files
                 src_bddl = os.path.join(pkg_root, 'bddl_files')
                 if os.path.exists(src_bddl):
-                    dest_bddl = os.path.join(self.bddl_root, manifest.package_name)
+                    dest_bddl = os.path.join(
+                        self.bddl_root,
+                        manifest.package_name,
+                    )
                     if os.path.exists(dest_bddl) and overwrite:
                         shutil.rmtree(dest_bddl)
                     if not os.path.exists(dest_bddl):
@@ -1206,7 +1315,10 @@ class TaskInstaller:
                 # Install init files
                 src_init = os.path.join(pkg_root, 'init_files')
                 if os.path.exists(src_init):
-                    dest_init = os.path.join(self.init_root, manifest.package_name)
+                    dest_init = os.path.join(
+                        self.init_root,
+                        manifest.package_name,
+                    )
                     if os.path.exists(dest_init) and overwrite:
                         shutil.rmtree(dest_init)
                     if not os.path.exists(dest_init):
@@ -1227,14 +1339,21 @@ class TaskInstaller:
                     for problem_file in os.listdir(src_problems):
                         if problem_file.endswith('.py'):
                             src_file = os.path.join(src_problems, problem_file)
-                            dest_file = os.path.join(dest_problems, problem_file)
+                            dest_file = os.path.join(
+                                dest_problems,
+                                problem_file,
+                            )
 
                             if os.path.exists(dest_file) and not overwrite:
-                                print(f'  ⚠ Problem file exists (skipped): {problem_file}')
+                                print(
+                                    f'  ⚠ Problem file exists (skipped): {problem_file}',
+                                )
                                 continue
 
                             shutil.copy2(src_file, dest_file)
-                            print(f'  ✓ Problem class installed: {problem_file}')
+                            print(
+                                f'  ✓ Problem class installed: {problem_file}',
+                            )
 
                 # Install assets (including scene files)
                 if not skip_assets:
@@ -1247,7 +1366,10 @@ class TaskInstaller:
                         for root, dirs, files in os.walk(src_assets):
                             # Calculate relative path from src_assets
                             rel_root = os.path.relpath(root, src_assets)
-                            dest_root = os.path.join(self.assets_root, rel_root)
+                            dest_root = os.path.join(
+                                self.assets_root,
+                                rel_root,
+                            )
                             os.makedirs(dest_root, exist_ok=True)
 
                             # Copy files
@@ -1269,15 +1391,26 @@ class TaskInstaller:
 
                         if skip_existing_assets and skipped_count > 0:
                             print(
-                                f'  ✓ Assets: {installed_count} installed, {skipped_count} skipped (already exist)'
+                                f'  ✓ Assets: {installed_count} installed, {skipped_count} skipped (already exist)',
                             )
                         else:
-                            print(f'  ✓ Assets installed: {installed_count} files')
+                            print(
+                                f'  ✓ Assets installed: {installed_count} files',
+                            )
 
-        print(colored(f'\n✓ Installation complete: {manifest.package_name}', 'green'))
+        print(
+            colored(
+                f'\n✓ Installation complete: {manifest.package_name}',
+                'green',
+            ),
+        )
         return True
 
-    def uninstall(self, package_name: str, remove_assets: bool = False) -> bool:
+    def uninstall(
+        self,
+        package_name: str,
+        remove_assets: bool = False,
+    ) -> bool:
         """
         Uninstall a task package.
 
@@ -1333,14 +1466,19 @@ class TaskCloudManager:
             )
         self.repo_id = repo_id
         self.api = HfApi()
-        self.cache_dir = os.path.join(os.path.expanduser('~'), '.cache', 'vla_arena', 'packages')
+        self.cache_dir = os.path.join(
+            os.path.expanduser('~'),
+            '.cache',
+            'vla_arena',
+            'packages',
+        )
         os.makedirs(self.cache_dir, exist_ok=True)
 
     def upload_with_git(
         self,
         package_path: str,
-        token: Optional[str] = None,
-        commit_message: Optional[str] = None,
+        token: str | None = None,
+        commit_message: str | None = None,
     ) -> str:
         """
         Upload a task package using Git LFS (fallback method when API fails).
@@ -1409,17 +1547,28 @@ class TaskCloudManager:
 
                 # Copy package file
                 print(f'  Copying {package_name}.vlap...')
-                dest_path = os.path.join(packages_dir, f'{package_name}{PACKAGE_EXTENSION}')
+                dest_path = os.path.join(
+                    packages_dir,
+                    f'{package_name}{PACKAGE_EXTENSION}',
+                )
                 shutil.copy2(package_path, dest_path)
 
                 # Add .gitattributes if LFS track created it
                 gitattributes = os.path.join(repo_dir, '.gitattributes')
                 if os.path.exists(gitattributes):
-                    subprocess.run(['git', 'add', '.gitattributes'], cwd=repo_dir, check=True)
+                    subprocess.run(
+                        ['git', 'add', '.gitattributes'],
+                        cwd=repo_dir,
+                        check=True,
+                    )
 
                 # Add package file
                 subprocess.run(
-                    ['git', 'add', f'packages/{package_name}{PACKAGE_EXTENSION}'],
+                    [
+                        'git',
+                        'add',
+                        f'packages/{package_name}{PACKAGE_EXTENSION}',
+                    ],
                     cwd=repo_dir,
                     check=True,
                 )
@@ -1435,7 +1584,12 @@ class TaskCloudManager:
 
                 # Push
                 print('  Pushing to HuggingFace...')
-                subprocess.run(['git', 'push'], cwd=repo_dir, check=True, capture_output=True)
+                subprocess.run(
+                    ['git', 'push'],
+                    cwd=repo_dir,
+                    check=True,
+                    capture_output=True,
+                )
 
                 url = f'https://huggingface.co/datasets/{self.repo_id}/blob/main/packages/{package_name}{PACKAGE_EXTENSION}'
                 print(colored(f'✓ Uploaded via Git LFS: {url}', 'green'))
@@ -1452,7 +1606,7 @@ class TaskCloudManager:
         self,
         package_path: str,
         private: bool = False,
-        token: Optional[str] = None,
+        token: str | None = None,
         use_git: bool = False,
     ) -> str:
         """
@@ -1508,14 +1662,18 @@ class TaskCloudManager:
         except Exception as e:
             # If API fails with 403 or storage error, try Git LFS
             error_str = str(e).lower()
-            if '403' in error_str or 'storage' in error_str or 'lfs' in error_str:
+            if (
+                '403' in error_str
+                or 'storage' in error_str
+                or 'lfs' in error_str
+            ):
                 print(colored(f'\n⚠ API upload failed: {e!s}', 'yellow'))
                 print(colored('Retrying with Git LFS method...\n', 'yellow'))
                 return self.upload_with_git(package_path, token=token)
             # For other errors, raise them
             raise
 
-    def list_packages(self) -> List[str]:
+    def list_packages(self) -> list[str]:
         """List available packages in the repository."""
         try:
             files = self.api.list_repo_files(
@@ -1535,8 +1693,8 @@ class TaskCloudManager:
     def download(
         self,
         package_name: str,
-        output_dir: Optional[str] = None,
-        token: Optional[str] = None,
+        output_dir: str | None = None,
+        token: str | None = None,
     ) -> str:
         """
         Download a task package from HuggingFace Hub.
@@ -1555,7 +1713,10 @@ class TaskCloudManager:
         os.makedirs(output_dir, exist_ok=True)
 
         # Download from HuggingFace
-        local_path = os.path.join(output_dir, f'{package_name}{PACKAGE_EXTENSION}')
+        local_path = os.path.join(
+            output_dir,
+            f'{package_name}{PACKAGE_EXTENSION}',
+        )
 
         self.api.hf_hub_download(
             repo_id=self.repo_id,
@@ -1566,7 +1727,11 @@ class TaskCloudManager:
         )
 
         # Move to expected location
-        downloaded_path = os.path.join(output_dir, 'packages', f'{package_name}{PACKAGE_EXTENSION}')
+        downloaded_path = os.path.join(
+            output_dir,
+            'packages',
+            f'{package_name}{PACKAGE_EXTENSION}',
+        )
         if os.path.exists(downloaded_path) and downloaded_path != local_path:
             shutil.move(downloaded_path, local_path)
 
@@ -1617,16 +1782,16 @@ def main():
 Examples:
   # Pack a single task
   python -m vla_arena.vla_arena.utils.asset_manager pack task.bddl -o ./packages
-  
+
   # Pack a task suite
   python -m vla_arena.vla_arena.utils.asset_manager pack-suite robustness_dynamic_distractors -o ./packages
-  
+
   # Install a package
   python -m vla_arena.vla_arena.utils.asset_manager install package.vlap
-  
+
   # Upload to HuggingFace (specify your repo)
   python -m vla_arena.vla_arena.utils.asset_manager upload package.vlap --repo username/task-assets
-  
+
   # Download and install from cloud
   python -m vla_arena.vla_arena.utils.asset_manager download my_task --repo username/task-assets --install
         """,
@@ -1637,27 +1802,60 @@ Examples:
     # Pack command
     pack_parser = subparsers.add_parser('pack', help='Pack a single task')
     pack_parser.add_argument('bddl_path', help='Path to BDDL file')
-    pack_parser.add_argument('-o', '--output', default='.', help='Output directory')
+    pack_parser.add_argument(
+        '-o',
+        '--output',
+        default='.',
+        help='Output directory',
+    )
     pack_parser.add_argument('--init', help='Path to init file')
     pack_parser.add_argument('--name', help='Package name')
     pack_parser.add_argument('--author', default='', help='Author name')
     pack_parser.add_argument('--email', default='', help='Author email')
-    pack_parser.add_argument('--description', default='', help='Task description')
-    pack_parser.add_argument('--no-assets', action='store_true', help='Skip including assets')
+    pack_parser.add_argument(
+        '--description',
+        default='',
+        help='Task description',
+    )
+    pack_parser.add_argument(
+        '--no-assets',
+        action='store_true',
+        help='Skip including assets',
+    )
 
     # Pack suite command
-    suite_parser = subparsers.add_parser('pack-suite', help='Pack a task suite')
+    suite_parser = subparsers.add_parser(
+        'pack-suite',
+        help='Pack a task suite',
+    )
     suite_parser.add_argument('suite_name', help='Name of the task suite')
-    suite_parser.add_argument('-o', '--output', default='.', help='Output directory')
+    suite_parser.add_argument(
+        '-o',
+        '--output',
+        default='.',
+        help='Output directory',
+    )
     suite_parser.add_argument('--author', default='', help='Author name')
     suite_parser.add_argument('--email', default='', help='Author email')
-    suite_parser.add_argument('--description', default='', help='Suite description')
+    suite_parser.add_argument(
+        '--description',
+        default='',
+        help='Suite description',
+    )
 
     # Install command
     install_parser = subparsers.add_parser('install', help='Install a package')
     install_parser.add_argument('package_path', help='Path to .vlap package')
-    install_parser.add_argument('--overwrite', action='store_true', help='Overwrite existing files')
-    install_parser.add_argument('--skip-assets', action='store_true', help='Skip installing assets')
+    install_parser.add_argument(
+        '--overwrite',
+        action='store_true',
+        help='Overwrite existing files',
+    )
+    install_parser.add_argument(
+        '--skip-assets',
+        action='store_true',
+        help='Skip installing assets',
+    )
     install_parser.add_argument(
         '--dry-run',
         action='store_true',
@@ -1669,14 +1867,21 @@ Examples:
     inspect_parser.add_argument('package_path', help='Path to .vlap package')
 
     # Upload command
-    upload_parser = subparsers.add_parser('upload', help='Upload to HuggingFace Hub')
+    upload_parser = subparsers.add_parser(
+        'upload',
+        help='Upload to HuggingFace Hub',
+    )
     upload_parser.add_argument('package_path', help='Path to .vlap package')
     upload_parser.add_argument(
         '--repo',
         required=True,
         help='HuggingFace repo ID (e.g., username/task-assets)',
     )
-    upload_parser.add_argument('--private', action='store_true', help='Make repo private')
+    upload_parser.add_argument(
+        '--private',
+        action='store_true',
+        help='Make repo private',
+    )
     upload_parser.add_argument('--token', help='HuggingFace API token')
     upload_parser.add_argument(
         '--use-git',
@@ -1685,7 +1890,10 @@ Examples:
     )
 
     # Download command
-    download_parser = subparsers.add_parser('download', help='Download from HuggingFace Hub')
+    download_parser = subparsers.add_parser(
+        'download',
+        help='Download from HuggingFace Hub',
+    )
     download_parser.add_argument('package_name', help='Name of the package')
     download_parser.add_argument(
         '--repo',
@@ -1693,7 +1901,11 @@ Examples:
         help='HuggingFace repo ID (e.g., username/task-assets)',
     )
     download_parser.add_argument('-o', '--output', help='Output directory')
-    download_parser.add_argument('--install', action='store_true', help='Install after download')
+    download_parser.add_argument(
+        '--install',
+        action='store_true',
+        help='Install after download',
+    )
     download_parser.add_argument(
         '--overwrite',
         action='store_true',
@@ -1710,9 +1922,16 @@ Examples:
     )
 
     # Uninstall command
-    uninstall_parser = subparsers.add_parser('uninstall', help='Uninstall a package')
+    uninstall_parser = subparsers.add_parser(
+        'uninstall',
+        help='Uninstall a package',
+    )
     uninstall_parser.add_argument('package_name', help='Name of the package')
-    uninstall_parser.add_argument('--remove-assets', action='store_true', help='Also remove assets')
+    uninstall_parser.add_argument(
+        '--remove-assets',
+        action='store_true',
+        help='Also remove assets',
+    )
 
     args = parser.parse_args()
 
@@ -1761,10 +1980,16 @@ Examples:
         print(f'  BDDL files: {len(manifest.bddl_files)}')
         print(f'  Init files: {len(manifest.init_files)}')
         print(f'  Assets: {len(manifest.assets)}')
-        print(f'  Total size: {manifest.total_size_bytes / 1024 / 1024:.2f} MB')
+        print(
+            f'  Total size: {manifest.total_size_bytes / 1024 / 1024:.2f} MB',
+        )
         print(
             f"\nObjects: {', '.join(manifest.objects[:10])}"
-            + (f' (+{len(manifest.objects)-10} more)' if len(manifest.objects) > 10 else ''),
+            + (
+                f' (+{len(manifest.objects)-10} more)'
+                if len(manifest.objects) > 10
+                else ''
+            ),
         )
 
     elif args.command == 'upload':

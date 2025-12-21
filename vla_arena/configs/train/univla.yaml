@@ -1,0 +1,46 @@
+# UniVLA Fine-tuning Configuration
+
+# Model Paths
+# Set UNIVLA_VLA_PATH environment variable or modify this path to specify your UniVLA model location
+vla_path: "/path/to/your/univla-model"  # Path to your local UniVLA path
+# Set UNIVLA_LAM_PATH environment variable or modify this path to specify your LAM checkpoint location
+lam_path: "/path/to/your/lam-checkpoint.ckpt"  # Path to LAM checkpoint
+
+# Directory Paths
+# Set UNIVLA_DATA_ROOT_DIR environment variable or modify this path to specify your dataset directory
+data_root_dir: "/path/to/your/rlds-datasets"  # Path to Open-X dataset directory
+dataset_name: "vla_arena"  # Name of fine-tuning dataset (e.g., `droid_wipe`)
+run_root_dir: "runs"  # Path to directory to store logs & checkpoints
+adapter_tmp_dir: "adapter-tmp"  # Temporary directory for LoRA weights before fusing
+
+# Fine-tuning Parameters
+batch_size: 8  # Fine-tuning batch size
+max_steps: 30000  # Max number of fine-tuning steps
+save_steps: 30000  # Interval for checkpoint saving
+learning_rate: 3.5e-4  # Fine-tuning learning rate
+grad_accumulation_steps: 2  # Gradient accumulation steps
+image_aug: true  # Whether to train with image augmentations
+shuffle_buffer_size: 16000  # Dataloader shuffle buffer size (can reduce if OOM)
+save_latest_checkpoint_only: true  # Whether to save only one checkpoint per run and continually overwrite the latest checkpoint (If False, saves all checkpoints)
+
+# LAM (Latent Action Model) Settings
+codebook_size: 16
+lam_model_dim: 768
+lam_latent_dim: 128
+lam_patch_size: 14
+lam_enc_blocks: 12
+lam_dec_blocks: 12
+lam_num_heads: 12
+window_size: 12
+
+# LoRA Arguments
+freeze_vla: false  # Whether to freeze VLA model weights
+use_lora: true  # Whether to use LoRA fine-tuning
+lora_rank: 32  # Rank of LoRA weight matrix
+lora_dropout: 0.0  # Dropout applied to LoRA weights
+use_quantization: false  # Whether to 4-bit quantize VLA for LoRA fine-tuning (CAUTION: Reduces memory but hurts performance)
+
+# Tracking Parameters
+wandb_project: "fientune-VLA-ARENA"  # Name of W&B project to log to
+wandb_entity: "jiahao-li"  # Name of entity to log under
+run_id_note: null  # Extra note for logging, Weights & Biases (optional)

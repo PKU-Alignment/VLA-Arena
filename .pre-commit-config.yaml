@@ -7,16 +7,14 @@ ci:
   autoupdate_commit_msg: "chore(pre-commit): [pre-commit.ci] autoupdate"
 default_stages: [pre-commit, pre-push, manual]
 repos:
+  # 1. Basic file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
       - id: check-symlinks
       - id: destroyed-symlinks
       - id: trailing-whitespace
-        exclude: |
-          (?x)(
-            ^vla_arena/vla_arena/assets/|
-          )
+        exclude: ^vla_arena/vla_arena/assets/
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-toml
@@ -34,28 +32,48 @@ repos:
       - id: detect-private-key
       - id: debug-statements
       - id: double-quote-string-fixer
+
+  # 2. Automatically add license header (placed before formatting)
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.5.5
+    hooks:
+      - id: insert-license
+        files: \.py$
+        exclude: ^tests/
+        args:
+          - --license-filepath
+          - .license_header      # <--- Suggested renaming to .license_header for a cleaner directory
+          - --comment-style
+          - "#"
+
+  # 3. Modernization (Pyupgrade)
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.15.2
+    hooks:
+      - id: pyupgrade
+        args: [--py311-plus]
+        exclude: ^examples/
+
+  # 4. Sort Imports (Isort)
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+
+  # 5. Code formatting (Black)
+  - repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+      - id: black-jupyter
+
+  # 6. Fast Lint (Ruff) - Can replace isort/pyupgrade above, kept here for coexistence
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.4.4
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.13.2
-    hooks:
-      - id: isort
-  - repo: https://github.com/psf/black
-    rev: 24.4.2
-    hooks:
-      - id: black-jupyter
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v3.15.2
-    hooks:
-      - id: pyupgrade
-        args: [--py38-plus] # sync with requires-python
-        exclude: |
-          (?x)(
-            ^examples/
-          )
+
+  # 7. Traditional Lint (Flake8)
   - repo: https://github.com/pycqa/flake8
     rev: 7.0.0
     hooks:
@@ -72,6 +90,8 @@ repos:
             ^tests/|
             ^docs/
           )
+
+  # 8. Spell check
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.6
     hooks:
@@ -82,6 +102,8 @@ repos:
             ^docs/spelling_wordlist.txt$|
             ^vla_arena/vla_arena/assets/
           )
+
+  # 9. Deep static analysis (Pylint) - Local hook
   - repo: local
     hooks:
       - id: pylint

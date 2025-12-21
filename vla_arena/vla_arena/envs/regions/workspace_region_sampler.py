@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 import numpy as np
 from robosuite.utils.transform_utils import quat_multiply
@@ -58,11 +57,17 @@ class TableRegionSampler(MultiRegionRandomSampler):
         """
         if self.rotation is None:
             rot_angle = np.random.uniform(high=2 * np.pi, low=0)
-        elif isinstance(self.rotation, tuple) or isinstance(self.rotation, list):
-            rot_angle = np.random.uniform(high=max(self.rotation), low=min(self.rotation))
+        elif isinstance(self.rotation, tuple) or isinstance(
+            self.rotation, list
+        ):
+            rot_angle = np.random.uniform(
+                high=max(self.rotation), low=min(self.rotation)
+            )
         # multiple rotations
         elif isinstance(self.rotation, dict):
-            quat = np.array([0.0, 0.0, 0.0, 1.0])  # \theta=0, in robosuite, quat = (x, y, z), w
+            quat = np.array(
+                [0.0, 0.0, 0.0, 1.0]
+            )  # \theta=0, in robosuite, quat = (x, y, z), w
             for i in range(len(self.rotation.keys())):
                 rotation_axis = list(self.rotation.keys())[i]
                 rot_angle = np.random.uniform(
@@ -71,11 +76,17 @@ class TableRegionSampler(MultiRegionRandomSampler):
                 )
 
                 if rotation_axis == 'x':
-                    current_quat = np.array([np.sin(rot_angle / 2), 0, 0, np.cos(rot_angle / 2)])
+                    current_quat = np.array(
+                        [np.sin(rot_angle / 2), 0, 0, np.cos(rot_angle / 2)]
+                    )
                 elif rotation_axis == 'y':
-                    current_quat = np.array([0, np.sin(rot_angle / 2), 0, np.cos(rot_angle / 2)])
+                    current_quat = np.array(
+                        [0, np.sin(rot_angle / 2), 0, np.cos(rot_angle / 2)]
+                    )
                 elif rotation_axis == 'z':
-                    current_quat = np.array([0, 0, np.sin(rot_angle / 2), np.cos(rot_angle / 2)])
+                    current_quat = np.array(
+                        [0, 0, np.sin(rot_angle / 2), np.cos(rot_angle / 2)]
+                    )
 
                 quat = quat_multiply(current_quat, quat)
 
@@ -85,11 +96,17 @@ class TableRegionSampler(MultiRegionRandomSampler):
 
         # Return angle based on axis requested
         if self.rotation_axis == 'x':
-            return np.array([np.sin(rot_angle / 2), 0, 0, np.cos(rot_angle / 2)])
+            return np.array(
+                [np.sin(rot_angle / 2), 0, 0, np.cos(rot_angle / 2)]
+            )
         if self.rotation_axis == 'y':
-            return np.array([0, np.sin(rot_angle / 2), 0, np.cos(rot_angle / 2)])
+            return np.array(
+                [0, np.sin(rot_angle / 2), 0, np.cos(rot_angle / 2)]
+            )
         if self.rotation_axis == 'z':
-            return np.array([0, 0, np.sin(rot_angle / 2), np.cos(rot_angle / 2)])
+            return np.array(
+                [0, 0, np.sin(rot_angle / 2), np.cos(rot_angle / 2)]
+            )
         # Invalid axis specified, raise error
         raise ValueError(
             f"Invalid rotation axis specified. Must be 'x', 'y', or 'z'. Got: {self.rotation_axis}",
@@ -135,11 +152,17 @@ class ObjectBasedSampler(MultiRegionRandomSampler):
         """
         if self.rotation is None:
             rot_angle = np.random.uniform(high=2 * np.pi, low=0)
-        elif isinstance(self.rotation, tuple) or isinstance(self.rotation, list):
-            rot_angle = np.random.uniform(high=max(self.rotation), low=min(self.rotation))
+        elif isinstance(self.rotation, tuple) or isinstance(
+            self.rotation, list
+        ):
+            rot_angle = np.random.uniform(
+                high=max(self.rotation), low=min(self.rotation)
+            )
         # multiple rotations
         elif isinstance(self.rotation, dict):
-            quat = np.array([0.0, 0.0, 0.0, 1.0])  # \theta=0, in robosuite, quat = (x, y, z), w
+            quat = np.array(
+                [0.0, 0.0, 0.0, 1.0]
+            )  # \theta=0, in robosuite, quat = (x, y, z), w
             for i in range(len(self.rotation.keys())):
                 rotation_axis = list(self.rotation.keys())[i]
                 rot_angle = np.random.uniform(
@@ -148,11 +171,17 @@ class ObjectBasedSampler(MultiRegionRandomSampler):
                 )
 
                 if rotation_axis == 'x':
-                    current_quat = np.array([np.sin(rot_angle / 2), 0, 0, np.cos(rot_angle / 2)])
+                    current_quat = np.array(
+                        [np.sin(rot_angle / 2), 0, 0, np.cos(rot_angle / 2)]
+                    )
                 elif rotation_axis == 'y':
-                    current_quat = np.array([0, np.sin(rot_angle / 2), 0, np.cos(rot_angle / 2)])
+                    current_quat = np.array(
+                        [0, np.sin(rot_angle / 2), 0, np.cos(rot_angle / 2)]
+                    )
                 elif rotation_axis == 'z':
-                    current_quat = np.array([0, 0, np.sin(rot_angle / 2), np.cos(rot_angle / 2)])
+                    current_quat = np.array(
+                        [0, 0, np.sin(rot_angle / 2), np.cos(rot_angle / 2)]
+                    )
 
                 quat = quat_multiply(current_quat, quat)
 
@@ -162,11 +191,17 @@ class ObjectBasedSampler(MultiRegionRandomSampler):
 
         # Return angle based on axis requested
         if self.rotation_axis == 'x':
-            return np.array([np.sin(rot_angle / 2), 0, 0, np.cos(rot_angle / 2)])
+            return np.array(
+                [np.sin(rot_angle / 2), 0, 0, np.cos(rot_angle / 2)]
+            )
         if self.rotation_axis == 'y':
-            return np.array([0, np.sin(rot_angle / 2), 0, np.cos(rot_angle / 2)])
+            return np.array(
+                [0, np.sin(rot_angle / 2), 0, np.cos(rot_angle / 2)]
+            )
         if self.rotation_axis == 'z':
-            return np.array([0, 0, np.sin(rot_angle / 2), np.cos(rot_angle / 2)])
+            return np.array(
+                [0, 0, np.sin(rot_angle / 2), np.cos(rot_angle / 2)]
+            )
         # Invalid axis specified, raise error
         raise ValueError(
             f"Invalid rotation axis specified. Must be 'x', 'y', or 'z'. Got: {self.rotation_axis}",

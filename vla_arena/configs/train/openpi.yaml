@@ -1,0 +1,63 @@
+# OpenPI Training Configuration
+# This config uses the base "pi0_vla_arena" config and allows overriding key parameters
+
+# Base config name (must match one of the predefined configs in config.py)
+name: "pi0_vla_arena_low_mem_finetune"
+
+# Experiment name (required)
+exp_name: "openpi_training"
+
+# Training Parameters
+batch_size: 8                                    # Global batch size
+num_train_steps: 30000                           # Number of training steps
+log_interval: 100                                 # Log metrics every N steps
+save_interval: 1000                               # Save checkpoint every N steps
+
+# Learning Rate Schedule (override if needed)
+# lr_schedule:
+#   warmup_steps: 1000
+#   peak_lr: 1.0e-4
+#   decay_steps: 29000
+#   decay_lr: 1.0e-6
+
+# Optimizer (override if needed)
+# optimizer:
+#   b1: 0.9
+#   b2: 0.999
+#   eps: 1.0e-8
+#   weight_decay: 0.01
+#   clip_gradient_norm: 1.0
+
+# Data Configuration (override if needed)
+# data:
+#   repo_id: "lerobot_data/VLA_Arena"            # LeRobot dataset repo ID
+#   extra_delta_transform: true                   # Apply extra delta transform
+
+# Model Configuration (override if needed)
+# model:
+#   action_dim: 7                                 # Action dimension
+#   action_horizon: 10                            # Action horizon
+#   max_token_len: 256                            # Max token length
+#   paligemma_variant: "gemma_2b"                 # Vision backbone variant
+#   action_expert_variant: "gemma_300m"           # Action expert variant
+#   pi05: false                                   # Use PI05 model
+
+# Weight Loading (override if needed)
+# weight_loader:
+#   checkpoint_path: "gs://openpi-assets/checkpoints/pi0_base/params"
+
+# Checkpoint Configuration
+checkpoint_base_dir: "./checkpoints"              # Base directory for checkpoints
+assets_base_dir: "./assets"                       # Base directory for assets
+overwrite: true                                  # Overwrite existing checkpoint directory
+resume: false                                     # Resume from latest checkpoint
+
+# Wandb Configuration
+wandb_enabled: true                               # Enable wandb logging
+project_name: "openpi"                            # Wandb project name
+
+# Other Settings
+seed: 42                                          # Random seed
+num_workers: 2                                    # Data loader workers
+keep_period: 5000                                 # Keep checkpoints every N steps
+fsdp_devices: 1                                   # FSDP devices (1 = disabled)

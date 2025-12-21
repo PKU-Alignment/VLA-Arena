@@ -1,0 +1,30 @@
+# OpenPI Evaluation Configuration
+# Configuration for evaluating OpenPI models on VLA-Arena benchmark tasks
+
+#################################################################################################################
+# Model server parameters
+#################################################################################################################
+host: "0.0.0.0"                    # Model server host address
+port: 8000                         # Model server port
+resize_size: 224                   # Image resize size for model input
+replan_steps: 5                    # Number of actions to execute before replanning
+
+#################################################################################################################
+# VLA-Arena environment-specific parameters
+#################################################################################################################
+task_suite_name: "safety_static_obstacles"  # Task suite name (e.g., "safety_static_obstacles", "safety_dynamic_obstacles", "long_horizon")
+task_level: 0                      # Task level (0 or 1)
+num_steps_wait: 10                 # Number of steps to wait for objects to stabilize in sim
+num_trials_per_task: 10            # Number of rollouts per task
+add_noise: false                   # Add noise to observations
+adjust_light: false                # Adjust lighting conditions
+randomize_color: false             # Randomize object colors
+camera_offset: false               # Apply camera offset
+safety: false                      # Enable safety mode
+
+#################################################################################################################
+# Utils
+#################################################################################################################
+save_video_mode: "first_success_failure"  # Video saving mode: "all", "first_success_failure", "none"
+local_log_dir: "./experiments/logs"       # Local directory for eval logs
+seed: 7                                   # Random seed (for reproducibility)

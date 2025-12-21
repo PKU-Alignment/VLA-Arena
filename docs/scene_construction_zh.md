@@ -56,7 +56,7 @@ define (problem Tabletop_Manipulation) ; 从 "Tabletop_Manipulation" 和 "Floor_
 - `ranges` : 目标坐标系中的 XY 平面范围，格式为`(x_min y_min x_max y_max)`
 - `yaw_rotation`(可选) : 区域的旋转角度（仅对`fixtures`有效）
 
-### 1.3 对象定义 
+### 1.3 对象定义
 
 #### 固定对象
 环境中不会移动的对象：
@@ -86,7 +86,7 @@ define (problem Tabletop_Manipulation) ; 从 "Tabletop_Manipulation" 和 "Floor_
 ```
 
 #### 移动对象
-定义在场景中自主移动的对象，支持多种运动模式： 
+定义在场景中自主移动的对象，支持多种运动模式：
 
 ```lisp
 (:moving_objects
@@ -255,6 +255,12 @@ python scripts/visualize_bddl.py --bddl_file "your_bddl_file_path"
 ```
 然后在`rollouts`目录中查看生成的视频：
 <p align="center"><img src="image/build_scene_1.png" width="300" height="300"/></p>
+
+### 故障排除
+如果在可视化过程中遇到错误 AttributeError: "'MjRenderContextOffscreen' object has no attribute 'con'"，请尝试安装以下软件包：
+```bash
+conda install -c conda-forge libegl-devel
+```
 
 ## 3. 资产
 BDDL 文件中的固定对象和可操作对象必须是`vla_arena/vla_arena/assets`目录中已存在的资产。该目录是场景中所有可用资产的仓库。

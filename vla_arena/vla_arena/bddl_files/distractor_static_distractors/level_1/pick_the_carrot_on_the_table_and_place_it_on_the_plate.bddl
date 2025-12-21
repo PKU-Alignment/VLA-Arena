@@ -1,0 +1,90 @@
+(define (problem Tabletop_Manipulation)
+  (:domain robosuite)
+  (:language Pick the carrot on the table and place it on the plate)
+
+  (:regions
+      (distractor_region_0
+          (:target main_table)
+          (:ranges (
+              (0.05 0.17 0.07 0.19)
+            )
+          )
+      )
+      (distractor_region_1
+          (:target main_table)
+          (:ranges (
+              (-0.15 -0.09 -0.13 -0.07)
+            )
+          )
+      )
+      (distractor_region_2
+          (:target main_table)
+          (:ranges (
+              (0.18 0.18 0.2 0.2)
+            )
+          )
+      )
+      (distractor_region_3
+          (:target main_table)
+          (:ranges (
+              (-0.2 -0.02 -0.18 0.02)
+            )
+          )
+      )
+      (cabinet_region
+          (:target main_table)
+          (:ranges (
+              (-0.24 -0.23 -0.22 -0.21)
+            )
+          )
+        (:yaw_rotation (
+              (1.6 1.6)
+            )
+        )
+      )
+    (plate_region
+        (:target main_table)
+        (:ranges ((-0.18 0.2 -0.16 0.22)))
+    )
+    (target_object_region
+        (:target main_table)
+        (:ranges ((-0.15 -0.18 -0.13 -0.16)))
+    )
+    (top_region
+        (:target white_cabinet_1)
+    )
+    (top_side
+        (:target white_cabinet_1)
+    )
+  )
+
+  (:fixtures
+    main_table - table
+    white_cabinet_1 - white_cabinet
+  )
+
+  (:objects
+    peach_1 - peach
+    apple_1 - apple
+    plate_1 - ceramic_plate
+    carrot_1 - carrot
+  )
+
+  (:obj_of_interest
+    carrot_1
+    plate_1
+  )
+
+  (:init
+    (On plate_1 white_cabinet_1_top_side)
+    (In apple_1 white_cabinet_1_top_region)
+    (On white_cabinet_1 main_table_cabinet_region)
+    (Open white_cabinet_1_top_region)
+    (On carrot_1 main_table_plate_region)
+    (On peach_1 main_table_distractor_region_0)
+  )
+
+  (:goal
+    (And (On carrot_1 plate_1))
+  )
+)

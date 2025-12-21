@@ -8,14 +8,18 @@
   <a href="docs/"><img src="https://img.shields.io/badge/docs-available-green?style=for-the-badge" alt="Docs"></a>
 </p>
 
-VLA-Arena 是一个开源的基准测试平台，用于系统评估视觉-语言-动作（VLA）模型。VLA-Arena 提供完整的工具链，涵盖**场景建模**、**行为收集**、**模型训练**和**评估**。它具有13个专业套件中的150+个任务、分层难度级别（L0-L2），以及用于安全性、泛化性和效率评估的综合指标。
+<p align="center">
+  <img src="image/structure.png" width="100%">
+</p>
 
-VLA-Arena 专注于四个关键领域：
+VLA-Arena 是一个开源的基准测试平台，用于系统评测视觉-语言-动作（VLA）模型。VLA-Arena 提供完整的工具链，涵盖*场景建模*、*行为收集*、*模型训练*和*评测*。涵盖13个专业套件、150+任务、分层难度级别（L0-L2），以及用于安全性、泛化性和效率评测的综合指标。
+
+VLA-Arena 囊括四个任务类别：
 - **安全性**：在物理世界中可靠安全地操作。
 
-- **鲁棒性**：面对环境不可预测性时保持稳定性能。
+- **抗干扰**：面对环境不可预测性时保持稳定性能。
 
-- **泛化性**：将学到的知识泛化到新情况。
+- **外推性**：将学到的知识泛化到新情况。
 
 - **长时域**：结合长序列动作来实现复杂目标。
 
@@ -31,7 +35,7 @@ VLA-Arena 专注于四个关键领域：
 
 - **🛠️ 轻松任务定制**：利用约束行为定义语言（CBDDL）快速定义全新的任务和安全约束。其声明性特性使你能够以最少的努力实现全面的场景覆盖。
 
-- **📊 系统难度扩展**：系统评估模型在三个不同难度级别（L0→L1→L2）的能力。隔离特定技能并精确定位失败点，从基本物体操作到复杂的长时域任务。
+- **📊 系统难度扩展**：系统评测模型在三个不同难度级别（L0→L1→L2）的能力。隔离特定技能并精确定位失败点，从基本物体操作到复杂的长时域任务。
 
 如果你觉得VLA-Arena有用，请在你的出版物中引用它。
 
@@ -76,11 +80,8 @@ git clone https://github.com/PKU-Alignment/VLA-Arena.git
 cd VLA-Arena
 
 # 创建环境
-conda create -n vla-arena python=3.10
+conda create -n vla-arena python=3.11
 conda activate vla-arena
-
-# 安装依赖
-pip install -r requirements.txt
 
 # 安装 VLA-Arena
 pip install -e .
@@ -93,27 +94,38 @@ pip install -e .
   if _SYSTEM == "Darwin":
     os.environ["MUJOCO_GL"] = "cgl"
   else:
-    os.environ["MUJOCO_GL"] = "wgl"    # "egl" to "wgl"
-  ```
+    os.environ["MUJOCO_GL"] = "wgl"    # Change "egl" to "wgl"
+   ```
 
-### 2. 基础评估
-```bash
-# 评估预训练模型
-python scripts/evaluate_policy.py \
-    --task_suite safety_static_obstacles \
-    --task_level 0 \
-    --n-episode 10 \
-    --policy openvla \
-    --model_ckpt /path/to/checkpoint
-```
-
-### 3. 数据收集
+### 2. 数据收集
 ```bash
 # 收集演示数据
 python scripts/collect_demonstration.py --bddl-file tasks/your_task.bddl
 ```
 
-详细说明请参见我们的[文档](#文档)部分。
+这将打开一个交互式仿真环境，您可以使用键盘控制机器人手臂来完成 BDDL 文件中指定的任务。
+
+### 3. 模型微调与评估
+
+**⚠️ 重要提示：** 我们建议为不同模型创建独立的 conda 环境，以避免依赖冲突。每个模型可能有不同的要求。
+
+```bash
+# 为模型创建专用环境
+conda create -n [model_name]_vla_arena python=3.11 -y
+conda activate [model_name]_vla_arena
+
+# 安装 VLA-Arena 和模型特定依赖
+pip install -e .
+pip install vla-arena[model_name]
+
+# 微调模型（例如 OpenVLA）
+vla-arena train --model openvla --config vla_arena/configs/train/openvla.yaml
+
+# 评估模型
+vla-arena eval --model openvla --config vla_arena/configs/evaluation/openvla.yaml
+```
+
+**注意：** OpenPi 需要使用 `uv` 进行环境管理的不同设置流程。请参考[模型微调与评测指南](docs/finetuning_and_evaluation_zh.md)了解详细的 OpenPi 安装和训练说明。
 
 ## 任务套件概览
 
@@ -188,8 +200,6 @@ VLA-Arena提供11个专业任务套件，共150+个任务，分为四个主要�
 - **操作系统**：Ubuntu 20.04+ 或 macOS 12+
 - **Python**：3.10 或更高版本
 - **CUDA**：11.8+（用于GPU加速）
-- **内存**：最低8GB，推荐16GB
-- **存储**：基础安装10GB，数据集50GB+
 
 ### 安装步骤
 ```bash
@@ -198,12 +208,11 @@ git clone https://github.com/PKU-Alignment/VLA-Arena.git
 cd VLA-Arena
 
 # 创建环境
-conda create -n vla-arena python=3.10
+conda create -n vla-arena python=3.11
 conda activate vla-arena
 
 # 安装依赖
 pip install --upgrade pip
-pip install -r requirements.txt
 pip install -e .
 ```
 
@@ -213,32 +222,34 @@ VLA-Arena为框架的所有方面提供全面的文档。选择最适合你需�
 
 ### 📖 核心指南
 
-#### 🎯 [模型评估指南](docs/evaluation_zh.md) | [English](docs/evaluation.md)
-评估VLA模型和将自定义模型添加到VLA-Arena的完整指南。
-- 快速开始评估
-- 支持的模型（OpenVLA）
-- 自定义模型集成
-- 配置选项
-
-#### 🔧 [模型微调指南](docs/finetune_zh.md) | [English](docs/finetune.md)
-使用VLA-Arena生成的数据集微调VLA模型的综合指南。
-- OpenVLA微调
-- 训练脚本和配置
+#### 🏗️ [场景构建指南](docs/scene_construction_zh.md) | [English](docs/scene_construction.md)
+使用 CBDDL（带约束行为域定义语言）构建自定义任务场景。
+- CBDDL 文件结构和语法
+- 区域、固定装置和对象定义
+- 具有多种运动类型的移动对象（线性、圆形、航点、抛物线）
+- 初始和目标状态规范
+- 成本约束和安全谓词
+- 图像效果设置
+- 资源管理和注册
+- 场景可视化工具
 
 #### 📊 [数据收集指南](docs/data_collection_zh.md) | [English](docs/data_collection.md)
-在自定义场景中收集演示数据的分步指南。
-- 交互式仿真环境
-- 机器人手臂键盘控制
-- 数据格式转换
-- 数据集创建和优化
+在自定义场景中收集演示数据并转换数据格式。
+- 带键盘控制的交互式仿真环境
+- 演示数据收集工作流
+- 数据格式转换（HDF5 到训练数据集）
+- 数据集再生（过滤 noops 并优化轨迹）
+- 将数据集转换为 RLDS 格式（用于 X-embodiment 框架）
+- 将 RLDS 数据集转换为 LeRobot 格式（用于 Hugging Face LeRobot）
 
-#### 🏗️ [场景构建指南](docs/scene_construction_zh.md) | [English](docs/scene_construction.md)
-使用BDDL构建自定义任务场景的详细指南。
-- BDDL文件结构
-- 物体和区域定义
-- 状态和目标规范
-- 成本约束和安全谓词
-- 场景可视化
+#### 🔧 [模型微调与评测指南](docs/finetuning_and_evaluation_zh.md) | [English](docs/finetuning_and_evaluation.md)
+使用 VLA-Arena 生成的数据集微调和评估 VLA 模型。
+- 通用模型（OpenVLA, OpenVLA-OFT, UniVLA, SmolVLA）：简单的安装和训练工作流
+- OpenPi：使用 `uv` 进行环境管理的特殊设置
+- 模型特定安装说明（`pip install vla-arena[model_name]`）
+- 训练配置和超参数设置
+- 评估脚本和指标
+- 用于推理的策略服务器设置（OpenPi）
 
 ### 🚀 快速参考
 
@@ -306,45 +317,64 @@ vla-arena-manage-assets upload ./packages/my_task.vlap --repo your-username/your
 
 ## 排行榜
 
-### OpenVLA-OFT结果（150,000训练步数并在VLA-Arena L0数据集上微调）
+### VLA模型在VLA-Arena基准测试上的性能评估
 
-#### 整体性能摘要
-| 模型 | L0成功率 | L1成功率 | L2成功率 | 平均成功率 |
-|------|------------|----------|----------|----------|
-| **OpenVLA-OFT** | 76.4%	| 36.3% |	16.7% |	36.5% | 
+我们在四个维度上比较了六个模型：**安全性**、**抗干扰性**、**外推性**和**长时域**。三个难度级别（L0–L2）的性能趋势以统一尺度（0.0–1.0）显示，便于跨模型比较。安全任务同时报告累积成本（CC，括号内显示）和成功率（SR），而其他任务仅报告成功率。**粗体**数字表示每个难度级别的最高性能。
 
-#### 每套件性能
+#### 🛡️ 安全性能
 
-### 🛡️ 安全性能
-| 任务套件 | L0成功率 | L1成功率 | L2成功率 | 平均成功率 |
-|----------|----------|----------|----------|------------|
-| static_obstacles | 100.0% | 20.0% | 20.0% | 46.7% |
-| cautious_grasp | 60.0% | 50.0% | 0.0% | 36.7% |
-| hazard_avoidance | 36.0% | 0.0% | 20.0% | 18.7% |
-| state_preservation | 100.0% | 76.0% | 20.0% | 65.3% |
-| dynamic_obstacles | 80.0% | 56.0% | 10.0% | 48.7% |
+| 任务 | OpenVLA | OpenVLA-OFT | π₀ | π₀-FAST | UniVLA | SmolVLA |
+|------|---------|-------------|----|---------|--------|---------|
+| **StaticObstacles** | | | | | | |
+| L0 | **1.00** (CC: 0.0) | **1.00** (CC: 0.0) | 0.98 (CC: 0.0) | **1.00** (CC: 0.0) | 0.84 (CC: 0.0) | 0.14 (CC: 0.0) |
+| L1 | 0.60 (CC: 8.2) | **0.20** (CC: 45.4) | **0.74** (CC: 8.0) | 0.40 (CC: 56.0) | 0.42 (CC: 9.7) | 0.00 (CC: 8.8) |
+| L2 | 0.00 (CC: 38.2) | 0.20 (CC: 49.0) | **0.32** (CC: 28.1) | 0.20 (CC: 6.8) | 0.18 (CC: 60.6) | 0.00 (CC: 2.6) |
+| **CautiousGrasp** | | | | | | |
+| L0 | **0.80** (CC: 6.6) | 0.60 (CC: 3.3) | **0.84** (CC: 3.5) | 0.64 (CC: 3.3) | **0.80** (CC: 3.3) | 0.52 (CC: 2.8) |
+| L1 | 0.40 (CC: 120.2) | 0.50 (CC: 6.3) | 0.08 (CC: 16.4) | 0.06 (CC: 15.6) | **0.60** (CC: 52.1) | 0.28 (CC: 30.7) |
+| L2 | 0.00 (CC: 50.1) | 0.00 (CC: 2.1) | 0.00 (CC: 0.5) | 0.00 (CC: 1.0) | 0.00 (CC: 8.5) | **0.04** (CC: 0.3) |
+| **HazardAvoidance** | | | | | | |
+| L0 | 0.20 (CC: 17.2) | 0.36 (CC: 9.4) | **0.74** (CC: 6.4) | 0.16 (CC: 10.4) | **0.70** (CC: 5.3) | 0.16 (CC: 10.4) |
+| L1 | 0.02 (CC: 22.8) | 0.00 (CC: 22.9) | 0.00 (CC: 16.8) | 0.00 (CC: 15.4) | **0.12** (CC: 18.3) | 0.00 (CC: 19.5) |
+| L2 | **0.20** (CC: 15.7) | **0.20** (CC: 14.7) | 0.00 (CC: 15.6) | **0.20** (CC: 13.9) | 0.04 (CC: 16.7) | 0.00 (CC: 18.0) |
+| **StatePreservation** | | | | | | |
+| L0 | **1.00** (CC: 0.0) | **1.00** (CC: 0.0) | 0.98 (CC: 0.0) | 0.60 (CC: 0.0) | 0.90 (CC: 0.0) | 0.50 (CC: 0.0) |
+| L1 | 0.66 (CC: 6.6) | **0.76** (CC: 7.6) | 0.64 (CC: 6.4) | 0.56 (CC: 5.6) | **0.76** (CC: 7.6) | 0.18 (CC: 1.8) |
+| L2 | 0.34 (CC: 21.0) | 0.20 (CC: 4.6) | **0.48** (CC: 15.8) | 0.20 (CC: 4.2) | **0.54** (CC: 16.4) | 0.08 (CC: 9.6) |
+| **DynamicObstacles** | | | | | | |
+| L0 | 0.60 (CC: 3.6) | **0.80** (CC: 8.8) | 0.92 (CC: 6.0) | **0.80** (CC: 3.6) | 0.26 (CC: 7.1) | 0.32 (CC: 2.1) |
+| L1 | 0.60 (CC: 5.1) | 0.56 (CC: 3.7) | **0.64** (CC: 3.3) | 0.30 (CC: 8.8) | **0.58** (CC: 16.3) | 0.24 (CC: 16.6) |
+| L2 | 0.26 (CC: 5.6) | 0.10 (CC: 1.8) | **0.10** (CC: 40.2) | 0.00 (CC: 21.2) | 0.08 (CC: 6.0) | **0.02** (CC: 0.9) |
 
-#### 🛡️ 安全成本分析
-| 任务套件 | L1总成本 | L2总成本 | 平均总成本 |
-|----------|----------|----------|------------|
-| static_obstacles | 45.40 | 49.00 | 47.20 |
-| cautious_grasp | 6.34 | 2.12 | 4.23 |
-| hazard_avoidance | 22.91 | 14.71 | 18.81 |
-| state_preservation | 7.60 | 4.60 | 6.10 |
-| dynamic_obstacles | 3.66 | 1.84 | 2.75 |
+#### 🔄 抗干扰性能
 
-### 🔄 抗干扰性能
-| 任务套件 | L0成功率 | L1成功率 | L2成功率 | 平均成功率 |
-|----------|----------|----------|----------|------------|
-| static_distractors | 100.0% | 0.0% | 20.0% | 40.0% |
-| dynamic_distractors | 100.0% | 54.0% | 40.0% | 64.7% |
+| 任务 | OpenVLA | OpenVLA-OFT | π₀ | π₀-FAST | UniVLA | SmolVLA |
+|------|---------|-------------|----|---------|--------|---------|
+| **StaticDistractors** | | | | | | |
+| L0 | 0.80 | **1.00** | 0.92 | **1.00** | **1.00** | 0.54 |
+| L1 | 0.20 | 0.00 | 0.02 | **0.22** | 0.12 | 0.00 |
+| L2 | 0.00 | **0.20** | 0.02 | 0.00 | 0.00 | 0.00 |
+| **DynamicDistractors** | | | | | | |
+| L0 | 0.60 | **1.00** | 0.78 | 0.80 | 0.78 | 0.42 |
+| L1 | 0.58 | 0.54 | **0.70** | 0.28 | 0.54 | 0.30 |
+| L2 | 0.40 | **0.40** | 0.18 | 0.04 | 0.04 | 0.00 |
 
-### 🎯 外推性能
-| 任务套件 | L0成功率 | L1成功率 | L2成功率 | 平均成功率 |
-|----------|----------|----------|----------|------------|
-| preposition_combinations | 62.0% | 18.0% | 0.0% | 26.7% |
-| task_workflows | 74.0% | 0.0% | 0.0% | 24.7% |
-| unseen_objects | 60.0% | 40.0% | 20.0% | 40.0% |
+#### 🎯 外推性能
+
+| 任务 | OpenVLA | OpenVLA-OFT | π₀ | π₀-FAST | UniVLA | SmolVLA |
+|------|---------|-------------|----|---------|--------|---------|
+| **PrepositionCombinations** | | | | | | |
+| L0 | 0.68 | 0.62 | **0.76** | 0.14 | 0.50 | 0.20 |
+| L1 | 0.04 | **0.18** | 0.10 | 0.00 | 0.02 | 0.00 |
+| L2 | 0.00 | 0.00 | 0.00 | 0.00 | **0.02** | 0.00 |
+| **TaskWorkflows** | | | | | | |
+| L0 | **0.82** | 0.74 | 0.72 | 0.24 | 0.76 | 0.32 |
+| L1 | **0.20** | 0.00 | 0.00 | 0.00 | 0.04 | 0.04 |
+| L2 | **0.16** | 0.00 | 0.00 | 0.00 | 0.20 | 0.00 |
+| **UnseenObjects** | | | | | | |
+| L0 | **0.80** | 0.60 | **0.80** | 0.00 | 0.34 | 0.16 |
+| L1 | 0.60 | 0.40 | 0.52 | 0.00 | **0.76** | 0.18 |
+| L2 | 0.00 | **0.20** | 0.04 | 0.00 | 0.16 | 0.00 |
 
 ### 📈 长程性能
 | 任务套件 | L0成功率 | L1成功率 | L2成功率 | 平均成功率 |
@@ -369,6 +399,6 @@ vla-arena-manage-assets upload ./packages/my_task.vlap --repo your-username/your
 ---
 
 <p align="center">
-  <b>VLA-Arena: 通过综合评估推进视觉-语言-动作模型发展</b><br>
+  <b>VLA-Arena: 通过综合评测推进视觉-语言-动作模型发展</b><br>
   由VLA-Arena团队用 ❤️ 制作
 </p>

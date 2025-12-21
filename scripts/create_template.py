@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 """
 This is a script for creating various files frrom templates. This is to ease the process for users who want to extend vla_arena, creating new tasks. You would still need to make necessary changes based on the template to serve your own need, but the hope is that we save you much time by providing the necessar templates.
@@ -71,7 +70,9 @@ def create_scene_xml_file(scene_name):
         texture_list = get_texture_file_list(type=type, texture_path='../')
         for i, (texture_name, texture_file_path) in enumerate(texture_list):
             print(f'[{i}]: {texture_name}')
-        choice = int(input(f'Please select which texture to use for {element_name}: '))
+        choice = int(
+            input(f'Please select which texture to use for {element_name}: ')
+        )
         element.set('file', texture_list[choice][1])
     tree.write(f'{scene_name}.xml', encoding='utf-8')
     print(f'Creating scene {scene_name} at the file: {scene_name}.xml')

@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 import numpy as np
 from robosuite.utils.mjcf_utils import xml_path_completion
@@ -39,21 +38,27 @@ class LivingRoomTableArena(Arena):
         self.table_friction = table_friction
         self.table_offset = table_offset
         self.center_pos = (
-            self.bottom_pos + np.array([0, 0, -self.table_half_size[2]]) + self.table_offset
+            self.bottom_pos
+            + np.array([0, 0, -self.table_half_size[2]])
+            + self.table_offset
         )
 
-        self.living_room_table_body = self.worldbody.find("./body[@name='living_room_table']")
+        self.living_room_table_body = self.worldbody.find(
+            "./body[@name='living_room_table']"
+        )
 
         texplane = self.asset.find("./texture[@name='texplane']")
         plane_file = texplane.get('file')
         plane_file = '/'.join(
-            plane_file.split('/')[:-1] + [get_texture_filename(type='floor', style=floor_style)],
+            plane_file.split('/')[:-1]
+            + [get_texture_filename(type='floor', style=floor_style)],
         )
         texplane.set('file', plane_file)
 
         texwall = self.asset.find("./texture[@name='tex-wall']")
         wall_file = texwall.get('file')
         wall_file = '/'.join(
-            wall_file.split('/')[:-1] + [get_texture_filename(type='wall', style=wall_style)],
+            wall_file.split('/')[:-1]
+            + [get_texture_filename(type='wall', style=wall_style)],
         )
         texwall.set('file', wall_file)

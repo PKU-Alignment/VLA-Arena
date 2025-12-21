@@ -1,16 +1,27 @@
 [run]
+branch = True
+data_file = tests/.coverage
+source =
+    vla_arena
 omit =
-    ../vla_arena/__init__.py
-    ../vla_arena/__version__.py
-    ../docs/*
-    ../scripts/*
-    ../vla_arena/vla_arena/assets/*
+    */tests/*
+    */conftest.py
+    */__main__.py
 
 [report]
+skip_empty = True
+show_missing = True
+precision = 2
 exclude_lines =
     pragma: no cover
-    raise NotImplementedError
-    class .*\bProtocol\):
-    @(abc\.)?abstractmethod
-    if __name__ == ('__main__'|"__main__"):
+    if __name__ == "__main__":
     if TYPE_CHECKING:
+    raise NotImplementedError
+
+[xml]
+output = tests/coverage.xml
+
+[paths]
+source =
+    vla_arena
+    */site-packages/vla_arena

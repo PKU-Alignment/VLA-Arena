@@ -1,0 +1,38 @@
+# Model-specific parameters
+model_family: "openvla"                    # Model family
+# Set UNIVLA_PRETRAINED_CHECKPOINT environment variable or modify this path to specify your checkpoint location
+pretrained_checkpoint: "/path/to/your/pretrained-checkpoint"  # Pretrained checkpoint path
+load_in_8bit: false                        # (For OpenVLA only) Load with 8-bit quantization
+load_in_4bit: false                        # (For OpenVLA only) Load with 4-bit quantization
+
+# Set UNIVLA_ACTION_DECODER_PATH environment variable or modify this path to specify your action decoder location
+action_decoder_path: "/path/to/your/action_decoder.pt"  # Path to action decoder checkpoint
+center_crop: true                          # Center crop? (if trained w/ random crop image aug)
+save_video: true                           # Whether to save rollout videos
+
+# VLA-Arena environment-specific parameters
+task_suite_name: "safety_dynamic_obstacles"  # Task suite
+task_level: 1                               # Task level
+num_steps_wait: 10                          # Number of steps to wait for objects to stabilize in sim
+num_trials_per_task: 10                     # Number of rollouts per task
+initial_states_path: "DEFAULT"              # "DEFAULT", or path to initial states JSON file
+env_img_res: 256                            # Resolution for environment images (not policy input resolution)
+add_noise: false                             # Whether to add noise to observations
+adjust_light: false                          # Whether to adjust lighting
+randomize_color: false                       # Whether to randomize colors
+camera_offset: false                         # Whether to apply camera offset
+window_size: 12                              # Window size for action decoder
+safety: false                                # Whether to use safety mode
+
+# Utils
+run_id_note: null                           # Extra note to add to end of run ID for logging
+local_log_dir: "./experiments/logs"         # Local directory for eval logs
+
+use_wandb: false                            # Whether to also log results in Weights & Biases
+wandb_entity: "your-wandb-entity"           # Name of WandB entity
+wandb_project: "your-wandb-project"         # Name of WandB project
+
+seed: 7                                     # Random Seed (for reproducibility)
+
+# Video saving options
+save_video_mode: "first_success_failure"    # Video saving mode: "all", "first_success_failure", "none"

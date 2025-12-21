@@ -1,0 +1,48 @@
+# Model-specific parameters
+model_family: "openvla"                    # Model family
+# Set OPENVLA_OFT_PRETRAINED_CHECKPOINT environment variable or modify this path to specify your checkpoint location
+pretrained_checkpoint: "path/to/openvla_oft_checkpoint"                  # Pretrained checkpoint path
+
+use_l1_regression: true                    # If True, uses continuous action head with L1 regression objective
+use_diffusion: false                      # If True, uses continuous action head with diffusion modeling objective (DDIM)
+num_diffusion_steps_train: 50             # (When `diffusion==True`) Number of diffusion steps used for training
+num_diffusion_steps_inference: 50         # (When `diffusion==True`) Number of diffusion steps used for inference
+use_film: false                           # If True, uses FiLM to infuse language inputs into visual features
+num_images_in_input: 1                    # Number of images in the VLA input (default: 1)
+use_proprio: false                        # Whether to include proprio state in input
+
+center_crop: true                         # Center crop? (if trained w/ random crop image aug)
+num_open_loop_steps: 8                    # Number of actions to execute open-loop before requerying policy
+
+lora_rank: 32                             # Rank of LoRA weight matrix (MAKE SURE THIS MATCHES TRAINING!)
+
+unnorm_key: "libero_spatial"              # Action un-normalization key
+
+load_in_8bit: false                       # (For OpenVLA only) Load with 8-bit quantization
+load_in_4bit: false                       # (For OpenVLA only) Load with 4-bit quantization
+
+# VLA-Arena environment-specific parameters
+task_suite_name: "libero_spatial"  # Task suite
+task_level: 0
+num_steps_wait: 10                        # Number of steps to wait for objects to stabilize in sim
+num_trials_per_task: 10                   # Number of rollouts per task
+initial_states_path: "DEFAULT"            # "DEFAULT", or path to initial states JSON file
+env_img_res: 256                         # Resolution for environment images (not policy input resolution)
+add_noise: false
+adjust_light: false
+randomize_color: false
+camera_offset: false
+safety: false
+
+# Utils
+run_id_note: null                         # Extra note to add to end of run ID for logging
+local_log_dir: "./experiments/logs"      # Local directory for eval logs
+
+use_wandb: false                          # Whether to also log results in Weights & Biases
+wandb_entity: "your-wandb-entity"         # Name of WandB entity
+wandb_project: "your-wandb-project"       # Name of WandB project
+
+seed: 7                                   # Random Seed (for reproducibility)
+
+# Video saving options
+save_video_mode: "first_success_failure"  # Video saving mode: "all", "first_success_failure", "none"

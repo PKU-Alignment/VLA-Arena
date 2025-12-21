@@ -1,0 +1,51 @@
+# Model Path
+# Set OPENVLA_OFT_VLA_PATH environment variable or modify this path to specify your OpenVLA model location
+vla_path: "/path/to/your/models/openvla"  # Path to OpenVLA model (on HuggingFace Hub or stored locally)
+
+# Dataset
+# Set OPENVLA_OFT_DATA_ROOT_DIR environment variable or modify this path to specify your dataset directory
+data_root_dir: "/path/to/your/datasets/openvla_spatial"  # Directory containing RLDS datasets
+dataset_name: "libero_spatial_no_noops"                 # Name of fine-tuning dataset (e.g., `aloha_scoop_x_into_bowl`)
+run_root_dir: "runs"                      # Path to directory to store logs & checkpoints
+shuffle_buffer_size: 100000               # Dataloader shuffle buffer size (can reduce if OOM errors occur)
+
+# Algorithm and architecture
+use_l1_regression: true                   # If True, trains continuous action head with L1 regression objective
+use_diffusion: false                      # If True, trains continuous action head with diffusion modeling objective (DDIM)
+num_diffusion_steps_train: 50             # (When `diffusion==True`) Number of diffusion steps used for training
+use_film: false                           # If True, uses FiLM to infuse language inputs into visual features
+num_images_in_input: 1                    # Number of images in the VLA input (default: 1)
+use_proprio: false                        # If True, includes robot proprioceptive state in input
+
+# Training configuration
+batch_size: 8                             # Batch size per device (total batch size = batch_size * num GPUs)
+learning_rate: 5.0e-4                     # Learning rate
+lr_warmup_steps: 0                        # Number of steps to warm up learning rate (from 10% to 100%)
+num_steps_before_decay: 100000            # Number of steps before LR decays by 10x
+grad_accumulation_steps: 1                # Number of gradient accumulation steps
+max_steps: 200000                         # Max number of training steps
+use_val_set: false                        # If True, uses validation set and log validation metrics
+val_freq: 10000                           # (When `use_val_set==True`) Validation set logging frequency in steps
+val_time_limit: 180                       # (When `use_val_set==True`) Time limit for computing validation metrics
+save_freq: 50000                             # Checkpoint saving frequency in steps
+save_latest_checkpoint_only: false        # If True, saves only 1 checkpoint, overwriting latest checkpoint
+                                          #   (If False, saves all checkpoints)
+resume: false                             # If True, resumes from checkpoint
+resume_step: null                         # (When `resume==True`) Step number that we are resuming from
+image_aug: true                           # If True, trains with image augmentations (HIGHLY RECOMMENDED)
+diffusion_sample_freq: 50                 # (When `use_diffusion==True`) Frequency for sampling in steps
+
+# LoRA
+use_lora: true                            # If True, uses LoRA fine-tuning
+lora_rank: 32                             # Rank of LoRA weight matrix
+lora_dropout: 0.0                         # Dropout applied to LoRA weights
+merge_lora_during_training: true          # If True, merges LoRA weights and saves result during training
+                                          #   Note: Merging can be very slow on some machines. If so, set to
+                                          #         False and merge final checkpoint offline!
+
+# Logging
+wandb_entity: "your-wandb-entity"         # Name of WandB entity
+wandb_project: "your-wandb-project"       # Name of WandB project
+run_id_note: null                         # Extra note to add to end of run ID for logging
+run_id_override: null                     # Optional string to override the run ID with
+wandb_log_freq: 10                        # WandB logging frequency in steps

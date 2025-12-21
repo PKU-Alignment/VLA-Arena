@@ -1,0 +1,70 @@
+(define (problem Tabletop_Manipulation)
+  (:domain robosuite)
+  (:language Pick the tomato on the table and place it on the bowl)
+
+  (:regions
+      (distractor_region_0
+          (:target main_table)
+          (:ranges (
+              (-0.17 0.11 -0.15 0.13)
+            )
+          )
+      )
+      (distractor_region_1
+          (:target main_table)
+          (:ranges (
+              (-0.23 0.29 -0.21 0.31)
+            )
+          )
+      )
+      (distractor_region_2
+          (:target main_table)
+          (:ranges (
+              (0.18 0.18 0.2 0.2)
+            )
+          )
+      )
+      (distractor_region_3
+          (:target main_table)
+          (:ranges (
+              (-0.2 -0.02 -0.18 0.02)
+            )
+          )
+      )
+    (bowl_region
+        (:target main_table)
+        (:ranges ((-0.04 -0.15 -0.02 -0.13)))
+    )
+    (target_object_region
+        (:target main_table)
+        (:ranges ((-0.24 0.18 -0.22 0.2)))
+    )
+  )
+
+  (:fixtures
+    main_table - table
+  )
+
+  (:objects
+    tomato_1 - tomato_n
+    bell_pepper_1 - bell_pepper
+    peach_1 - peach
+    bowl_1 - new_bowl
+  )
+
+  (:obj_of_interest
+    tomato_1
+    bowl_1
+  )
+
+  (:init
+    (On tomato_1 main_table_target_object_region)
+    (On bell_pepper_1 main_table_distractor_region_0)
+    (On peach_1 main_table_distractor_region_1)
+    (On bowl_1 main_table_bowl_region)
+  )
+
+  (:goal
+    (And (On tomato_1 bowl_1))
+  )
+)

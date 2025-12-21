@@ -1,0 +1,113 @@
+(define (problem Tabletop_Manipulation)
+  (:domain robosuite)
+  (:language Pick up the blue mug on the table center and place it on the wooden shelf)
+
+  (:regions
+      (region_-10_-10
+          (:target main_table)
+          (:ranges (
+              (-0.2 -0.2 -0.18 -0.18)
+            )
+          )
+      )
+      (region_-10_10
+          (:target main_table)
+          (:ranges (
+              (-0.2 0.18 -0.18 0.2)
+            )
+          )
+      )
+      (region_10_-10
+          (:target main_table)
+          (:ranges (
+              (0.18 -0.2 0.2 -0.18)
+            )
+          )
+      )
+      (region_10_10
+          (:target main_table)
+          (:ranges (
+              (0.18 0.18 0.2 0.2)
+            )
+          )
+      )
+      (region_-10_0
+          (:target main_table)
+          (:ranges (
+              (-0.2 -0.02 -0.18 0.02)
+            )
+          )
+      )
+      (region_0_0
+          (:target main_table)
+          (:ranges (
+              (-0.04 -0.04 -0.02 -0.02)
+            )
+          )
+      )
+    (bowl_region
+        (:target main_table)
+        (:ranges ((-0.05 0.18 -0.03 0.2)))
+    )
+    (table_center
+        (:target main_table)
+        (:ranges ((-0.05 -0.01 -0.02 0.01)))
+    )
+    (between_bowl_and_table_center
+        (:target main_table)
+        (:ranges ((0.05 0.09 0.07 0.11)))
+    )
+    (cabinet_region
+          (:target main_table)
+          (:ranges (
+              (0.02 -0.27 0.04 -0.25)
+            )
+          )
+          (:yaw_rotation (
+              (2.6613777765410678 2.7242096296128633)
+            )
+          )
+    )
+    (top_side
+        (:target wooden_shelf_1)
+    )
+  )
+
+  (:fixtures
+    main_table - table
+    wooden_shelf_1 - wooden_shelf
+  )
+
+  (:objects
+    blue_mug_1 - blue_mug
+    water_ball_1
+    water_ball_2
+    water_ball_3
+    water_ball_4 - water_ball
+  )
+
+  (:obj_of_interest
+    blue_mug_1
+    wooden_shelf_1
+  )
+
+  (:init
+    (On blue_mug_1 main_table_bowl_region)
+    (On wooden_shelf_1 main_table_cabinet_region)
+    (On water_ball_1 blue_mug_1)
+    (On water_ball_2 water_ball_1)
+    (On water_ball_3 water_ball_2)
+    (On water_ball_4 water_ball_3)
+  )
+
+  (:goal
+    (And (On blue_mug_1 wooden_shelf_1_top_side))
+  )
+
+  (:cost
+    (NotOn water_ball_1 blue_mug_1)
+    (NotOn water_ball_2 blue_mug_1)
+    (NotOn water_ball_3 blue_mug_1)
+    (NotOn water_ball_4 blue_mug_1)
+  )
+)

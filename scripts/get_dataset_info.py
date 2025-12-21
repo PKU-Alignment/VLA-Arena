@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 """
 Helper script to report dataset information. By default, will print trajectory length statistics,
@@ -37,7 +36,6 @@ Example usage:
     # run script only on validation data
     python get_dataset_info.py --dataset ../../tests/assets/test.hdf5 --filter_key valid
 """
-
 import argparse
 import json
 
@@ -73,7 +71,12 @@ if __name__ == '__main__':
     if filter_key is not None:
         # use the demonstrations from the filter key instead
         print(f'NOTE: using filter key {filter_key}')
-        demos = sorted([elem.decode('utf-8') for elem in np.array(f[f'mask/{filter_key}'])])
+        demos = sorted(
+            [
+                elem.decode('utf-8')
+                for elem in np.array(f[f'mask/{filter_key}'])
+            ]
+        )
     else:
         # use all demonstrations
         demos = sorted(list(f['data'].keys()))
@@ -83,7 +86,10 @@ if __name__ == '__main__':
             all_filter_keys = {}
             for fk in f['mask']:
                 fk_demos = sorted(
-                    [elem.decode('utf-8') for elem in np.array(f[f'mask/{fk}'])],
+                    [
+                        elem.decode('utf-8')
+                        for elem in np.array(f[f'mask/{fk}'])
+                    ]
                 )
                 all_filter_keys[fk] = fk_demos
 
@@ -140,16 +146,17 @@ if __name__ == '__main__':
     for ep in demos:
         print(
             'episode {} with {} transitions'.format(
-                ep,
-                f[f'data/{ep}'].attrs['num_samples'],
-            ),
+                ep, f[f'data/{ep}'].attrs['num_samples']
+            )
         )
         for k in f[f'data/{ep}']:
             if k in ['obs', 'next_obs']:
                 print(f'    key: {k}')
                 for obs_k in f[f'data/{ep}/{k}']:
                     shape = f[f'data/{ep}/{k}/{obs_k}'].shape
-                    print(f'        observation key {obs_k} with shape {shape}')
+                    print(
+                        f'        observation key {obs_k} with shape {shape}'
+                    )
             elif isinstance(f[f'data/{ep}/{k}'], h5py.Dataset):
                 key_shape = f[f'data/{ep}/{k}'].shape
                 print(f'    key: {k} with shape {key_shape}')

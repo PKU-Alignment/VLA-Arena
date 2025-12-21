@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 import os
 
@@ -19,7 +18,9 @@ import mujoco
 import numpy as np
 import robosuite.macros as macros
 import robosuite.utils.transform_utils as T
-from robosuite.environments.manipulation.manipulation_env import ManipulationEnv
+from robosuite.environments.manipulation.manipulation_env import (
+    ManipulationEnv,
+)
 from robosuite.models.base import MujocoModel
 from robosuite.models.tasks import ManipulationTask
 from robosuite.utils.observables import Observable, sensor
@@ -71,7 +72,9 @@ class SingleArmEnv(ManipulationEnv):
         """
         super()._check_robot_configuration(robots)
         if type(robots) is list:
-            assert len(robots) == 1, 'Error: Only one robot should be inputted for this task!'
+            assert (
+                len(robots) == 1
+            ), 'Error: Only one robot should be inputted for this task!'
 
     @property
     def _eef_xpos(self):
@@ -97,10 +100,14 @@ class SingleArmEnv(ManipulationEnv):
 
         if self.env_configuration == 'bimanual':
             return np.array(
-                self.sim.data.site_xmat[self.sim.model.site_name2id(pf + 'right_grip_site')],
+                self.sim.data.site_xmat[
+                    self.sim.model.site_name2id(pf + 'right_grip_site')
+                ],
             ).reshape(3, 3)
         return np.array(
-            self.sim.data.site_xmat[self.sim.model.site_name2id(pf + 'grip_site')],
+            self.sim.data.site_xmat[
+                self.sim.model.site_name2id(pf + 'grip_site')
+            ],
         ).reshape(3, 3)
 
     @property
@@ -164,7 +171,6 @@ class BDDLBaseDomain(SingleArmEnv):
         light_adjustment=False,
         **kwargs,
     ):
-        t0 = time.time()
         # settings for table top (hardcoded since it's not an essential part of the environment)
         self.workspace_offset = workspace_offset
         # reward configuration
@@ -210,12 +216,18 @@ class BDDLBaseDomain(SingleArmEnv):
         self.fixtures = []
         # self.custom_material_dict = {}
 
-        self.custom_asset_dir = os.path.abspath(os.path.join(DIR_PATH, '../assets'))
+        self.custom_asset_dir = os.path.abspath(
+            os.path.join(DIR_PATH, '../assets')
+        )
 
         self.bddl_file_name = bddl_file_name
         self.camera_names = camera_names
-        self.camera_configs = {camera: [0, 0, 0] for camera in self.camera_names}
-        self.parsed_problem = BDDLUtils.robosuite_parse_problem(self.bddl_file_name)
+        self.camera_configs = {
+            camera: [0, 0, 0] for camera in self.camera_names
+        }
+        self.parsed_problem = BDDLUtils.robosuite_parse_problem(
+            self.bddl_file_name
+        )
         if self.parsed_problem['camera_names']:
             self.camera_names = self.parsed_problem['camera_names']
             self.camera_configs = self.parsed_problem['camera_configs']
@@ -243,7 +255,9 @@ class BDDLBaseDomain(SingleArmEnv):
             self.image_settings['brightness'] = np.random.random() * 1.5 - 0.75
             self.image_settings['contrast'] = np.random.random() * 1.5 - 0.75
             self.image_settings['saturation'] = np.random.random() * 1.5 - 0.75
-            self.image_settings['temperature'] = 3500 + np.random.random() * 5000
+            self.image_settings['temperature'] = (
+                3500 + np.random.random() * 5000
+            )
 
         super().__init__(
             robots=robots,
@@ -303,7 +317,8 @@ class BDDLBaseDomain(SingleArmEnv):
     def _assert_problem_name(self):
         """Implement this to make sure the loaded bddl file has the correct problem name specification."""
         assert (
-            self.parsed_problem['problem_name'] == self.__class__.__name__.lower()
+            self.parsed_problem['problem_name']
+            == self.__class__.__name__.lower()
         ), 'Problem name mismatched'
 
     def _load_fixtures_in_arena(self, mujoco_arena):
@@ -326,7 +341,12 @@ class BDDLBaseDomain(SingleArmEnv):
 
     def _generate_object_state_wrapper(
         self,
-        skip_object_names=['main_table', 'floor', 'countertop', 'coffee_table'],
+        skip_object_names=[
+            'main_table',
+            'floor',
+            'countertop',
+            'coffee_table',
+        ],
     ):
         object_states_dict = {}
         tracking_object_states_changes = []
@@ -334,15 +354,27 @@ class BDDLBaseDomain(SingleArmEnv):
             if object_name in skip_object_names:
                 continue
             object_states_dict[object_name] = ObjectState(self, object_name)
-            if self.objects_dict[object_name].category_name in VISUAL_CHANGE_OBJECTS_DICT:
-                tracking_object_states_changes.append(object_states_dict[object_name])
+            if (
+                self.objects_dict[object_name].category_name
+                in VISUAL_CHANGE_OBJECTS_DICT
+            ):
+                tracking_object_states_changes.append(
+                    object_states_dict[object_name]
+                )
 
         for object_name in self.fixtures_dict.keys():
             if object_name in skip_object_names:
                 continue
-            object_states_dict[object_name] = ObjectState(self, object_name, is_fixture=True)
-            if self.fixtures_dict[object_name].category_name in VISUAL_CHANGE_OBJECTS_DICT:
-                tracking_object_states_changes.append(object_states_dict[object_name])
+            object_states_dict[object_name] = ObjectState(
+                self, object_name, is_fixture=True
+            )
+            if (
+                self.fixtures_dict[object_name].category_name
+                in VISUAL_CHANGE_OBJECTS_DICT
+            ):
+                tracking_object_states_changes.append(
+                    object_states_dict[object_name]
+                )
 
         for object_name in self.object_sites_dict.keys():
             if object_name in skip_object_names:
@@ -407,7 +439,9 @@ class BDDLBaseDomain(SingleArmEnv):
         # Adjust base pose accordingly
 
         if self._arena_type == 'table':
-            xpos = self.robots[0].robot_model.base_xpos_offset['table'](self.table_full_size[0])
+            xpos = self.robots[0].robot_model.base_xpos_offset['table'](
+                self.table_full_size[0]
+            )
             self.robots[0].robot_model.set_base_xpos(xpos)
             mujoco_arena = TableArena(
                 table_full_size=self.table_full_size,
@@ -417,7 +451,9 @@ class BDDLBaseDomain(SingleArmEnv):
                 **self._arena_properties,
             )
         elif self._arena_type == 'kitchen':
-            xpos = self.robots[0].robot_model.base_xpos_offset['kitchen_table'](
+            xpos = self.robots[0].robot_model.base_xpos_offset[
+                'kitchen_table'
+            ](
                 self.kitchen_table_full_size[0],
             )
             self.robots[0].robot_model.set_base_xpos(xpos)
@@ -447,7 +483,9 @@ class BDDLBaseDomain(SingleArmEnv):
             )
 
         elif self._arena_type == 'living_room':
-            xpos = self.robots[0].robot_model.base_xpos_offset['living_room_table'](
+            xpos = self.robots[0].robot_model.base_xpos_offset[
+                'living_room_table'
+            ](
                 self.living_room_table_full_size[0],
             )
             self.robots[0].robot_model.set_base_xpos(xpos)
@@ -469,7 +507,9 @@ class BDDLBaseDomain(SingleArmEnv):
         # Arena always gets set to zero origin
         mujoco_arena.set_origin([0, 0, 0])
 
-        self._setup_camera(mujoco_arena, self.camera_names, self.camera_configs)
+        self._setup_camera(
+            mujoco_arena, self.camera_names, self.camera_configs
+        )
 
         self._load_custom_material()
 
@@ -483,8 +523,12 @@ class BDDLBaseDomain(SingleArmEnv):
 
         self._setup_placement_initializer(mujoco_arena)
 
-        moving_objects_names = [object['name'] for object in self.moving_objects]
-        xml_processor = make_xml_processor(moving_objects_names, self.random_color)
+        moving_objects_names = [
+            object['name'] for object in self.moving_objects
+        ]
+        xml_processor = make_xml_processor(
+            moving_objects_names, self.random_color
+        )
         self.set_xml_processor(xml_processor)
 
         self.objects = list(self.objects_dict.values())
@@ -501,12 +545,18 @@ class BDDLBaseDomain(SingleArmEnv):
             self.model.merge_assets(fixture)
 
     def _setup_placement_initializer(self, mujoco_arena):
-        self.placement_initializer = SequentialCompositeSampler(name='ObjectSampler')
-        self.conditional_placement_initializer = SiteSequentialCompositeSampler(
-            name='ConditionalSiteSampler',
+        self.placement_initializer = SequentialCompositeSampler(
+            name='ObjectSampler'
         )
-        self.conditional_placement_on_objects_initializer = SequentialCompositeSampler(
-            name='ConditionalObjectSampler',
+        self.conditional_placement_initializer = (
+            SiteSequentialCompositeSampler(
+                name='ConditionalSiteSampler',
+            )
+        )
+        self.conditional_placement_on_objects_initializer = (
+            SequentialCompositeSampler(
+                name='ConditionalObjectSampler',
+            )
         )
         self._add_placement_initializer()
 
@@ -522,10 +572,14 @@ class BDDLBaseDomain(SingleArmEnv):
         self.obj_body_id = dict()
 
         for object_name, object_body in self.objects_dict.items():
-            self.obj_body_id[object_name] = self.sim.model.body_name2id(object_body.root_body)
+            self.obj_body_id[object_name] = self.sim.model.body_name2id(
+                object_body.root_body
+            )
 
         for fixture_name, fixture_body in self.fixtures_dict.items():
-            self.obj_body_id[fixture_name] = self.sim.model.body_name2id(fixture_body.root_body)
+            self.obj_body_id[fixture_name] = self.sim.model.body_name2id(
+                fixture_body.root_body
+            )
 
     def _setup_observables(self):
         """
@@ -560,7 +614,11 @@ class BDDLBaseDomain(SingleArmEnv):
         @sensor(modality='object')
         def world_pose_in_gripper(obs_cache):
             return (
-                T.pose_inv(T.pose2mat((obs_cache[f'{pf}eef_pos'], obs_cache[f'{pf}eef_quat'])))
+                T.pose_inv(
+                    T.pose2mat(
+                        (obs_cache[f'{pf}eef_pos'], obs_cache[f'{pf}eef_quat'])
+                    )
+                )
                 if f'{pf}eef_pos' in obs_cache and f'{pf}eef_quat' in obs_cache
                 else np.eye(4)
             )
@@ -587,7 +645,9 @@ class BDDLBaseDomain(SingleArmEnv):
                     active=False,
                 )
             else:
-                observables[name] = Observable(name=name, sensor=s, sampling_rate=self.control_freq)
+                observables[name] = Observable(
+                    name=name, sensor=s, sampling_rate=self.control_freq
+                )
 
         return observables
 
@@ -609,11 +669,15 @@ class BDDLBaseDomain(SingleArmEnv):
 
         @sensor(modality=modality)
         def obj_pos(obs_cache):
-            return np.array(self.sim.data.body_xpos[self.obj_body_id[obj_name]])
+            return np.array(
+                self.sim.data.body_xpos[self.obj_body_id[obj_name]]
+            )
 
         @sensor(modality=modality)
         def obj_quat(obs_cache):
-            return T.convert_quat(self.sim.data.body_xquat[self.obj_body_id[obj_name]], to='xyzw')
+            return T.convert_quat(
+                self.sim.data.body_xquat[self.obj_body_id[obj_name]], to='xyzw'
+            )
 
         @sensor(modality=modality)
         def obj_to_eef_pos(obs_cache):
@@ -629,8 +693,12 @@ class BDDLBaseDomain(SingleArmEnv):
                 ],
             ):
                 return np.zeros(3)
-            obj_pose = T.pose2mat((obs_cache[f'{obj_name}_pos'], obs_cache[f'{obj_name}_quat']))
-            rel_pose = T.pose_in_A_to_pose_in_B(obj_pose, obs_cache['world_pose_in_gripper'])
+            obj_pose = T.pose2mat(
+                (obs_cache[f'{obj_name}_pos'], obs_cache[f'{obj_name}_quat'])
+            )
+            rel_pose = T.pose_in_A_to_pose_in_B(
+                obj_pose, obs_cache['world_pose_in_gripper']
+            )
             rel_pos, rel_quat = T.mat2pose(rel_pose)
             obs_cache[f'{obj_name}_to_{pf}eef_quat'] = rel_quat
             return rel_pos
@@ -685,9 +753,14 @@ class BDDLBaseDomain(SingleArmEnv):
                 object_name = state[1]
                 region_name = state[2]
                 target_name = regions[region_name]['target']
-                x_ranges, y_ranges = rectangle2xyrange(regions[region_name]['ranges'])
+                x_ranges, y_ranges = rectangle2xyrange(
+                    regions[region_name]['ranges']
+                )
                 yaw_rotation = regions[region_name]['yaw_rotation']
-                if target_name in self.objects_dict or target_name in self.fixtures_dict:
+                if (
+                    target_name in self.objects_dict
+                    or target_name in self.fixtures_dict
+                ):
                     conditioned_initial_place_state_on_sites.append(state)
                     continue
                 if self.is_fixture(object_name):
@@ -707,13 +780,17 @@ class BDDLBaseDomain(SingleArmEnv):
                     self.placement_initializer.append_sampler(fixture_sampler)
                 else:
                     # This is to place movable objects.
-                    region_sampler = get_region_samplers(problem_name, mapping_inv[target_name])(
+                    region_sampler = get_region_samplers(
+                        problem_name, mapping_inv[target_name]
+                    )(
                         object_name,
                         self.objects_dict[object_name],
                         x_ranges=x_ranges,
                         y_ranges=y_ranges,
                         rotation=self.objects_dict[object_name].rotation,
-                        rotation_axis=self.objects_dict[object_name].rotation_axis,
+                        rotation_axis=self.objects_dict[
+                            object_name
+                        ].rotation_axis,
                         reference_pos=self.workspace_offset,
                     )
                     self.placement_initializer.append_sampler(region_sampler)
@@ -725,16 +802,22 @@ class BDDLBaseDomain(SingleArmEnv):
                 ):
                     obj = self.get_object(state[1])
                     if state[0] == 'open':
-                        joint_ranges = obj.object_properties['articulation']['default_open_ranges']
+                        joint_ranges = obj.object_properties['articulation'][
+                            'default_open_ranges'
+                        ]
                     else:
-                        joint_ranges = obj.object_properties['articulation']['default_close_ranges']
+                        joint_ranges = obj.object_properties['articulation'][
+                            'default_close_ranges'
+                        ]
 
                     property_initializer = OpenCloseSampler(
                         name=obj.name,
                         state_type=state[0],
                         joint_ranges=joint_ranges,
                     )
-                    self.object_property_initializers.append(property_initializer)
+                    self.object_property_initializers.append(
+                        property_initializer
+                    )
             elif state[0] in ['turnon', 'turnoff']:
                 # If "turnon" is implemented, we assume "turnoff" is also implemented.
                 if state[1] in self.object_states_dict and hasattr(
@@ -756,7 +839,9 @@ class BDDLBaseDomain(SingleArmEnv):
                         state_type=state[0],
                         joint_ranges=joint_ranges,
                     )
-                    self.object_property_initializers.append(property_initializer)
+                    self.object_property_initializers.append(
+                        property_initializer
+                    )
 
         # Place objects that are on sites
         for state in conditioned_initial_place_state_on_sites:
@@ -837,7 +922,9 @@ class BDDLBaseDomain(SingleArmEnv):
         if force_update:
             self._update_observables(force=True)
 
-        camera_obs = [camera_name + '_image' for camera_name in self.camera_names]
+        camera_obs = [
+            camera_name + '_image' for camera_name in self.camera_names
+        ]
         # Loop through all observables and grab their current observation
         for obs_name, observable in self._observables.items():
             if observable.is_enabled() and observable.is_active():
@@ -855,7 +942,11 @@ class BDDLBaseDomain(SingleArmEnv):
                 if modality not in obs_by_modality:
                     obs_by_modality[modality] = []
                 # Make sure all observations are numpy arrays so we can concatenate them
-                array_obs = [obs] if type(obs) in {int, float} or not obs.shape else obs
+                array_obs = (
+                    [obs]
+                    if type(obs) in {int, float} or not obs.shape
+                    else obs
+                )
                 obs_by_modality[modality].append(np.array(array_obs))
 
         # Add in modality observations
@@ -877,13 +968,16 @@ class BDDLBaseDomain(SingleArmEnv):
         if not self.deterministic_reset:
 
             # Sample from the placement initializer for all objects
-            for object_property_initializer in self.object_property_initializers:
-                if isinstance(object_property_initializer, OpenCloseSampler) or isinstance(
-                    object_property_initializer,
-                    TurnOnOffSampler,
-                ):
+            for (
+                object_property_initializer
+            ) in self.object_property_initializers:
+                if isinstance(
+                    object_property_initializer, OpenCloseSampler
+                ) or isinstance(object_property_initializer, TurnOnOffSampler):
                     joint_pos = object_property_initializer.sample()
-                    self.object_states_dict[object_property_initializer.name].set_joint(joint_pos)
+                    self.object_states_dict[
+                        object_property_initializer.name
+                    ].set_joint(joint_pos)
                 else:
                     print("Warning!!! This sampler doesn't seem to be used")
             # robosuite didn't provide api for this stepping. we manually do this stepping to increase the speed of resetting simulation.
@@ -894,15 +988,19 @@ class BDDLBaseDomain(SingleArmEnv):
                 self.sim,
                 object_placements,
             )
-            object_placements = self.conditional_placement_on_objects_initializer.sample(
-                object_placements,
+            object_placements = (
+                self.conditional_placement_on_objects_initializer.sample(
+                    object_placements,
+                )
             )
             for obj_pos, obj_quat, obj in object_placements.values():
                 if obj.name not in list(self.fixtures_dict.keys()):
                     # This is for movable object resetting
                     self.sim.data.set_joint_qpos(
                         obj.joints[-1],
-                        np.concatenate([np.array(obj_pos), np.array(obj_quat)]),
+                        np.concatenate(
+                            [np.array(obj_pos), np.array(obj_quat)]
+                        ),
                     )
                     self.object_original_quat[obj.name] = obj_quat
                     self.object_original_pos[obj.name] = obj_pos
@@ -927,34 +1025,43 @@ class BDDLBaseDomain(SingleArmEnv):
         self.mocap_motion_generators = mocap_motion_generators
 
     def _set_mocap_motion(self):
-        for object_name, mocap_motion_generator in self.mocap_motion_generators.items():
+        for (
+            object_name,
+            mocap_motion_generator,
+        ) in self.mocap_motion_generators.items():
             pos, quat = next(mocap_motion_generator)
             self.sim.data.set_mocap_pos(object_name + '_main_mocap', pos)
             self.sim.data.set_mocap_quat(object_name + '_main_mocap', quat)
 
     def _set_mocap_motion_generator(self, object):
         if object['motion_type'] == 'circle':
-            # 获取物体的初始位置和四元数
+            # Get object's initial position and quaternion
             start_pos = self.object_original_pos[object['name']]
             start_quat = self.object_original_quat[object['name']]
-            # 创建圆周运动生成器
+            # Create circular motion generator
             return CircularMotionGenerator(
                 start_pos=start_pos,
                 center_pos=object.get('motion_center', [0, 0, 1.2]),
                 start_quat=start_quat,
-                period=object.get('motion_period', 1),  # 将速度转换为周期
+                period=object.get(
+                    'motion_period', 1
+                ),  # Convert speed to period
             )
         if object['motion_type'] == 'linear':
-            # 获取物体的初始位置和四元数
+            # Get object's initial position and quaternion
             start_pos = self.object_original_pos[object['name']]
             start_quat = self.object_original_quat[object['name']]
-            # 创建线性运动生成器
+            # Create linear motion generator
             return LinearMotionGenerator(
                 start_pos=start_pos,
                 start_quat=start_quat,
                 direction=object.get('motion_direction', [0, 1, 0]),
-                cycle_time=object.get('motion_period', 1),  # 默认周期为1秒
-                travel_dist=object.get('motion_travel_dist', 1),  # 使用速度作为移动距离
+                cycle_time=object.get(
+                    'motion_period', 1
+                ),  # Default period is 1 second
+                travel_dist=object.get(
+                    'motion_travel_dist', 1
+                ),  # Use speed as travel distance
             )
         if object['motion_type'] == 'waypoint':
             return SmoothWaypointMotionGenerator(
@@ -972,12 +1079,20 @@ class BDDLBaseDomain(SingleArmEnv):
                 dt=object.get('motion_dt', 0.01),
                 gravity=object.get('motion_gravity', np.array([0, 0, -9.81])),
             )
-        raise NotImplementedError(f"Invalid motion type: {object['motion_type']}")
+        raise NotImplementedError(
+            f"Invalid motion type: {object['motion_type']}"
+        )
 
     def _weld_mocap_joint(self, object_name, mocap_joint_name):
-        self.sim.model.eq_active[self.sim.model.eq_obj1id[mocap_joint_name]] = 1
-        self.sim.model.eq_obj1id[mocap_joint_name] = self.sim.model.body_name2id(object_name)
-        self.sim.model.eq_obj2id[mocap_joint_name] = self.sim.model.body_name2id(object_name)
+        self.sim.model.eq_active[
+            self.sim.model.eq_obj1id[mocap_joint_name]
+        ] = 1
+        self.sim.model.eq_obj1id[mocap_joint_name] = (
+            self.sim.model.body_name2id(object_name)
+        )
+        self.sim.model.eq_obj2id[mocap_joint_name] = (
+            self.sim.model.body_name2id(object_name)
+        )
 
     def _check_success(self):
         """
@@ -1054,7 +1169,11 @@ class BDDLBaseDomain(SingleArmEnv):
 
     def get_robot_state_vector(self, obs):
         return np.concatenate(
-            [obs['robot0_gripper_qpos'], obs['robot0_eef_pos'], obs['robot0_eef_quat']],
+            [
+                obs['robot0_gripper_qpos'],
+                obs['robot0_eef_pos'],
+                obs['robot0_eef_quat'],
+            ],
         )
 
     def is_fixture(self, object_name):
@@ -1111,7 +1230,9 @@ class BDDLBaseDomain(SingleArmEnv):
                     f'contact: {self.sim.model.geom_id2name(contact.geom1)} {self.sim.model.geom_id2name(contact.geom2)}',
                 )
                 f6 = np.zeros(6)
-                mujoco.mj_contactForce(self.sim.model._model, self.sim.data._data, i, f6)
+                mujoco.mj_contactForce(
+                    self.sim.model._model, self.sim.data._data, i, f6
+                )
                 normal_force += f6[2]
                 return normal_force
         return normal_force
@@ -1130,10 +1251,10 @@ class BDDLBaseDomain(SingleArmEnv):
         # print(geoms_1)
         # print(geoms_2)
 
-        # 遍历所有几何体对
+        # Iterate through all geometry pairs
         for g1_name in geoms_1:
             for g2_name in geoms_2:
-                # 避免计算同一几何体与自身的距离
+                # Avoid calculating distance between the same geometry and itself
                 if g1_name == g2_name:
                     continue
 
@@ -1141,12 +1262,14 @@ class BDDLBaseDomain(SingleArmEnv):
                     g1_id = self.sim.model.geom_name2id(g1_name)
                     g2_id = self.sim.model.geom_name2id(g2_name)
                 except ValueError:
-                    # 如果找不到几何体，打印警告并跳过
-                    print(f"警告: 无法找到几何体 '{g1_name}' 或 '{g2_name}'")
+                    # If geometry not found, print warning and skip
+                    print(
+                        f"Warning: Unable to find geometry '{g1_name}' or '{g2_name}'"
+                    )
                     continue
 
-                # 【修正点】: 添加了 distmax 参数
-                # distmax 是一个距离上限，用于优化。我们设置一个较大的值以获取精确距离。
+                # Note: Added distmax parameter
+                # distmax is a distance upper bound used for optimization. We set a large value to get accurate distance.
                 fromto = np.zeros(6, dtype=np.float64)
                 dist = mujoco.mj_geomDistance(
                     self.sim.model._model,
@@ -1164,18 +1287,28 @@ class BDDLBaseDomain(SingleArmEnv):
 
     def check_gripper_distance(self, object_geoms):
         g_geoms = [
-            self.robots[0].gripper[self.robots[0].arms[0]]._important_geoms['left_fingerpad'],
-            self.robots[0].gripper[self.robots[0].arms[0]]._important_geoms['right_fingerpad'],
+            self.robots[0]
+            .gripper[self.robots[0].arms[0]]
+            ._important_geoms['left_fingerpad'],
+            self.robots[0]
+            .gripper[self.robots[0].arms[0]]
+            ._important_geoms['right_fingerpad'],
         ]
         gripper_geoms = ['gripper0_right_' + g[0] for g in g_geoms]
         return self.check_distance(object_geoms, gripper_geoms)
 
     def check_gripper_distance_part(self, object_1, geom_ids):
-        assert isinstance(geom_ids, list), 'geom_ids must be a list of geom ids'
+        assert isinstance(
+            geom_ids, list
+        ), 'geom_ids must be a list of geom ids'
         geom_1 = object_1.contact_geoms
         g_geoms = [
-            self.robots[0].gripper[self.robots[0].arms[0]]._important_geoms['left_fingerpad'],
-            self.robots[0].gripper[self.robots[0].arms[0]]._important_geoms['right_fingerpad'],
+            self.robots[0]
+            .gripper[self.robots[0].arms[0]]
+            ._important_geoms['left_fingerpad'],
+            self.robots[0]
+            .gripper[self.robots[0].arms[0]]
+            ._important_geoms['right_fingerpad'],
         ]
         gripper_geoms = ['gripper0_right_' + g[0] for g in g_geoms]
         geoms_to_check = []
@@ -1257,11 +1390,17 @@ class BDDLBaseDomain(SingleArmEnv):
         if isinstance(object_geoms, MujocoModel):
             o_geoms = object_geoms.contact_geoms
         else:
-            o_geoms = [object_geoms] if type(object_geoms) is str else object_geoms
+            o_geoms = (
+                [object_geoms] if type(object_geoms) is str else object_geoms
+            )
 
         g_geoms = [
-            self.robots[0].gripper[self.robots[0].arms[0]]._important_geoms['left_fingerpad'],
-            self.robots[0].gripper[self.robots[0].arms[0]]._important_geoms['right_fingerpad'],
+            self.robots[0]
+            .gripper[self.robots[0].arms[0]]
+            ._important_geoms['left_fingerpad'],
+            self.robots[0]
+            .gripper[self.robots[0].arms[0]]
+            ._important_geoms['right_fingerpad'],
         ]
         # Search for collisions between each gripper geom group and the object geoms group
         for g_group in g_geoms:
@@ -1270,7 +1409,9 @@ class BDDLBaseDomain(SingleArmEnv):
         return False
 
     def check_gripper_contact_part(self, object_1, geom_ids_1):
-        assert isinstance(geom_ids_1, list), 'geom_ids_1 must be a list of geom ids'
+        assert isinstance(
+            geom_ids_1, list
+        ), 'geom_ids_1 must be a list of geom ids'
         # print(object_1)
         # print(geom_ids_1)
         geom_1 = object_1.contact_geoms
@@ -1311,7 +1452,9 @@ class BDDLBaseDomain(SingleArmEnv):
             # Checking unary logical predicates
             predicate_fn_name = state[0]
             object_name = state[1]
-            return eval_predicate_fn(predicate_fn_name, self.object_states_dict[object_name])
+            return eval_predicate_fn(
+                predicate_fn_name, self.object_states_dict[object_name]
+            )
         if len(state) == 4:
             # Checking binary logical predicates
             predicate_fn_name = state[0]
@@ -1345,15 +1488,25 @@ class BDDLBaseDomain(SingleArmEnv):
                 if geom_name_1 == 'all':
                     geom_name_1 = object_1_name
                 elif isinstance(geom_name_1, list):
-                    geom_name_1 = [object_1_name + '_g' + (geom_name) for geom_name in geom_name_1]
+                    geom_name_1 = [
+                        object_1_name + '_g' + (geom_name)
+                        for geom_name in geom_name_1
+                    ]
                 else:
-                    raise NotImplementedError(f'Invalid geom_name_1: {geom_name_1}')
+                    raise NotImplementedError(
+                        f'Invalid geom_name_1: {geom_name_1}'
+                    )
                 if geom_name_2 == 'all':
                     geom_name_2 = object_2_name
                 elif isinstance(geom_name_2, list):
-                    geom_name_2 = [object_2_name + '_g' + (geom_name) for geom_name in geom_name_2]
+                    geom_name_2 = [
+                        object_2_name + '_g' + (geom_name)
+                        for geom_name in geom_name_2
+                    ]
                 else:
-                    raise NotImplementedError(f'Invalid geom_name_2: {geom_name_2}')
+                    raise NotImplementedError(
+                        f'Invalid geom_name_2: {geom_name_2}'
+                    )
                 return self._check_contact(geom_name_1, geom_name_2)
             raise NotImplementedError(f'Invalid state length: {len(state)}')
         raise NotImplementedError(f'Invalid state length: {len(state)}')
@@ -1364,28 +1517,35 @@ from PIL import Image, ImageEnhance
 
 def ajust_image(img, brightness=0, contrast=0, saturation=0, temperature=6500):
     """
-    brightness:亮度
-    contrast:对比度
-    saturation:饱和度
-    均在-1~1之间取值
-    """
-    img_pil = Image.fromarray(img)  # 数组→PIL
+    Adjust image brightness, contrast, saturation, and color temperature.
 
-    # 1. 亮度调节（1.0=原亮度，>1提亮，<1变暗）
+    Args:
+        img: numpy array, input image
+        brightness: float, brightness adjustment value in range [-1, 1]
+        contrast: float, contrast adjustment value in range [-1, 1]
+        saturation: float, saturation adjustment value in range [-1, 1]
+        temperature: float, color temperature in Kelvin (2000~10000K, default 6500K is neutral white light)
+
+    Returns:
+        numpy array: adjusted image
+    """
+    img_pil = Image.fromarray(img)  # Convert array to PIL Image
+
+    # 1. Adjust brightness (1.0 = original brightness, >1 brighten, <1 darken)
     if brightness:
         bright_enhancer = ImageEnhance.Brightness(img_pil)
         img_pil = bright_enhancer.enhance(1 + brightness)
 
-    # 2. 对比度调节
+    # 2. Adjust contrast
     if contrast:
         contrast_enhancer = ImageEnhance.Contrast(img_pil)
         img_pil = contrast_enhancer.enhance(1 + contrast)
 
-    # 3. 饱和度调节（Color模块对应饱和度）
+    # 3. Adjust saturation (Color module corresponds to saturation)
     if saturation:
         saturate_enhancer = ImageEnhance.Color(img_pil)
         img_pil = saturate_enhancer.enhance(1 + saturation)
-    # 转回NumPy数组
+    # Convert back to NumPy array
     img_final = np.array(img_pil)
     if temperature != 6500:
         img_final = adjust_temperature(img_final, temperature)
@@ -1394,54 +1554,85 @@ def ajust_image(img, brightness=0, contrast=0, saturation=0, temperature=6500):
 
 def adjust_temperature(img, temperature=6500):
     """
-    用PIL调节图像色温
-    :param img: PIL.Image 对象(RGB格式)
-    :param temperature: 目标色温(2000~10000K,默认6500K为中性白光)
-    :return: 调节后的 PIL.Image 对象
+    Adjust image color temperature using RGB scaling factors.
+
+    Args:
+        img: numpy array, input image in RGB format
+        temperature: float, target color temperature in Kelvin (2000~10000K, default 6500K is neutral white light)
+
+    Returns:
+        numpy array: adjusted image
     """
 
-    # 2. 定义色温对应的 RGB 缩放因子（基于常见光谱分布）
+    # Define RGB scaling factors based on color temperature (based on common spectral distribution)
     if temperature <= 6500:
-        # 低色温（暖）：增强R，减弱B
-        r_factor = 1.0 + (6500 - temperature) / 6500 * 0.4  # R最多增强40%
-        g_factor = 1.0  # G保持不变
-        b_factor = 1.0 - (6500 - temperature) / 6500 * 0.4  # B最多减弱40%
+        # Low color temperature (warm): enhance R, reduce B
+        r_factor = (
+            1.0 + (6500 - temperature) / 6500 * 0.4
+        )  # R can be enhanced up to 40%
+        g_factor = 1.0  # G remains unchanged
+        b_factor = (
+            1.0 - (6500 - temperature) / 6500 * 0.4
+        )  # B can be reduced up to 40%
     else:
-        # 高色温（冷）：增强B，减弱R
-        r_factor = 1.0 - (temperature - 6500) / 6500 * 0.4  # R最多减弱40%
-        g_factor = 1.0  # G保持不变
-        b_factor = 1.0 + (temperature - 6500) / 6500 * 0.4  # B最多增强40%
+        # High color temperature (cool): enhance B, reduce R
+        r_factor = (
+            1.0 - (temperature - 6500) / 6500 * 0.4
+        )  # R can be reduced up to 40%
+        g_factor = 1.0  # G remains unchanged
+        b_factor = (
+            1.0 + (temperature - 6500) / 6500 * 0.4
+        )  # B can be enhanced up to 40%
 
-    # 3. 按因子调节各通道（避免溢出，限制在0~255）
-    img[..., 0] = np.clip(img[..., 0] * r_factor, 0, 255)  # R通道
-    img[..., 1] = np.clip(img[..., 1] * g_factor, 0, 255)  # G通道
-    img[..., 2] = np.clip(img[..., 2] * b_factor, 0, 255)  # B通道
+    # Adjust each channel by factor (avoid overflow, clamp to 0~255)
+    img[..., 0] = np.clip(img[..., 0] * r_factor, 0, 255)  # R channel
+    img[..., 1] = np.clip(img[..., 1] * g_factor, 0, 255)  # G channel
+    img[..., 2] = np.clip(img[..., 2] * b_factor, 0, 255)  # B channel
 
     return img.astype(np.uint8)
 
 
 def add_gaussian_noise(image, mean=0, var=0.01):
-    """添加高斯噪声"""
-    # 将图像归一化到[0,1]范围处理
+    """
+    Add Gaussian noise to an image.
+
+    Args:
+        image: numpy array, input image
+        mean: float, mean of Gaussian noise (default 0)
+        var: float, variance of Gaussian noise (default 0.01)
+
+    Returns:
+        numpy array: image with Gaussian noise added
+    """
+    # Normalize image to [0,1] range for processing
     image = image / 255.0
     sigma = var**0.5
-    # 生成高斯噪声
+    # Generate Gaussian noise
     gauss = np.random.normal(mean, sigma, image.shape)
-    # 添加噪声到图像
+    # Add noise to image
     noisy_image = image + gauss
-    # 确保像素值在[0,1]范围内
+    # Ensure pixel values are in [0,1] range
     noisy_image = np.clip(noisy_image, 0, 1)
-    # 转换回[0,255]整数范围
+    # Convert back to [0,255] integer range
     return (noisy_image * 255).astype(np.uint8)
 
 
 def add_salt_pepper_noise(image, prob=0.05):
-    """添加椒盐噪声"""
+    """
+    Add salt and pepper noise to an image.
+
+    Args:
+        image: numpy array, input image
+        prob: float, probability of noise (default 0.05)
+
+    Returns:
+        numpy array: image with salt and pepper noise added
+    """
     output = np.copy(image)
-    # 计算椒盐噪声的像素数量
+    # Calculate threshold for salt and pepper noise
     thres = 1 - prob
-    # 添加盐噪声（白色）
+    # Add salt noise (white pixels)
     output[np.random.random(image.shape) < prob] = 255
-    # 添加椒噪声（黑色）
+    # Add pepper noise (black pixels)
     output[np.random.random(image.shape) > thres] = 0
     return output

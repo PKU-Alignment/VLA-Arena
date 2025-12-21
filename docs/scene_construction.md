@@ -56,10 +56,10 @@ Regions define the spatial scope where objects can be placed.
 - `ranges` : The XY-plane range in the target coordinate system, formatted as `(x_min y_min x_max y_max)`
 - `yaw_rotation`(Optional) : Rotation angle of the region (only valid for `fixtures`)
 
-### 1.3 Object Definition  
+### 1.3 Object Definition
 
-#### Fixtures  
-Objects that do not move in the environment:  
+#### Fixtures
+Objects that do not move in the environment:
 
 ```lisp
 (:fixtures
@@ -86,7 +86,7 @@ Objects directly related to the task:
 ```
 
 #### Moving Objects
-Define objects that move autonomously in the scene, supporting multiple motion modes:  
+Define objects that move autonomously in the scene, supporting multiple motion modes:
 
 ```lisp
 (:moving_objects
@@ -130,7 +130,7 @@ Define objects that move autonomously in the scene, supporting multiple motion m
 (:motion_direction (0 1 0))   ; Initial direction
 (:motion_gravity (0 0 -9.81)) ; Gravity vector
 ```
-### 1.4 State Definition  
+### 1.4 State Definition
 
 #### Initial State
 Defines the initial configuration of the scene:
@@ -255,6 +255,12 @@ Here is an example:
 ```
 Then view the generated video in the `rollouts` directory:
 <p align="center"><img src="image/build_scene_1.png" width="300" height="300"/></p>
+
+### Trouble Shooting
+If you encounter error AttributeError: "'MjRenderContextOffscreen' object has no attribute 'con'" during visualization, please try installing the following package:
+```bash
+conda install -c conda-forge libegl-devel
+```
 
 ## 3. Assets
 Both fixtures and objects in the BDDL file must be existing assets in the `vla_arena/vla_arena/assets` directory. This directory serves as the central repository for all usable assets within the scene.

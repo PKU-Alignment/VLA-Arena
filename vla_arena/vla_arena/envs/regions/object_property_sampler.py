@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 from copy import copy
 
@@ -57,10 +56,14 @@ class ObjectPropertySampler:
             mujoco_objects (MujocoObject or list of MujocoObject): single model or list of MJCF object models
         """
         mujoco_objects = (
-            [mujoco_objects] if isinstance(mujoco_objects, MujocoObject) else mujoco_objects
+            [mujoco_objects]
+            if isinstance(mujoco_objects, MujocoObject)
+            else mujoco_objects
         )
         for obj in mujoco_objects:
-            assert obj not in self.mujoco_objects, f"Object '{obj.name}' already in sampler!"
+            assert (
+                obj not in self.mujoco_objects
+            ), f"Object '{obj.name}' already in sampler!"
             self.mujoco_objects.append(obj)
 
     def reset(self):
@@ -102,7 +105,9 @@ class OpenCloseSampler(ObjectPropertySampler):
         super().__init__(name, mujoco_objects)
 
     def sample(self):
-        return np.random.uniform(high=self.joint_ranges[1], low=self.joint_ranges[0])
+        return np.random.uniform(
+            high=self.joint_ranges[1], low=self.joint_ranges[0]
+        )
 
 
 class TurnOnOffSampler(ObjectPropertySampler):
@@ -120,4 +125,6 @@ class TurnOnOffSampler(ObjectPropertySampler):
         super().__init__(name, mujoco_objects)
 
     def sample(self):
-        return np.random.uniform(high=self.joint_ranges[1], low=self.joint_ranges[0])
+        return np.random.uniform(
+            high=self.joint_ranges[1], low=self.joint_ranges[0]
+        )

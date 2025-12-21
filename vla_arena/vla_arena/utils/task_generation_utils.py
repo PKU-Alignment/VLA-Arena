@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 import os
 from collections import namedtuple
@@ -22,10 +21,14 @@ from vla_arena.vla_arena.utils.mu_utils import get_scene_class
 
 TASK_INFO = {}
 
-TaskInfoTuple = namedtuple('TaskInfoTuple', 'scene_name language objects_of_interest goal_states')
+TaskInfoTuple = namedtuple(
+    'TaskInfoTuple', 'scene_name language objects_of_interest goal_states'
+)
 
 
-def register_task_info(language, scene_name, objects_of_interest=[], goal_states=[]):
+def register_task_info(
+    language, scene_name, objects_of_interest=[], goal_states=[]
+):
 
     if scene_name not in TASK_INFO:
         TASK_INFO[scene_name] = []
@@ -34,7 +37,9 @@ def register_task_info(language, scene_name, objects_of_interest=[], goal_states
     possible_objects_of_interest = scene.possible_objects_of_interest
     for object_name in objects_of_interest:
         if object_name not in possible_objects_of_interest:
-            print(f'Error!! {scene_name} not having valid objects: {object_name}')
+            print(
+                f'Error!! {scene_name} not having valid objects: {object_name}'
+            )
             print(possible_objects_of_interest)
             raise ValueError
     task_goal = [('And', *goal_states)]

@@ -1,0 +1,109 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "univla"
+authors = [
+    {name = "Qingwen Bu", email="qwbu01@sjtu.edu.cn"},
+]
+description = "UniVLA: Learning to Act Anywhere with Task-centric Latent Actions"
+version = "1.0.0"
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = ["robotic manipulation", "vision-language-action models", "latent action"]
+license = {file = "LICENSE"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "absl_py==2.1.0",
+    "accelerate==0.32.1",
+    "dlimp @ git+https://github.com/moojink/dlimp_openvla",
+    "draccus==0.8.0",
+    "einops==0.8.1",
+    "ema_pytorch==0.5.1",
+    "gym==0.26.2",
+    "h5py==3.11.0",
+    "huggingface_hub==0.26.1",
+    "hydra-core==1.3.2",
+    "imageio==2.34.2",
+    "jsonlines==4.0.0",
+    "lightning==2.4.0",
+    "matplotlib==3.10.1",
+    "moviepy==1.0.3",
+    "numpy==1.26.4",
+    "omegaconf==2.3.0",
+    "opencv_python==4.10.0.84",
+    "packaging==24.1",
+    "peft==0.11.1",
+    "Pillow==11.2.1",
+    "piq==0.8.0",
+    "pyquaternion==0.9.9",
+    "pytorch_lightning==1.8.6",
+    "PyYAML==6.0.1",
+    "Requests==2.32.3",
+    "rich==14.0.0",
+    "robosuite==1.4.1",
+    "rotary_embedding_torch==0.8.4",
+    "setuptools==57.5.0",
+    "tensorflow==2.15.0",
+    "tensorflow_datasets==4.9.3",
+    "tensorflow_graphics==2021.12.3",
+    "termcolor==3.0.1",
+    "timm==0.9.10",
+    "tokenizers==0.19.1",
+    "tqdm==4.66.4",
+    "transformers==4.40.1"
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=24.2.0",
+    "gpustat",
+    "ipython",
+    "pre-commit",
+    "ruff>=0.2.2",
+]
+sagemaker = [
+    "boto3",
+    "sagemaker"
+]
+
+[project.urls]
+homepage = "https://opendrivelab.com/UniVLA/"
+
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["cache"]
+
+[tool.setuptools.package-data]
+"prismatic" = ["py.typed"]
+
+[tool.black]
+line-length = 121
+target-version = ["py38", "py39", "py310"]
+preview = true
+
+[tool.ruff]
+line-length = 121
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["A", "B", "E", "F", "I", "RUF", "W"]
+ignore = ["F722"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402", "F401"]

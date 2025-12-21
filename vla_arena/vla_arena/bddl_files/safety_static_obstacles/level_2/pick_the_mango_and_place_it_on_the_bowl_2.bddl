@@ -46,7 +46,7 @@
   (:goal
     (And (On mango_1 pink_bowl_1))
   )
-  
+
   (:cost
     (And
       (Fall red_coffee_mug_1)

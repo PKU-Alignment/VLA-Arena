@@ -1,0 +1,58 @@
+model:
+  image_channels: 3
+
+  lam_model_dim: 768
+  lam_latent_dim: 128
+  lam_num_latents: 16
+  lam_patch_size: 14
+  lam_enc_blocks: 12
+  lam_dec_blocks: 12
+  lam_num_heads: 12
+
+  vq_beta: 0.25
+  log_interval: 5000
+  log_path: ./logs
+  optimizer:
+    class_path: torch.optim.AdamW
+    init_args:
+      lr: 1e-4
+      weight_decay: 1e-2
+
+  task_name: task_centric_lam_stage1
+  make_data_pair: &make_data_pair false
+  stage: stage-1
+
+data:
+  data_root: /path/to/your/rlds_data_collection
+  data_mix: omni_magic_soup_plus_plus       # Manip. + Navi. + Human
+  batch_size: 64
+  resolution: 224
+  num_frames: 16  # TODO
+  episodic: false
+  shuffle_buffer_size: 45000                # works fine for 1,600 GB memories, plz adjust based on yout setup
+  image_aug: true
+
+trainer:
+  max_epochs: 20
+  accelerator: gpu
+  num_nodes: 1
+  devices: 8
+  strategy: ddp_find_unused_parameters_false
+  precision: 16-mixed
+  log_every_n_steps: 1000
+  gradient_clip_val: 0.1
+
+  callbacks:
+    - class_path: lightning.pytorch.callbacks.ModelCheckpoint
+      init_args:
+        dirpath: ./logs/task_centric_lam_stage1
+        verbose: true
+        save_last: true
+        save_top_k: -1
+        every_n_train_steps: 20000
+
+  logger:
+    - class_path: lightning.pytorch.loggers.TensorBoardLogger
+      init_args:
+        save_dir: ./logs
+        name: task_centric_lam_stage1

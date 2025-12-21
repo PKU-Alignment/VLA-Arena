@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,11 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 
 from vla_arena.vla_arena.utils.bddl_generation_utils import *
-from vla_arena.vla_arena.utils.mu_utils import InitialSceneTemplates, register_mu
+from vla_arena.vla_arena.utils.mu_utils import (
+    InitialSceneTemplates,
+    register_mu,
+)
 
 
 @register_mu(scene_type='kitchen')
@@ -76,14 +78,24 @@ class KitchenScene1(InitialSceneTemplates):
             ),
         )
 
-        self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
+        self.xy_region_kwargs_list = (
+            get_xy_region_kwargs_list_from_regions_info(self.regions)
+        )
 
     @property
     def init_states(self):
         states = [
-            ('On', 'akita_black_bowl_1', 'kitchen_table_akita_black_bowl_init_region'),
+            (
+                'On',
+                'akita_black_bowl_1',
+                'kitchen_table_akita_black_bowl_init_region',
+            ),
             ('On', 'plate_1', 'kitchen_table_plate_init_region'),
-            ('On', 'wooden_cabinet_1', 'kitchen_table_wooden_cabinet_init_region'),
+            (
+                'On',
+                'wooden_cabinet_1',
+                'kitchen_table_wooden_cabinet_init_region',
+            ),
         ]
         return states
 
@@ -154,7 +166,9 @@ class KitchenScene2(InitialSceneTemplates):
                 region_half_len=0.025,
             ),
         )
-        self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
+        self.xy_region_kwargs_list = (
+            get_xy_region_kwargs_list_from_regions_info(self.regions)
+        )
 
     @property
     def init_states(self):
@@ -175,7 +189,11 @@ class KitchenScene2(InitialSceneTemplates):
                 'kitchen_table_akita_black_bowl_back_init_region',
             ),
             ('On', 'plate_1', 'kitchen_table_plate_init_region'),
-            ('On', 'wooden_cabinet_1', 'kitchen_table_wooden_cabinet_init_region'),
+            (
+                'On',
+                'wooden_cabinet_1',
+                'kitchen_table_wooden_cabinet_init_region',
+            ),
         ]
         return states
 
@@ -225,7 +243,9 @@ class KitchenScene3(InitialSceneTemplates):
             ),
         )
 
-        self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
+        self.xy_region_kwargs_list = (
+            get_xy_region_kwargs_list_from_regions_info(self.regions)
+        )
 
     @property
     def init_states(self):
@@ -290,14 +310,24 @@ class KitchenScene4(InitialSceneTemplates):
                 region_half_len=0.025,
             ),
         )
-        self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
+        self.xy_region_kwargs_list = (
+            get_xy_region_kwargs_list_from_regions_info(self.regions)
+        )
 
     @property
     def init_states(self):
         states = [
-            ('On', 'akita_black_bowl_1', 'kitchen_table_akita_black_bowl_init_region'),
+            (
+                'On',
+                'akita_black_bowl_1',
+                'kitchen_table_akita_black_bowl_init_region',
+            ),
             ('On', 'wine_bottle_1', 'kitchen_table_wine_bottle_init_region'),
-            ('On', 'white_cabinet_1', 'kitchen_table_white_cabinet_init_region'),
+            (
+                'On',
+                'white_cabinet_1',
+                'kitchen_table_white_cabinet_init_region',
+            ),
             ('On', 'wine_rack_1', 'kitchen_table_wine_rack_init_region'),
             ('Open', 'white_cabinet_1_bottom_region'),
         ]
@@ -361,14 +391,24 @@ class KitchenScene5(InitialSceneTemplates):
                 region_half_len=0.025,
             ),
         )
-        self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
+        self.xy_region_kwargs_list = (
+            get_xy_region_kwargs_list_from_regions_info(self.regions)
+        )
 
     @property
     def init_states(self):
         states = [
-            ('On', 'akita_black_bowl_1', 'kitchen_table_akita_black_bowl_init_region'),
+            (
+                'On',
+                'akita_black_bowl_1',
+                'kitchen_table_akita_black_bowl_init_region',
+            ),
             ('On', 'plate_1', 'kitchen_table_plate_init_region'),
-            ('On', 'white_cabinet_1', 'kitchen_table_white_cabinet_init_region'),
+            (
+                'On',
+                'white_cabinet_1',
+                'kitchen_table_white_cabinet_init_region',
+            ),
             ('On', 'ketchup_1', 'kitchen_table_ketchup_init_region'),
             ('Open', 'white_cabinet_1_top_region'),
         ]
@@ -433,13 +473,23 @@ class KitchenScene6(InitialSceneTemplates):
             ),
         )
 
-        self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
+        self.xy_region_kwargs_list = (
+            get_xy_region_kwargs_list_from_regions_info(self.regions)
+        )
 
     @property
     def init_states(self):
         states = [
-            ('On', 'porcelain_mug_1', 'kitchen_table_porcelain_mug_init_region'),
-            ('On', 'white_yellow_mug_1', 'kitchen_table_white_yellow_mug_init_region'),
+            (
+                'On',
+                'porcelain_mug_1',
+                'kitchen_table_porcelain_mug_init_region',
+            ),
+            (
+                'On',
+                'white_yellow_mug_1',
+                'kitchen_table_white_yellow_mug_init_region',
+            ),
             ('On', 'microwave_1', 'kitchen_table_microwave_init_region'),
             ('Open', 'microwave_1'),
         ]
@@ -495,7 +545,9 @@ class KitchenScene7(InitialSceneTemplates):
             ),
         )
 
-        self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
+        self.xy_region_kwargs_list = (
+            get_xy_region_kwargs_list_from_regions_info(self.regions)
+        )
 
     @property
     def init_states(self):
@@ -553,7 +605,9 @@ class KitchenScene8(InitialSceneTemplates):
             ),
         )
 
-        self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
+        self.xy_region_kwargs_list = (
+            get_xy_region_kwargs_list_from_regions_info(self.regions)
+        )
 
     @property
     def init_states(self):
@@ -624,7 +678,9 @@ class KitchenScene9(InitialSceneTemplates):
             ),
         )
 
-        self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
+        self.xy_region_kwargs_list = (
+            get_xy_region_kwargs_list_from_regions_info(self.regions)
+        )
 
     @property
     def init_states(self):
@@ -706,12 +762,18 @@ class KitchenScene10(InitialSceneTemplates):
                 region_half_len=0.025,
             ),
         )
-        self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
+        self.xy_region_kwargs_list = (
+            get_xy_region_kwargs_list_from_regions_info(self.regions)
+        )
 
     @property
     def init_states(self):
         states = [
-            ('On', 'akita_black_bowl_1', 'kitchen_table_akita_black_bowl_init_region'),
+            (
+                'On',
+                'akita_black_bowl_1',
+                'kitchen_table_akita_black_bowl_init_region',
+            ),
             ('On', 'butter_1', 'kitchen_table_butter_front_init_region'),
             ('On', 'butter_2', 'kitchen_table_butter_back_init_region'),
             (
@@ -719,7 +781,11 @@ class KitchenScene10(InitialSceneTemplates):
                 'chocolate_pudding_1',
                 'kitchen_table_chocolate_pudding_init_region',
             ),
-            ('On', 'wooden_cabinet_1', 'kitchen_table_wooden_cabinet_init_region'),
+            (
+                'On',
+                'wooden_cabinet_1',
+                'kitchen_table_wooden_cabinet_init_region',
+            ),
             ('Open', 'wooden_cabinet_1_top_region'),
         ]
         return states
@@ -792,14 +858,28 @@ class LivingRoomScene1(InitialSceneTemplates):
                 region_half_len=0.025,
             ),
         )
-        self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
+        self.xy_region_kwargs_list = (
+            get_xy_region_kwargs_list_from_regions_info(self.regions)
+        )
 
     @property
     def init_states(self):
         states = [
-            ('On', 'alphabet_soup_1', 'living_room_table_alphabet_soup_init_region'),
-            ('On', 'cream_cheese_1', 'living_room_table_cream_cheese_init_region'),
-            ('On', 'tomato_sauce_1', 'living_room_table_tomato_sauce_init_region'),
+            (
+                'On',
+                'alphabet_soup_1',
+                'living_room_table_alphabet_soup_init_region',
+            ),
+            (
+                'On',
+                'cream_cheese_1',
+                'living_room_table_cream_cheese_init_region',
+            ),
+            (
+                'On',
+                'tomato_sauce_1',
+                'living_room_table_tomato_sauce_init_region',
+            ),
             ('On', 'ketchup_1', 'living_room_table_ketchup_init_region'),
             ('On', 'basket_1', 'living_room_table_basket_init_region'),
         ]
@@ -900,17 +980,35 @@ class LivingRoomScene2(InitialSceneTemplates):
                 region_half_len=0.025,
             ),
         )
-        self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
+        self.xy_region_kwargs_list = (
+            get_xy_region_kwargs_list_from_regions_info(self.regions)
+        )
 
     @property
     def init_states(self):
         states = [
-            ('On', 'alphabet_soup_1', 'living_room_table_alphabet_soup_init_region'),
-            ('On', 'cream_cheese_1', 'living_room_table_cream_cheese_init_region'),
-            ('On', 'tomato_sauce_1', 'living_room_table_tomato_sauce_init_region'),
+            (
+                'On',
+                'alphabet_soup_1',
+                'living_room_table_alphabet_soup_init_region',
+            ),
+            (
+                'On',
+                'cream_cheese_1',
+                'living_room_table_cream_cheese_init_region',
+            ),
+            (
+                'On',
+                'tomato_sauce_1',
+                'living_room_table_tomato_sauce_init_region',
+            ),
             ('On', 'ketchup_1', 'living_room_table_ketchup_init_region'),
             ('On', 'milk_1', 'living_room_table_milk_init_region'),
-            ('On', 'orange_juice_1', 'living_room_table_orange_juice_init_region'),
+            (
+                'On',
+                'orange_juice_1',
+                'living_room_table_orange_juice_init_region',
+            ),
             ('On', 'butter_1', 'living_room_table_butter_init_region'),
             ('On', 'basket_1', 'living_room_table_basket_init_region'),
         ]
@@ -991,17 +1089,35 @@ class LivingRoomScene3(InitialSceneTemplates):
                 region_half_len=0.025,
             ),
         )
-        self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
+        self.xy_region_kwargs_list = (
+            get_xy_region_kwargs_list_from_regions_info(self.regions)
+        )
 
     @property
     def init_states(self):
         states = [
-            ('On', 'alphabet_soup_1', 'living_room_table_alphabet_soup_init_region'),
-            ('On', 'cream_cheese_1', 'living_room_table_cream_cheese_init_region'),
-            ('On', 'tomato_sauce_1', 'living_room_table_tomato_sauce_init_region'),
+            (
+                'On',
+                'alphabet_soup_1',
+                'living_room_table_alphabet_soup_init_region',
+            ),
+            (
+                'On',
+                'cream_cheese_1',
+                'living_room_table_cream_cheese_init_region',
+            ),
+            (
+                'On',
+                'tomato_sauce_1',
+                'living_room_table_tomato_sauce_init_region',
+            ),
             ('On', 'ketchup_1', 'living_room_table_ketchup_init_region'),
             ('On', 'butter_1', 'living_room_table_butter_init_region'),
-            ('On', 'wooden_tray_1', 'living_room_table_wooden_tray_init_region'),
+            (
+                'On',
+                'wooden_tray_1',
+                'living_room_table_wooden_tray_init_region',
+            ),
         ]
         return states
 
@@ -1070,7 +1186,9 @@ class LivingRoomScene4(InitialSceneTemplates):
                 region_half_len=0.025,
             ),
         )
-        self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
+        self.xy_region_kwargs_list = (
+            get_xy_region_kwargs_list_from_regions_info(self.regions)
+        )
 
     @property
     def init_states(self):
@@ -1095,7 +1213,11 @@ class LivingRoomScene4(InitialSceneTemplates):
                 'new_salad_dressing_1',
                 'living_room_table_salad_dressing_init_region',
             ),
-            ('On', 'wooden_tray_1', 'living_room_table_wooden_tray_init_region'),
+            (
+                'On',
+                'wooden_tray_1',
+                'living_room_table_wooden_tray_init_region',
+            ),
         ]
         return states
 
@@ -1163,20 +1285,30 @@ class LivingRoomScene5(InitialSceneTemplates):
                 region_half_len=0.025,
             ),
         )
-        self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
+        self.xy_region_kwargs_list = (
+            get_xy_region_kwargs_list_from_regions_info(self.regions)
+        )
 
     @property
     def init_states(self):
         states = [
             ('On', 'plate_1', 'living_room_table_plate_left_region'),
             ('On', 'plate_2', 'living_room_table_plate_right_region'),
-            ('On', 'red_coffee_mug_1', 'living_room_table_red_coffee_mug_init_region'),
+            (
+                'On',
+                'red_coffee_mug_1',
+                'living_room_table_red_coffee_mug_init_region',
+            ),
             (
                 'On',
                 'white_yellow_mug_1',
                 'living_room_table_white_yellow_mug_init_region',
             ),
-            ('On', 'porcelain_mug_1', 'living_room_table_porcelain_mug_init_region'),
+            (
+                'On',
+                'porcelain_mug_1',
+                'living_room_table_porcelain_mug_init_region',
+            ),
         ]
         return states
 
@@ -1251,19 +1383,29 @@ class LivingRoomScene6(InitialSceneTemplates):
                 region_half_len=0.025,
             ),
         )
-        self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
+        self.xy_region_kwargs_list = (
+            get_xy_region_kwargs_list_from_regions_info(self.regions)
+        )
 
     @property
     def init_states(self):
         states = [
             ('On', 'plate_1', 'living_room_table_plate_init_region'),
-            ('On', 'red_coffee_mug_1', 'living_room_table_red_coffee_mug_init_region'),
+            (
+                'On',
+                'red_coffee_mug_1',
+                'living_room_table_red_coffee_mug_init_region',
+            ),
             (
                 'On',
                 'chocolate_pudding_1',
                 'living_room_table_chocolate_pudding_init_region',
             ),
-            ('On', 'porcelain_mug_1', 'living_room_table_porcelain_mug_init_region'),
+            (
+                'On',
+                'porcelain_mug_1',
+                'living_room_table_porcelain_mug_init_region',
+            ),
         ]
         return states
 
@@ -1324,14 +1466,20 @@ class StudyScene1(InitialSceneTemplates):
                 yaw_rotation=(np.pi, np.pi),
             ),
         )
-        self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
+        self.xy_region_kwargs_list = (
+            get_xy_region_kwargs_list_from_regions_info(self.regions)
+        )
 
     @property
     def init_states(self):
         states = [
             ('On', 'desk_caddy_1', 'study_table_desk_caddy_init_region'),
             ('On', 'black_book_1', 'study_table_black_book_init_region'),
-            ('On', 'white_yellow_mug_1', 'study_table_white_yellow_mug_init_region'),
+            (
+                'On',
+                'white_yellow_mug_1',
+                'study_table_white_yellow_mug_init_region',
+            ),
         ]
         return states
 
@@ -1382,14 +1530,20 @@ class StudyScene2(InitialSceneTemplates):
                 yaw_rotation=(np.pi, np.pi),
             ),
         )
-        self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
+        self.xy_region_kwargs_list = (
+            get_xy_region_kwargs_list_from_regions_info(self.regions)
+        )
 
     @property
     def init_states(self):
         states = [
             ('On', 'desk_caddy_1', 'study_table_desk_caddy_init_region'),
             ('On', 'black_book_1', 'study_table_black_book_init_region'),
-            ('On', 'red_coffee_mug_1', 'study_table_red_coffee_mug_init_region'),
+            (
+                'On',
+                'red_coffee_mug_1',
+                'study_table_red_coffee_mug_init_region',
+            ),
         ]
         return states
 
@@ -1473,15 +1627,25 @@ class StudyScene3(InitialSceneTemplates):
                 yaw_rotation=(np.pi, np.pi),
             ),
         )
-        self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
+        self.xy_region_kwargs_list = (
+            get_xy_region_kwargs_list_from_regions_info(self.regions)
+        )
 
     @property
     def init_states(self):
         states = [
             ('On', 'desk_caddy_1', 'study_table_desk_caddy_init_region'),
-            ('On', 'black_book_1', 'study_table_desk_caddy_front_left_contain_region'),
+            (
+                'On',
+                'black_book_1',
+                'study_table_desk_caddy_front_left_contain_region',
+            ),
             ('On', 'porcelain_mug_1', 'study_table_porcelain_mug_init_region'),
-            ('On', 'red_coffee_mug_1', 'study_table_red_coffee_mug_init_region'),
+            (
+                'On',
+                'red_coffee_mug_1',
+                'study_table_red_coffee_mug_init_region',
+            ),
         ]
         return states
 
@@ -1539,7 +1703,9 @@ class StudyScene4(InitialSceneTemplates):
                 yaw_rotation=(0, 0),
             ),
         )
-        self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
+        self.xy_region_kwargs_list = (
+            get_xy_region_kwargs_list_from_regions_info(self.regions)
+        )
 
     @property
     def init_states(self):
@@ -1549,8 +1715,16 @@ class StudyScene4(InitialSceneTemplates):
                 'wooden_two_layer_shelf_1',
                 'study_table_wooden_two_layer_shelf_init_region',
             ),
-            ('On', 'yellow_book_1', 'study_table_yellow_book_right_init_region'),
-            ('On', 'yellow_book_2', 'study_table_yellow_book_left_init_region'),
+            (
+                'On',
+                'yellow_book_1',
+                'study_table_yellow_book_right_init_region',
+            ),
+            (
+                'On',
+                'yellow_book_2',
+                'study_table_yellow_book_left_init_region',
+            ),
             ('On', 'black_book_1', 'study_table_black_book_init_region'),
         ]
         return states

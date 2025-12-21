@@ -1,0 +1,74 @@
+(define (problem Tabletop_Manipulation)
+  (:domain robosuite)
+  (:language Pick up the apple and place it on the bowl)
+
+  (:regions
+    (target_region
+        (:target main_table)
+        (:ranges ((-0.01 -0.19 0.01 -0.17)))
+    )
+    (object_region
+        (:target main_table)
+        (:ranges ((-0.01 0.17 0.01 0.19)))
+    )
+    (moving_region
+        (:target main_table)
+        (:ranges ((-0.01 0.35 0.01 0.37)))
+    )
+  )
+
+  (:fixtures
+    main_table - table
+  )
+
+  (:objects
+    apple_1 - apple
+    porcelain_bowl_1 - porcelain_bowl
+    mickey_1 - mickey
+  )
+
+  (:moving_objects
+    (mickey_1
+        (:motion_type waypoint)
+        (:motion_waypoints (
+                            ((0.0 0.36 0.95) (0 1 0))
+                            ((0.127 0.307 0.95) (-1 1 0))
+                            ((0.18 0.18 0.95) (-1 0 0))
+                            ((0.127 0.053 0.95) (-1 -1 0))
+                            ((0.0 0.0 0.95) (0 -1 0))
+                            ((-0.127 -0.053 0.95) (-1 -1 0))
+                            ((-0.18 -0.18 0.95) (-1 0 0))
+                            ((-0.127 -0.307 0.95) (-1 1 0))
+                            ((0.0 -0.36 0.95) (0 1 0))
+                            ((0.127 -0.307 0.95) (1 1 0))
+                            ((0.18 -0.18 0.95) (1 0 0))
+                            ((0.127 -0.053 0.95) (1 -1 0))
+                            ((0.0 0.0 0.95) (0 -1 0))
+                            ((-0.127 0.053 0.95) (1 -1 0))
+                            ((-0.18 0.18 0.95) (1 0 0))
+                            ((-0.127 0.307 0.95) (1 1 0))
+                            ((0.0 0.36 0.95) (0 1 0)))
+                          )
+        (:motion_dt 2)
+    )
+  )
+
+  (:obj_of_interest
+    apple_1
+    porcelain_bowl_1
+  )
+
+  (:init
+    (On apple_1 main_table_object_region)
+    (On porcelain_bowl_1 main_table_target_region)
+    (On mickey_1 main_table_moving_region)
+  )
+
+  (:goal
+    (And (On apple_1 porcelain_bowl_1))
+  )
+
+  (:cost
+    (And (InContact apple_1 mickey_1) (CheckGripperContact mickey_1))
+  )
+)

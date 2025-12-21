@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 import argparse
 import datetime
@@ -70,7 +69,9 @@ def collect_human_trajectory(
 
     env.render()
 
-    task_completion_hold_count = -1  # counter to collect 10 timesteps after reaching goal
+    task_completion_hold_count = (
+        -1
+    )  # counter to collect 10 timesteps after reaching goal
     device.start_control()
 
     # Print action info for all robots
@@ -80,18 +81,18 @@ def collect_human_trajectory(
     saving = True
     count = 0
 
-    # ====== 绘图变量 ======
+    # ====== Plotting variables ======
     cost_list = []
     cumulative_cost = 0
     step_list = []
 
-    # 只在需要实时显示时初始化交互式图表
+    # Only initialize interactive plot when real-time display is needed
     fig = None
     ax = None
     line = None
 
     if use_synchronous_cost_curve:
-        plt.ion()  # 开启交互模式
+        plt.ion()  # Enable interactive mode
         fig, ax = plt.subplots()
         (line,) = ax.plot([], [], label='Cumulative Cost')
         ax.set_xlabel('Step Count')
@@ -102,7 +103,9 @@ def collect_human_trajectory(
     # Keep track of prev gripper actions when using since they are position-based and must be maintained when arms switched
     all_prev_gripper_actions = [
         {
-            f'{robot_arm}_gripper': np.repeat([0], robot.gripper[robot_arm].dof)
+            f'{robot_arm}_gripper': np.repeat(
+                [0], robot.gripper[robot_arm].dof
+            )
             for robot_arm in robot.arms
             if robot.gripper[robot_arm].dof > 0
         }
@@ -135,7 +138,9 @@ def collect_human_trajectory(
                     active_robot.composite_controller.joint_action_policy.input_type
                 )
             else:
-                controller_input_type = active_robot.part_controllers[arm_name].input_type
+                controller_input_type = active_robot.part_controllers[
+                    arm_name
+                ].input_type
 
             if controller_input_type == 'delta':
                 action_dict[arm_name] = input_ac_dict[f'{arm_name}_delta']
@@ -149,22 +154,26 @@ def collect_human_trajectory(
             robot.create_action_vector(all_prev_gripper_actions[i])
             for i, robot in enumerate(env.robots)
         ]
-        env_action[device.active_robot] = active_robot.create_action_vector(action_dict)
+        env_action[device.active_robot] = active_robot.create_action_vector(
+            action_dict
+        )
         env_action = np.concatenate(env_action)
         for gripper_ac in all_prev_gripper_actions[device.active_robot]:
-            all_prev_gripper_actions[device.active_robot][gripper_ac] = action_dict[gripper_ac]
+            all_prev_gripper_actions[device.active_robot][gripper_ac] = (
+                action_dict[gripper_ac]
+            )
 
         obs, reward, done, info = env.step(env_action)
         # replay_images.append(get_image(obs))
         env.render()
 
-        # ====== 始终收集cost数据 ======
+        # ====== Always collect cost data ======
         if 'cost' in info:
             cumulative_cost += info['cost']
             cost_list.append(cumulative_cost)
             step_list.append(count)
 
-            # 只在flag为True时实时更新显示
+            # Only update display in real-time when flag is True
             if use_synchronous_cost_curve and fig is not None:
                 line.set_data(step_list, cost_list)
                 ax.relim()
@@ -173,7 +182,7 @@ def collect_human_trajectory(
                     fig.canvas.draw()
                     fig.canvas.flush_events()
                 except:
-                    pass  # 忽略GUI更新错误
+                    pass  # Ignore GUI update errors
 
         # Also break if we complete the task
         if task_completion_hold_count == 0:
@@ -182,11 +191,17 @@ def collect_human_trajectory(
         # state machine to check for having a success for 10 consecutive timesteps
         if env._check_success():
             if task_completion_hold_count > 0:
-                task_completion_hold_count -= 1  # latched state, decrement count
+                task_completion_hold_count -= (
+                    1  # latched state, decrement count
+                )
             else:
-                task_completion_hold_count = 10  # reset count on first success timestep
+                task_completion_hold_count = (
+                    10  # reset count on first success timestep
+                )
         else:
-            task_completion_hold_count = -1  # null the counter if there's no success
+            task_completion_hold_count = (
+                -1
+            )  # null the counter if there's no success
 
         # limit frame rate if necessary
         if max_fr is not None:
@@ -203,14 +218,14 @@ def collect_human_trajectory(
     # cleanup for end of data collection episodes
     env.close()
 
-    # ====== 保存图表（无论是否实时显示） ======
+    # ====== Save plot (whether or not real-time display was used) ======
     if len(cost_list) > 0:
-        # 如果之前在实时显示，关闭交互模式
+        # If real-time display was used before, turn off interactive mode
         if use_synchronous_cost_curve and fig is not None:
             plt.ioff()
-            # 使用已有的figure
+            # Use existing figure
         else:
-            # 如果没有实时显示，创建新的figure来保存
+            # If no real-time display, create new figure to save
             fig, ax = plt.subplots()
             ax.plot(step_list, cost_list, label='Cumulative Cost')
             ax.set_xlabel('Step Count')
@@ -218,7 +233,7 @@ def collect_human_trajectory(
             ax.set_title('Cost Curve')
             ax.legend()
 
-        # 保存图表
+        # Save plot
         date = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
         if new_dir is not None:
             os.makedirs(new_dir, exist_ok=True)
@@ -241,7 +256,9 @@ def collect_human_trajectory(
     return saving
 
 
-def gather_demonstrations_as_hdf5(directory, out_dir, env_info, args, remove_directory=[]):
+def gather_demonstrations_as_hdf5(
+    directory, out_dir, env_info, args, remove_directory=[]
+):
     """
     Gathers the demonstrations saved in @directory into a
     single hdf5 file.
@@ -280,7 +297,11 @@ def gather_demonstrations_as_hdf5(directory, out_dir, env_info, args, remove_dir
 
     num_eps = 0
     env_name = None  # will get populated at some point
-    problem_info = BDDLUtils.get_problem_info(args.bddl_file) if hasattr(args, 'bddl_file') else {}
+    problem_info = (
+        BDDLUtils.get_problem_info(args.bddl_file)
+        if hasattr(args, 'bddl_file')
+        else {}
+    )
 
     for ep_directory in os.listdir(directory):
         # Skip directories marked for removal
@@ -305,7 +326,9 @@ def gather_demonstrations_as_hdf5(directory, out_dir, env_info, args, remove_dir
             if 'successful' in dic:
                 success = success or dic['successful']
             else:
-                success = True  # Default to saving all demos if no success flag
+                success = (
+                    True  # Default to saving all demos if no success flag
+                )
 
         if len(states) == 0:
             continue
@@ -341,7 +364,9 @@ def gather_demonstrations_as_hdf5(directory, out_dir, env_info, args, remove_dir
     if hasattr(args, 'bddl_file'):
         grp.attrs['problem_info'] = json.dumps(problem_info)
         grp.attrs['bddl_file_name'] = args.bddl_file
-        grp.attrs['bddl_file_content'] = str(open(args.bddl_file, encoding='utf-8').read())
+        grp.attrs['bddl_file_content'] = str(
+            open(args.bddl_file, encoding='utf-8').read()
+        )
 
     f.close()
     print(f'Saved {num_eps} demonstrations to {hdf5_path}')
@@ -512,7 +537,9 @@ if __name__ == '__main__':
         )
 
     elif args.device == 'mjgui':
-        assert args.renderer == 'mjviewer', 'Mocap is only supported with the mjviewer renderer'
+        assert (
+            args.renderer == 'mjviewer'
+        ), 'Mocap is only supported with the mjviewer renderer'
         from robosuite.devices.mjgui import MJGUI
 
         device = MJGUI(env=env)
@@ -523,7 +550,9 @@ if __name__ == '__main__':
         )
 
     # make a new timestamped directory
-    t1, t2 = datetime.datetime.now().strftime('%Y%m%d_%H%M%S'), datetime.datetime.now().strftime(
+    t1, t2 = datetime.datetime.now().strftime(
+        '%Y%m%d_%H%M%S'
+    ), datetime.datetime.now().strftime(
         '%f',
     )
     DATE = time.strftime('%Y_%m_%d')
@@ -553,5 +582,7 @@ if __name__ == '__main__':
         )
         if saving:
             print(f'Remove directory list: {remove_directory}')
-            gather_demonstrations_as_hdf5(tmp_directory, new_dir, env_info, args, remove_directory)
+            gather_demonstrations_as_hdf5(
+                tmp_directory, new_dir, env_info, args, remove_directory
+            )
             i += 1

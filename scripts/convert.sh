@@ -1,30 +1,16 @@
 #!/bin/bash
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
-
 
 # LeRobot Dataset Conversion Script
 # Usage:
 # 1. Modify the variables below
-# 2. Run: ./run_conversion.sh
-# Or: DATA_DIR=/path/to/data ./run_conversion.sh
+# 2. Run: ./convert.sh
+# Or: DATA_DIR=/path/to/data ./convert.sh
 
 set -e
 
 # ============ Configuration Variables ============
 DATA_DIR="${DATA_DIR:-"/your/path/to/rlds"}"
+MODEL_TYPE="${MODEL_TYPE:-"your/model/type"}" # openpi or smolvla
 HF_LEROBOT_HOME="${HF_LEROBOT_HOME:-"/your/path/to/hf_lerobot_data"}"
 PUSH_TO_HUB="${PUSH_TO_HUB:-false}"
 # ================================
@@ -63,6 +49,10 @@ fi
 
 # Run conversion
 echo "Starting conversion (approximately 30 minutes)..."
-python scripts/convert_data_to_lerobot.py $ARGS
+if [ "$MODEL_TYPE" = "smolvla" ]; then
+    python scripts/convert_data_to_lerobot_smolvla.py $ARGS
+else
+    python scripts/convert_data_to_lerobot_openpi.py $ARGS
+fi
 
 echo "Conversion completed! Data saved to: $HF_LEROBOT_HOME"

@@ -59,22 +59,22 @@ This script will display an interactive simulation environment window, where you
   <tr>
     <td><code>[</code> / <code>]</code></td>
     <td colspan='2'>Switch to the previous/next view</td>
-    
+
   </tr>
   <tr>
     <td><code>B</code></td>
     <td colspan='2'>Toggle arm/base mode (if applicable)</td>
-    
+
   </tr>
   <tr>
     <td><code>S</code></td>
     <td colspan='2'>Switch active arm (if multi-armed robot)</td>
-    
+
   </tr>
   <tr>
     <td><code>=</code></td>
     <td colspan='2'>Switch active robot (if multi-robot environment)</td>
-    
+
   </tr>
   </tbody>
 </table>
@@ -156,7 +156,7 @@ The dataset builder is already configured with the following features:
 
 - **Observation Data**:
   - `image`: Main camera RGB image (256×256×3)
-  - `wrist_image`: Wrist camera RGB image (256×256×3)  
+  - `wrist_image`: Wrist camera RGB image (256×256×3)
   - `state`: Robot end-effector state (8D: 6D pose + 2D gripper state)
   - `joint_state`: Robot joint angles (7D)
 
@@ -242,6 +242,9 @@ Modify configuration variables in `scripts/convert.sh`:
 # Set RLDS dataset path
 DATA_DIR="/path/to/your/rlds/dataset"
 
+# Set your model type ("openpi" or "smolvla")
+MODEL_TYPE="your/model/type"
+
 # Set LeRobot output path, defaulting to "./lerobot_dataset"
 HF_LEROBOT_HOME="/path/to/lerobot/datasets"
 
@@ -251,8 +254,8 @@ PUSH_TO_HUB="false"
 
 ### 5.3 Dataset Feature Mapping
 
-The conversion script will map RLDS data to LeRobot format:
-
+The conversion script will convert RLDS data to two distinct LeRobot formats according to the model type:
+#### OpenPi
 - **Image Data**:
   - `image`: Main camera RGB image (256×256×3)
   - `wrist_image`: Wrist camera RGB image (256×256×3)
@@ -262,6 +265,19 @@ The conversion script will map RLDS data to LeRobot format:
 
 - **Action Data**:
   - `actions`: Robot actions (7D)
+
+- **Task Information**:
+  - `task`: Language instruction (extracted from RLDS language_instruction)
+#### SmolVLA
+- **Image Data**:
+  - `observations.images.image`: Main camera RGB image (256×256×3)
+  - `observations.images.wrist_image`: Wrist camera RGB image (256×256×3)
+
+- **State Data**:
+  - `observations.state`: Robot end-effector state (8D: 6D pose + 2D gripper state)
+
+- **Action Data**:
+  - `action`: Robot actions (7D)
 
 - **Task Information**:
   - `task`: Language instruction (extracted from RLDS language_instruction)
@@ -275,10 +291,10 @@ Run the conversion script:
 ./scripts/convert.sh
 
 # Method 2: Specify data path
-./scripts/convert.sh /path/to/your/rlds/dataset
+./scripts/convert.sh /path/to/your/rlds/dataset your/model/type
 
 # Method 3: Use environment variables
-DATA_DIR=/path/to/your/rlds/dataset ./scripts/convert.sh
+DATA_DIR=/path/to/your/rlds/dataset MODEL_TYPE=your/model/type ./scripts/convert.sh
 ```
 
 The conversion process will:
@@ -291,7 +307,7 @@ The conversion process will:
 
 ### 5.5 Conversion Parameter Description
 
-The following parameters can be adjusted in `convert_data_to_lerobot.py`:
+The following parameters can be adjusted in `convert_data_to_lerobot_{model_type}.py`:
 
 ```python
 # Robot configuration

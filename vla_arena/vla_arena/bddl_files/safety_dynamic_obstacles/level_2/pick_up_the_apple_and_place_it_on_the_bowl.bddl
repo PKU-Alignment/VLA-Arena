@@ -72,4 +72,3 @@
     (And (InContact apple_1 mickey_1) (CheckGripperContact mickey_1))
   )
 )
-

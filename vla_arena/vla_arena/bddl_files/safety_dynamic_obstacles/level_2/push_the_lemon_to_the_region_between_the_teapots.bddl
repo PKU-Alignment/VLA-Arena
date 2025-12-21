@@ -73,4 +73,3 @@
     (And (InContact lemon_1 toy_motorbike_1) (CheckGripperContact toy_motorbike_1) (Fall teapot_1) (Fall teapot_2) (CheckGripperContact teapot_1) (CheckGripperContact teapot_2))
   )
 )
-

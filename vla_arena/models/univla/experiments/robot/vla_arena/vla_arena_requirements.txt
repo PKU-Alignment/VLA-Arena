@@ -1,0 +1,8 @@
+setuptools==78.1.1
+imageio[ffmpeg]
+robosuite==1.5.1
+bddl
+easydict
+cloudpickle
+gym
+setuptools==78.1.1

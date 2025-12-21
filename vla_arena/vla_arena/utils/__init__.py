@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 import os
 
@@ -19,7 +18,9 @@ import yaml
 
 
 # This is a default path for localizing all the benchmark related files
-libero_config_path = os.environ.get('LIBERO_CONFIG_PATH', os.path.expanduser('~/.libero'))
+libero_config_path = os.environ.get(
+    'LIBERO_CONFIG_PATH', os.path.expanduser('~/.libero')
+)
 config_file = os.path.join(libero_config_path, 'config.yaml')
 
 
@@ -30,7 +31,9 @@ def get_path_dict(root_location=os.path.dirname(os.path.abspath(__file__))):
     bddl_files_default_path = os.path.join(benchmark_root_path, './bddl_files')
 
     # This is a default path for localizing all the default bddl files
-    init_states_default_path = os.path.join(benchmark_root_path, './init_files')
+    init_states_default_path = os.path.join(
+        benchmark_root_path, './init_files'
+    )
 
     # This is a default path for localizing all the default datasets
     dataset_default_path = os.path.join(benchmark_root_path, '../datasets')
@@ -50,7 +53,9 @@ def get_libero_path(key):
     return config[key]
 
 
-def set_libero_path(custom_location=os.path.dirname(os.path.abspath(__file__))):
+def set_libero_path(
+    custom_location=os.path.dirname(os.path.abspath(__file__)),
+):
     new_config = get_path_dict(custom_location)
     with open(config_file, 'w') as f:
         yaml.dump(new_config, f)

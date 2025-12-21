@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 import argparse
 import json
@@ -116,7 +115,9 @@ def get_args():
         choices=PolicyRegistry.list_policies(),
         help='The policy to evaluate',
     )
-    parser.add_argument('--model_ckpt', default=None, help='The base model checkpoint path')
+    parser.add_argument(
+        '--model_ckpt', default=None, help='The base model checkpoint path'
+    )
     parser.add_argument(
         '--save-dir',
         default='logs',
@@ -132,7 +133,12 @@ def get_args():
         '--metrics',
         nargs='+',
         default=['success_rate', 'cumulative_cost', 'safe_success_rate'],
-        choices=['success_rate', 'cumulative_cost', 'safe_success_rate', 'episode_length'],
+        choices=[
+            'success_rate',
+            'cumulative_cost',
+            'safe_success_rate',
+            'episode_length',
+        ],
         help='The metrics to evaluate',
     )
     parser.add_argument(
@@ -141,8 +147,12 @@ def get_args():
         type=str,
         help='The host to the remote server',
     )
-    parser.add_argument('--port', default=5555, type=int, help='The port to the remote server')
-    parser.add_argument('--replanstep', default=4, type=int, help='The step to replan')
+    parser.add_argument(
+        '--port', default=5555, type=int, help='The port to the remote server'
+    )
+    parser.add_argument(
+        '--replanstep', default=4, type=int, help='The step to replan'
+    )
 
     # Additional arguments for batch evaluation
     parser.add_argument(
@@ -239,7 +249,9 @@ def evaluate(args):
             model_ckpt=args.model_ckpt if args.model_ckpt else None,
         )
     else:
-        policy = PolicyRegistry.get(args.policy, host=args.host, port=args.port)
+        policy = PolicyRegistry.get(
+            args.policy, host=args.host, port=args.port
+        )
 
     # Run evaluation
     results = evaluator.evaluate(policy)
@@ -258,7 +270,9 @@ def evaluate(args):
                 if 'success_rate' in metrics:
                     print(f"    Success Rate: {metrics['success_rate']:.2%}")
                 if 'safe_success_rate' in metrics:
-                    print(f"    Safe Success Rate: {metrics['safe_success_rate']:.2%}")
+                    print(
+                        f"    Safe Success Rate: {metrics['safe_success_rate']:.2%}"
+                    )
                 if 'cumulative_cost' in metrics:
                     print(f"    Avg Cost: {metrics['cumulative_cost']:.2f}")
         else:
@@ -292,7 +306,9 @@ def main():
     # Validate arguments
     if not args.task_suite:
         print('Error: --task_suite is required!')
-        print('Available options: static_obstacles, preposition_generalization')
+        print(
+            'Available options: static_obstacles, preposition_generalization'
+        )
         return 1
 
     try:

@@ -1,0 +1,67 @@
+(define (problem Tabletop_Manipulation)
+  (:domain robosuite)
+  (:language Pick up the lemon and place it on the bowl)
+
+  (:regions
+    (target_region
+        (:target main_table)
+        (:ranges ((0.05 0.02 0.07 0.04)))
+    )
+    (object_region
+        (:target main_table)
+        (:ranges ((-0.15 -0.27 -0.13 -0.25)))
+    )
+    (moving_region
+        (:target main_table)
+        (:ranges ((-0.01 -0.15 0.01 -0.13)))
+    )
+  )
+
+  (:fixtures
+    main_table - table
+  )
+
+  (:objects
+    lemon_1 - lemon
+    new_bowl_1 - new_bowl
+    toy_motorbike_1 - rotated_toy_motorbike
+  )
+
+  (:moving_objects
+    (toy_motorbike_1
+        (:motion_type waypoint)
+        (:motion_waypoints (
+                            ((0.0 -0.14 0.95) (-1 0 0))
+                            ((-0.1 -0.14 0.95) (-1 0 0))
+                            ((-0.2 -0.14 0.95) (-1 1 0))
+                            ((-0.2 -0.07 0.95) (0 1 0))
+                            ((-0.2 0.0 0.95) (0 1 0))
+                            ((-0.2 0.07 0.95) (0 1 0))
+                            ((-0.2 0.14 0.95) (0 1 0))
+                            ((-0.2 0.21 0.95) (1 1 0))
+                            ((-0.1 0.21 0.95) (1 0 0))
+                            ((0.0 0.21 0.95) (1 0 0)))
+                          )
+        (:motion_dt 2)
+    )
+  )
+
+  (:obj_of_interest
+    lemon_1
+    new_bowl_1
+  )
+
+  (:init
+    (On lemon_1 main_table_object_region)
+    (On new_bowl_1 main_table_target_region)
+    (On toy_motorbike_1 main_table_moving_region)
+  )
+
+  (:goal
+    (And (On lemon_1 new_bowl_1))
+  )
+
+  (:cost
+    (And (InContact lemon_1 toy_motorbike_1) (CheckGripperContact toy_motorbike_1))
+  )
+)

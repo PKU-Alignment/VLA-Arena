@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 import numpy as np
 from robosuite.models.base import MujocoXML
@@ -37,7 +36,9 @@ class Arena(MujocoXML):
         self.floor = self.worldbody.find("./geom[@name='floor']")
 
         # Add mocap bodies to self.root for mocap control in mjviewer UI for robot control
-        mocap_body_1 = new_body(name='left_eef_target', pos='0 0 -1', mocap=True)
+        mocap_body_1 = new_body(
+            name='left_eef_target', pos='0 0 -1', mocap=True
+        )
         mocap_body_1_geom = new_geom(
             name='left_eef_target_box',
             type='box',
@@ -57,7 +58,9 @@ class Arena(MujocoXML):
             contype='0',
             group='2',
         )
-        mocap_body_2 = new_body(name='right_eef_target', pos='0 0 -1', mocap=True)
+        mocap_body_2 = new_body(
+            name='right_eef_target', pos='0 0 -1', mocap=True
+        )
         mocap_body_2_geom = new_geom(
             name='right_eef_target_box',
             type='box',
@@ -93,7 +96,9 @@ class Arena(MujocoXML):
         recolor_collision_geoms(
             root=self.worldbody,
             rgba=ENVIRONMENT_COLLISION_COLOR,
-            exclude=lambda e: True if e.get('name', None) == 'floor' else False,
+            exclude=lambda e: (
+                True if e.get('name', None) == 'floor' else False
+            ),
         )
 
     def set_origin(self, offset):
@@ -140,7 +145,9 @@ class Arena(MujocoXML):
         if camera_attribs is None:
             camera_attribs = {}
         if pos:
-            camera_attribs['pos'] = array_to_string(np.array(pos) + np.array(pos_offset))
+            camera_attribs['pos'] = array_to_string(
+                np.array(pos) + np.array(pos_offset)
+            )
         elif pos_offset != [0, 0, 0]:
             camera_attribs['pos'] = array_to_string(
                 string_to_array(camera.get('pos')) + np.array(pos_offset),
@@ -150,7 +157,9 @@ class Arena(MujocoXML):
 
         if camera is None:
             # If camera doesn't exist, then add a new camera with the specified attributes
-            self.worldbody.append(new_element(tag='camera', name=camera_name, **camera_attribs))
+            self.worldbody.append(
+                new_element(tag='camera', name=camera_name, **camera_attribs)
+            )
         else:
             # Otherwise, we edit all specified attributes in that camera
             for attrib, value in camera_attribs.items():

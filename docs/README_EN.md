@@ -22,6 +22,12 @@ A comprehensive guide for collecting demonstration data in custom scenes and con
    - Filtering noop actions for trajectory continuity
    - Dataset optimization and validation
    - Quality assurance procedures
+4. [Convert Dataset to RLDS Format](#4-convert-dataset-to-rlds-format)
+   - RLDS format conversion
+   - Dataset standardization
+5. [Convert RLDS Dataset to LeRobot Format](#5-convert-rlds-dataset-to-lerobot-format)
+   - LeRobot format conversion
+   - Compatibility handling
 
 ---
 
@@ -63,37 +69,25 @@ Detailed guide for building custom task scenarios using BDDL (Behavior Domain De
 
 ---
 
-### 3. Model Fine-tuning Guide
-**File:** `finetune.md` 
+### 3. Model Fine-tuning and Evaluation Guide
+**File:** `finetuning_and_evaluation.md`
 
-Comprehensive guide for fine-tuning VLA models using VLA-Arena generated datasets.
+Comprehensive guide for fine-tuning and evaluating VLA models using VLA-Arena generated datasets. Supports OpenVLA, OpenVLA-OFT, Openpi, UniVLA, SmolVLA, and other models.
 
 #### Table of Contents:
-1. [Quick Start](#quick-start)
-   - Environment setup
-   - Basic fine-tuning commands
-2. [Fine-tuning OpenVLA](#fine-tuning-openvla)
-   - OpenVLA library installation
-   - One-click fine-tuning scripts
-   - Parameter configuration
-   - Dataset configuration options
-3. [Fine-tuning OpenVLA OFT](#fine-tuning-openvla-oft)
-   - OFT fine-tuning introduction
-   - Advanced training options
-   - Architecture enhancements
-   - Multi-GPU support
-4. [Troubleshooting](#troubleshooting)
-   - Common issues and solutions
-   - Debugging techniques
-5. [Model Evaluation](#model-evaluation)
-   - Evaluation procedures
-   - Performance metrics
-6. [Adding Custom Models](#adding-custom-models)
-   - Custom model integration
-   - Configuration requirements
-7. [Configuration Instructions](#configuration-instructions)
-   - Detailed configuration options
-   - Best practices
+1. [General Models (OpenVLA, OpenVLA-OFT, UniVLA, SmolVLA)](#general-models)
+   - Dependency installation
+   - Model fine-tuning
+   - Model evaluation
+2. [Openpi Model](#openpi)
+   - Environment setup (using uv)
+   - Training configuration and execution
+   - Policy server startup
+   - Model evaluation
+3. [Configuration File Notes](#configuration-file-notes)
+   - Dataset path configuration
+   - Model parameter settings
+   - Training hyperparameter configuration
 
 ---
 
@@ -187,19 +181,17 @@ Comprehensive guide for packaging, sharing, and installing custom tasks and scen
 
 ```
 docs/
-├── data_collection.md          # Data collection guide (English)
-├── data_collection_zh.md       # Data collection guide (Chinese)
-├── scene_construction.md       # Scene construction guide (English)
-├── scene_construction_zh.md    # Scene construction guide (Chinese)
-├── finetune.md                 # Model fine-tuning guide (English)
-├── finetune_zh.md              # Model fine-tuning guide (Chinese)
-├── evaluation.md               # Model evaluation guide (English)
-├── evaluation_zh.md            # Model evaluation guide (Chinese)
 ├── asset_management.md         # Task asset management guide (English)
 ├── asset_management_zh.md      # Task asset management guide (Chinese)
-├── finetune_openvla.sh         # OpenVLA fine-tuning script
-├── finetune_openvla_oft.sh     # OpenVLA OFT fine-tuning script
-└── image/                      # Documentation images and GIFs
+├── data_collection.md                    # Data collection guide (English)
+├── data_collection_zh.md                 # Data collection guide (Chinese)
+├── scene_construction.md                 # Scene construction guide (English)
+├── scene_construction_zh.md              # Scene construction guide (Chinese)
+├── finetuning_and_evaluation.md         # Model fine-tuning and evaluation guide (English)
+├── finetuning_and_evaluation_zh.md      # Model fine-tuning and evaluation guide (Chinese)
+├── README_EN.md                          # Documentation table of contents (English)
+├── README_ZH.md                          # Documentation table of contents (Chinese)
+└── image/                                # Documentation images and GIFs
 ```
 
 ---

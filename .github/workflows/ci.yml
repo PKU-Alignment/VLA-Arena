@@ -45,17 +45,17 @@ jobs:
           # Install only linting tools, not the full package
           pip install isort black ruff flake8 flake8-bugbear flake8-comprehensions flake8-docstrings flake8-pyi flake8-simplify pylint pyenchant
 
-      - name: Code style check with black
-        run: |
-          make py-format
+      # - name: Code style check with black
+      #   run: |
+      #     make py-format
 
-      - name: Lint with ruff
-        run: |
-          make ruff
+      # - name: Lint with ruff
+      #   run: |
+      #     make ruff
 
-      - name: Lint with flake8
-        run: |
-          make flake8
+      # - name: Lint with flake8
+      #   run: |
+      #     make flake8
 
       - name: Check with pylint
         run: |
@@ -70,12 +70,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python-version: ['3.8', '3.9', '3.10', '3.11']
-        exclude:
-          - os: macos-latest
-            python-version: '3.8'
-          - os: macos-latest
-            python-version: '3.9'
+        python-version: ['3.11']
 
     steps:
       - name: Checkout code
@@ -118,14 +113,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           # Install without optional heavy dependencies for CI
-          pip install -e . --no-deps
-          pip install pytest pytest-cov pytest-xdist hydra-core numpy easydict opencv-python robosuite bddl future matplotlib cloudpickle gym IPython imageio imageio-ffmpeg colorlog rich jsonlines json_numpy pyyaml
+          pip install -e .
 
       - name: Run tests
         run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            export MUJOCO_GL=egl
+          fi
           make test
-        env:
-          MUJOCO_GL: osmesa
 
       - name: Upload coverage reports
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10'

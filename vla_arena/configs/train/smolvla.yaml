@@ -1,0 +1,21 @@
+dataset:
+  root: "/path/to/your/datasets/vla-arena-lerobot"
+
+policy:
+  type: "smolvla"
+  pretrained_path: "/path/to/your/models/smolvla"
+  device: "cuda"
+  optimizer_lr: 1e-4
+  scheduler_warmup_steps: 1000
+  push_to_hub: false
+
+batch_size: 64
+steps: 100000
+output_dir: "outputs/train/smolvla_finetuned"
+job_name: "smolvla_finetuning_on_vla_arena"
+save_checkpoint: true
+save_freq: 5000
+
+wandb:
+  enable: false
+  project: "smolvla_finetuning"

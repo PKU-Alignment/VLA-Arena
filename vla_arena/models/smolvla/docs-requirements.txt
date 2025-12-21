@@ -1,0 +1,7 @@
+# docs-requirements.txt
+imageio[ffmpeg]
+robosuite==1.5.1
+bddl
+easydict
+cloudpickle
+gym

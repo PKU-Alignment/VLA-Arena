@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 import argparse
 import json
@@ -28,29 +27,31 @@ from vla_arena.vla_arena import get_vla_arena_path
 from vla_arena.vla_arena.envs import *
 
 
-def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_demo_counter):
+def process_single_demo_file(
+    demo_file_path, env_kwargs_template, args, global_demo_counter
+):
     """
-    处理单个demo HDF5文件并返回处理后的数据
+    Process a single demo HDF5 file and return processed data.
 
     Args:
-        demo_file_path: 原始demo文件路径
-        env_kwargs_template: 环境参数模板
-        args: 命令行参数
-        global_demo_counter: 全局demo计数器
+        demo_file_path: Original demo file path
+        env_kwargs_template: Environment parameters template
+        args: Command line arguments
+        global_demo_counter: Global demo counter
 
     Returns:
-        处理后的demo数据列表和更新后的计数器
+        List of processed demo data and updated counter
     """
 
-    print(f'\n处理文件: {demo_file_path}')
+    print(f'\nProcessing file: {demo_file_path}')
 
     try:
         f = h5py.File(demo_file_path, 'r')
     except Exception as e:
-        print(f'无法打开文件 {demo_file_path}: {e}')
+        print(f'Unable to open file {demo_file_path}: {e}')
         return [], global_demo_counter
 
-    # 提取必要的元数据
+    # Extract necessary metadata
     try:
         env_name = f['data'].attrs['env']
         env_info = f['data'].attrs['env_info']
@@ -60,11 +61,11 @@ def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_d
         bddl_file_name = f['data'].attrs['bddl_file_name']
         demos = list(f['data'].keys())
     except KeyError as e:
-        print(f'文件 {demo_file_path} 缺少必要的元数据: {e}')
+        print(f'File {demo_file_path} missing necessary metadata: {e}')
         f.close()
         return [], global_demo_counter
 
-    # 更新环境参数
+    # Update environment parameters
     env_kwargs = json.loads(env_info)
     vla_arena_utils.update_env_kwargs(
         env_kwargs,
@@ -81,28 +82,28 @@ def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_d
         camera_segmentations=None,
     )
 
-    # 创建环境
+    # Create environment
     try:
         env = TASK_MAPPING[problem_name](**env_kwargs)
     except Exception as e:
-        print(f'无法创建环境 {problem_name}: {e}')
+        print(f'Unable to create environment {problem_name}: {e}')
         f.close()
         return [], global_demo_counter
 
     processed_demos = []
     cap_index = 5
 
-    # 处理每个episode
+    # Process each episode
     for ep in demos:
-        print(f'  处理 {ep}...')
+        print(f'  Processing {ep}...')
 
         try:
-            # 读取模型和状态
+            # Read model and states
             model_xml = f[f'data/{ep}'].attrs['model_file']
             states = f[f'data/{ep}/states'][()]
             actions = np.array(f[f'data/{ep}/actions'][()])
 
-            # 重置环境
+            # Reset environment
             reset_success = False
             max_reset_attempts = 5
             for attempt in range(max_reset_attempts):
@@ -112,7 +113,9 @@ def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_d
                     break
                 except:
                     if attempt == max_reset_attempts - 1:
-                        print(f'    无法重置环境，跳过 {ep}')
+                        print(
+                            f'    Unable to reset environment, skipping {ep}'
+                        )
                     continue
 
             if not reset_success:
@@ -120,7 +123,7 @@ def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_d
 
             model_xml = vla_arena_utils.postprocess_model_xml(model_xml, {})
 
-            # 初始化环境状态
+            # Initialize environment state
             init_idx = 0
             env.reset_from_xml_string(model_xml)
             env.sim.reset()
@@ -130,7 +133,7 @@ def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_d
 
             camera_names = env.camera_names
 
-            # 收集数据的容器
+            # Containers for collecting data
             ee_states = []
             gripper_states = []
             joint_states = []
@@ -143,24 +146,24 @@ def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_d
                 }
             valid_index = []
 
-            # 回放动作并收集观测
+            # Replay actions and collect observations
             for j, action in enumerate(actions):
                 obs, reward, done, info = env.step(action)
 
-                # 检查状态一致性
+                # Check state consistency
                 if j < len(actions) - 1:
                     state_playback = env.sim.get_state().flatten()
                     err = np.linalg.norm(states[j + 1] - state_playback)
                     # if err > 0.01:
-                    #     print(f"    [警告] 回放偏差 {err:.2f} at step {j}")
+                    #     print(f"    [Warning] Playback deviation {err:.2f} at step {j}")
 
-                # 跳过前几帧（传感器稳定）
+                # Skip first few frames (sensor stabilization)
                 if j < cap_index:
                     continue
 
                 valid_index.append(j)
 
-                # 收集proprioception数据
+                # Collect proprioception data
                 if not args.no_proprio:
                     if 'robot0_gripper_qpos' in obs:
                         gripper_states.append(obs['robot0_gripper_qpos'])
@@ -176,15 +179,19 @@ def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_d
 
                 robot_states.append(env.get_robot_state_vector(obs))
 
-                # 收集图像数据
+                # Collect image data
                 if not args.not_use_camera_obs:
                     if args.use_depth:
                         for camera in camera_names:
-                            camera_list[camera]['depths'].append(obs[camera + '_depth'])
+                            camera_list[camera]['depths'].append(
+                                obs[camera + '_depth']
+                            )
                     for camera in camera_names:
-                        camera_list[camera]['images'].append(obs[camera + '_image'])
+                        camera_list[camera]['images'].append(
+                            obs[camera + '_image']
+                        )
 
-            # 准备最终数据
+            # Prepare final data
             states = states[valid_index]
             actions = actions[valid_index]
             dones = np.zeros(len(actions)).astype(np.uint8)
@@ -192,14 +199,16 @@ def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_d
             rewards = np.zeros(len(actions)).astype(np.uint8)
             rewards[-1] = 1
 
-            # 存储处理后的数据
+            # Store processed data
             demo_data = {
                 'demo_id': f'demo_{global_demo_counter}',
                 'states': states,
                 'actions': actions,
                 'rewards': rewards,
                 'dones': dones,
-                'robot_states': np.stack(robot_states, axis=0) if robot_states else None,
+                'robot_states': (
+                    np.stack(robot_states, axis=0) if robot_states else None
+                ),
                 'model_file': model_xml,
                 'init_state': states[init_idx] if len(states) > 0 else None,
                 'num_samples': len(camera_list[camera_names[0]]['images']),
@@ -207,7 +216,7 @@ def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_d
                 'original_ep': ep,
             }
 
-            # 添加观测数据
+            # Add observation data
             if not args.no_proprio and gripper_states:
                 demo_data['gripper_states'] = np.stack(gripper_states, axis=0)
                 demo_data['joint_states'] = np.stack(joint_states, axis=0)
@@ -218,7 +227,9 @@ def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_d
             if not args.not_use_camera_obs:
                 for camera in camera_names:
                     if camera_list[camera]['images']:
-                        demo_data[camera + '_rgb'] = np.stack(camera_list[camera]['images'], axis=0)
+                        demo_data[camera + '_rgb'] = np.stack(
+                            camera_list[camera]['images'], axis=0
+                        )
 
                 if args.use_depth:
                     for camera in camera_names:
@@ -232,14 +243,14 @@ def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_d
             global_demo_counter += 1
 
         except Exception as e:
-            print(f'    处理 {ep} 时出错: {e}')
+            print(f'    Error processing {ep}: {e}')
             continue
 
-    # 清理
+    # Cleanup
     env.close()
     f.close()
 
-    # 返回元数据和处理后的demos
+    # Return metadata and processed demos
     metadata = {
         'env_name': env_name,
         'problem_info': problem_info,
@@ -257,40 +268,44 @@ def main():
         '--input-dir',
         type=str,
         required=True,
-        help='包含原始demo HDF5文件的目录 (如: demonstration_data/xxx/)',
+        help='Directory containing original demo HDF5 files (e.g., demonstration_data/xxx/)',
     )
     parser.add_argument(
         '--output-dir',
         type=str,
         default=None,
-        help='输出目录，默认根据BDDL文件自动确定',
+        help='Output directory, default is automatically determined based on BDDL file',
     )
     parser.add_argument(
         '--pattern',
         type=str,
         default='*.hdf5',
-        help='要处理的文件名 (默认: .hdf5)',
+        help='Filename pattern to process (default: .hdf5)',
     )
     parser.add_argument('--not-use-camera-obs', action='store_true')
     parser.add_argument('--no-proprio', action='store_true')
     parser.add_argument('--use-depth', action='store_true')
-    parser.add_argument('--not-recursive', action='store_true', help='不递归搜索子目录')
+    parser.add_argument(
+        '--not-recursive',
+        action='store_true',
+        help='Do not recursively search subdirectories',
+    )
 
     args = parser.parse_args()
 
-    # 查找所有要处理的HDF5文件
+    # Find all HDF5 files to process
     if not args.not_recursive:
         demo_files = list(Path(args.input_dir).rglob(args.pattern))
     else:
         demo_files = list(Path(args.input_dir).glob(args.pattern))
 
     if not demo_files:
-        print(f'在 {args.input_dir} 中没有找到匹配 {args.pattern} 的文件')
+        print(f'No files matching {args.pattern} found in {args.input_dir}')
         return
 
-    print(f'找到 {len(demo_files)} 个文件待处理')
+    print(f'Found {len(demo_files)} files to process')
 
-    # 处理所有文件并收集数据，按BDDL文件分组
+    # Process all files and collect data, grouped by BDDL file
     demos_by_bddl = {}  # {bddl_file_name: [demos]}
     env_kwargs_template = {}
     metadata_by_bddl = {}  # {bddl_file_name: metadata}
@@ -300,7 +315,7 @@ def main():
             str(demo_file),
             env_kwargs_template,
             args,
-            0,  # 每个BDDL文件独立计数
+            0,  # Each BDDL file counts independently
         )
 
         if metadata and demos:
@@ -310,27 +325,29 @@ def main():
                 metadata_by_bddl[bddl_file_name] = metadata
             demos_by_bddl[bddl_file_name].extend(demos)
 
-    # 为每个BDDL文件创建一个输出文件
+    # Create an output file for each BDDL file
     for bddl_file_name, demos in demos_by_bddl.items():
-        # 根据原代码的命名逻辑生成输出路径
-        demo_dir = args.input_dir  # 输入目录作为demo_dir
+        # Generate output path based on original code's naming logic
+        demo_dir = args.input_dir  # Input directory as demo_dir
         bddl_base_name = os.path.basename(bddl_file_name)
 
         if args.output_dir:
-            # 如果指定了输出目录，使用它
+            # If output directory is specified, use it
             output_parent_dir = Path(args.output_dir)
             hdf5_file_name = bddl_base_name.replace('.bddl', '_demo.hdf5')
             hdf5_path = output_parent_dir / hdf5_file_name
         else:
-            # 否则按原代码逻辑：基于demonstration_data目录结构
+            # Otherwise follow original code logic: based on demonstration_data directory structure
             if 'demonstration_data/' in demo_dir:
                 relative_dir = demo_dir.split('demonstration_data/')[-1]
             else:
-                # 如果路径中没有demonstration_data，使用当前目录名
+                # If demonstration_data is not in path, use current directory name
                 relative_dir = os.path.basename(demo_dir)
 
             hdf5_file_name = bddl_base_name.replace('.bddl', '_demo.hdf5')
-            hdf5_path = os.path.join(get_vla_arena_path('datasets'), relative_dir, hdf5_file_name)
+            hdf5_path = os.path.join(
+                get_vla_arena_path('datasets'), relative_dir, hdf5_file_name
+            )
             hdf5_path = Path(hdf5_path)
             if hdf5_path.exists():
                 stem = hdf5_path.stem
@@ -341,20 +358,20 @@ def main():
         output_parent_dir = hdf5_path.parent
         output_parent_dir.mkdir(parents=True, exist_ok=True)
 
-        print(f'\n为 {bddl_base_name} 创建输出文件: {hdf5_path}')
+        print(f'\nCreating output file for {bddl_base_name}: {hdf5_path}')
 
-        # 写入HDF5文件（使用原代码的结构）
+        # Write HDF5 file (using original code structure)
         metadata = metadata_by_bddl[bddl_file_name]
 
         with h5py.File(str(hdf5_path), 'w') as h5py_f:
             grp = h5py_f.create_group('data')
 
-            # 写入属性（与原代码保持一致）
+            # Write attributes (consistent with original code)
             grp.attrs['env_name'] = metadata['env_name']
             grp.attrs['problem_info'] = json.dumps(metadata['problem_info'])
             grp.attrs['macros_image_convention'] = macros.IMAGE_CONVENTION
 
-            # 环境参数
+            # Environment parameters
             problem_name = metadata['problem_info']['problem_name']
             env_args = {
                 'type': 1,
@@ -370,36 +387,50 @@ def main():
             if os.path.exists(bddl_file_name):
                 grp.attrs['bddl_file_content'] = open(bddl_file_name).read()
 
-            # 写入每个demo的数据，重新编号
+            # Write each demo's data, renumbering
             total_len = 0
             for i, demo_data in enumerate(demos):
-                demo_id = f'demo_{i}'  # 重新编号从0开始
+                demo_id = f'demo_{i}'  # Renumber starting from 0
                 ep_data_grp = grp.create_group(demo_id)
 
-                # 写入观测数据组
+                # Write observation data group
                 obs_grp = ep_data_grp.create_group('obs')
 
-                # Proprioception数据
-                for key in ['gripper_states', 'joint_states', 'ee_states', 'ee_pos', 'ee_ori']:
+                # Proprioception data
+                for key in [
+                    'gripper_states',
+                    'joint_states',
+                    'ee_states',
+                    'ee_pos',
+                    'ee_ori',
+                ]:
                     if key in demo_data:
                         obs_grp.create_dataset(key, data=demo_data[key])
 
-                # 图像数据
+                # Image data
                 for camera in metadata['camera_names']:
-                    for key in [camera + suffix for suffix in ['_rgb', '_depth']]:
+                    for key in [
+                        camera + suffix for suffix in ['_rgb', '_depth']
+                    ]:
                         if key in demo_data:
                             obs_grp.create_dataset(key, data=demo_data[key])
 
-                # 写入动作和状态数据
-                ep_data_grp.create_dataset('actions', data=demo_data['actions'])
+                # Write action and state data
+                ep_data_grp.create_dataset(
+                    'actions', data=demo_data['actions']
+                )
                 ep_data_grp.create_dataset('states', data=demo_data['states'])
-                ep_data_grp.create_dataset('rewards', data=demo_data['rewards'])
+                ep_data_grp.create_dataset(
+                    'rewards', data=demo_data['rewards']
+                )
                 ep_data_grp.create_dataset('dones', data=demo_data['dones'])
 
                 if demo_data['robot_states'] is not None:
-                    ep_data_grp.create_dataset('robot_states', data=demo_data['robot_states'])
+                    ep_data_grp.create_dataset(
+                        'robot_states', data=demo_data['robot_states']
+                    )
 
-                # 写入属性
+                # Write attributes
                 ep_data_grp.attrs['num_samples'] = demo_data['num_samples']
                 ep_data_grp.attrs['model_file'] = demo_data['model_file']
                 if demo_data['init_state'] is not None:
@@ -407,13 +438,13 @@ def main():
 
                 total_len += demo_data['num_samples']
 
-            # 写入汇总信息
+            # Write summary information
             grp.attrs['num_demos'] = len(demos)
             grp.attrs['total'] = total_len
 
-        print(f'创建的数据集已保存到: {hdf5_path}')
-        print(f'Demonstrations数: {len(demos)}')
-        print(f'总样本数: {total_len}')
+        print(f'Created dataset saved to: {hdf5_path}')
+        print(f'Number of demonstrations: {len(demos)}')
+        print(f'Total samples: {total_len}')
 
 
 if __name__ == '__main__':

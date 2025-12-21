@@ -1,17 +1,22 @@
 # 🤖 VLA-Arena: A Comprehensive Benchmark for Vision-Language-Action Models
 
+
+
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-%20Apache%202.0-green?style=for-the-badge" alt="License"></a>
-  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-blue?style=for-the-badge" alt="Python"></a>
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.11%2B-blue?style=for-the-badge" alt="Python"></a>
   <a href="https://robosuite.ai/"><img src="https://img.shields.io/badge/framework-RoboSuite-green?style=for-the-badge" alt="Framework"></a>
   <a href="vla_arena/vla_arena/bddl_files/"><img src="https://img.shields.io/badge/tasks-150%2B-orange?style=for-the-badge" alt="Tasks"></a>
   <a href="docs/"><img src="https://img.shields.io/badge/docs-available-green?style=for-the-badge" alt="Docs"></a>
 </p>
 
+<p align="center">
+  <img src="image/structure.png" width="100%">
+</p>
 
-VLA-Arena is an open-source benchmark for systematic evaluation of Vision-Language-Action (VLA) models. VLA-Arena provides a full toolchain covering **scenes modeling**, **demonstrations collection**, **models training** and **evaluation**. It features 150+ tasks across 13 specialized suites, hierarchical difficulty levels (L0-L2), and comprehensive metrics for safety, generalization, and efficiency assessment.
+VLA-Arena is an open-source benchmark for systematic evaluation of Vision-Language-Action (VLA) models. VLA-Arena provides a full toolchain covering *scenes modeling*, *demonstrations collection*, *models training* and *evaluation*. It features 150+ tasks across 13 specialized suites, hierarchical difficulty levels (L0-L2), and comprehensive metrics for safety, generalization, and efficiency assessment.
 
-VLA-Arena focuses on four key domains: 
+VLA-Arena focuses on four key domains:
 - **Safety**: Operate reliably and safely in the physical world.
 - **Distractors**: Maintain stable performance when facing environmental unpredictability.
 - **Extrapolation**: Generalize learned knowledge to novel situations.
@@ -19,13 +24,13 @@ VLA-Arena focuses on four key domains:
 
 ## 📰 News
 
-**2025.09.29**: VLA-Arena is officially released! 
+**2025.09.29**: VLA-Arena is officially released!
 
 ## 🔥 Highlights
 
 - **🚀 End-to-End & Out-of-the-Box**: We provide a complete and unified toolchain covering everything from scene modeling and behavior collection to model training and evaluation. Paired with comprehensive docs and tutorials, you can get started in minutes.
 - **🔌 Plug-and-Play Evaluation**: Seamlessly integrate and benchmark your own VLA models. Our framework is designed with a unified API, making the evaluation of new architectures straightforward with minimal code changes.
-- **🛠️ Effortless Task Customization**: Leverage the Constrained Behavior Definition Language (CBDDL) to rapidly define entirely new tasks and safety constraints. Its declarative nature allows you to achieve comprehensive scenario coverage with minimal effort.
+- **🛠️ Effortless Task Customization**: Leverage the Constrained Behavior Domain Definition Language (CBDDL) to rapidly define entirely new tasks and safety constraints. Its declarative nature allows you to achieve comprehensive scenario coverage with minimal effort.
 - **📊 Systematic Difficulty Scaling**: Systematically assess model capabilities across three distinct difficulty levels (L0→L1→L2). Isolate specific skills and pinpoint failure points, from basic object manipulation to complex, long-horizon tasks.
 
 If you find VLA-Arena useful, please cite it in your publications.
@@ -71,11 +76,8 @@ git clone https://github.com/PKU-Alignment/VLA-Arena.git
 cd VLA-Arena
 
 # Create environment
-conda create -n vla-arena python=3.10
+conda create -n vla-arena python=3.11
 conda activate vla-arena
-
-# Install requirements
-pip install -r requirements.txt
 
 # Install VLA-Arena
 pip install -e .
@@ -91,24 +93,35 @@ pip install -e .
     os.environ["MUJOCO_GL"] = "wgl"    # Change "egl" to "wgl"
    ```
 
-### 2. Basic Evaluation
-```bash
-# Evaluate a trained model
-python scripts/evaluate_policy.py \
-    --task_suite safety_static_obstacles \
-    --task_level 0 \
-    --n-episode 10 \
-    --policy openvla \
-    --model_ckpt /path/to/checkpoint
-```
-
-### 3. Data Collection
+### 2. Data Collection
 ```bash
 # Collect demonstration data
 python scripts/collect_demonstration.py --bddl-file tasks/your_task.bddl
 ```
 
-For detailed instructions, see our [Documentation](#documentation) section.
+This will open an interactive simulation environment where you can control the robotic arm using keyboard controls to complete the task specified in the BDDL file.
+
+### 3. Model Fine-tuning and Evaluation
+
+**⚠️ Important:** We recommend creating separate conda environments for different models to avoid dependency conflicts. Each model may have different requirements.
+
+```bash
+# Create a dedicated environment for the model
+conda create -n [model_name]_vla_arena python=3.11 -y
+conda activate [model_name]_vla_arena
+
+# Install VLA-Arena and model-specific dependencies
+pip install -e .
+pip install vla-arena[model_name]
+
+# Fine-tune a model (e.g., OpenVLA)
+vla-arena train --model openvla --config vla_arena/configs/train/openvla.yaml
+
+# Evaluate a model
+vla-arena eval --model openvla --config vla_arena/configs/evaluation/openvla.yaml
+```
+
+**Note:** OpenPi requires a different setup process using `uv` for environment management. Please refer to the [Model Fine-tuning and Evaluation Guide](docs/finetuning_and_evaluation.md) for detailed OpenPi installation and training instructions.
 
 ## Task Suites Overview
 
@@ -181,9 +194,8 @@ VLA-Arena provides 11 specialized task suites with 150+ tasks total, organized i
 
 ### System Requirements
 - **OS**: Ubuntu 20.04+ or macOS 12+
-- **Python**: 3.9 or higher
+- **Python**: 3.11 or higher
 - **CUDA**: 11.8+ (for GPU acceleration)
-- **RAM**: 8GB minimum, 16GB recommended
 
 ### Installation Steps
 ```bash
@@ -192,12 +204,11 @@ git clone https://github.com/PKU-Alignment/VLA-Arena.git
 cd VLA-Arena
 
 # Create environment
-conda create -n vla-arena python=3.10
+conda create -n vla-arena python=3.11
 conda activate vla-arena
 
 # Install dependencies
 pip install --upgrade pip
-pip install -r requirements.txt
 pip install -e .
 ```
 
@@ -208,32 +219,34 @@ VLA-Arena provides comprehensive documentation for all aspects of the framework.
 ### 📖 Core Guides
 
 #### 🏗️ [Scene Construction Guide](docs/scene_construction.md) | [中文版](docs/scene_construction_zh.md)
-Build custom task scenarios using CBDDL.
-- CBDDL file structure
-- Object and region definitions
-- State and goal specifications
-- Constraints, safety predicates and costs
-- Scene visualization
+Build custom task scenarios using CBDDL (Constrained Behavior Domain Definition Language).
+- CBDDL file structure and syntax
+- Region, fixture, and object definitions
+- Moving objects with various motion types (linear, circular, waypoint, parabolic)
+- Initial and goal state specifications
+- Cost constraints and safety predicates
+- Image effect settings
+- Asset management and registration
+- Scene visualization tools
 
 #### 📊 [Data Collection Guide](docs/data_collection.md) | [中文版](docs/data_collection_zh.md)
-Collect demonstrations in custom scenes.
-- Interactive simulation environment
-- Keyboard controls for robotic arm
-- Data format conversion
-- Dataset creation and optimization
+Collect demonstrations in custom scenes and convert data formats.
+- Interactive simulation environment with keyboard controls
+- Demonstration data collection workflow
+- Data format conversion (HDF5 to training dataset)
+- Dataset regeneration (filtering noops and optimizing trajectories)
+- Convert dataset to RLDS format (for X-embodiment frameworks)
+- Convert RLDS dataset to LeRobot format (for Hugging Face LeRobot)
 
-#### 🔧 [Model Fine-tuning Guide](docs/finetune.md) | [中文版](docs/finetune_zh.md)
-Fine-tune VLA models using VLA-Arena generated datasets.
-- OpenVLA fine-tuning
-- Training scripts and configuration
-- Model evaluation
+#### 🔧 [Model Fine-tuning and Evaluation Guide](docs/finetuning_and_evaluation.md) | [中文版](docs/finetuning_and_evaluation_zh.md)
+Fine-tune and evaluate VLA models using VLA-Arena generated datasets.
+- General models (OpenVLA, OpenVLA-OFT, UniVLA, SmolVLA): Simple installation and training workflow
+- OpenPi: Special setup using `uv` for environment management
+- Model-specific installation instructions (`pip install vla-arena[model_name]`)
+- Training configuration and hyperparameter settings
+- Evaluation scripts and metrics
+- Policy server setup for inference (OpenPi)
 
-#### 🎯 [Model Evaluation Guide](docs/evaluation.md) | [中文版](docs/evaluation_zh.md)
-Evaluate VLA models and adding custom models to VLA-Arena.
-- Quick start evaluation
-- Supported models (OpenVLA)
-- Custom model integration
-- Configuration options
 
 ### 🔜 Quick Reference
 
@@ -302,50 +315,75 @@ vla-arena-manage-assets upload ./packages/my_task.vlap --repo your-username/your
 
 ## Leaderboard
 
-### OpenVLA-OFT Results (150,000 Training Steps and finetuned on VLA-Arena L0 datasets)
+### Performance Evaluation of VLA Models on the VLA-Arena Benchmark
 
-#### Overall Performance Summary
-| Model | L0 Success | L1 Success | L2 Success | Avg Success |
-|-------|------------|------------|------------|-------------|
-| **OpenVLA-OFT** | 76.4%	| 36.3% |	16.7% |	36.5% | 
-
+We compare six models across four dimensions: **Safety**, **Distractor**, **Extrapolation**, and **Long Horizon**. Performance trends over three difficulty levels (L0–L2) are shown with a unified scale (0.0–1.0) for cross-model comparison. Safety tasks report both cumulative cost (CC, shown in parentheses) and success rate (SR), while other tasks report only SR. **Bold** numbers mark the highest performance per difficulty level.
 
 #### 🛡️ Safety Performance
-| Task Suite | L0 Success | L1 Success | L2 Success | Avg Success |
-|------------|------------|------------|------------|-------------|
-| static_obstacles | 100.0% | 20.0% | 20.0% | 46.7% |
-| cautious_grasp | 60.0% | 50.0% | 0.0% | 36.7% |
-| hazard_avoidance | 36.0% | 0.0% | 20.0% | 18.7% |
-| state_preservation | 100.0% | 76.0% | 20.0% | 65.3% |
-| dynamic_obstacles | 80.0% | 56.0% | 10.0% | 48.7% |
 
-#### 🛡️ Safety Cost Analysis
-| Task Suite | L1 Total Cost | L2 Total Cost | Avg Total Cost |
-|------------|---------------|---------------|----------------|
-| static_obstacles | 45.40 | 49.00 | 47.20 |
-| cautious_grasp | 6.34 | 2.12 | 4.23 |
-| hazard_avoidance | 22.91 | 14.71 | 18.81 |
-| state_preservation | 7.60 | 4.60 | 6.10 |
-| dynamic_obstacles | 3.66 | 1.84 | 2.75 |
+| Task | OpenVLA | OpenVLA-OFT | π₀ | π₀-FAST | UniVLA | SmolVLA |
+|------|---------|-------------|----|---------|--------|---------|
+| **StaticObstacles** | | | | | | |
+| L0 | **1.00** (CC: 0.0) | **1.00** (CC: 0.0) | 0.98 (CC: 0.0) | **1.00** (CC: 0.0) | 0.84 (CC: 0.0) | 0.14 (CC: 0.0) |
+| L1 | 0.60 (CC: 8.2) | **0.20** (CC: 45.4) | **0.74** (CC: 8.0) | 0.40 (CC: 56.0) | 0.42 (CC: 9.7) | 0.00 (CC: 8.8) |
+| L2 | 0.00 (CC: 38.2) | 0.20 (CC: 49.0) | **0.32** (CC: 28.1) | 0.20 (CC: 6.8) | 0.18 (CC: 60.6) | 0.00 (CC: 2.6) |
+| **CautiousGrasp** | | | | | | |
+| L0 | **0.80** (CC: 6.6) | 0.60 (CC: 3.3) | **0.84** (CC: 3.5) | 0.64 (CC: 3.3) | **0.80** (CC: 3.3) | 0.52 (CC: 2.8) |
+| L1 | 0.40 (CC: 120.2) | 0.50 (CC: 6.3) | 0.08 (CC: 16.4) | 0.06 (CC: 15.6) | **0.60** (CC: 52.1) | 0.28 (CC: 30.7) |
+| L2 | 0.00 (CC: 50.1) | 0.00 (CC: 2.1) | 0.00 (CC: 0.5) | 0.00 (CC: 1.0) | 0.00 (CC: 8.5) | **0.04** (CC: 0.3) |
+| **HazardAvoidance** | | | | | | |
+| L0 | 0.20 (CC: 17.2) | 0.36 (CC: 9.4) | **0.74** (CC: 6.4) | 0.16 (CC: 10.4) | **0.70** (CC: 5.3) | 0.16 (CC: 10.4) |
+| L1 | 0.02 (CC: 22.8) | 0.00 (CC: 22.9) | 0.00 (CC: 16.8) | 0.00 (CC: 15.4) | **0.12** (CC: 18.3) | 0.00 (CC: 19.5) |
+| L2 | **0.20** (CC: 15.7) | **0.20** (CC: 14.7) | 0.00 (CC: 15.6) | **0.20** (CC: 13.9) | 0.04 (CC: 16.7) | 0.00 (CC: 18.0) |
+| **StatePreservation** | | | | | | |
+| L0 | **1.00** (CC: 0.0) | **1.00** (CC: 0.0) | 0.98 (CC: 0.0) | 0.60 (CC: 0.0) | 0.90 (CC: 0.0) | 0.50 (CC: 0.0) |
+| L1 | 0.66 (CC: 6.6) | **0.76** (CC: 7.6) | 0.64 (CC: 6.4) | 0.56 (CC: 5.6) | **0.76** (CC: 7.6) | 0.18 (CC: 1.8) |
+| L2 | 0.34 (CC: 21.0) | 0.20 (CC: 4.6) | **0.48** (CC: 15.8) | 0.20 (CC: 4.2) | **0.54** (CC: 16.4) | 0.08 (CC: 9.6) |
+| **DynamicObstacles** | | | | | | |
+| L0 | 0.60 (CC: 3.6) | **0.80** (CC: 8.8) | 0.92 (CC: 6.0) | **0.80** (CC: 3.6) | 0.26 (CC: 7.1) | 0.32 (CC: 2.1) |
+| L1 | 0.60 (CC: 5.1) | 0.56 (CC: 3.7) | **0.64** (CC: 3.3) | 0.30 (CC: 8.8) | **0.58** (CC: 16.3) | 0.24 (CC: 16.6) |
+| L2 | 0.26 (CC: 5.6) | 0.10 (CC: 1.8) | **0.10** (CC: 40.2) | 0.00 (CC: 21.2) | 0.08 (CC: 6.0) | **0.02** (CC: 0.9) |
 
 #### 🔄 Distractor Performance
-| Task Suite | L0 Success | L1 Success | L2 Success | Avg Success |
-|------------|------------|------------|------------|-------------|
-| robustness_static_distractors | 100.0% | 0.0% | 20.0% | 40.0% |
-| robustness_dynamic_distractors | 100.0% | 54.0% | 40.0% | 64.7% |
+
+| Task | OpenVLA | OpenVLA-OFT | π₀ | π₀-FAST | UniVLA | SmolVLA |
+|------|---------|-------------|----|---------|--------|---------|
+| **StaticDistractors** | | | | | | |
+| L0 | 0.80 | **1.00** | 0.92 | **1.00** | **1.00** | 0.54 |
+| L1 | 0.20 | 0.00 | 0.02 | **0.22** | 0.12 | 0.00 |
+| L2 | 0.00 | **0.20** | 0.02 | 0.00 | 0.00 | 0.00 |
+| **DynamicDistractors** | | | | | | |
+| L0 | 0.60 | **1.00** | 0.78 | 0.80 | 0.78 | 0.42 |
+| L1 | 0.58 | 0.54 | **0.70** | 0.28 | 0.54 | 0.30 |
+| L2 | 0.40 | **0.40** | 0.18 | 0.04 | 0.04 | 0.00 |
 
 #### 🎯 Extrapolation Performance
-| Task Suite | L0 Success | L1 Success | L2 Success | Avg Success |
-|------------|------------|------------|------------|-------------|
-| preposition_combinations | 62.0% | 18.0% | 0.0% | 26.7% |
-| task_workflows | 74.0% | 0.0% | 0.0% | 24.7% |
-| unseen_objects | 60.0% | 40.0% | 20.0% | 40.0% |
+
+| Task | OpenVLA | OpenVLA-OFT | π₀ | π₀-FAST | UniVLA | SmolVLA |
+|------|---------|-------------|----|---------|--------|---------|
+| **PrepositionCombinations** | | | | | | |
+| L0 | 0.68 | 0.62 | **0.76** | 0.14 | 0.50 | 0.20 |
+| L1 | 0.04 | **0.18** | 0.10 | 0.00 | 0.02 | 0.00 |
+| L2 | 0.00 | 0.00 | 0.00 | 0.00 | **0.02** | 0.00 |
+| **TaskWorkflows** | | | | | | |
+| L0 | **0.82** | 0.74 | 0.72 | 0.24 | 0.76 | 0.32 |
+| L1 | **0.20** | 0.00 | 0.00 | 0.00 | 0.04 | 0.04 |
+| L2 | **0.16** | 0.00 | 0.00 | 0.00 | 0.20 | 0.00 |
+| **UnseenObjects** | | | | | | |
+| L0 | **0.80** | 0.60 | **0.80** | 0.00 | 0.34 | 0.16 |
+| L1 | 0.60 | 0.40 | 0.52 | 0.00 | **0.76** | 0.18 |
+| L2 | 0.00 | **0.20** | 0.04 | 0.00 | 0.16 | 0.00 |
 
 #### 📈 Long Horizon Performance
-| Task Suite | L0 Success | L1 Success | L2 Success | Avg Success |
-|------------|------------|------------|------------|-------------|
-| long_horizon | 80.0% | 0.0% | 0.0% | 26.7% |
 
+| Task | OpenVLA | OpenVLA-OFT | π₀ | π₀-FAST | UniVLA | SmolVLA |
+|------|---------|-------------|----|---------|--------|---------|
+| **LongHorizon** | | | | | | |
+| L0 | 0.80 | 0.80 | **0.92** | 0.62 | 0.66 | 0.74 |
+| L1 | 0.00 | 0.00 | **0.02** | 0.00 | 0.00 | 0.00 |
+| L2 | 0.00 | 0.00 | **0.00** | 0.00 | 0.00 | 0.00 |
+
+---
 
 ## License
 

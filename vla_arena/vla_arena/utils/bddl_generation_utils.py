@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 import os
 
@@ -30,7 +29,10 @@ def get_result(result):
 def save_to_file(result, scene_name, language, folder=''):
     file_name = os.path.join(
         folder,
-        f'{scene_name}'.upper() + '_' + '_'.join(language.lower().split(' ')) + '.bddl',
+        f'{scene_name}'.upper()
+        + '_'
+        + '_'.join(language.lower().split(' '))
+        + '.bddl',
     )
     with open(file_name, 'w') as f:
         f.write(result)
@@ -230,7 +232,9 @@ def get_property_string(**kwargs):
             strings.append(f'{INDENT}(:{k} {v})')
         else:
             strings.append(f'{INDENT}(:{k} (')
-            strings += [INDENT + INDENT + new_v for new_v in general_get_str_func(v)]
+            strings += [
+                INDENT + INDENT + new_v for new_v in general_get_str_func(v)
+            ]
             strings.append(f'{INDENT}{INDENT})')
             strings.append(f'{INDENT})')
     strings = [INDENT + each_line for each_line in strings]
@@ -268,7 +272,9 @@ def get_object_affordance_region(**kwargs):
 
 
 @RegionWrapper
-def region_module(xy_region_kwargs_list=None, affordance_region_kwargs_list=None):
+def region_module(
+    xy_region_kwargs_list=None, affordance_region_kwargs_list=None
+):
     strings = []
     if xy_region_kwargs_list is not None:
         for fixture_kwargs in xy_region_kwargs_list:
@@ -298,7 +304,9 @@ def object_naming_mapping(category_name, object_id):
         return 'coffee_table'
     if category_name == 'living_room_table':
         if object_id > 1:
-            raise ValueError('Living room table can only be one for the moment.')
+            raise ValueError(
+                'Living room table can only be one for the moment.'
+            )
         return 'living_room_table'
     if category_name == 'study_table':
         if object_id > 1:
@@ -341,7 +349,9 @@ def get_object_dict(objects_num_info):
     for category_name, num_objects in objects_num_info.items():
         object_dict[category_name] = []
         for object_id in range(1, num_objects + 1):
-            object_dict[category_name].append(object_naming_mapping(category_name, object_id))
+            object_dict[category_name].append(
+                object_naming_mapping(category_name, object_id)
+            )
     return object_dict
 
 

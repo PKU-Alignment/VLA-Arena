@@ -1,0 +1,19 @@
+policy_path: "your/path/to/policy"
+
+# --- VLA-Arena environment-specific parameters ---
+task_suite_name: "safety_dynamic_obstacles"
+task_level: 0
+num_steps_wait: 10
+num_trials_per_task: 10
+
+# --- Evaluation arguments ---
+video_out_path: "./rollout"
+device: "cuda"
+
+seed: 1000
+
+save_video_mode: "first_success_failure"
+add_noise: false
+randomize_color: false
+adjust_light: false
+camera_offset: false

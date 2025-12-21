@@ -1,19 +1,4 @@
 #!/bin/bash
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
-
 # ============================================================================
 # VLA-Arena Unified Evaluation Script
 # ============================================================================
@@ -34,7 +19,7 @@ POLICY="openvla"                                    # Options: openvla, random (
 MODEL_CKPT="path/to/model/checkpoint"                   # Path to model checkpoint
 
 # Task Configuration
-TASK_SUITE="safety_static_obstacles"                                       # Options:  
+TASK_SUITE="safety_static_obstacles"                                       # Options:
 TASK_LEVEL=0                                        # Difficulty level: 0 (easy), 1 (medium), 2 (hard)
 N_EPISODES=1                                       # Number of episodes per task
 
@@ -76,7 +61,7 @@ print_warning() {
 # Validation
 validate_config() {
     local valid=true
-    
+
     if [ "$valid" = false ]; then
         print_error "Configuration validation failed. Please check your settings."
         exit 1
@@ -109,10 +94,10 @@ print_config() {
 main() {
     # Validate configuration
     validate_config
-    
+
     # Print configuration
     print_config
-    
+
     # Ask for confirmation
     read -p "Do you want to proceed with this configuration? [(y)/n]: " -n 1 -r
     echo
@@ -120,7 +105,7 @@ main() {
         print_warning "Evaluation cancelled by user"
         exit 0
     fi
-    
+
     # Build command
     CMD="python scripts/evaluate_policy.py"
     CMD="$CMD --task_suite $TASK_SUITE"
@@ -134,15 +119,15 @@ main() {
     if [[ "$POLICY" != "random" ]]; then
         CMD="$CMD --model_ckpt $MODEL_CKPT"
     fi
-    
+
     # Add visualization flag if enabled
     if [[ "$VISUALIZATION" == "true" ]]; then
         CMD="$CMD --visualization"
     fi
-    
+
     # Create save directory
     mkdir -p "$SAVE_DIR"
-    
+
     # Save configuration to file
     cat > "$SAVE_DIR/evaluation_config.txt" <<EOF
 VLA-Arena Evaluation Configuration
@@ -159,20 +144,20 @@ Metrics: $METRICS
 
 Command: $CMD
 EOF
-    
+
     print_info "Starting evaluation..."
     print_info "Command: $CMD"
     echo ""
-    
+
     # Run evaluation
     eval $CMD
-    
+
     # Check exit status
     if [ $? -eq 0 ]; then
         echo ""
         print_success "Evaluation completed successfully!"
         print_info "Results saved to: $SAVE_DIR"
-        
+
         # Display summary if metrics file exists
         if [ -f "$SAVE_DIR/$POLICY/metrics_summary.json" ]; then
             echo ""

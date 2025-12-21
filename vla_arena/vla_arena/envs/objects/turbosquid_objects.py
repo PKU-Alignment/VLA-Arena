@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 import os
 import pathlib
@@ -27,7 +26,9 @@ from vla_arena.vla_arena.envs.base_object import register_object
 
 
 class TurbosquidObjects(MujocoXMLObject):
-    def __init__(self, name, obj_name, joints=[dict(type='free', damping='0.0005')]):
+    def __init__(
+        self, name, obj_name, joints=[dict(type='free', damping='0.0005')]
+    ):
         super().__init__(
             os.path.join(
                 str(absolute_path),

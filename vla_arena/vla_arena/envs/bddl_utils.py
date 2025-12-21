@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 
 import numpy as np
@@ -44,7 +43,9 @@ def get_regions(t, regions, group):
                     assert (
                         len(rect_range) == 4
                     ), f'Dimension of rectangular range mismatched!!, supposed to be 4, only found {len(rect_range)}'
-                    region_dict['ranges'].append([float(x) for x in rect_range])
+                    region_dict['ranges'].append(
+                        [float(x) for x in rect_range]
+                    )
             elif attribute[0] == ':yaw_rotation':
                 # print(attribute[1])
                 for value in attribute[1]:
@@ -107,7 +108,9 @@ def get_moving_objects(t, moving_objects, group):
             elif attribute[0] == ':motion_gravity':
                 moving_object_dict['motion_gravity'] = attribute[1]
             else:
-                raise NotImplementedError(f'Invalid motion attribute: {attribute[0]}')
+                raise NotImplementedError(
+                    f'Invalid motion attribute: {attribute[0]}'
+                )
         moving_objects.append(moving_object_dict)
 
 
@@ -179,7 +182,9 @@ def robosuite_parse_problem(problem_filename):
                 problem_name = group[-1]
             elif t == ':domain':
                 if domain_name != group[-1]:
-                    raise Exception('Different domain specified in problem file')
+                    raise Exception(
+                        'Different domain specified in problem file'
+                    )
             elif t == ':requirements':
                 pass
             elif t == ':objects':

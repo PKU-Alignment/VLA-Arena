@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 import argparse
 import json
@@ -76,7 +75,9 @@ def main():
     bddl_base_name = os.path.basename(bddl_file_name)
     relative_dir = demo_dir.split('demonstration_data/')[-1]
     hdf5_file_name = bddl_base_name.replace('.bddl', '_demo.hdf5')
-    hdf5_path = os.path.join(get_vla_arena_path('datasets'), relative_dir, hdf5_file_name)
+    hdf5_path = os.path.join(
+        get_vla_arena_path('datasets'), relative_dir, hdf5_file_name
+    )
 
     output_parent_dir = Path(hdf5_path).parent
     output_parent_dir.mkdir(parents=True, exist_ok=True)
@@ -192,7 +193,9 @@ def main():
                 err = np.linalg.norm(states[j + 1] - state_playback)
 
                 if err > 0.01:
-                    print(f'[warning] playback diverged by {err:.2f} for ep {ep} at step {j}')
+                    print(
+                        f'[warning] playback diverged by {err:.2f} for ep {ep} at step {j}'
+                    )
 
             # Skip recording because the force sensor is not stable in
             # the beginning
@@ -244,21 +247,41 @@ def main():
 
         obs_grp = ep_data_grp.create_group('obs')
         if not args.no_proprio:
-            obs_grp.create_dataset('gripper_states', data=np.stack(gripper_states, axis=0))
-            obs_grp.create_dataset('joint_states', data=np.stack(joint_states, axis=0))
-            obs_grp.create_dataset('ee_states', data=np.stack(ee_states, axis=0))
-            obs_grp.create_dataset('ee_pos', data=np.stack(ee_states, axis=0)[:, :3])
-            obs_grp.create_dataset('ee_ori', data=np.stack(ee_states, axis=0)[:, 3:])
+            obs_grp.create_dataset(
+                'gripper_states', data=np.stack(gripper_states, axis=0)
+            )
+            obs_grp.create_dataset(
+                'joint_states', data=np.stack(joint_states, axis=0)
+            )
+            obs_grp.create_dataset(
+                'ee_states', data=np.stack(ee_states, axis=0)
+            )
+            obs_grp.create_dataset(
+                'ee_pos', data=np.stack(ee_states, axis=0)[:, :3]
+            )
+            obs_grp.create_dataset(
+                'ee_ori', data=np.stack(ee_states, axis=0)[:, 3:]
+            )
 
-        obs_grp.create_dataset('agentview_rgb', data=np.stack(agentview_images, axis=0))
-        obs_grp.create_dataset('eye_in_hand_rgb', data=np.stack(eye_in_hand_images, axis=0))
+        obs_grp.create_dataset(
+            'agentview_rgb', data=np.stack(agentview_images, axis=0)
+        )
+        obs_grp.create_dataset(
+            'eye_in_hand_rgb', data=np.stack(eye_in_hand_images, axis=0)
+        )
         if args.use_depth:
-            obs_grp.create_dataset('agentview_depth', data=np.stack(agentview_depths, axis=0))
-            obs_grp.create_dataset('eye_in_hand_depth', data=np.stack(eye_in_hand_depths, axis=0))
+            obs_grp.create_dataset(
+                'agentview_depth', data=np.stack(agentview_depths, axis=0)
+            )
+            obs_grp.create_dataset(
+                'eye_in_hand_depth', data=np.stack(eye_in_hand_depths, axis=0)
+            )
 
         ep_data_grp.create_dataset('actions', data=actions)
         ep_data_grp.create_dataset('states', data=states)
-        ep_data_grp.create_dataset('robot_states', data=np.stack(robot_states, axis=0))
+        ep_data_grp.create_dataset(
+            'robot_states', data=np.stack(robot_states, axis=0)
+        )
         ep_data_grp.create_dataset('rewards', data=rewards)
         ep_data_grp.create_dataset('dones', data=dones)
         ep_data_grp.attrs['num_samples'] = len(agentview_images)

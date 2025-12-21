@@ -1,35 +1,19 @@
-<!--
-Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <mujoco>
     <asset>
-        <!-- 加载 mesh -->
+        <!-- Load mesh -->
         <mesh name="dump_truck_mesh" file="DumpTruck.obj" scale="0.025 0.025 0.025"/>
 
-        <!-- 加载贴图 texture -->
+        <!-- Load texture -->
         <texture name="dump_truck_tex" type="2d" file="DumpTruckDiffuseBake.png"/>
 
-        <!-- 定义材质，并使用贴图 rgba为蛋壳黄色-->
+        <!-- Define material and use texture, rgba is eggshell yellow -->
         <material name="dump_truck_mat" texture="dump_truck_tex" specular="0.3" shininess="0.8"/>
     </asset>
 
     <worldbody>
         <body pos="0 0 0">
         <body name="object">
-            <!-- 将 mesh 和材质一起用于 geom -->
+            <!-- Apply mesh and material together to geom -->
             <geom type="mesh" mesh="dump_truck_mesh" material="dump_truck_mat" group="1"/> <geom type="sphere" size="0.01" material="dump_truck_mat" group="0"/>
             <inertial pos="0 0 0" mass="0.03" diaginertia="0.01 0.01 0.01"/>
         </body>

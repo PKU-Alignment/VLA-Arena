@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 import collections
 import os
@@ -123,17 +122,25 @@ class MultiRegionRandomSampler(ObjectPositionSampler):
         if self.rotation is None:
             rot_angle = np.random.uniform(high=2 * np.pi, low=0)
         elif isinstance(self.rotation, collections.abc.Iterable):
-            rot_angle = np.random.uniform(high=max(self.rotation), low=min(self.rotation))
+            rot_angle = np.random.uniform(
+                high=max(self.rotation), low=min(self.rotation)
+            )
         else:
             rot_angle = self.rotation
 
         # Return angle based on axis requested
         if self.rotation_axis == 'x':
-            return np.array([np.cos(rot_angle / 2), np.sin(rot_angle / 2), 0, 0])
+            return np.array(
+                [np.cos(rot_angle / 2), np.sin(rot_angle / 2), 0, 0]
+            )
         if self.rotation_axis == 'y':
-            return np.array([np.cos(rot_angle / 2), 0, np.sin(rot_angle / 2), 0])
+            return np.array(
+                [np.cos(rot_angle / 2), 0, np.sin(rot_angle / 2), 0]
+            )
         if self.rotation_axis == 'z':
-            return np.array([np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)])
+            return np.array(
+                [np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)]
+            )
         # Invalid axis specified, raise error
         raise ValueError(
             f"Invalid rotation axis specified. Must be 'x', 'y', or 'z'. Got: {self.rotation_axis}",
@@ -180,7 +187,9 @@ class MultiRegionRandomSampler(ObjectPositionSampler):
         # Sample pos and quat for all objects assigned to this sampler
         for obj in self.mujoco_objects:
             # First make sure the currently sampled object hasn't already been sampled
-            assert obj.name not in placed_objects, f"Object '{obj.name}' has already been sampled!"
+            assert (
+                obj.name not in placed_objects
+            ), f"Object '{obj.name}' has already been sampled!"
 
             horizontal_radius = obj.horizontal_radius
             bottom_offset = obj.bottom_offset
@@ -200,7 +209,10 @@ class MultiRegionRandomSampler(ObjectPositionSampler):
                         if (
                             np.linalg.norm((object_x - x, object_y - y))
                             <= other_obj.horizontal_radius + horizontal_radius
-                        ) and (object_z - z <= other_obj.top_offset[-1] - bottom_offset[-1]):
+                        ) and (
+                            object_z - z
+                            <= other_obj.top_offset[-1] - bottom_offset[-1]
+                        ):
                             location_valid = False
                             break
 
@@ -282,21 +294,27 @@ def postprocess_model_xml(xml_str, cameras_dict={}, demo_generation=False):
         old_path_split = old_path.split('/')
         if 'robosuite' in old_path_split:
             ind = max(
-                loc for loc, val in enumerate(old_path_split) if val == 'robosuite'
+                loc
+                for loc, val in enumerate(old_path_split)
+                if val == 'robosuite'
             )  # last occurrence index
             new_path_split = path_split + old_path_split[ind + 1 :]
             new_path = '/'.join(new_path_split)
             elem.set('file', new_path)
         elif 'libero' in old_path_split and demo_generation:
             ind = max(
-                loc for loc, val in enumerate(old_path_split) if val == 'libero'
+                loc
+                for loc, val in enumerate(old_path_split)
+                if val == 'libero'
             )  # last occurrence index
             new_path_split = libero_path_split + old_path_split[ind + 1 :]
             new_path = '/'.join(new_path_split)
             elem.set('file', new_path)
         elif 'vla_arena' in old_path_split and demo_generation:
             ind = max(
-                loc for loc, val in enumerate(old_path_split) if val == 'vla_arena'
+                loc
+                for loc, val in enumerate(old_path_split)
+                if val == 'vla_arena'
             )  # last occurrence index
             new_path_split = vla_arena_path_split + old_path_split[ind + 1 :]
             new_path = '/'.join(new_path_split)
@@ -327,38 +345,48 @@ def rectangle2xyrange(rect_ranges):
 
 
 class LinearMotionGenerator:
-    def __init__(self, start_pos, start_quat, direction, cycle_time, travel_dist, dt=1):
+    def __init__(
+        self, start_pos, start_quat, direction, cycle_time, travel_dist, dt=1
+    ):
         """
-        往返线性运动生成器
+        Linear motion generator for back-and-forth movement along a specified direction.
+
+        This generator creates a periodic linear motion pattern where an object moves forward
+        and backward along a given direction vector, completing a full cycle (forward + backward)
+        in the specified cycle_time.
 
         Args:
-            start_pos: (3,) 起始位置
-            start_quat: (4,) 起始四元数 (xyzw)
-            direction: (3,) 运动方向（不需要归一化）
-            cycle_time: float 一个往返周期总时长 (秒)
-            travel_dist: float 单程最大位移 (米)
-            dt: float 每步时间间隔
+            start_pos: (3,) array, initial position in 3D space (x, y, z)
+            start_quat: (4,) array, initial quaternion orientation in xyzw format
+            direction: (3,) array, direction vector for motion (will be normalized internally)
+            cycle_time: float, total time for one complete cycle (forward + backward) in seconds
+            travel_dist: float, maximum displacement distance for one-way travel in meters
+            dt: float, time step interval between each iteration
         """
         self.start_pos = np.asarray(start_pos, dtype=float)
         self.start_quat = np.asarray(start_quat, dtype=float)
         self.direction = np.asarray(direction, dtype=float)
-        self.direction /= np.linalg.norm(self.direction)  # 归一化
+        self.direction /= np.linalg.norm(
+            self.direction
+        )  # Normalize direction vector
         self.cycle_time = float(cycle_time)
         self.travel_dist = float(travel_dist)
         self.dt = float(dt)
 
-        # 计算周期内步数
+        # Calculate number of steps per cycle
         self.steps_per_cycle = float(round(self.cycle_time / self.dt))
-        self.half_steps = self.steps_per_cycle // 2  # 单向运动步数
+        self.half_steps = (
+            self.steps_per_cycle // 2
+        )  # Number of steps for one-way motion
 
-        # 单步位移
+        # Displacement per step
         self.step_disp = self.direction * (self.travel_dist / self.half_steps)
 
-        # 当前状态
+        # Current state
         self.pos = self.start_pos.copy()
         self.quat = self.start_quat.copy()
 
-        # 当前方向标志（1: 正向，-1: 反向）
+        # Current direction flag (True: forward, False: backward)
         self.forward = True
         self.step_count = 0
 
@@ -367,17 +395,20 @@ class LinearMotionGenerator:
 
     def __next__(self):
         """
-        迭代一次，返回 (pos, quat)
+        Advance one iteration and return current position and orientation.
+
+        Returns:
+            tuple: (pos, quat) where pos is (3,) position array and quat is (4,) quaternion array
         """
-        # 更新步数
+        # Update step count
         self.step_count += 1
 
-        # 检查是否需要反向
+        # Check if direction reversal is needed (reached halfway point)
         if self.step_count > self.half_steps:
             self.step_count = 1
             self.forward = not self.forward
 
-        # 更新位置
+        # Update position based on current direction
         if self.forward:
             self.pos += self.step_disp
         else:
@@ -387,7 +418,7 @@ class LinearMotionGenerator:
 
     def reset(self):
         """
-        重置到起点
+        Reset generator to initial starting position and orientation.
         """
         self.pos = self.start_pos.copy()
         self.quat = self.start_quat.copy()
@@ -396,17 +427,22 @@ class LinearMotionGenerator:
 
 
 class CircularMotionGenerator:
-    def __init__(self, start_pos, center_pos, start_quat, period, dt=1, normal=None):
+    def __init__(
+        self, start_pos, center_pos, start_quat, period, dt=1, normal=None
+    ):
         """
-        圆周运动生成器
+        Circular motion generator for objects moving along a circular path.
+
+        This generator creates a circular motion pattern where an object moves around
+        a center point in a circular path defined by a plane normal vector.
 
         Args:
-            start_pos: (3,) 圆上的起始点
-            center_pos: (3,) 圆心
-            start_quat: (4,) 起始四元数 (xyzw)
-            period: float 转一圈所需时间 (秒)
-            dt: float 时间步长 (秒)
-            normal: (3,) 圆平面法向量（默认从Z轴推断）
+            start_pos: (3,) array, initial position on the circle in 3D space
+            center_pos: (3,) array, center position of the circular path
+            start_quat: (4,) array, initial quaternion orientation in xyzw format
+            period: float, time required to complete one full revolution in seconds
+            dt: float, time step interval between each iteration in seconds
+            normal: (3,) array, normal vector of the circular plane (defaults to Z-axis if None)
         """
         self.center = np.asarray(center_pos, dtype=float)
         self.start_pos = np.asarray(start_pos, dtype=float)
@@ -414,29 +450,29 @@ class CircularMotionGenerator:
         self.period = float(period)
         self.dt = float(dt)
 
-        # 圆半径向量
+        # Calculate radius vector from center to start position
         radius_vec = self.start_pos - self.center
         self.radius = np.linalg.norm(radius_vec)
         if self.radius < 1e-8:
-            raise ValueError('start_pos 不能和 center_pos 重合！')
+            raise ValueError('start_pos cannot coincide with center_pos!')
         self.axis_x = radius_vec / self.radius
 
-        # 角速度 (rad/s)
+        # Angular velocity in radians per second
         self.omega = 2 * np.pi / self.period
 
-        # 角度步长（弧度）
+        # Angular step size in radians
         self.angle_step = self.omega * self.dt
 
-        # 圆平面法向量（如果没给就默认Z轴）
+        # Normal vector of the circular plane (defaults to Z-axis if not provided)
         if normal is None:
             normal = np.array([0, 0, 1.0])
         self.normal = normal / np.linalg.norm(normal)
 
-        # 圆平面上的第二个轴
+        # Second axis in the circular plane (perpendicular to both normal and axis_x)
         self.axis_y = np.cross(self.normal, self.axis_x)
         self.axis_y /= np.linalg.norm(self.axis_y)
 
-        # 当前角度
+        # Current angle in radians
         self.angle = 0.0
 
     def __iter__(self):
@@ -444,12 +480,17 @@ class CircularMotionGenerator:
 
     def __next__(self):
         """
-        根据固定时间步长计算角度变化，返回 (pos, quat)
+        Advance one time step and return current position and orientation.
+
+        Calculates the new position based on the fixed time step and angular velocity.
+
+        Returns:
+            tuple: (pos, quat) where pos is (3,) position array and quat is (4,) quaternion array
         """
-        # 更新角度
+        # Update angle
         self.angle += self.angle_step
 
-        # 圆周坐标
+        # Calculate circular coordinates using parametric equation
         pos = (
             self.center
             + self.radius * np.cos(self.angle) * self.axis_x
@@ -464,52 +505,61 @@ class CircularMotionGenerator:
 
 def direction_to_quaternion(target_dir):
     """
-    以(0,-1,0)对应四元数(1,1,1,1)为基准，将方向向量转换为四元数
+    Convert a direction vector to a quaternion using a reference mapping.
 
-    参数：
-        target_dir: 目标方向向量，格式为(x, y, z)
+    This function converts a 3D direction vector to a quaternion representation.
+    The reference mapping uses direction (0, 1, 0) corresponding to quaternion (1, 1, 1, 1),
+    and maintains a magnitude of 2 for the quaternion.
 
-    返回：
-        四元数，格式为(w, x, y, z)
+    Args:
+        target_dir: (3,) array, target direction vector in format (x, y, z)
+
+    Returns:
+        tuple: quaternion in format (w, x, y, z)
+
+    Raises:
+        ValueError: if target_dir is a zero vector
     """
-    # 标准化目标方向向量
+    # Normalize target direction vector
     target = np.array(target_dir, dtype=np.float64)
     target_norm = np.linalg.norm(target)
 
     if target_norm < 1e-6:
-        raise ValueError('目标方向向量不能为零向量')
+        raise ValueError('target direction vector cannot be zero vector')
 
     target = target / target_norm
 
-    # 基准参考：(0,1,0)方向对应四元数(1,1,1,1)
-    # 该四元数的模长为2，我们将保持这一缩放比例
+    # Reference mapping: direction (0, 1, 0) corresponds to quaternion (1, 1, 1, 1)
+    # The quaternion has magnitude 2, which we will maintain
     base_quat = np.array([1.0, 1.0, 1.0, 1.0])
-    base_dir = np.array([0.0, 1.0, 0.0])  # 基准方向
-    ref_dir = np.array([0.0, 0.1])  # 原始参考方向(Z轴正向)
+    base_dir = np.array([0.0, 1.0, 0.0])  # Reference direction
+    ref_dir = np.array(
+        [0.0, 0.1]
+    )  # Original reference direction (positive Z-axis)
 
-    # 计算从基准方向到目标方向的旋转
-    # 1. 计算旋转轴（基准方向与目标方向的叉积）
+    # Calculate rotation from base direction to target direction
+    # 1. Compute rotation axis (cross product of base and target directions)
     axis = np.cross(base_dir, target)
     axis_norm = np.linalg.norm(axis)
 
-    # 2. 处理共线情况
+    # 2. Handle collinear case (same or opposite direction)
     if axis_norm < 1e-6:
-        # 与基准方向相同或相反
+        # Same or opposite direction as base
         dot = np.dot(base_dir, target)
         if dot > 0:
-            # 与基准方向相同，返回基准四元数
+            # Same direction as base, return base quaternion
             return tuple(base_quat)
-        # 与基准方向相反，计算相反四元数
+        # Opposite direction, compute negated quaternion
         return (-base_quat[0], -base_quat[1], -base_quat[2], -base_quat[3])
 
-    # 归一化旋转轴
+    # Normalize rotation axis
     axis = axis / axis_norm
 
-    # 3. 计算旋转角度
+    # 3. Calculate rotation angle
     dot_product = np.dot(base_dir, target)
     angle = np.arccos(np.clip(dot_product, -1.0, 1.0))
 
-    # 4. 计算从基准方向到目标方向的增量四元数（单位四元数）
+    # 4. Compute incremental quaternion (unit quaternion) from base to target direction
     half_angle = angle / 2.0
     delta_quat = np.array(
         [
@@ -520,18 +570,31 @@ def direction_to_quaternion(target_dir):
         ],
     )
 
-    # 5. 将基准四元数归一化后与增量四元数相乘
-    base_unit = base_quat / np.linalg.norm(base_quat)  # 基准单位四元数
-    composite = quaternion_multiply(delta_quat, base_unit)  # 复合旋转
+    # 5. Multiply normalized base quaternion with incremental quaternion
+    base_unit = base_quat / np.linalg.norm(
+        base_quat
+    )  # Normalized base quaternion
+    composite = quaternion_multiply(
+        delta_quat, base_unit
+    )  # Composite rotation
 
-    # 6. 缩放回原比例（保持模长为2）
+    # 6. Scale back to original magnitude (maintain magnitude of 2)
     result = composite * 2.0
 
     return tuple(result)
 
 
 def quaternion_multiply(q1, q2):
-    """四元数乘法：q1 * q2"""
+    """
+    Multiply two quaternions: q1 * q2.
+
+    Args:
+        q1: (4,) array, first quaternion in format (w, x, y, z)
+        q2: (4,) array, second quaternion in format (w, x, y, z)
+
+    Returns:
+        (4,) array, resulting quaternion in format (w, x, y, z)
+    """
     w1, x1, y1, z1 = q1
     w2, x2, y2, z2 = q2
 
@@ -546,43 +609,55 @@ def quaternion_multiply(q1, q2):
 
 
 class SmoothWaypointMotionGenerator:
-    def __init__(self, waypoints, start_quat, segment_time=10, dt=0.01, loop=False):
+    def __init__(
+        self, waypoints, start_quat, segment_time=10, dt=0.01, loop=False
+    ):
         """
-        平滑轨迹生成器（支持位置 & 姿态插值）
+        Smooth trajectory generator with support for position and orientation interpolation.
+
+        This generator creates smooth motion between waypoints using linear interpolation
+        for positions and spherical linear interpolation (SLERP) for quaternion orientations.
 
         Args:
-            waypoints: [(pos, dir), ...]，pos为位置向量，dir为方向向量
-            segment_time: 每段轨迹所需时间 (秒)
-            dt: 每步时间间隔 (秒)
-            loop: 是否循环轨迹
+            waypoints: list of tuples [(pos, dir), ...], where pos is position vector and dir is direction vector
+            start_quat: (4,) array, initial quaternion orientation in xyzw format
+            segment_time: float, time required to traverse each segment in seconds
+            dt: float, time step interval between each iteration in seconds
+            loop: bool, whether to loop the trajectory (return to start after reaching end)
         """
         if len(waypoints) < 2:
-            raise ValueError('waypoints 至少要有两个！')
+            raise ValueError('waypoints must have at least two points!')
 
-        self.waypoints = waypoints  # 保留完整航点信息
-        self.positions = [list(map(float, wp[0])) for wp in waypoints]  # 提取位置信息
+        self.waypoints = waypoints  # Store complete waypoint information
+        self.positions = [
+            list(map(float, wp[0])) for wp in waypoints
+        ]  # Extract position information
         self.quaternions = [
-            direction_to_quaternion(list(map(float, wp[1]))) for wp in waypoints
-        ]  # 提取姿态信息
+            direction_to_quaternion(list(map(float, wp[1])))
+            for wp in waypoints
+        ]  # Extract orientation information
 
         self.n_segments = len(waypoints) - 1
 
         self.segment_time = float(segment_time)
         self.dt = float(dt)
-        self.steps_per_segment = max(1, int(self.segment_time / self.dt))  # 改为整数步
+        self.steps_per_segment = max(
+            1,
+            int(self.segment_time / self.dt),
+        )  # Convert to integer steps
         self.loop = bool(loop)
 
-        # 当前段索引 & 当前步
-        self.direction = 1  # 当前方向
+        # Current segment index and step within segment
+        self.direction = 1  # Current direction (1: forward, -1: backward)
         self.seg_idx = 0
         self.step_idx = 0
-        self.current_quat = start_quat.copy()  # 当前姿态
+        self.current_quat = start_quat.copy()  # Current orientation
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        # 检查是否所有段都已完成且不循环
+        # Check if all segments are completed and not looping
         if (
             not self.loop
             and self.seg_idx == 0
@@ -591,56 +666,68 @@ class SmoothWaypointMotionGenerator:
         ):
             raise StopIteration
 
-        # 获取当前段的起始和结束航点
+        # Get start and end waypoints of current segment
         p0 = np.array(self.positions[self.seg_idx])
-        p1 = np.array(self.positions[(self.seg_idx + self.direction) % len(self.positions)])
+        p1 = np.array(
+            self.positions[
+                (self.seg_idx + self.direction) % len(self.positions)
+            ]
+        )
 
-        # 插值比例 alpha (0到1之间)
+        # Interpolation ratio alpha (between 0 and 1)
         alpha = self.step_idx / self.steps_per_segment
 
-        # 位置线性插值 (Lerp)
+        # Linear interpolation for position (Lerp)
         current_pos = p0 + alpha * (p1 - p0)
 
-        # 姿态插值可以在这里实现，例如球面线性插值(Slerp)
+        # Spherical linear interpolation (SLERP) for quaternion orientation
         q0 = self.quaternions[self.seg_idx]
-        q1 = self.quaternions[(self.seg_idx + self.direction) % len(self.quaternions)]
+        q1 = self.quaternions[
+            (self.seg_idx + self.direction) % len(self.quaternions)
+        ]
         norm0 = np.linalg.norm(q0)
         norm1 = np.linalg.norm(q1)
         q0 = q0 / norm0 if norm0 != 0 else [1.0, 0.0, 0.0, 0.0]
         q1 = q1 / norm1 if norm1 != 0 else [1.0, 0.0, 0.0, 0.0]
 
-        # 2. 计算点积
-        dot_product = q0[0] * q1[0] + q0[1] * q1[1] + q0[2] * q1[2] + q0[3] * q1[3]
+        # 2. Calculate dot product
+        dot_product = (
+            q0[0] * q1[0] + q0[1] * q1[1] + q0[2] * q1[2] + q0[3] * q1[3]
+        )
 
-        # 3. 确保取最短路径（点积为负则取反）
+        # 3. Ensure shortest path (negate if dot product is negative)
         if dot_product < 0.0:
             q1 = [-x for x in q1]
             dot_product = -dot_product
 
-        # 4. 处理数值稳定性（接近时用线性插值）
+        # 4. Handle numerical stability (use linear interpolation when quaternions are close)
         if dot_product > 0.9995:
-            # 线性插值
+            # Linear interpolation
             interpolated = [
                 q0[0] + alpha * (q1[0] - q0[0]),
                 q0[1] + alpha * (q1[1] - q0[1]),
                 q0[2] + alpha * (q1[2] - q0[2]),
                 q0[3] + alpha * (q1[3] - q0[3]),
             ]
-            # 重新单位化
+            # Renormalize
             norm = np.linalg.norm(interpolated)
-            self.current_quat = interpolated / norm if norm != 0 else [1.0, 0.0, 0.0, 0.0]
+            self.current_quat = (
+                interpolated / norm if norm != 0 else [1.0, 0.0, 0.0, 0.0]
+            )
         else:
-            # 5. 计算旋转角度
-            theta_0 = np.arccos(dot_product)  # 初始夹角
-            theta = theta_0 * alpha  # 插值角度
+            # 5. Calculate rotation angle
+            theta_0 = np.arccos(
+                dot_product
+            )  # Initial angle between quaternions
+            theta = theta_0 * alpha  # Interpolated angle
             sin_theta = np.sin(theta)
             sin_theta_0 = np.sin(theta_0)
 
-            # 6. 计算插值系数
+            # 6. Calculate interpolation coefficients
             s0 = np.cos(theta) - dot_product * sin_theta / sin_theta_0
             s1 = sin_theta / sin_theta_0
 
-            # 7. 计算最终插值结果
+            # 7. Compute final interpolated quaternion
             self.current_quat = [
                 s0 * q0[0] + s1 * q1[0],
                 s0 * q0[1] + s1 * q1[1],
@@ -648,57 +735,71 @@ class SmoothWaypointMotionGenerator:
                 s0 * q0[3] + s1 * q1[3],
             ]
 
-        # 前进一步
+        # Advance one step
         self.step_idx += 1
 
-        # 如果这一段走完，切到下一段
+        # If current segment is complete, move to next segment
         if self.step_idx >= self.steps_per_segment:
             self.step_idx = 0
-            self.seg_idx += self.direction  # 根据方向更新段索引
+            self.seg_idx += (
+                self.direction
+            )  # Update segment index based on direction
 
-            # 检查是否到达边界，需要改变方向
+            # Check if boundary is reached and direction change is needed
             if self.seg_idx >= self.n_segments:
-                # 到达最后一个段，改为反向
+                # Reached last segment, reverse direction
                 self.direction = -1
-                self.seg_idx = self.n_segments  # 保持在最后一个有效段
+                self.seg_idx = self.n_segments  # Keep at last valid segment
             elif self.seg_idx <= 0:
-                # 到达第一个段，若循环则改为正向，否则结束
+                # Reached first segment, if looping then go forward, otherwise end
                 if self.loop:
                     self.direction = 1
                     self.seg_idx = 0
                 else:
-                    self.seg_idx = 0  # 准备结束
+                    self.seg_idx = 0  # Prepare to end
 
         return current_pos.tolist(), self.current_quat.copy()
 
     def reset(self):
-        """重置轨迹到起点"""
+        """Reset trajectory to starting point."""
         self.seg_idx = 0
         self.step_idx = 0
 
 
 class ParabolicMotionGenerator:
-    def __init__(self, start_pos, start_quat, initial_speed, direction, dt=0.01, gravity=None):
+    def __init__(
+        self,
+        start_pos,
+        start_quat,
+        initial_speed,
+        direction,
+        dt=0.01,
+        gravity=None,
+    ):
         """
-        抛物线运动生成器
+        Parabolic motion generator for projectile motion under gravity.
+
+        This generator simulates projectile motion using the kinematic equation:
+        pos(t) = p0 + v0 * t + 0.5 * g * t^2
 
         Args:
-            start_pos: (3,) 起始位置
-            start_quat: (4,) 起始四元数 (xyzw)
-            initial_speed: float 初始速度大小 (m/s)
-            direction: (3,) 速度方向（不需要归一化），不应与重力方向共线
-            dt: float 时间步长 (s)
-            gravity: (3,) 重力加速度向量 (m/s^2)，默认为 [0, 0, -9.81]
+            start_pos: (3,) array, initial position in 3D space
+            start_quat: (4,) array, initial quaternion orientation in xyzw format
+            initial_speed: float, magnitude of initial velocity in m/s
+            direction: (3,) array, direction vector for initial velocity (will be normalized),
+                       should not be collinear with gravity direction
+            dt: float, time step interval in seconds
+            gravity: (3,) array, gravity acceleration vector in m/s^2 (defaults to [0, 0, -9.81])
         """
         self.start_pos = np.array(start_pos, dtype=float)
         self.start_quat = np.array(start_quat, dtype=float)
-        # 速度方向归一化
+        # Normalize velocity direction
         dir_vec = np.array(direction, dtype=float)
         norm = np.linalg.norm(dir_vec)
         if norm < 1e-8:
-            raise ValueError('direction 向量不能为零')
+            raise ValueError('direction vector cannot be zero')
         self.initial_velocity = dir_vec / norm * float(initial_speed)
-        # 重力加速度
+        # Gravity acceleration
         if gravity is None:
             gravity = np.array([0, 0, -9.81], dtype=float)
         else:
@@ -706,7 +807,7 @@ class ParabolicMotionGenerator:
         self.gravity = gravity
         self.dt = float(dt)
 
-        # 当前状态
+        # Current state
         self.pos = self.start_pos.copy()
         self.quat = self.start_quat.copy()
         self.t = 0.0
@@ -715,14 +816,18 @@ class ParabolicMotionGenerator:
         return self
 
     def __next__(self):
-        # pos(t) = p0 + v0 * t + 0.5 * g * t^2
+        # Kinematic equation: pos(t) = p0 + v0 * t + 0.5 * g * t^2
         self.t += self.dt
-        self.pos = self.start_pos + self.initial_velocity * self.t + 0.5 * self.gravity * self.t**2
+        self.pos = (
+            self.start_pos
+            + self.initial_velocity * self.t
+            + 0.5 * self.gravity * self.t**2
+        )
         return self.pos.copy(), self.quat.copy()
 
     def reset(self):
         """
-        重置到初始状态
+        Reset generator to initial state.
         """
         self.pos = self.start_pos.copy()
         self.quat = self.start_quat.copy()
@@ -731,30 +836,40 @@ class ParabolicMotionGenerator:
 
 def make_xml_processor(body_names, random_color):
     """
-    输入 body_names 列表如 ["milk_1", "lemon_1"]
-    返回一个 xml_processor(xml_string) 函数
-    该函数会给 xml 里每个 body_name_main 增加 mocap + weld(如果不存在)
-    并为所有包含material属性的元素添加rgba属性
+    Create an XML processor function that modifies MuJoCo XML strings.
+
+    The returned function processes XML strings to:
+    1. Add mocap bodies and weld constraints for each body_name_main (if they don't exist)
+    2. Add rgba attributes to all elements with material attributes (if random_color is True)
+
+    Args:
+        body_names: list of strings, e.g., ["milk_1", "lemon_1"]
+        random_color: bool, whether to add random rgba colors to material elements
+
+    Returns:
+        function: xml_processor(xml_string) that takes an XML string and returns a modified XML string
     """
 
     def xml_processor(xml_string):
         root = ET.fromstring(xml_string)
 
-        # 找 worldbody & equality 节点
+        # Find worldbody and equality nodes
         worldbody = root.find('worldbody')
         equality = root.find('equality')
         if equality is None:
             equality = ET.SubElement(root, 'equality')
 
-        # 遍历 body_names
+        # Iterate through body_names
         for name in body_names:
-            full_body_name = f'{name}_main'  # 自动补 _main
-            mocap_body_name = f'{full_body_name}_mocap'  # mocap 名字
+            full_body_name = f'{name}_main'  # Automatically append _main
+            mocap_body_name = f'{full_body_name}_mocap'  # Mocap body name
 
-            # 检查mocap body是否已存在
-            existing_mocap = worldbody.find(f".//body[@name='{mocap_body_name}']")
+            # Check if mocap body already exists
+            existing_mocap = worldbody.find(
+                f".//body[@name='{mocap_body_name}']"
+            )
             if existing_mocap is None:
-                # 不存在则追加 mocap body
+                # If not exists, append mocap body
                 mocap_body = ET.Element(
                     'body',
                     {'mocap': 'true', 'name': mocap_body_name, 'pos': '0 0 0'},
@@ -771,23 +886,28 @@ def make_xml_processor(body_names, random_color):
                 )
                 equality.append(weld)
             else:
-                # 已存在则跳过
+                # If exists, skip
                 continue
 
-        # 处理所有包含material属性的元素，添加rgba属性
-        # 递归遍历所有元素
+        # Process all elements with material attributes and add rgba attributes
+        # Recursively traverse all elements
         def process_elements(element):
-            # 检查当前元素是否有material属性
+            # Check if current element has material attribute
             if 'material' in element.attrib:
                 material_value = element.attrib['material']
-                # 如果material中不包含"robot0"且没有rgba属性，则添加
-                if 'robot0' not in material_value and 'rgba' not in element.attrib:
-                    # 添加默认的rgba值（白色不透明）
-                    color = np.append(np.random.uniform(low=0.2, high=0.8, size=3), 1)
+                # If material doesn't contain "robot0" and doesn't have rgba attribute, add it
+                if (
+                    'robot0' not in material_value
+                    and 'rgba' not in element.attrib
+                ):
+                    # Add default rgba value (random color with full opacity)
+                    color = np.append(
+                        np.random.uniform(low=0.2, high=0.8, size=3), 1
+                    )
                     color_string = ' '.join(map(str, color))
                     element.set('rgba', color_string)
 
-            # 处理子元素
+            # Process child elements
             for child in element:
                 process_elements(child)
 
@@ -801,7 +921,13 @@ def make_xml_processor(body_names, random_color):
 
 def extract_trailing_int(s):
     """
-    提取字符串末尾的整数，如果没有则返回 None。
+    Extract the trailing integer from a string, return None if not found.
+
+    Args:
+        s: string to search for trailing integer
+
+    Returns:
+        int or None: the trailing integer if found, None otherwise
     """
     match = re.search(r'(\d+)$', s)
     return int(match.group(1)) if match else None

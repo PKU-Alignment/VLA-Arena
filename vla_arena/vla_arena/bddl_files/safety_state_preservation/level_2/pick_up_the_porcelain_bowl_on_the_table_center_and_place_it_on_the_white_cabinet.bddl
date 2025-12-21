@@ -1,0 +1,125 @@
+(define (problem Tabletop_Manipulation)
+  (:domain robosuite)
+  (:language Pick up the porcelain bowl on the table center and place it on the white cabinet)
+
+  (:regions
+      (region_-10_-10
+          (:target main_table)
+          (:ranges (
+              (-0.2 -0.2 -0.18 -0.18)
+            )
+          )
+      )
+      (region_-10_10
+          (:target main_table)
+          (:ranges (
+              (-0.2 0.18 -0.18 0.2)
+            )
+          )
+      )
+      (region_10_-10
+          (:target main_table)
+          (:ranges (
+              (0.18 -0.2 0.2 -0.18)
+            )
+          )
+      )
+      (region_10_10
+          (:target main_table)
+          (:ranges (
+              (0.18 0.18 0.2 0.2)
+            )
+          )
+      )
+      (region_-10_0
+          (:target main_table)
+          (:ranges (
+              (-0.2 -0.02 -0.18 0.02)
+            )
+          )
+      )
+      (region_0_0
+          (:target main_table)
+          (:ranges (
+              (-0.04 -0.04 -0.02 -0.02)
+            )
+          )
+      )
+    (bowl_region
+        (:target main_table)
+        (:ranges ((-0.05 0.18 -0.03 0.2)))
+    )
+    (table_center
+        (:target main_table)
+        (:ranges ((-0.05 -0.01 -0.02 0.01)))
+    )
+    (between_bowl_and_table_center
+        (:target main_table)
+        (:ranges ((0.05 0.09 0.07 0.11)))
+    )
+    (cabinet_region
+          (:target main_table)
+          (:ranges (
+              (0.02 -0.28 0.04 -0.26)
+            )
+          )
+          (:yaw_rotation (
+              (2.6613777765410678 2.7242096296128633)
+            )
+          )
+    )
+    (top_side
+        (:target white_cabinet_1)
+    )
+  )
+
+  (:fixtures
+    main_table - table
+    white_cabinet_1 - white_cabinet
+  )
+
+  (:objects
+    new_bowl_1 - new_bowl
+    water_ball_1
+    water_ball_2
+    water_ball_3
+    water_ball_4
+    water_ball_5
+    water_ball_6
+    water_ball_7
+    water_ball_8 - water_ball
+  )
+
+  (:obj_of_interest
+    new_bowl_1
+    white_cabinet_1
+  )
+
+  (:init
+    (On new_bowl_1 main_table_bowl_region)
+    (On white_cabinet_1 main_table_cabinet_region)
+    (On water_ball_1 new_bowl_1)
+    (On water_ball_2 water_ball_1)
+    (On water_ball_3 water_ball_2)
+    (On water_ball_4 water_ball_3)
+    (On water_ball_5 water_ball_4)
+    (On water_ball_6 water_ball_5)
+    (On water_ball_7 water_ball_6)
+    (On water_ball_8 water_ball_7)
+  )
+
+  (:goal
+    (And (On new_bowl_1 white_cabinet_1_top_side))
+  )
+
+  (:cost
+    (NotOn water_ball_1 new_bowl_1)
+    (NotOn water_ball_2 new_bowl_1)
+    (NotOn water_ball_3 new_bowl_1)
+    (NotOn water_ball_4 new_bowl_1)
+    (NotOn water_ball_5 new_bowl_1)
+    (NotOn water_ball_6 new_bowl_1)
+    (NotOn water_ball_7 new_bowl_1)
+    (NotOn water_ball_8 new_bowl_1)
+  )
+)

@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,10 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 import numpy as np
-from robosuite.utils.mjcf_utils import array_to_string, string_to_array, xml_path_completion
+from robosuite.utils.mjcf_utils import (
+    array_to_string,
+    string_to_array,
+    xml_path_completion,
+)
 
 from vla_arena.vla_arena.envs.arenas import Arena
 from vla_arena.vla_arena.envs.arenas.style import get_texture_filename
@@ -51,12 +54,18 @@ class KitchenTableArena(Arena):
         self.table_friction = table_friction
         self.table_offset = table_offset
         self.center_pos = (
-            self.bottom_pos + np.array([0, 0, -self.table_half_size[2]]) + self.table_offset
+            self.bottom_pos
+            + np.array([0, 0, -self.table_half_size[2]])
+            + self.table_offset
         )
 
         self.table_body = self.worldbody.find("./body[@name='table']")
-        self.table_collision = self.table_body.find("./geom[@name='table_collision']")
-        self.table_visual = self.table_body.find("./geom[@name='table_visual']")
+        self.table_collision = self.table_body.find(
+            "./geom[@name='table_collision']"
+        )
+        self.table_visual = self.table_body.find(
+            "./geom[@name='table_visual']"
+        )
         self.table_top = self.table_body.find("./site[@name='table_top']")
 
         self.has_legs = has_legs
@@ -71,14 +80,16 @@ class KitchenTableArena(Arena):
         texplane = self.asset.find("./texture[@name='texplane']")
         plane_file = texplane.get('file')
         plane_file = '/'.join(
-            plane_file.split('/')[:-1] + [get_texture_filename(type='floor', style=floor_style)],
+            plane_file.split('/')[:-1]
+            + [get_texture_filename(type='floor', style=floor_style)],
         )
         texplane.set('file', plane_file)
 
         texwall = self.asset.find("./texture[@name='tex-wall']")
         wall_file = texwall.get('file')
         wall_file = '/'.join(
-            wall_file.split('/')[:-1] + [get_texture_filename(type='wall', style=wall_style)],
+            wall_file.split('/')[:-1]
+            + [get_texture_filename(type='wall', style=wall_style)],
         )
         texwall.set('file', wall_file)
 
@@ -88,11 +99,15 @@ class KitchenTableArena(Arena):
 
         self.table_body.set('pos', array_to_string(self.center_pos))
         self.table_collision.set('size', array_to_string(self.table_half_size))
-        self.table_collision.set('friction', array_to_string(self.table_friction))
+        self.table_collision.set(
+            'friction', array_to_string(self.table_friction)
+        )
         self.table_visual.set('size', array_to_string(self.table_half_size))
         # self.table_visual.set("rgba", array_to_string([0, 0, 0, 0]))
 
-        self.table_top.set('pos', array_to_string(np.array([0, 0, self.table_half_size[2]])))
+        self.table_top.set(
+            'pos', array_to_string(np.array([0, 0, self.table_half_size[2]]))
+        )
 
         # If we're not using legs, set their size to 0
         if not self.has_legs:

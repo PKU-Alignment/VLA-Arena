@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 import os
 import pathlib
@@ -90,7 +89,11 @@ class Mickey(GoogleScannedObject):
     def __init__(self, name='mickey', obj_name='mickey'):
         super().__init__(name, obj_name)
         self.rotation_axis = 'z'
-        self.rotation = {'x': (np.pi / 2, np.pi / 2), 'y': (0, 0), 'z': (np.pi / 2, np.pi / 2)}
+        self.rotation = {
+            'x': (np.pi / 2, np.pi / 2),
+            'y': (0, 0),
+            'z': (np.pi / 2, np.pi / 2),
+        }
 
 
 @register_object
@@ -105,7 +108,11 @@ class ToyMotorbike(GoogleScannedObject):
     def __init__(self, name='toy_motorbike', obj_name='toy_motorbike'):
         super().__init__(name, obj_name)
         self.rotation_axis = 'z'
-        self.rotation = {'x': (np.pi / 2, np.pi / 2), 'y': (0, 0), 'z': (np.pi / 2, np.pi / 2)}
+        self.rotation = {
+            'x': (np.pi / 2, np.pi / 2),
+            'y': (0, 0),
+            'z': (np.pi / 2, np.pi / 2),
+        }
 
 
 @register_object
@@ -118,10 +125,16 @@ class RotatedToyMotorbike(GoogleScannedObject):
 
 @register_object
 class RotatedToyMotorbikeX(GoogleScannedObject):
-    def __init__(self, name='rotated_toy_motorbike_x', obj_name='toy_motorbike'):
+    def __init__(
+        self, name='rotated_toy_motorbike_x', obj_name='toy_motorbike'
+    ):
         super().__init__(name, obj_name)
         self.rotation_axis = 'z'
-        self.rotation = {'x': (np.pi / 6, np.pi / 6), 'y': (0, 0), 'z': (np.pi / 2, np.pi / 2)}
+        self.rotation = {
+            'x': (np.pi / 6, np.pi / 6),
+            'y': (0, 0),
+            'z': (np.pi / 2, np.pi / 2),
+        }
 
 
 @register_object
@@ -129,7 +142,11 @@ class ToyTrain(GoogleScannedObject):
     def __init__(self, name='toy_train', obj_name='toy_train'):
         super().__init__(name, obj_name)
         self.rotation_axis = 'z'
-        self.rotation = {'x': (np.pi / 4, np.pi / 4), 'y': (0, 0), 'z': (np.pi / 2, np.pi / 2)}
+        self.rotation = {
+            'x': (np.pi / 4, np.pi / 4),
+            'y': (0, 0),
+            'z': (np.pi / 2, np.pi / 2),
+        }
 
 
 @register_object
@@ -248,7 +265,12 @@ class KiwiN(GoogleScannedObject):
 
 @register_object
 class BlackBowl(GoogleScannedObject):
-    def __init__(self, name='black_bowl', obj_name='black_bowl', duplicate_collision_geoms=True):
+    def __init__(
+        self,
+        name='black_bowl',
+        obj_name='black_bowl',
+        duplicate_collision_geoms=True,
+    ):
         super().__init__(name, obj_name)
 
 

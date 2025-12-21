@@ -1,19 +1,37 @@
+# Copyright 2025 The VLA-Arena Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import glob
 import os
-from typing import Any, Iterator, Tuple
+from collections.abc import Iterator
+from typing import Any
 
 import h5py
 import numpy as np
 import tensorflow_datasets as tfds
-
 from VLA_Arena.conversion_utils import MultiThreadedDatasetBuilder
 
 
-tfds.core.utils.gcs_utils._is_gcs_disabled = True  # disable GCS to avoid issues with TFDS
-os.environ['NO_GCE_CHECK'] = 'true'  # disable GCE check to avoid issues with TFDS
+tfds.core.utils.gcs_utils._is_gcs_disabled = (
+    True  # disable GCS to avoid issues with TFDS
+)
+os.environ['NO_GCE_CHECK'] = (
+    'true'  # disable GCE check to avoid issues with TFDS
+)
 
 
-def _generate_examples(paths) -> Iterator[Tuple[str, Any]]:
+def _generate_examples(paths) -> Iterator[tuple[str, Any]]:
     """Yields episodes for list of data paths."""
     # the line below needs to be *inside* generate_examples so that each worker creates it's own model
     # creating one shared model outside this function would cause a deadlock
@@ -29,13 +47,26 @@ def _generate_examples(paths) -> Iterator[Tuple[str, Any]]:
                 return None  # skip episode if the demo doesn't exist (e.g. due to failed demo)
             actions = F['data'][f'demo_{demo_id}']['actions'][()]
             states = F['data'][f'demo_{demo_id}']['obs']['ee_states'][()]
-            gripper_states = F['data'][f'demo_{demo_id}']['obs']['gripper_states'][()]
-            joint_states = F['data'][f'demo_{demo_id}']['obs']['joint_states'][()]
-            images = F['data'][f'demo_{demo_id}']['obs'][camera_name + '_rgb'][()]
-            if 'robot0_eye_in_hand_rgb' in F['data'][f'demo_{demo_id}']['obs'].keys():
-                wrist_images = F['data'][f'demo_{demo_id}']['obs']['robot0_eye_in_hand_rgb'][()]
+            gripper_states = F['data'][f'demo_{demo_id}']['obs'][
+                'gripper_states'
+            ][()]
+            joint_states = F['data'][f'demo_{demo_id}']['obs']['joint_states'][
+                ()
+            ]
+            images = F['data'][f'demo_{demo_id}']['obs'][camera_name + '_rgb'][
+                ()
+            ]
+            if (
+                'robot0_eye_in_hand_rgb'
+                in F['data'][f'demo_{demo_id}']['obs'].keys()
+            ):
+                wrist_images = F['data'][f'demo_{demo_id}']['obs'][
+                    'robot0_eye_in_hand_rgb'
+                ][()]
             else:
-                wrist_images = F['data'][f'demo_{demo_id}']['obs']['eye_in_hand_rgb'][()]
+                wrist_images = F['data'][f'demo_{demo_id}']['obs'][
+                    'eye_in_hand_rgb'
+                ][()]
 
         # compute language instruction
         raw_file_string = os.path.basename(episode_path).split('/')[-1]
@@ -57,10 +88,14 @@ def _generate_examples(paths) -> Iterator[Tuple[str, Any]]:
                         'image': images[i][::-1, ::-1],
                         'wrist_image': wrist_images[i][::-1, ::-1],
                         'state': np.asarray(
-                            np.concatenate((states[i], gripper_states[i]), axis=-1),
+                            np.concatenate(
+                                (states[i], gripper_states[i]), axis=-1
+                            ),
                             np.float32,
                         ),
-                        'joint_state': np.asarray(joint_states[i], dtype=np.float32),
+                        'joint_state': np.asarray(
+                            joint_states[i], dtype=np.float32
+                        ),
                     },
                     'action': np.asarray(actions[i], dtype=np.float32),
                     'discount': 1.0,
@@ -75,9 +110,7 @@ def _generate_examples(paths) -> Iterator[Tuple[str, Any]]:
         # create output data sample
         sample = {
             'steps': episode,
-            'episode_metadata': {
-                'file_path': episode_path,
-            },
+            'episode_metadata': {'file_path': episode_path},
         }
 
         # if you want to skip an example for whatever reason, simply return None
@@ -169,14 +202,14 @@ class VLAArena(MultiThreadedDatasetBuilder):
                                 doc='True on last step of the episode if it is a terminal step, True for demos.',
                             ),
                             'language_instruction': tfds.features.Text(
-                                doc='Language Instruction.',
+                                doc='Language Instruction.'
                             ),
                         },
                     ),
                     'episode_metadata': tfds.features.FeaturesDict(
                         {
                             'file_path': tfds.features.Text(
-                                doc='Path to the original data file.',
+                                doc='Path to the original data file.'
                             ),
                         },
                     ),

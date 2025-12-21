@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,12 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 from .arenas import *
 from .base_object import OBJECTS_DICT
 from .bddl_base_domain import TASK_MAPPING
-from .env_wrapper import OffScreenRenderEnv, SegmentationRenderEnv
 from .problems import *
 from .robots import *
+
+# from .env_wrapper import OffScreenRenderEnv, SegmentationRenderEnv
 from .venv import DummyVectorEnv, SubprocVectorEnv

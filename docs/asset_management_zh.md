@@ -451,4 +451,3 @@ python scripts/manage_assets.py download my_task \
 - [数据收集指南](data_collection_zh.md) - 如何收集演示数据
 - [评估指南](evaluation_zh.md) - 如何评估策略
 - [HuggingFace Hub 文档](https://huggingface.co/docs/hub/index) - 云存储
-

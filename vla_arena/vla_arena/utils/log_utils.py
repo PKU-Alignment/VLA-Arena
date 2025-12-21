@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 VLA-Arena Team. All Rights Reserved.
+# Copyright 2025 The VLA-Arena Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
 
 import logging
 
@@ -27,9 +26,12 @@ class VlaArenaColorFormatter(logging.Formatter):
     FORMATS = {
         logging.DEBUG: format_str + debug_message_str,
         logging.INFO: message_str,
-        logging.WARNING: colored(format_str, 'yellow', attrs=['bold']) + message_str,
-        logging.ERROR: colored(format_str, 'red', attrs=['bold']) + message_str,
-        logging.CRITICAL: colored(format_str, 'red', attrs=['bold', 'reverse']) + message_str,
+        logging.WARNING: colored(format_str, 'yellow', attrs=['bold'])
+        + message_str,
+        logging.ERROR: colored(format_str, 'red', attrs=['bold'])
+        + message_str,
+        logging.CRITICAL: colored(format_str, 'red', attrs=['bold', 'reverse'])
+        + message_str,
     }
 
     def format(self, record):

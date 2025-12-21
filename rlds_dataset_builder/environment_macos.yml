@@ -161,4 +161,4 @@ dependencies:
     - yarl==1.8.1
     - zipp==3.16.1
     - zstandard==0.21.0
-prefix: /Users/karl/miniconda3/envs/rlds_env
+prefix: ${CONDA_PREFIX:-$HOME/miniconda3/envs/rlds_env}  # Set this to your conda environment path

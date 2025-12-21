@@ -32,7 +32,6 @@ import zipfile
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
 
 
 try:
@@ -147,7 +146,7 @@ def lightweight_parse_bddl(bddl_path: str) -> dict:
     return result
 
 
-def find_problem_class_file(problem_name: str) -> Optional[str]:
+def find_problem_class_file(problem_name: str) -> str | None:
     """
     Find the Python file containing the Problem class.
 
@@ -188,7 +187,7 @@ def find_problem_class_file(problem_name: str) -> Optional[str]:
     return None
 
 
-def extract_scene_xml_from_problem(problem_file: str) -> Optional[str]:
+def extract_scene_xml_from_problem(problem_file: str) -> str | None:
     """
     Extract scene_xml path from a Problem class file.
 
@@ -223,7 +222,7 @@ def extract_scene_xml_from_problem(problem_file: str) -> Optional[str]:
         return None
 
 
-def parse_scene_xml_assets(scene_xml_path: str) -> Dict[str, List[str]]:
+def parse_scene_xml_assets(scene_xml_path: str) -> dict[str, list[str]]:
     """
     Parse a scene XML file to extract referenced assets (textures, meshes).
 
@@ -288,11 +287,11 @@ class SceneInfo:
     """Information about a scene and its assets."""
 
     problem_name: str
-    problem_file: Optional[str]
-    scene_xml: Optional[str]
-    scene_xml_full_path: Optional[str]
-    textures: List[str] = field(default_factory=list)
-    meshes: List[str] = field(default_factory=list)
+    problem_file: str | None
+    scene_xml: str | None
+    scene_xml_full_path: str | None
+    textures: list[str] = field(default_factory=list)
+    meshes: list[str] = field(default_factory=list)
 
     def has_custom_scene(self) -> bool:
         """Check if this is a custom scene that needs to be packaged."""
@@ -423,26 +422,26 @@ class TaskManifest:
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
 
     # Contents
-    bddl_files: List[str] = field(default_factory=list)
-    init_files: List[str] = field(default_factory=list)
-    problem_files: List[str] = field(default_factory=list)  # Custom Problem class files
-    scene_files: List[str] = field(default_factory=list)  # Scene XML files
-    scene_assets: List[str] = field(default_factory=list)  # Scene textures/meshes
-    assets: List[Dict] = field(default_factory=list)  # Object assets
+    bddl_files: list[str] = field(default_factory=list)
+    init_files: list[str] = field(default_factory=list)
+    problem_files: list[str] = field(default_factory=list)  # Custom Problem class files
+    scene_files: list[str] = field(default_factory=list)  # Scene XML files
+    scene_assets: list[str] = field(default_factory=list)  # Scene textures/meshes
+    assets: list[dict] = field(default_factory=list)  # Object assets
 
     # Dependencies
-    fixtures: List[str] = field(default_factory=list)
-    objects: List[str] = field(default_factory=list)
+    fixtures: list[str] = field(default_factory=list)
+    objects: list[str] = field(default_factory=list)
 
     # Checksums
     total_size_bytes: int = 0
     package_checksum: str = ''
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: Dict) -> 'TaskManifest':
+    def from_dict(cls, data: dict) -> 'TaskManifest':
         return cls(**data)
 
     def save(self, path: str):
@@ -522,7 +521,7 @@ class AssetDependencyAnalyzer:
                         if asset_name not in self.asset_mapping:
                             self.asset_mapping[asset_name] = (category, dir_name)
 
-    def analyze_bddl(self, bddl_path: str) -> Tuple[Set[str], Set[str], Dict]:
+    def analyze_bddl(self, bddl_path: str) -> tuple[set[str], set[str], dict]:
         """
         Analyze a BDDL file to extract required assets.
 
@@ -556,7 +555,7 @@ class AssetDependencyAnalyzer:
 
         return fixtures, objects, parsed
 
-    def get_asset_paths(self, object_names: Set[str]) -> List[AssetInfo]:
+    def get_asset_paths(self, object_names: set[str]) -> list[AssetInfo]:
         """
         Get asset file paths for given object names.
 
@@ -670,7 +669,7 @@ class TaskPackager:
     def __init__(self):
         self.analyzer = AssetDependencyAnalyzer()
 
-    def _find_init_file_for_bddl(self, bddl_path: str) -> Optional[str]:
+    def _find_init_file_for_bddl(self, bddl_path: str) -> str | None:
         """
         Auto-detect the corresponding init file for a BDDL file.
 
@@ -716,8 +715,8 @@ class TaskPackager:
         self,
         bddl_path: str,
         output_dir: str,
-        init_path: Optional[str] = None,
-        package_name: Optional[str] = None,
+        init_path: str | None = None,
+        package_name: str | None = None,
         author: str = '',
         email: str = '',
         description: str = '',
@@ -1071,7 +1070,7 @@ class TaskInstaller:
 
         return manifest
 
-    def check_conflicts(self, package_path: str) -> Dict[str, List[str]]:
+    def check_conflicts(self, package_path: str) -> dict[str, list[str]]:
         """
         Check for potential conflicts with existing assets.
 
@@ -1318,8 +1317,8 @@ class TaskCloudManager:
     def upload_with_git(
         self,
         package_path: str,
-        token: Optional[str] = None,
-        commit_message: Optional[str] = None,
+        token: str | None = None,
+        commit_message: str | None = None,
     ) -> str:
         """
         Upload a task package using Git LFS (fallback method when API fails).
@@ -1431,7 +1430,7 @@ class TaskCloudManager:
         self,
         package_path: str,
         private: bool = False,
-        token: Optional[str] = None,
+        token: str | None = None,
         use_git: bool = False,
     ) -> str:
         """
@@ -1494,7 +1493,7 @@ class TaskCloudManager:
             # For other errors, raise them
             raise
 
-    def list_packages(self) -> List[str]:
+    def list_packages(self) -> list[str]:
         """List available packages in the repository."""
         try:
             files = self.api.list_repo_files(
@@ -1514,8 +1513,8 @@ class TaskCloudManager:
     def download(
         self,
         package_name: str,
-        output_dir: Optional[str] = None,
-        token: Optional[str] = None,
+        output_dir: str | None = None,
+        token: str | None = None,
     ) -> str:
         """
         Download a task package from HuggingFace Hub.
@@ -1556,7 +1555,7 @@ class TaskCloudManager:
         self,
         package_name: str,
         overwrite: bool = False,
-        token: Optional[str] = None,
+        token: str | None = None,
     ) -> bool:
         """
         Download and install a package in one step.

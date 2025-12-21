@@ -30,6 +30,8 @@
 from pathlib import Path
 
 import torch
+from safetensors.torch import save_file
+
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
 from lerobot.datasets.transforms import (
     ImageTransformConfig,
@@ -38,8 +40,6 @@ from lerobot.datasets.transforms import (
     make_transform_from_config,
 )
 from lerobot.utils.random_utils import seeded_context
-from safetensors.torch import save_file
-
 
 ARTIFACT_DIR = Path('tests/artifacts/image_transforms')
 DATASET_REPO_ID = 'lerobot/aloha_static_cups_open'

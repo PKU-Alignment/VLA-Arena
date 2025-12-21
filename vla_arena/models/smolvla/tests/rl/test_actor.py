@@ -33,14 +33,15 @@ from unittest.mock import patch
 
 import pytest
 import torch
-from lerobot.utils.transition import Transition
 from torch.multiprocessing import Event, Queue
 
+from lerobot.utils.transition import Transition
 from tests.utils import require_package
 
 
 def create_learner_service_stub():
     import grpc
+
     from lerobot.transport import services_pb2, services_pb2_grpc
 
     class MockLearnerService(services_pb2_grpc.LearnerServiceServicer):
@@ -116,7 +117,6 @@ def test_establish_learner_connection_failure():
 def test_push_transitions_to_transport_queue():
     from lerobot.scripts.rl.actor import push_transitions_to_transport_queue
     from lerobot.transport.utils import bytes_to_transitions
-
     from tests.transport.test_transport_utils import assert_transitions_equal
 
     """Test pushing transitions to transport queue."""

@@ -27,7 +27,6 @@
 # limitations under the License.
 from lerobot.constants import HF_LEROBOT_HOME
 
-
 LEROBOT_TEST_DIR = HF_LEROBOT_HOME / '_testing'
 DUMMY_REPO_ID = 'dummy/repo'
 DUMMY_ROBOT_TYPE = 'dummy_robot'

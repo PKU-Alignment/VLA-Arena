@@ -180,7 +180,7 @@ class ObjectState(BaseObjectState):
 
         # Check orientation changes
         quat_diff = transform_utils.quat_multiply(
-            current_quat, transform_utils.quat_inverse(original_quat)
+            current_quat, transform_utils.quat_inverse(original_quat),
         )
         quat_diff_euler = transform_utils.quat2axisangle(quat_diff)
 
@@ -255,14 +255,12 @@ class SiteObjectState(BaseObjectState):
             parent_object = self.env.get_object(self.parent_name)
             if parent_object is None:
                 return this_object.under(
-                    this_object_position, this_object_mat, other_object_position
+                    this_object_position, this_object_mat, other_object_position,
                 )
-            else:
-                return this_object.under(
-                    this_object_position, this_object_mat, other_object_position
-                ) and self.env.check_contact(parent_object, other_object)
-        else:
-            return True
+            return this_object.under(
+                this_object_position, this_object_mat, other_object_position,
+            ) and self.env.check_contact(parent_object, other_object)
+        return True
 
     def set_joint(self, qpos=1.5):
         for joint in self.env.object_sites_dict[self.object_name].joints:

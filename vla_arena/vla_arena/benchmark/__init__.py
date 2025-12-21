@@ -35,7 +35,7 @@ def register_benchmark(target_class):
 def get_benchmark_dict(help=False):
     if help:
         print('Available benchmarks:')
-        for benchmark_name in BENCHMARK_MAPPING.keys():
+        for benchmark_name in BENCHMARK_MAPPING:
             print(f'\t{benchmark_name}')
     return BENCHMARK_MAPPING
 
@@ -97,7 +97,7 @@ def grab_language_from_filename(x):
 def grab_language_from_bddl_file(bddl_filename, problem_folder, level_dir):
     domain_name = 'robosuite'
     bddl_file_path = os.path.join(
-        get_vla_arena_path('bddl_files'), problem_folder, level_dir, bddl_filename
+        get_vla_arena_path('bddl_files'), problem_folder, level_dir, bddl_filename,
     )
     tokens = scan_tokens(filename=bddl_file_path)
     if isinstance(tokens, list) and tokens.pop(0) == 'define':
@@ -134,7 +134,7 @@ def grab_language_from_bddl_file(bddl_filename, problem_folder, level_dir):
                     else:
                         object_list.append(group.pop(0))
                 if object_list:
-                    if not 'object' in objects:
+                    if 'object' not in objects:
                         objects['object'] = []
                     objects['object'] += object_list
             elif t == ':obj_of_interest':
@@ -152,7 +152,7 @@ def grab_language_from_bddl_file(bddl_filename, problem_folder, level_dir):
                     else:
                         fixture_list.append(group.pop(0))
                 if fixture_list:
-                    if not 'fixture' in fixtures:
+                    if 'fixture' not in fixtures:
                         fixtures['fixture'] = []
                     fixtures['fixture'] += fixture_list
             elif t == ':regions':
@@ -194,8 +194,7 @@ def grab_language_from_bddl_file(bddl_filename, problem_folder, level_dir):
             'moving_objects': moving_objects,
             'image_settings': image_settings,
         }
-    else:
-        raise Exception(f'Problem does not match problem pattern')
+    raise Exception('Problem does not match problem pattern')
 
 
 def grab_language_from_bddl_path(bddl_file_path):
@@ -235,7 +234,7 @@ def grab_language_from_bddl_path(bddl_file_path):
                     else:
                         object_list.append(group.pop(0))
                 if object_list:
-                    if not 'object' in objects:
+                    if 'object' not in objects:
                         objects['object'] = []
                     objects['object'] += object_list
             elif t == ':obj_of_interest':
@@ -253,7 +252,7 @@ def grab_language_from_bddl_path(bddl_file_path):
                     else:
                         fixture_list.append(group.pop(0))
                 if fixture_list:
-                    if not 'fixture' in fixtures:
+                    if 'fixture' not in fixtures:
                         fixtures['fixture'] = []
                     fixtures['fixture'] += fixture_list
             elif t == ':regions':
@@ -295,8 +294,7 @@ def grab_language_from_bddl_path(bddl_file_path):
             'moving_objects': moving_objects,
             'image_settings': image_settings,
         }
-    else:
-        raise Exception(f'Problem does not match problem pattern')
+    raise Exception('Problem does not match problem pattern')
 
 
 def assign_task_level(task_name, task_index=None):
@@ -459,11 +457,10 @@ class Benchmark(abc.ABC):
         level_tasks = self.level_task_maps[level]
         if 0 <= level_id < len(level_tasks):
             return level_tasks[level_id]
-        else:
-            return None
+        return None
 
     def _get_task_file_path(
-        self, level: int, level_id: int, file_type: str, file_extension: str
+        self, level: int, level_id: int, file_type: str, file_extension: str,
     ) -> str | None:
         """
         Generic method to get file paths by level and level_id.
@@ -488,7 +485,7 @@ class Benchmark(abc.ABC):
             return None
 
         file_path = os.path.join(
-            get_vla_arena_path(file_type), task.problem_folder, level_dir, filename
+            get_vla_arena_path(file_type), task.problem_folder, level_dir, filename,
         )
         return file_path
 
@@ -534,7 +531,7 @@ class Benchmark(abc.ABC):
     def get_task_demonstration(self, i):
         """Get demonstration path by task index."""
         assert (
-            0 <= i and i < self.n_tasks
+            i >= 0 and i < self.n_tasks
         ), f'[error] task number {i} is outer of range {self.n_tasks}'
 
         task = self.tasks[i]

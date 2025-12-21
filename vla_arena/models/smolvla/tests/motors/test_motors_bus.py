@@ -32,6 +32,7 @@ import re
 from unittest.mock import patch
 
 import pytest
+
 from lerobot.motors.motors_bus import (
     Motor,
     MotorNormMode,
@@ -39,7 +40,6 @@ from lerobot.motors.motors_bus import (
     get_address,
     get_ctrl_table,
 )
-
 from tests.mocks.mock_motors_bus import (
     DUMMY_CTRL_TABLE_1,
     DUMMY_CTRL_TABLE_2,

@@ -39,7 +39,6 @@ from queue import Queue
 import pytest
 import torch
 
-
 # Skip entire module if grpc is not available
 pytest.importorskip('grpc')
 
@@ -55,7 +54,6 @@ def robot_client():
     # Import only when the test actually runs (after decorator check)
     from lerobot.scripts.server.configs import RobotClientConfig
     from lerobot.scripts.server.robot_client import RobotClient
-
     from tests.mocks.mock_robot import MockRobotConfig
 
     test_config = MockRobotConfig()

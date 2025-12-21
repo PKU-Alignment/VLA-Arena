@@ -29,6 +29,7 @@
 # limitations under the License.
 
 import pytest
+
 from lerobot.configs.types import FeatureType, NormalizationMode, PolicyFeature
 from lerobot.policies.sac.configuration_sac import (
     ActorLearnerConfig,

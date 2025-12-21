@@ -31,7 +31,7 @@ class OnTheGroundPanda(ManipulatorModel):
 
         # Set joint damping
         self.set_joint_attribute(
-            attrib='damping', values=np.array((0.1, 0.1, 0.1, 0.1, 0.1, 0.01, 0.01))
+            attrib='damping', values=np.array((0.1, 0.1, 0.1, 0.1, 0.1, 0.01, 0.01)),
         )
 
     @property
@@ -61,7 +61,7 @@ class OnTheGroundPanda(ManipulatorModel):
                 0.00,  # Joint 5: Keep at 0
                 2.3,  # Joint 6: Wrist joint, changed from 2.23 to 2.3 (lower end-effector height)
                 np.pi / 4,  # Joint 7: End-effector rotation, keep at 45 degrees
-            ]
+            ],
         )
 
     @property

@@ -27,7 +27,6 @@ import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Union
 
 import draccus
 import timm
@@ -36,7 +35,6 @@ import torch.nn as nn
 from huggingface_hub import hf_hub_download
 from timm.models.vision_transformer import LayerScale
 from transformers import AutoTokenizer
-
 from vla_arena.models.openvla_oft.vla_arena.models.openvla_oft.prismatic.extern.hf.configuration_prismatic import (
     PrismaticConfig,
 )

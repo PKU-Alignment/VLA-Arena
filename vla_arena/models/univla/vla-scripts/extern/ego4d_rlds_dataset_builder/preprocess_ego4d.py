@@ -14,9 +14,8 @@
 
 import argparse
 import json
-import multiprocessing
 import os
-from multiprocessing import Lock, Manager, Pool
+from multiprocessing import Manager, Pool
 
 import cv2
 import numpy as np

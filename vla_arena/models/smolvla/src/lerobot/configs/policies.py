@@ -39,6 +39,7 @@ import draccus
 from huggingface_hub import hf_hub_download
 from huggingface_hub.constants import CONFIG_NAME
 from huggingface_hub.errors import HfHubHTTPError
+
 from lerobot.configs.types import FeatureType, NormalizationMode, PolicyFeature
 from lerobot.constants import ACTION, OBS_STATE
 from lerobot.optim.optimizers import OptimizerConfig
@@ -49,7 +50,6 @@ from lerobot.utils.utils import (
     is_amp_available,
     is_torch_device_available,
 )
-
 
 T = TypeVar('T', bound='PreTrainedConfig')
 

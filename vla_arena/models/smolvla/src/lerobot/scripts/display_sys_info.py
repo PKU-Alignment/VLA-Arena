@@ -34,7 +34,6 @@ It should be able to run without any of LeRobot's dependencies or LeRobot itself
 
 import platform
 
-
 HAS_HF_HUB = True
 HAS_HF_DATASETS = True
 HAS_NP = True

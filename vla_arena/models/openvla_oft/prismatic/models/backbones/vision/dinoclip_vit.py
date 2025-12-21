@@ -21,7 +21,6 @@ Vision backbone that returns concatenated features from both DINOv2 and CLIP.
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import Dict, Tuple
 
 import timm
 import torch
@@ -33,14 +32,12 @@ from torch.distributed.fsdp.wrap import (
     transformer_auto_wrap_policy,
 )
 from torchvision.transforms import Compose, Resize
-
 from vla_arena.models.openvla_oft.prismatic.models.backbones.vision.base_vision import (
     ImageTransform,
     LetterboxPad,
     VisionBackbone,
     unpack_tuple,
 )
-
 
 # Registry =>> Supported DinoCLIP Pairs (as TIMM identifiers)
 DINOCLIP_VISION_BACKBONES = {

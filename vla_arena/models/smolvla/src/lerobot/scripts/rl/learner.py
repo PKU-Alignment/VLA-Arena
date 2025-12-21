@@ -68,6 +68,11 @@ from pprint import pformat
 
 import grpc
 import torch
+from termcolor import colored
+from torch import nn
+from torch.multiprocessing import Queue
+from torch.optim.optimizer import Optimizer
+
 from lerobot.cameras import opencv  # noqa: F401
 from lerobot.configs import parser
 from lerobot.configs.train import TrainRLServerPipelineConfig
@@ -94,17 +99,15 @@ from lerobot.transport.utils import (
 from lerobot.utils.buffer import ReplayBuffer, concatenate_batch_transitions
 from lerobot.utils.process import ProcessSignalHandler
 from lerobot.utils.random_utils import set_seed
-from lerobot.utils.train_utils import get_step_checkpoint_dir
-from lerobot.utils.train_utils import load_training_state as utils_load_training_state
-from lerobot.utils.train_utils import save_checkpoint, update_last_checkpoint
+from lerobot.utils.train_utils import (
+    get_step_checkpoint_dir,
+    load_training_state as utils_load_training_state,
+    save_checkpoint,
+    update_last_checkpoint,
+)
 from lerobot.utils.transition import move_state_dict_to_device, move_transition_to_device
 from lerobot.utils.utils import format_big_number, get_safe_torch_device, init_logging
 from lerobot.utils.wandb_utils import WandBLogger
-from termcolor import colored
-from torch import nn
-from torch.multiprocessing import Queue
-from torch.optim.optimizer import Optimizer
-
 
 LOG_PREFIX = '[LEARNER]'
 

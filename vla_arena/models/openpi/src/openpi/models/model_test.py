@@ -12,12 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from flax import nnx
 import jax
 import pytest
-from flax import nnx
+
 from openpi.models import model as _model
-from openpi.models import pi0_config, pi0_fast
-from openpi.shared import download, nnx_utils
+from openpi.models import pi0_config
+from openpi.models import pi0_fast
+from openpi.shared import download
+from openpi.shared import nnx_utils
 
 
 def test_pi0_model():
@@ -37,7 +40,7 @@ def test_pi0_model():
 
 def test_pi0_lora_model():
     key = jax.random.key(0)
-    config = pi0_config.Pi0Config(paligemma_variant='gemma_2b_lora')
+    config = pi0_config.Pi0Config(paligemma_variant="gemma_2b_lora")
     model = config.create(key)
 
     batch_size = 2
@@ -67,7 +70,7 @@ def test_pi0_fast_model():
 
 def test_pi0_fast_lora_model():
     key = jax.random.key(0)
-    config = pi0_fast.Pi0FASTConfig(paligemma_variant='gemma_2b_lora')
+    config = pi0_fast.Pi0FASTConfig(paligemma_variant="gemma_2b_lora")
     model = config.create(key)
 
     batch_size = 2
@@ -79,7 +82,7 @@ def test_pi0_fast_lora_model():
     actions = nnx_utils.module_jit(model.sample_actions)(key, obs)
     assert actions.shape == (batch_size, 256)
 
-    lora_filter = nnx_utils.PathRegex('.*lora.*')
+    lora_filter = nnx_utils.PathRegex(".*lora.*")
     model_state = nnx.state(model)
 
     lora_state_elems = list(model_state.filter(lora_filter))
@@ -96,7 +99,7 @@ def test_model_restore():
 
     model = config.load(
         _model.restore_params(
-            download.maybe_download('gs://openpi-assets/checkpoints/pi0_base/params')
+            download.maybe_download("gs://openpi-assets/checkpoints/pi0_base/params")
         )
     )
 

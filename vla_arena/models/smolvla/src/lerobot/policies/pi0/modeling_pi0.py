@@ -69,6 +69,9 @@ from collections import deque
 
 import torch
 import torch.nn.functional as F  # noqa: N812
+from torch import Tensor, nn
+from transformers import AutoTokenizer
+
 from lerobot.constants import ACTION, OBS_STATE
 from lerobot.policies.normalize import Normalize, Unnormalize
 from lerobot.policies.pi0.configuration_pi0 import PI0Config
@@ -79,8 +82,6 @@ from lerobot.policies.pi0.paligemma_with_expert import (
 from lerobot.policies.pretrained import PreTrainedPolicy
 from lerobot.policies.utils import log_model_loading_keys
 from lerobot.utils.utils import get_safe_dtype, init_logging
-from torch import Tensor, nn
-from transformers import AutoTokenizer
 
 
 def create_sinusoidal_pos_embedding(

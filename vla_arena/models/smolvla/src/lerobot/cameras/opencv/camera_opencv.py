@@ -39,18 +39,17 @@ from pathlib import Path
 from threading import Event, Lock, Thread
 from typing import Any
 
-
 # Fix MSMF hardware transform compatibility for Windows before importing cv2
 if platform.system() == 'Windows' and 'OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS' not in os.environ:
     os.environ['OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS'] = '0'
 import cv2
 import numpy as np
+
 from lerobot.errors import DeviceAlreadyConnectedError, DeviceNotConnectedError
 
 from ..camera import Camera
 from ..utils import get_cv2_backend, get_cv2_rotation
 from .configuration_opencv import ColorMode, OpenCVCameraConfig
-
 
 # NOTE(Steven): The maximum opencv device index depends on your operating system. For instance,
 # if you have 3 cameras, they should be associated to index 0, 1, and 2. This is the case

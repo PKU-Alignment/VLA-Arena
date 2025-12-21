@@ -24,8 +24,7 @@ import os
 from collections.abc import Callable, MutableMapping
 from contextlib import nullcontext
 from logging import LoggerAdapter
-from typing import Any, ClassVar, Dict, Tuple, Union
-
+from typing import Any, ClassVar
 
 # Overwatch Default Format String
 RICH_FORMATTER, DATEFMT = '| >> %(message)s', '%m/%d [%H:%M:%S]'

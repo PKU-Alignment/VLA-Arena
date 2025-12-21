@@ -21,19 +21,16 @@ Evaluates a trained policy in a LIBERO simulation benchmark task suite.
 import json
 import logging
 import os
-import random
-import string
 import sys
 from collections import deque
 from dataclasses import dataclass
-from enum import Enum
 from pathlib import Path
-from typing import Optional, Union
 
 import draccus
 import numpy as np
 import tqdm
 import wandb
+from vla_arena.vla_arena import benchmark
 
 # Append current directory so that interpreter can find experiments.robot
 from vla_arena_utils import (
@@ -45,11 +42,9 @@ from vla_arena_utils import (
     save_rollout_video,
 )
 
-from vla_arena.vla_arena import benchmark
-from vla_arena.vla_arena.benchmark.vla_arena_suite_task_map import vla_arena_task_map
-
-
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
+from vla_arena.models.openvla_oft.prismatic.vla.constants import NUM_ACTIONS_CHUNK
+
 from experiments.robot.openvla_utils import (
     get_action_head,
     get_noisy_action_projector,
@@ -66,9 +61,6 @@ from experiments.robot.robot_utils import (
     normalize_gripper_action,
     set_seed_everywhere,
 )
-
-from vla_arena.models.openvla_oft.prismatic.vla.constants import NUM_ACTIONS_CHUNK
-
 
 # Set up logging
 logging.basicConfig(

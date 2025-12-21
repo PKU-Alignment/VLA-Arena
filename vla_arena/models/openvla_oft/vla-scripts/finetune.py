@@ -23,7 +23,6 @@ import time
 from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Optional, Tuple, Type
 
 import draccus
 import torch
@@ -32,12 +31,7 @@ import torch.nn as nn
 import tqdm
 import wandb
 from accelerate import PartialState
-from experiments.robot.openvla_utils import (
-    check_model_logic_mismatch,
-    model_is_on_hf_hub,
-    update_auto_map,
-)
-from huggingface_hub import HfApi, snapshot_download
+from huggingface_hub import snapshot_download
 from peft import LoraConfig, PeftModel, get_peft_model
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim import AdamW
@@ -45,7 +39,6 @@ from torch.optim.lr_scheduler import MultiStepLR
 from torch.utils.data import DataLoader
 from transformers import AutoConfig, AutoImageProcessor, AutoModelForVision2Seq, AutoProcessor
 from transformers.modeling_outputs import CausalLMOutputWithPast
-
 from vla_arena.models.openvla_oft.vla_arena.models.openvla_oft.prismatic.extern.hf.configuration_prismatic import (
     OpenVLAConfig,
 )
@@ -96,6 +89,11 @@ from vla_arena.models.openvla_oft.vla_arena.models.openvla_oft.prismatic.vla.dat
     save_dataset_statistics,
 )
 
+from experiments.robot.openvla_utils import (
+    check_model_logic_mismatch,
+    model_is_on_hf_hub,
+    update_auto_map,
+)
 
 # Sane Defaults
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'

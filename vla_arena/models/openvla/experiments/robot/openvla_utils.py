@@ -23,7 +23,6 @@ import tensorflow as tf
 import torch
 from PIL import Image
 from transformers import AutoConfig, AutoImageProcessor, AutoModelForVision2Seq, AutoProcessor
-
 from vla_arena.models.openvla.prismatic.extern.hf.configuration_prismatic import OpenVLAConfig
 from vla_arena.models.openvla.prismatic.extern.hf.modeling_prismatic import (
     OpenVLAForActionPrediction,
@@ -32,7 +31,6 @@ from vla_arena.models.openvla.prismatic.extern.hf.processing_prismatic import (
     PrismaticImageProcessor,
     PrismaticProcessor,
 )
-
 
 # Initialize important constants and pretty-printing mode in NumPy.
 ACTION_DIM = 7

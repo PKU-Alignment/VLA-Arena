@@ -34,10 +34,11 @@ import einops
 import gymnasium as gym
 import numpy as np
 import torch
+from torch import Tensor
+
 from lerobot.configs.types import FeatureType, PolicyFeature
 from lerobot.envs.configs import EnvConfig
 from lerobot.utils.utils import get_channel_first_image_shape
-from torch import Tensor
 
 
 def preprocess_observation(observations: dict[str, np.ndarray]) -> dict[str, Tensor]:

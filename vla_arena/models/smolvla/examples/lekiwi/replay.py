@@ -20,7 +20,6 @@ from lerobot.robots.lekiwi.lekiwi_client import LeKiwiClient
 from lerobot.utils.robot_utils import busy_wait
 from lerobot.utils.utils import log_say
 
-
 EPISODE_IDX = 0
 
 robot_config = LeKiwiClientConfig(remote_ip='172.18.134.136', id='lekiwi')

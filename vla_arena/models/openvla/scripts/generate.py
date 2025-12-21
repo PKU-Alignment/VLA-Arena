@@ -24,18 +24,16 @@ Run with: python scripts/generate.py --model_path <PATH TO LOCAL MODEL OR HF HUB
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Union
 
 import draccus
 import requests
 import torch
 from PIL import Image
-from prismatic import load
-
 from vla_arena.models.openvla.vla_arena.models.openvla.prismatic.overwatch import (
     initialize_overwatch,
 )
 
+from prismatic import load
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)

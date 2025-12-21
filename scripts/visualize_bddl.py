@@ -13,14 +13,12 @@
 # limitations under the License.
 
 import argparse
-import math
 import os
 import sys
 import time
 
 import imageio
 import numpy as np
-import tensorflow as tf
 import torch
 
 from vla_arena.vla_arena.envs.env_wrapper import OffScreenRenderEnv

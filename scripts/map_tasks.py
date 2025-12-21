@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import re
 from collections import defaultdict
 from pathlib import Path
@@ -161,7 +160,7 @@ def main():
         help='Output file path',
     )
     parser.add_argument(
-        '--print-only', action='store_true', help='Only print result, do not save file'
+        '--print-only', action='store_true', help='Only print result, do not save file',
     )
 
     args = parser.parse_args()

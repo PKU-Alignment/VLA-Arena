@@ -31,6 +31,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 import draccus
+
 from lerobot.configs.types import FeatureType, PolicyFeature
 from lerobot.constants import ACTION, OBS_ENV_STATE, OBS_IMAGE, OBS_IMAGES, OBS_STATE
 from lerobot.robots import RobotConfig

@@ -34,6 +34,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
+
 from lerobot.configs.parser import PluginLoadError, load_plugin, parse_plugin_args, wrap
 from lerobot.envs.configs import EnvConfig
 

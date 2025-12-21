@@ -37,7 +37,7 @@ from pathlib import Path
 
 import tensorflow_datasets as tfds
 import tyro
-from lerobot.common.datasets.lerobot_dataset import HF_LEROBOT_HOME, LeRobotDataset
+from lerobot.common.datasets.lerobot_dataset import LeRobotDataset
 
 
 def main(data_dir: str = '', output_dir: str = '', *, push_to_hub: bool = False):

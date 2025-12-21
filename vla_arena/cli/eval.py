@@ -32,7 +32,7 @@ def eval_main(args):
     except ImportError as e:
         raise RuntimeError(
             f"Model '{model}' is not installed or evaluator script not found.\n"
-            f'Try: pip install vla-arena[{model}]'
+            f'Try: pip install vla-arena[{model}]',
         ) from e
 
     # 2. Directly import the module and execute main

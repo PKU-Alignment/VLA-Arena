@@ -74,7 +74,7 @@ class VideoWriter:
         if self.save_video:
             os.makedirs(self.video_path, exist_ok=True)
             if self.single_video:
-                video_name = os.path.join(self.video_path, f'video.mp4')
+                video_name = os.path.join(self.video_path, 'video.mp4')
                 video_writer = imageio.get_writer(video_name, fps=self.fps)
                 for idx in self.image_buffer.keys():
                     for im in self.image_buffer[idx]:

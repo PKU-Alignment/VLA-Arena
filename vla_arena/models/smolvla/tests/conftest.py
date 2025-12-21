@@ -31,11 +31,10 @@
 import traceback
 
 import pytest
-from lerobot.configs.types import FeatureType, PolicyFeature
 from serial import SerialException
 
+from lerobot.configs.types import FeatureType, PolicyFeature
 from tests.utils import DEVICE
-
 
 # Import fixture modules as plugins
 pytest_plugins = [

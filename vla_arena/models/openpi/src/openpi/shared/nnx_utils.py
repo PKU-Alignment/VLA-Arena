@@ -12,19 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections.abc import Callable
 import dataclasses
 import functools
 import inspect
 import re
-from collections.abc import Callable
 from typing import Any, ParamSpec, TypeVar
 
 import flax.nnx as nnx
 import jax
 
-
-P = ParamSpec('P')
-R = TypeVar('R')
+P = ParamSpec("P")
+R = TypeVar("R")
 
 
 def module_jit(meth: Callable[P, R], *jit_args, **jit_kwargs) -> Callable[P, R]:
@@ -41,7 +40,7 @@ def module_jit(meth: Callable[P, R], *jit_args, **jit_kwargs) -> Callable[P, R]:
     after the method call completes.
     """
     if not (inspect.ismethod(meth) and isinstance(meth.__self__, nnx.Module)):
-        raise ValueError('module_jit must only be used on bound methods of nnx.Modules.')
+        raise ValueError("module_jit must only be used on bound methods of nnx.Modules.")
 
     graphdef, state = nnx.split(meth.__self__)
 
@@ -66,11 +65,11 @@ class PathRegex:
     """
 
     pattern: str | re.Pattern
-    sep: str = '/'
+    sep: str = "/"
 
     def __post_init__(self):
         if not isinstance(self.pattern, re.Pattern):
-            object.__setattr__(self, 'pattern', re.compile(self.pattern))
+            object.__setattr__(self, "pattern", re.compile(self.pattern))
 
     def __call__(self, path: nnx.filterlib.PathParts, x: Any) -> bool:
         joined_path = self.sep.join(str(x) for x in path)

@@ -12,24 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ast
 import copy
-import io
 import logging
 import os
 import pickle
 import random
 import re
-from cgitb import text
 from collections.abc import Callable
-from dataclasses import dataclass
 from itertools import chain
-from multiprocessing import Value
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any
 
-import braceexpand
-import cv2
 import numpy as np
 import torch
 import torch.nn as nn
@@ -38,8 +31,6 @@ import torchvision
 from omegaconf import DictConfig, ListConfig, OmegaConf
 from PIL import Image
 from torch.utils.data import Dataset
-from webdataset.filters import _shuffle
-
 
 # Constants
 Image.MAX_IMAGE_PIXELS = 1000000000

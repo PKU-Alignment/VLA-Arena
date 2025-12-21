@@ -24,15 +24,12 @@ import os
 import sys
 from collections import deque
 from dataclasses import dataclass
-from enum import Enum
 from pathlib import Path
-from typing import Optional, Union
 
 import draccus
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import tqdm
 import wandb
 
@@ -46,7 +43,6 @@ from vla_arena.models.univla.experiments.robot.vla_arena.vla_arena_utils import 
 )
 from vla_arena.vla_arena import benchmark
 
-
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
 from vla_arena.models.univla.experiments.robot.openvla_utils import get_processor
 from vla_arena.models.univla.experiments.robot.robot_utils import (
@@ -58,7 +54,6 @@ from vla_arena.models.univla.experiments.robot.robot_utils import (
     normalize_gripper_action,
     set_seed_everywhere,
 )
-
 
 # Set up logging
 logging.basicConfig(

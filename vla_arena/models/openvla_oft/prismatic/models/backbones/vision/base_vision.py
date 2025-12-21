@@ -26,7 +26,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Dict, Optional, Protocol, Tuple, Union
+from typing import Any, Protocol
 
 import timm
 import torch

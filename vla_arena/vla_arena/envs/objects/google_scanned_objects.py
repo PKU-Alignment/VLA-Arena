@@ -18,12 +18,11 @@ import re
 
 import numpy as np
 from robosuite.models.objects import MujocoXMLObject
-from robosuite.utils.mjcf_utils import xml_path_completion
 
 
 absolute_path = pathlib.Path(__file__).parent.parent.parent.absolute()
 
-from vla_arena.vla_arena.envs.base_object import register_object, register_visual_change_object
+from vla_arena.vla_arena.envs.base_object import register_object
 
 
 class GoogleScannedObject(MujocoXMLObject):
@@ -45,7 +44,7 @@ class GoogleScannedObject(MujocoXMLObject):
             duplicate_collision_geoms=duplicate_collision_geoms,
         )
         self.category_name = '_'.join(
-            re.sub(r'([A-Z])', r' \1', self.__class__.__name__).split()
+            re.sub(r'([A-Z])', r' \1', self.__class__.__name__).split(),
         ).lower()
         self.rotation = (np.pi / 2, np.pi / 2)
         self.rotation_axis = 'x'

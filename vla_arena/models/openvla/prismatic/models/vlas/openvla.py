@@ -19,17 +19,14 @@ PyTorch Module defining OpenVLA as a lightweight wrapper around a PrismaticVLM; 
 discretizing actions with the ActionTokenizer.
 """
 
-from typing import Dict, List, Optional
 
 import numpy as np
 import torch
 from PIL import Image
 from transformers import LlamaTokenizerFast
-
 from vla_arena.models.openvla.prismatic.models.vlms.prismatic import PrismaticVLM
 from vla_arena.models.openvla.prismatic.overwatch import initialize_overwatch
 from vla_arena.models.openvla.prismatic.vla.action_tokenizer import ActionTokenizer
-
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)

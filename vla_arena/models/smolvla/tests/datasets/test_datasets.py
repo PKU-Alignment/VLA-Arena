@@ -34,11 +34,14 @@ from copy import deepcopy
 from itertools import chain
 from pathlib import Path
 
-import lerobot
 import numpy as np
 import pytest
 import torch
 from huggingface_hub import HfApi
+from PIL import Image
+from safetensors.torch import load_file
+
+import lerobot
 from lerobot.configs.default import DatasetConfig
 from lerobot.configs.train import TrainPipelineConfig
 from lerobot.datasets.factory import make_dataset
@@ -47,9 +50,6 @@ from lerobot.datasets.lerobot_dataset import LeRobotDataset, MultiLeRobotDataset
 from lerobot.datasets.utils import create_branch, flatten_dict, unflatten_dict
 from lerobot.envs.factory import make_env_config
 from lerobot.policies.factory import make_policy_config
-from PIL import Image
-from safetensors.torch import load_file
-
 from tests.fixtures.constants import DUMMY_CHW, DUMMY_HWC, DUMMY_REPO_ID
 from tests.utils import require_x86_64_kernel
 

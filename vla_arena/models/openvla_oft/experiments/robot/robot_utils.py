@@ -17,13 +17,11 @@
 import os
 import random
 import time
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import numpy as np
 import torch
-
 from vla_arena.models.openvla_oft.experiments.robot.openvla_utils import get_vla, get_vla_action
-
 
 # Initialize important constants
 ACTION_DIM = 7

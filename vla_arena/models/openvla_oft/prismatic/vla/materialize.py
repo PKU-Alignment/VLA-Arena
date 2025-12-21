@@ -20,11 +20,9 @@ exports individual functions for clear control flow.
 """
 
 from pathlib import Path
-from typing import Tuple, Type
 
 from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizerBase
-
 from vla_arena.models.openvla_oft.prismatic.models.backbones.llm.prompting import PromptBuilder
 from vla_arena.models.openvla_oft.prismatic.models.backbones.vision import ImageTransform
 from vla_arena.models.openvla_oft.prismatic.util.data_utils import PaddedCollatorForActionPrediction

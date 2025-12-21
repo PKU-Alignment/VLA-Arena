@@ -40,11 +40,11 @@ import torch
 import torch.distributed as distributed
 import torch.nn.functional as F  # noqa: N812
 from einops import pack, rearrange, reduce, repeat, unpack
-from lerobot.policies.vqbet.configuration_vqbet import VQBeTConfig
 from torch import einsum, nn
 from torch.cuda.amp import autocast
 from torch.optim import Optimizer
 
+from lerobot.policies.vqbet.configuration_vqbet import VQBeTConfig
 
 # ruff: noqa: N806
 

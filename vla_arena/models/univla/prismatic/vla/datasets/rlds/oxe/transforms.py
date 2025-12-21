@@ -29,10 +29,9 @@ Transforms adopt the following structure:
     }
 """
 
-from typing import Any, Dict
+from typing import Any
 
 import tensorflow as tf
-
 from vla_arena.models.univla.prismatic.vla.datasets.rlds.oxe.utils.droid_utils import (
     droid_baseact_transform,
     droid_finetuning_transform,

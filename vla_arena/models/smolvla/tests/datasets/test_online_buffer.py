@@ -33,8 +33,8 @@ from uuid import uuid4
 import numpy as np
 import pytest
 import torch
-from lerobot.datasets.online_buffer import OnlineBuffer, compute_sampler_weights
 
+from lerobot.datasets.online_buffer import OnlineBuffer, compute_sampler_weights
 
 # Some constants for OnlineBuffer tests.
 data_key = 'data'

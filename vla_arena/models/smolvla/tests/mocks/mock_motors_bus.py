@@ -30,7 +30,6 @@
 
 from lerobot.motors.motors_bus import Motor, MotorsBus
 
-
 DUMMY_CTRL_TABLE_1 = {
     'Firmware_Version': (0, 1),
     'Model_Number': (1, 2),

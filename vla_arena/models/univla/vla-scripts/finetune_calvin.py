@@ -16,20 +16,15 @@ import os
 from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 import draccus
 import torch
 import torch.distributed as dist
 import torch.nn as nn
-import torchvision.transforms as transforms
 import tqdm
 import wandb
 from accelerate import Accelerator, DistributedDataParallelKwargs, PartialState
-from ema_pytorch import EMA
-from latent_action_model.genie.modules.lam import ControllableDINOLatentActionModel
 from peft import LoraConfig, PeftModel, get_peft_model, prepare_model_for_kbit_training
-from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.nn.utils.rnn import pad_sequence
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
@@ -40,8 +35,6 @@ from transformers import (
     AutoProcessor,
     BitsAndBytesConfig,
 )
-from transformers.modeling_outputs import CausalLMOutputWithPast
-
 from vla_arena.models.univla.prismatic.extern.hf.configuration_prismatic import OpenVLAConfig
 from vla_arena.models.univla.prismatic.extern.hf.modeling_prismatic import (
     OpenVLAForActionPrediction,
@@ -52,7 +45,6 @@ from vla_arena.models.univla.prismatic.extern.hf.processing_prismatic import (
 )
 from vla_arena.models.univla.prismatic.models.backbones.llm.prompting import (
     PurePromptBuilder,
-    VicunaV15ChatPromptBuilder,
 )
 from vla_arena.models.univla.prismatic.util.data_utils import (
     PaddedCollatorForActionPrediction_CALVIN,
@@ -63,6 +55,7 @@ from vla_arena.models.univla.prismatic.vla.datasets.rlds.utils.data_utils import
     save_dataset_statistics,
 )
 
+from latent_action_model.genie.modules.lam import ControllableDINOLatentActionModel
 
 # Sane Defaults
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
@@ -96,7 +89,6 @@ class ActionDecoder(torch.nn.Module):
         return action
 
 
-from vla_arena.models.univla.prismatic.models.policy.transformer_utils import MAPBlock
 
 
 class Wrapped_Model(torch.nn.Module):

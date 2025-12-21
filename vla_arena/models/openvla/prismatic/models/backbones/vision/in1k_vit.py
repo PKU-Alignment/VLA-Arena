@@ -20,7 +20,6 @@ Vision Transformers trained / finetuned on ImageNet (ImageNet-21K =>> ImageNet-1
 
 from vla_arena.models.openvla.prismatic.models.backbones.vision.base_vision import TimmViTBackbone
 
-
 # Registry =>> Supported Vision Backbones (from TIMM)
 IN1K_VISION_BACKBONES = {
     'in1k-vit-l': 'vit_large_patch16_224.augreg_in21k_ft_in1k',

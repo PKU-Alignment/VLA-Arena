@@ -78,9 +78,7 @@ def get_dataset_info(dataset_path, filter_key=None, verbose=True):
             print('==== Filter Key Contents ====')
             for fk in all_filter_keys:
                 print(
-                    'filter_key {} with {} demos: {}'.format(
-                        fk, len(all_filter_keys[fk]), all_filter_keys[fk]
-                    )
+                    f'filter_key {fk} with {len(all_filter_keys[fk])} demos: {all_filter_keys[fk]}',
                 )
         print('')
     env_meta = json.loads(f['data'].attrs['env_args'])

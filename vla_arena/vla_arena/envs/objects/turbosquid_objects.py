@@ -18,12 +18,11 @@ import re
 
 import numpy as np
 from robosuite.models.objects import MujocoXMLObject
-from robosuite.utils.mjcf_utils import xml_path_completion
 
 
 absolute_path = pathlib.Path(__file__).parent.parent.parent.absolute()
 
-from vla_arena.vla_arena.envs.base_object import register_object, register_visual_change_object
+from vla_arena.vla_arena.envs.base_object import register_object
 
 
 class TurbosquidObjects(MujocoXMLObject):
@@ -39,7 +38,7 @@ class TurbosquidObjects(MujocoXMLObject):
             duplicate_collision_geoms=False,
         )
         self.category_name = '_'.join(
-            re.sub(r'([A-Z])', r' \1', self.__class__.__name__).split()
+            re.sub(r'([A-Z])', r' \1', self.__class__.__name__).split(),
         ).lower()
         self.rotation = (0, 0)
         self.rotation_axis = 'x'
@@ -190,7 +189,7 @@ class RedCoffeeMug(TurbosquidObjects):
 @register_object
 class GreenMug(TurbosquidObjects):
     def __init__(
-        self, name='green_mug', obj_name='green_mug', joints=[dict(type='free', damping='0.0005')]
+        self, name='green_mug', obj_name='green_mug', joints=[dict(type='free', damping='0.0005')],
     ):
         super().__init__(name, obj_name, joints)
 

@@ -19,8 +19,6 @@ Contains trajectory transforms used in the orca data pipeline. Trajectory transf
 that represents a single trajectory, meaning each tensor has the same leading dimension (the trajectory length).
 """
 
-import logging
-from typing import Dict
 
 import tensorflow as tf
 

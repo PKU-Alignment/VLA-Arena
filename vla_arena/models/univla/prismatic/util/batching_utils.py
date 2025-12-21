@@ -22,7 +22,6 @@ Core definitions of (Distributed) Samplers for VLM finetuning; provides function
 
 import math
 from collections.abc import Iterator
-from typing import List, Optional, Tuple
 
 import numpy as np
 import torch

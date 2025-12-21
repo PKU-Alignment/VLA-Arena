@@ -124,9 +124,7 @@ if __name__ == '__main__':
             print('==== Filter Key Contents ====')
             for fk in all_filter_keys:
                 print(
-                    'filter_key {} with {} demos: {}'.format(
-                        fk, len(all_filter_keys[fk]), all_filter_keys[fk]
-                    )
+                    f'filter_key {fk} with {len(all_filter_keys[fk])} demos: {all_filter_keys[fk]}',
                 )
         print('')
     env_meta = json.loads(f['data'].attrs['env_args'])
@@ -156,7 +154,5 @@ if __name__ == '__main__':
     print('')
     if (action_min < -1.0) or (action_max > 1.0):
         raise Exception(
-            'Dataset should have actions in [-1., 1.] but got bounds [{}, {}]'.format(
-                action_min, action_max
-            )
+            f'Dataset should have actions in [-1., 1.] but got bounds [{action_min}, {action_max}]',
         )

@@ -42,7 +42,6 @@ from ..robot import Robot
 from ..utils import ensure_safe_goal_position
 from .config_so101_follower import SO101FollowerConfig
 
-
 logger = logging.getLogger(__name__)
 
 

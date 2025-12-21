@@ -37,7 +37,6 @@ from lerobot.teleoperators.so100_leader.so100_leader import SO100Leader
 from ..teleoperator import Teleoperator
 from .config_bi_so100_leader import BiSO100LeaderConfig
 
-
 logger = logging.getLogger(__name__)
 
 

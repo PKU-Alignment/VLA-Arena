@@ -21,26 +21,21 @@ format to OpenVLA, IterableDataset shim.
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Tuple, Type
+from typing import Any
 
 import numpy as np
 import torch
 from PIL import Image
 from torch.utils.data import Dataset, IterableDataset
 from transformers import PreTrainedTokenizerBase
-
 from vla_arena.models.openvla_oft.prismatic.models.backbones.llm.prompting import PromptBuilder
 from vla_arena.models.openvla_oft.prismatic.models.backbones.vision import ImageTransform
 from vla_arena.models.openvla_oft.prismatic.util.data_utils import tree_map
 from vla_arena.models.openvla_oft.prismatic.vla.action_tokenizer import ActionTokenizer
 from vla_arena.models.openvla_oft.prismatic.vla.constants import (
-    ACTION_DIM,
     ACTION_PROPRIO_NORMALIZATION_TYPE,
-    ACTION_TOKEN_BEGIN_IDX,
     IGNORE_INDEX,
     NUM_ACTIONS_CHUNK,
-    PROPRIO_DIM,
-    STOP_INDEX,
 )
 from vla_arena.models.openvla_oft.prismatic.vla.datasets.rlds import (
     make_interleaved_dataset,

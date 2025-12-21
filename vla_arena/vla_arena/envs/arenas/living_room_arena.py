@@ -46,13 +46,13 @@ class LivingRoomTableArena(Arena):
         texplane = self.asset.find("./texture[@name='texplane']")
         plane_file = texplane.get('file')
         plane_file = '/'.join(
-            plane_file.split('/')[:-1] + [get_texture_filename(type='floor', style=floor_style)]
+            plane_file.split('/')[:-1] + [get_texture_filename(type='floor', style=floor_style)],
         )
         texplane.set('file', plane_file)
 
         texwall = self.asset.find("./texture[@name='tex-wall']")
         wall_file = texwall.get('file')
         wall_file = '/'.join(
-            wall_file.split('/')[:-1] + [get_texture_filename(type='wall', style=wall_style)]
+            wall_file.split('/')[:-1] + [get_texture_filename(type='wall', style=wall_style)],
         )
         texwall.set('file', wall_file)

@@ -35,10 +35,9 @@ import time
 
 import pytest
 import torch
+
 from lerobot.configs.types import PolicyFeature
-
 from tests.utils import require_package
-
 
 # -----------------------------------------------------------------------------
 # Test fixtures

@@ -12,11 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import pathlib
 
 import numpy as np
-import robosuite.utils.transform_utils as transform_utils
 from robosuite.utils.mjcf_utils import string_to_array
 
 
@@ -88,5 +86,5 @@ class SiteObject:
         # print(total_size, " | ", delta_position)
         # print(total_size[2] < delta_position[2] < total_size[2] + other_height, np.all(np.abs(delta_position[:2]) < total_size[:2]))
         return total_size[2] - 0.005 < delta_position[2] < total_size[2] + other_height and np.all(
-            np.abs(delta_position[:2]) < total_size[:2]
+            np.abs(delta_position[:2]) < total_size[:2],
         )

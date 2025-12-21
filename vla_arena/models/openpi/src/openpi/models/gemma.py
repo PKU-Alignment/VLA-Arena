@@ -39,18 +39,18 @@ We follow this einsum axis naming convention:
   D: d_model ("features")
 """
 
-import dataclasses
 from collections.abc import Sequence
+import dataclasses
 from typing import Literal, TypeAlias
 
 import einops
 import flax.linen as nn
 import jax
 import jax.numpy as jnp
+
 import openpi.models.lora as lora
 import openpi.shared.array_typing as at
 import openpi.training.sharding as sharding
-
 
 PALIGEMMA_VOCAB_SIZE = 257_152
 
@@ -66,12 +66,12 @@ class Config:
     lora_configs: dict[str, lora.LoRAConfig] = dataclasses.field(default_factory=dict)
 
 
-Variant = Literal['dummy', 'gemma_300m', 'gemma_300m_lora', 'gemma_2b', 'gemma_2b_lora']
+Variant = Literal["dummy", "gemma_300m", "gemma_300m_lora", "gemma_2b", "gemma_2b_lora"]
 
 
 def get_config(variant: Variant) -> Config:
     """Returns config for specified gemma variant."""
-    if variant == 'dummy':
+    if variant == "dummy":
         return Config(
             width=64,
             depth=4,
@@ -80,7 +80,7 @@ def get_config(variant: Variant) -> Config:
             num_kv_heads=1,
             head_dim=16,
         )
-    if variant == 'gemma_300m':
+    if variant == "gemma_300m":
         # 311M params
         return Config(
             width=1024,
@@ -90,7 +90,7 @@ def get_config(variant: Variant) -> Config:
             num_kv_heads=1,
             head_dim=256,
         )
-    if variant == 'gemma_2b':
+    if variant == "gemma_2b":
         return Config(
             width=2048,
             depth=18,
@@ -99,7 +99,7 @@ def get_config(variant: Variant) -> Config:
             num_kv_heads=1,
             head_dim=256,
         )
-    if variant == 'gemma_2b_lora':
+    if variant == "gemma_2b_lora":
         return Config(
             width=2048,
             depth=18,
@@ -108,11 +108,11 @@ def get_config(variant: Variant) -> Config:
             num_kv_heads=1,
             head_dim=256,
             lora_configs={
-                'attn': lora.LoRAConfig(rank=16, alpha=16.0),
-                'ffn': lora.LoRAConfig(rank=16, alpha=16.0),
+                "attn": lora.LoRAConfig(rank=16, alpha=16.0),
+                "ffn": lora.LoRAConfig(rank=16, alpha=16.0),
             },
         )
-    if variant == 'gemma_300m_lora':
+    if variant == "gemma_300m_lora":
         # 311M params
         return Config(
             width=1024,
@@ -122,11 +122,11 @@ def get_config(variant: Variant) -> Config:
             num_kv_heads=1,
             head_dim=256,
             lora_configs={
-                'attn': lora.LoRAConfig(rank=32, alpha=32.0),
-                'ffn': lora.LoRAConfig(rank=32, alpha=32.0),
+                "attn": lora.LoRAConfig(rank=32, alpha=32.0),
+                "ffn": lora.LoRAConfig(rank=32, alpha=32.0),
             },
         )
-    raise ValueError(f'Unknown variant: {variant}')
+    raise ValueError(f"Unknown variant: {variant}")
 
 
 @at.typecheck
@@ -142,7 +142,7 @@ class RMSNorm(nn.Module):
         )  # compute normalization in float32
         if cond is None:
             # regular RMSNorm
-            scale = self.param('scale', nn.initializers.zeros_init(), (x.shape[-1]))
+            scale = self.param("scale", nn.initializers.zeros_init(), (x.shape[-1]))
             normed_inputs = normed_inputs * (
                 1 + scale
             )  # scale by learned parameter in float32 (matches Flax implementation)
@@ -164,7 +164,7 @@ class Embedder(nn.Module):
 
     def setup(self):
         self.input_embedding_table = self.param(
-            'input_embedding',
+            "input_embedding",
             nn.initializers.normal(),
             (self.vocab_size, self.embed_dim),
         )
@@ -202,30 +202,30 @@ class Attention(nn.Module):
             if config.num_kv_heads == config.num_heads:
                 qkv_einsum = lora.Einsum(
                     shape=(3, config.num_heads, config.width, config.head_dim),
-                    name=_name('qkv_einsum', i),
+                    name=_name("qkv_einsum", i),
                     init_fn=nn.initializers.lecun_normal(
                         in_axis=-2, out_axis=-1, batch_axis=(0, 1)
                     ),
-                    lora_config=config.lora_configs.get('attn'),
+                    lora_config=config.lora_configs.get("attn"),
                 )
-                qkvs.append(qkv_einsum('BSD,3KDH->3BSKH', x))
+                qkvs.append(qkv_einsum("BSD,3KDH->3BSKH", x))
             else:
                 q_einsum = lora.Einsum(
                     shape=(config.num_heads, config.width, config.head_dim),
-                    name=_name('q_einsum', i),
+                    name=_name("q_einsum", i),
                     init_fn=nn.initializers.lecun_normal(in_axis=-2, out_axis=-1, batch_axis=(0,)),
-                    lora_config=config.lora_configs.get('attn'),
+                    lora_config=config.lora_configs.get("attn"),
                 )
-                q = q_einsum('BTD,NDH->BTNH', x)
+                q = q_einsum("BTD,NDH->BTNH", x)
                 kv_einsum = lora.Einsum(
                     shape=(2, config.num_kv_heads, config.width, config.head_dim),
-                    name=_name('kv_einsum', i),
+                    name=_name("kv_einsum", i),
                     init_fn=nn.initializers.lecun_normal(
                         in_axis=-2, out_axis=-1, batch_axis=(0, 1)
                     ),
-                    lora_config=config.lora_configs.get('attn'),
+                    lora_config=config.lora_configs.get("attn"),
                 )
-                k, v = kv_einsum('BSD,2KDH->2BSKH', x)
+                k, v = kv_einsum("BSD,2KDH->2BSKH", x)
                 qkvs.append((q, k, v))
 
         q, k, v = (jnp.concatenate(y, axis=1) for y in zip(*qkvs, strict=True))
@@ -243,12 +243,12 @@ class Attention(nn.Module):
             k = jnp.concatenate([cache_k, k], axis=1)
             v = jnp.concatenate([cache_v, v], axis=1)
 
-        q = einops.rearrange(q, 'B T (K G) H -> B T K G H', K=self.configs[0].num_kv_heads)
-        logits = jnp.einsum('BTKGH,BSKH->BKGTS', q, k, preferred_element_type=jnp.float32)
+        q = einops.rearrange(q, "B T (K G) H -> B T K G H", K=self.configs[0].num_kv_heads)
+        logits = jnp.einsum("BTKGH,BSKH->BKGTS", q, k, preferred_element_type=jnp.float32)
 
         if attn_mask.shape != (q.shape[0], 1, q.shape[1], k.shape[1]):
             raise ValueError(
-                f'Attention mask with shape {attn_mask.shape} but shapes for q and k are: {q.shape} and {k.shape}'
+                f"Attention mask with shape {attn_mask.shape} but shapes for q and k are: {q.shape} and {k.shape}"
             )
 
         # big_neg = jnp.finfo(logits.dtype).min
@@ -257,8 +257,8 @@ class Attention(nn.Module):
 
         probs = jax.nn.softmax(masked_logits, axis=-1).astype(dtype)
 
-        encoded = jnp.einsum('BKGTS,BSKH->BTKGH', probs, v)
-        encoded = einops.rearrange(encoded, 'B T K G H -> B T (K G) H')
+        encoded = jnp.einsum("BKGTS,BSKH->BTKGH", probs, v)
+        encoded = einops.rearrange(encoded, "B T K G H -> B T (K G) H")
 
         out = []
         start = 0
@@ -267,11 +267,11 @@ class Attention(nn.Module):
                 end = start + x.shape[1]
                 out_einsum = lora.Einsum(
                     shape=(config.num_heads, config.head_dim, config.width),
-                    name=_name('attn_vec_einsum', i),
+                    name=_name("attn_vec_einsum", i),
                     init_fn=nn.initializers.lecun_normal(in_axis=(-3, -2), out_axis=-1),
-                    lora_config=config.lora_configs.get('attn'),
+                    lora_config=config.lora_configs.get("attn"),
                 )
-                out.append(out_einsum('BTNH,NHD->BTD', encoded[:, start:end]))
+                out.append(out_einsum("BTNH,NHD->BTD", encoded[:, start:end]))
                 start = end
             else:
                 out.append(None)
@@ -290,7 +290,7 @@ class FeedForward(nn.Module):
     def __call__(self, x):
         dtype = x.dtype  # original dtype, could be half-precision
         w_gating = self.param(
-            'gating_einsum',
+            "gating_einsum",
             nn.initializers.lecun_normal(in_axis=-2, out_axis=-1, batch_axis=(0,)),
             (2, self.features, self.hidden_dim),
         ).astype(dtype)
@@ -301,7 +301,7 @@ class FeedForward(nn.Module):
         activations = gate_value * ff1
 
         w_linear = self.param(
-            'linear',
+            "linear",
             nn.initializers.lecun_normal(in_axis=-2, out_axis=-1),
             (self.hidden_dim, self.features),
         ).astype(dtype)
@@ -322,19 +322,19 @@ class Block(nn.Module):
     @nn.compact
     def __call__(
         self, xs, kv_cache, positions, attn_mask, adarms_cond, deterministic=True
-    ):  # noqa: FBT002
+    ):
         xs = sharding.activation_sharding_constraint(xs)
         drop = nn.Dropout(self.dropout, self.dropout_bdims) if self.dropout else lambda x, _: x
 
-        attn = Attention(configs=self.configs, name='attn')
+        attn = Attention(configs=self.configs, name="attn")
 
         pre_attn = []
         gates = []
         for i, x in enumerate(xs):
             if x is not None:
-                x, gate = RMSNorm(name=_name('pre_attention_norm', i))(
+                x, gate = RMSNorm(name=_name("pre_attention_norm", i))(
                     x, adarms_cond[i]
-                )  # noqa: PLW2901
+                )
             pre_attn.append(x)
             gates.append(gate if x is not None else None)
 
@@ -349,12 +349,12 @@ class Block(nn.Module):
         gates = []
         for i, (x, config) in enumerate(zip(xs, self.configs, strict=True)):
             if x is not None:
-                x, gate = RMSNorm(name=_name('pre_ffw_norm', i))(x, adarms_cond[i])  # noqa: PLW2901
+                x, gate = RMSNorm(name=_name("pre_ffw_norm", i))(x, adarms_cond[i])  # noqa: PLW2901
                 x = lora.FeedForward(  # noqa: PLW2901
                     features=config.width,
                     hidden_dim=config.mlp_dim,
-                    name=_name('mlp', i),
-                    lora_config=config.lora_configs.get('ffn'),
+                    name=_name("mlp", i),
+                    lora_config=config.lora_configs.get("ffn"),
                 )(x)
             out.append(x)
             gates.append(gate if x is not None else None)
@@ -367,7 +367,7 @@ class Block(nn.Module):
         return xs, kv_cache
 
 
-KVCache: TypeAlias = tuple[at.Float[at.Array, 'l b _t _k _h'], at.Float[at.Array, 'l b _t _v _h']]
+KVCache: TypeAlias = tuple[at.Float[at.Array, "l b _t _k _h"], at.Float[at.Array, "l b _t _v _h"]]
 
 
 @at.typecheck
@@ -388,7 +388,7 @@ class Module(nn.Module):
         self.embedder = Embedder(
             vocab_size=PALIGEMMA_VOCAB_SIZE,
             embed_dim=self.configs[0].width,  # embedder for first expert only
-            name='embedder',
+            name="embedder",
         )
         block_cls = nn.remat(
             Block,
@@ -398,8 +398,8 @@ class Module(nn.Module):
         )
         self.layers = nn.scan(
             block_cls,
-            variable_axes={'params': 0},
-            split_rngs={'params': True, 'dropout': True},
+            variable_axes={"params": 0},
+            split_rngs={"params": True, "dropout": True},
             in_axes=(
                 0,
                 nn.broadcast,
@@ -413,24 +413,24 @@ class Module(nn.Module):
             dropout=self.dropout,
             dropout_bdims=self.dropout_bdims,
         )
-        self.final_norms = [RMSNorm(name=_name('final_norm', i)) for i in range(len(self.configs))]
+        self.final_norms = [RMSNorm(name=_name("final_norm", i)) for i in range(len(self.configs))]
 
     @at.typecheck
-    def embed(self, tokens: at.Int[at.Array, 'b t']) -> at.Float[at.Array, 'b t d']:
+    def embed(self, tokens: at.Int[at.Array, "b t"]) -> at.Float[at.Array, "b t d"]:
         return self.embedder.encode(tokens).astype(self.embed_dtype)
 
     @at.typecheck
     def __call__(
         self,
         # list of token arrays, one for each expert, or None if that expert should not be run
-        embedded: Sequence[at.Float[at.Array, 'b _t _d'] | None],
-        positions: at.Int[at.Array, 'b t'],
-        mask: at.Bool[at.Array, 'b t s'],
-        adarms_cond: Sequence[at.Float[at.Array, 'b _d'] | None] | None = None,
+        embedded: Sequence[at.Float[at.Array, "b _t _d"] | None],
+        positions: at.Int[at.Array, "b t"],
+        mask: at.Bool[at.Array, "b t s"],
+        adarms_cond: Sequence[at.Float[at.Array, "b _d"] | None] | None = None,
         *,
         kv_cache: KVCache | None = None,
         deterministic: bool = True,
-    ) -> tuple[Sequence[at.Float[at.Array, 'b _t _d'] | None], KVCache]:
+    ) -> tuple[Sequence[at.Float[at.Array, "b _t _d"] | None], KVCache]:
         embedded = jax.tree.map(lambda e: e.astype(self.embed_dtype), embedded)
         mask = jnp.asarray(mask)[:, None, :, :]
         if adarms_cond is None:
@@ -487,7 +487,7 @@ def _name(name, i):
     # and the action expert.
     if i == 0:
         return name
-    return f'{name}_{i}'
+    return f"{name}_{i}"
 
 
 def _gated_residual(x, y, gate):

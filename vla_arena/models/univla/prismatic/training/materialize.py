@@ -20,13 +20,10 @@ and strategy configurations.
 """
 
 from collections.abc import Callable
-from typing import Optional
 
 import torch
-
 from vla_arena.models.univla.prismatic.models.vlms import PrismaticVLM
 from vla_arena.models.univla.prismatic.training.strategies import FSDPStrategy, TrainingStrategy
-
 
 # Registry =>> Maps ID --> {cls(), kwargs} :: supports FSDP for now, but DDP handler is also implemented!
 TRAIN_STRATEGIES = {

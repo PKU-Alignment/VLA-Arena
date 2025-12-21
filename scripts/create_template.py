@@ -25,7 +25,7 @@ from vla_arena.vla_arena.envs.textures import get_texture_file_list
 
 def create_problem_class_from_file(class_name):
     template_source_file = os.path.join(
-        get_vla_arena_path('benchmark_root'), '../../templates/problem_class_template.py'
+        get_vla_arena_path('benchmark_root'), '../../templates/problem_class_template.py',
     )
     with open(template_source_file) as f:
         lines = f.readlines()
@@ -42,7 +42,7 @@ def create_problem_class_from_file(class_name):
 def create_scene_xml_file(scene_name):
     """This is just an example for you to jump start. For more advanced editing, you will need to figure out yourself. You can take a look at all the available xml files for reference."""
     template_source_file = os.path.join(
-        get_vla_arena_path('benchmark_root'), '../../templates/scene_template.xml'
+        get_vla_arena_path('benchmark_root'), '../../templates/scene_template.xml',
     )
     parser = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
     tree = ET.parse(template_source_file, parser)
@@ -73,7 +73,7 @@ def create_scene_xml_file(scene_name):
     tree.write(f'{scene_name}.xml', encoding='utf-8')
     print(f'Creating scene {scene_name} at the file: {scene_name}.xml')
     print(
-        '\n [Notice] The texture fiile paths are specified in the relative path format assuming your scene xml will be placed in the path vla_arena/vla_arena/assets/scenes/. '
+        '\n [Notice] The texture fiile paths are specified in the relative path format assuming your scene xml will be placed in the path vla_arena/vla_arena/assets/scenes/. ',
     )
     return
 

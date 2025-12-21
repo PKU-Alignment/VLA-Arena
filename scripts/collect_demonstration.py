@@ -20,7 +20,6 @@ import time
 from copy import deepcopy
 from glob import glob
 
-import cv2
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
@@ -30,7 +29,6 @@ from robosuite.controllers.composite.composite_controller import WholeBody
 from robosuite.wrappers import DataCollectionWrapper, VisualizationWrapper
 
 import vla_arena.vla_arena.envs.bddl_utils as BDDLUtils
-from visualize_bddl import get_image, save_rollout_video
 from vla_arena.vla_arena.envs import *
 
 
@@ -520,12 +518,12 @@ if __name__ == '__main__':
 
     else:
         raise Exception(
-            "Invalid device choice: choose 'keyboard', 'spacemouse', 'dualsense', or 'mjgui'."
+            "Invalid device choice: choose 'keyboard', 'spacemouse', 'dualsense', or 'mjgui'.",
         )
 
     # make a new timestamped directory
     t1, t2 = datetime.datetime.now().strftime('%Y%m%d_%H%M%S'), datetime.datetime.now().strftime(
-        '%f'
+        '%f',
     )
     DATE = time.strftime('%Y_%m_%d')
     new_dir = os.path.join(

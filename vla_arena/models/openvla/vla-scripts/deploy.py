@@ -46,14 +46,13 @@ import os.path
 # ruff: noqa: E402
 import json_numpy
 
-
 json_numpy.patch()
 import json
 import logging
 import traceback
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 import draccus
 import torch
@@ -62,7 +61,6 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from PIL import Image
 from transformers import AutoModelForVision2Seq, AutoProcessor
-
 
 # === Utilities ===
 SYSTEM_PROMPT = (

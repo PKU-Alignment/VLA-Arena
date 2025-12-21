@@ -38,7 +38,6 @@ from lerobot.motors.dynamixel import DriveMode, DynamixelMotorsBus, OperatingMod
 from ..teleoperator import Teleoperator
 from .config_widowx import WidowXConfig
 
-
 logger = logging.getLogger(__name__)
 
 

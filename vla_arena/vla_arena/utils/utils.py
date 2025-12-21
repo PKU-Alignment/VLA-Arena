@@ -12,15 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 import os
-import random
 import xml.etree.ElementTree as ET
-from pathlib import Path
 
-import numpy as np
 import robosuite
-import torch
 from robosuite.utils.mjcf_utils import find_elements
 
 

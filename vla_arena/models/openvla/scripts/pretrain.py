@@ -38,13 +38,11 @@ import json
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Tuple, Union
 
 import draccus
 import torch
 import torch.distributed as dist
 import yaml
-
 from vla_arena.models.openvla.vla_arena.models.openvla.prismatic.conf import (
     DatasetConfig,
     DatasetRegistry,
@@ -67,7 +65,6 @@ from vla_arena.models.openvla.vla_arena.models.openvla.prismatic.training import
     get_train_strategy,
 )
 from vla_arena.models.openvla.vla_arena.models.openvla.prismatic.util import set_global_seed
-
 
 # Disable Tokenizers Parallelism to Play Nice w/ PyTorch Multiprocessing DataLoaders
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'

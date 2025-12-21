@@ -36,8 +36,9 @@ from pathlib import Path
 import cv2
 import torch
 import torchvision.transforms.functional as F  # type: ignore  # noqa: N812
-from lerobot.datasets.lerobot_dataset import LeRobotDataset
 from tqdm import tqdm  # type: ignore
+
+from lerobot.datasets.lerobot_dataset import LeRobotDataset
 
 
 def select_rect_roi(img):

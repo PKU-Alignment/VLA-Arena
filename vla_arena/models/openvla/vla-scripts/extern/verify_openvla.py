@@ -25,7 +25,6 @@ import torch
 from PIL import Image
 from transformers import AutoModelForVision2Seq, AutoProcessor
 
-
 # === Verification Arguments
 MODEL_PATH = 'openvla/openvla-7b'
 SYSTEM_PROMPT = (

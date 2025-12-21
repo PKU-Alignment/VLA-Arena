@@ -16,7 +16,7 @@ import numpy as np
 from robosuite.utils.mjcf_utils import array_to_string, string_to_array, xml_path_completion
 
 from vla_arena.vla_arena.envs.arenas import Arena
-from vla_arena.vla_arena.envs.arenas.style import STYLE_MAPPING, get_texture_filename
+from vla_arena.vla_arena.envs.arenas.style import get_texture_filename
 
 
 class StudyTableArena(Arena):
@@ -58,14 +58,14 @@ class StudyTableArena(Arena):
         texplane = self.asset.find("./texture[@name='texplane']")
         plane_file = texplane.get('file')
         plane_file = '/'.join(
-            plane_file.split('/')[:-1] + [get_texture_filename(type='floor', style=floor_style)]
+            plane_file.split('/')[:-1] + [get_texture_filename(type='floor', style=floor_style)],
         )
         texplane.set('file', plane_file)
 
         texwall = self.asset.find("./texture[@name='tex-wall']")
         wall_file = texwall.get('file')
         wall_file = '/'.join(
-            wall_file.split('/')[:-1] + [get_texture_filename(type='wall', style=wall_style)]
+            wall_file.split('/')[:-1] + [get_texture_filename(type='wall', style=wall_style)],
         )
         texwall.set('file', wall_file)
 

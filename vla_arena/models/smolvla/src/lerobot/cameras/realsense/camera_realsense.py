@@ -38,7 +38,6 @@ from typing import Any
 import cv2
 import numpy as np
 
-
 try:
     import pyrealsense2 as rs
 except Exception as e:
@@ -50,7 +49,6 @@ from ..camera import Camera
 from ..configs import ColorMode
 from ..utils import get_cv2_rotation
 from .configuration_realsense import RealSenseCameraConfig
-
 
 logger = logging.getLogger(__name__)
 

@@ -34,11 +34,11 @@ import time
 
 import pytest
 import torch
+from torch.multiprocessing import Event, Queue
+
 from lerobot.configs.train import TrainRLServerPipelineConfig
 from lerobot.policies.sac.configuration_sac import SACConfig
 from lerobot.utils.transition import Transition
-from torch.multiprocessing import Event, Queue
-
 from tests.utils import require_package
 
 
@@ -112,7 +112,6 @@ def test_end_to_end_transitions_flow(cfg):
     )
     from lerobot.scripts.rl.learner import start_learner
     from lerobot.transport.utils import bytes_to_transitions
-
     from tests.transport.test_transport_utils import assert_transitions_equal
 
     """Test complete transitions flow from actor to learner."""

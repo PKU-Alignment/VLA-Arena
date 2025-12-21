@@ -17,14 +17,12 @@ import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Tuple, Union
 
 import draccus
 import torch
 import torch.distributed as dist
 import torchvision.transforms as transforms
 import yaml
-
 from vla_arena.models.univla.prismatic.conf import VLAConfig, VLARegistry
 from vla_arena.models.univla.prismatic.models import load, load_vla
 from vla_arena.models.univla.prismatic.overwatch import initialize_overwatch
@@ -34,7 +32,6 @@ from vla_arena.models.univla.prismatic.vla import get_latent_vla_dataset_and_col
 from vla_arena.models.univla.prismatic.vla.datasets.rlds.utils.data_utils import (
     save_dataset_statistics,
 )
-
 
 # Sane Defaults
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'

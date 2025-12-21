@@ -64,10 +64,6 @@ from functools import partial
 import numpy as np
 import torch
 import torch.nn.functional as F  # noqa: N812
-from lerobot.constants import ACTION, OBS_STATE
-from lerobot.policies.normalize import Normalize, Unnormalize
-from lerobot.policies.pi0fast.configuration_pi0fast import PI0FASTConfig
-from lerobot.policies.pretrained import PreTrainedPolicy
 from PIL import Image
 from scipy.fft import idct
 from torch import Tensor, nn
@@ -75,6 +71,10 @@ from transformers import AutoProcessor, AutoTokenizer, PaliGemmaForConditionalGe
 from transformers.cache_utils import HybridCache, StaticCache
 from transformers.models.auto import CONFIG_MAPPING
 
+from lerobot.constants import ACTION, OBS_STATE
+from lerobot.policies.normalize import Normalize, Unnormalize
+from lerobot.policies.pi0fast.configuration_pi0fast import PI0FASTConfig
+from lerobot.policies.pretrained import PreTrainedPolicy
 
 PRECISION = {
     'float16': torch.float16,

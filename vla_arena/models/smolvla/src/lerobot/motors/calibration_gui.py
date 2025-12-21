@@ -30,11 +30,9 @@ import math
 import os
 from dataclasses import dataclass
 
-
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 
 from lerobot.motors import MotorCalibration, MotorsBus
-
 
 BAR_LEN, BAR_THICKNESS = 450, 8
 HANDLE_R = 10

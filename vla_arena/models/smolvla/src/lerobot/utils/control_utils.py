@@ -40,11 +40,12 @@ from functools import cache
 import numpy as np
 import torch
 from deepdiff import DeepDiff
+from termcolor import colored
+
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
 from lerobot.datasets.utils import DEFAULT_FEATURES
 from lerobot.policies.pretrained import PreTrainedPolicy
 from lerobot.robots import Robot
-from termcolor import colored
 
 
 def log_control_info(robot: Robot, dt_s, episode_index=None, frame_index=None, fps=None):

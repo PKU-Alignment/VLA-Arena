@@ -19,10 +19,8 @@ Contains simple goal relabeling logic for BC use-cases where rewards and next_ob
 Each function should add entries to the "task" dict.
 """
 
-from typing import Dict
 
 import tensorflow as tf
-
 from vla_arena.models.openvla_oft.prismatic.vla.datasets.rlds.utils.data_utils import tree_merge
 
 

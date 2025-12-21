@@ -34,11 +34,9 @@ Terminology
 import os
 import random
 from collections.abc import Callable
-from typing import Optional
 
 import numpy as np
 import torch
-
 
 # === Randomness ===
 

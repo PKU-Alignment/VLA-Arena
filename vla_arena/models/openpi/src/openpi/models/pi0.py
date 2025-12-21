@@ -13,21 +13,21 @@
 # limitations under the License.
 
 import logging
-from typing_extensions import override
 
 import einops
 import flax.nnx as nnx
 import flax.nnx.bridge as nnx_bridge
 import jax
 import jax.numpy as jnp
-import openpi.models.gemma as _gemma
-import openpi.models.siglip as _siglip
+from typing_extensions import override
+
 from openpi.models import model as _model
 from openpi.models import pi0_config
+import openpi.models.gemma as _gemma
+import openpi.models.siglip as _siglip
 from openpi.shared import array_typing as at
 
-
-logger = logging.getLogger('openpi')
+logger = logging.getLogger("openpi")
 
 
 def make_attn_mask(input_mask, mask_ar):
@@ -60,16 +60,16 @@ def make_attn_mask(input_mask, mask_ar):
 
 @at.typecheck
 def posemb_sincos(
-    pos: at.Real[at.Array, ' b'], embedding_dim: int, min_period: float, max_period: float
-) -> at.Float[at.Array, 'b {embedding_dim}']:
+    pos: at.Real[at.Array, " b"], embedding_dim: int, min_period: float, max_period: float
+) -> at.Float[at.Array, "b {embedding_dim}"]:
     """Computes sine-cosine positional embedding vectors for scalar positions."""
     if embedding_dim % 2 != 0:
-        raise ValueError(f'embedding_dim ({embedding_dim}) must be divisible by 2')
+        raise ValueError(f"embedding_dim ({embedding_dim}) must be divisible by 2")
 
     fraction = jnp.linspace(0.0, 1.0, embedding_dim // 2)
     period = min_period * (max_period / min_period) ** fraction
     sinusoid_input = jnp.einsum(
-        'i,j->ij',
+        "i,j->ij",
         pos,
         1.0 / period * 2 * jnp.pi,
         precision=jax.lax.Precision.HIGHEST,
@@ -92,13 +92,13 @@ class Pi0(_model.BaseModel):
             )
         )
         llm.lazy_init(
-            rngs=rngs, method='init', use_adarms=[False, True] if config.pi05 else [False, False]
+            rngs=rngs, method="init", use_adarms=[False, True] if config.pi05 else [False, False]
         )
         img = nnx_bridge.ToNNX(
             _siglip.Module(
                 num_classes=paligemma_config.width,
-                variant='So400m/14',
-                pool_type='none',
+                variant="So400m/14",
+                pool_type="none",
                 scan=True,
                 dtype_mm=config.dtype,
             )
@@ -129,7 +129,7 @@ class Pi0(_model.BaseModel):
     @at.typecheck
     def embed_prefix(
         self, obs: _model.Observation
-    ) -> tuple[at.Float[at.Array, 'b s emb'], at.Bool[at.Array, 'b s'], at.Bool[at.Array, ' s']]:
+    ) -> tuple[at.Float[at.Array, "b s emb"], at.Bool[at.Array, "b s"], at.Bool[at.Array, " s"]]:
         input_mask = []
         ar_mask = []
         tokens = []
@@ -141,7 +141,7 @@ class Pi0(_model.BaseModel):
             input_mask.append(
                 einops.repeat(
                     obs.image_masks[name],
-                    'b -> b s',
+                    "b -> b s",
                     s=image_tokens.shape[1],
                 )
             )
@@ -150,7 +150,7 @@ class Pi0(_model.BaseModel):
 
         # add language (aka tokenized inputs)
         if obs.tokenized_prompt is not None:
-            tokenized_inputs = self.PaliGemma.llm(obs.tokenized_prompt, method='embed')
+            tokenized_inputs = self.PaliGemma.llm(obs.tokenized_prompt, method="embed")
             tokens.append(tokenized_inputs)
             input_mask.append(obs.tokenized_prompt_mask)
             # full attention between image and language inputs
@@ -165,12 +165,12 @@ class Pi0(_model.BaseModel):
         self,
         obs: _model.Observation,
         noisy_actions: _model.Actions,
-        timestep: at.Float[at.Array, ' b'],
+        timestep: at.Float[at.Array, " b"],
     ) -> tuple[
-        at.Float[at.Array, 'b s emb'],
-        at.Bool[at.Array, 'b s'],
-        at.Bool[at.Array, ' s'],
-        at.Float[at.Array, 'b emb'] | None,
+        at.Float[at.Array, "b s emb"],
+        at.Bool[at.Array, "b s"],
+        at.Bool[at.Array, " s"],
+        at.Float[at.Array, "b emb"] | None,
     ]:
         input_mask = []
         ar_mask = []
@@ -198,7 +198,7 @@ class Pi0(_model.BaseModel):
             adarms_cond = time_emb
         else:
             # mix timestep + action information using an MLP (no adaRMS)
-            time_tokens = einops.repeat(time_emb, 'b emb -> b s emb', s=self.action_horizon)
+            time_tokens = einops.repeat(time_emb, "b emb -> b s emb", s=self.action_horizon)
             action_time_tokens = jnp.concatenate([action_tokens, time_tokens], axis=-1)
             action_time_tokens = self.action_time_mlp_in(action_time_tokens)
             action_time_tokens = nnx.swish(action_time_tokens)
@@ -222,7 +222,7 @@ class Pi0(_model.BaseModel):
         actions: _model.Actions,
         *,
         train: bool = False,
-    ) -> at.Float[at.Array, '*b ah']:
+    ) -> at.Float[at.Array, "*b ah"]:
         preprocess_rng, noise_rng, time_rng = jax.random.split(rng, 3)
         observation = _model.preprocess_observation(preprocess_rng, observation, train=train)
 
@@ -258,8 +258,8 @@ class Pi0(_model.BaseModel):
         rng: at.KeyArrayLike,
         observation: _model.Observation,
         *,
-        num_steps: int | at.Int[at.Array, ''] = 10,
-        noise: at.Float[at.Array, 'b ah ad'] | None = None,
+        num_steps: int | at.Int[at.Array, ""] = 10,
+        noise: at.Float[at.Array, "b ah ad"] | None = None,
     ) -> _model.Actions:
         observation = _model.preprocess_observation(None, observation, train=False)
         # note that we use the convention more common in diffusion literature, where t=1 is noise and t=0 is the target
@@ -287,7 +287,7 @@ class Pi0(_model.BaseModel):
             suffix_attn_mask = make_attn_mask(suffix_mask, suffix_ar_mask)
             # `prefix_attn_mask` is shape (b, suffix_len, prefix_len) indicating how the suffix tokens can attend to the
             # prefix tokens
-            prefix_attn_mask = einops.repeat(prefix_mask, 'b p -> b s p', s=suffix_tokens.shape[1])
+            prefix_attn_mask = einops.repeat(prefix_mask, "b p -> b s p", s=suffix_tokens.shape[1])
             # `combined_mask` is shape (b, suffix_len, prefix_len + suffix_len) indicating how the suffix tokens (which
             # generate the queries) can attend to the full prefix + suffix sequence (which generates the keys and values)
             full_attn_mask = jnp.concatenate([prefix_attn_mask, suffix_attn_mask], axis=-1)

@@ -31,7 +31,7 @@ class LiberoOnTheGroundPanda(ManipulatorModel):
 
         # Set joint damping
         self.set_joint_attribute(
-            attrib='damping', values=np.array((0.1, 0.1, 0.1, 0.1, 0.1, 0.01, 0.01))
+            attrib='damping', values=np.array((0.1, 0.1, 0.1, 0.1, 0.1, 0.01, 0.01)),
         )
 
     @property

@@ -36,6 +36,7 @@ import numpy as np
 import PIL.Image
 import pytest
 import torch
+
 from lerobot.datasets.lerobot_dataset import (
     CODEBASE_VERSION,
     LeRobotDataset,
@@ -49,7 +50,6 @@ from lerobot.datasets.utils import (
     get_hf_features_from_features,
     hf_transform_to_torch,
 )
-
 from tests.fixtures.constants import (
     DEFAULT_FPS,
     DUMMY_CAMERA_FEATURES,

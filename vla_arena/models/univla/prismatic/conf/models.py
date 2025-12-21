@@ -25,7 +25,6 @@ variant thereof. A given model variant configures the following attributes:
 
 from dataclasses import dataclass
 from enum import Enum, unique
-from typing import Optional
 
 from draccus import ChoiceRegistry
 

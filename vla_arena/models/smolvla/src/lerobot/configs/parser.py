@@ -35,8 +35,8 @@ from functools import wraps
 from pathlib import Path
 
 import draccus
-from lerobot.utils.utils import has_method
 
+from lerobot.utils.utils import has_method
 
 PATH_KEY = 'path'
 PLUGIN_DISCOVERY_SUFFIX = 'discover_packages_path'

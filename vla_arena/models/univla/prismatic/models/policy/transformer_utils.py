@@ -12,18 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import math
-import warnings
-from typing import Optional
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from einops import rearrange, repeat
-from torch import einsum
-from torch.autograd import Function
-from torch.nn.init import constant_, xavier_uniform_
-
+from einops import repeat
 
 # from torch import einsum
 

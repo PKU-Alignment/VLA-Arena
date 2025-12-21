@@ -51,5 +51,5 @@ ROBOT_CLASS_MAPPING.update(
         'MountedPanda': FixedBaseRobot,
         'OnTheGroundPanda': FixedBaseRobot,
         'LiberoOnTheGroundPanda': FixedBaseRobot,
-    }
+    },
 )

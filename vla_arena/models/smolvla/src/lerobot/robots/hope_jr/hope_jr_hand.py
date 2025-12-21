@@ -42,7 +42,6 @@ from lerobot.motors.feetech import FeetechMotorsBus
 from ..robot import Robot
 from .config_hope_jr import HopeJrHandConfig
 
-
 logger = logging.getLogger(__name__)
 
 RIGHT_HAND_INVERSIONS = [

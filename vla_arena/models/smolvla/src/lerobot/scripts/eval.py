@@ -75,6 +75,10 @@ import einops
 import gymnasium as gym
 import numpy as np
 import torch
+from termcolor import colored
+from torch import Tensor, nn
+from tqdm import trange
+
 from lerobot.configs import parser
 from lerobot.configs.eval import EvalPipelineConfig
 from lerobot.envs.factory import make_env
@@ -85,9 +89,6 @@ from lerobot.policies.utils import get_device_from_parameters
 from lerobot.utils.io_utils import write_video
 from lerobot.utils.random_utils import set_seed
 from lerobot.utils.utils import get_safe_torch_device, init_logging, inside_slurm
-from termcolor import colored
-from torch import Tensor, nn
-from tqdm import trange
 
 
 def rollout(

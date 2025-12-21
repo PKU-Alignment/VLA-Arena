@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import abc
-from typing import Dict
 
 
 class BasePolicy(abc.ABC):

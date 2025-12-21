@@ -21,7 +21,7 @@ import shutil
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import json_numpy
 import numpy as np
@@ -31,7 +31,6 @@ import torch
 from huggingface_hub import HfApi, hf_hub_download
 from PIL import Image
 from transformers import AutoConfig, AutoImageProcessor, AutoModelForVision2Seq, AutoProcessor
-
 
 # Apply JSON numpy patch for serialization
 json_numpy.patch()
@@ -62,7 +61,6 @@ from vla_arena.models.openvla_oft.prismatic.vla.constants import (
 from vla_arena.models.openvla_oft.prismatic.vla.datasets.rlds.utils.data_utils import (
     NormalizationType,
 )
-
 
 # Initialize important constants
 DATE = time.strftime('%Y_%m_%d')

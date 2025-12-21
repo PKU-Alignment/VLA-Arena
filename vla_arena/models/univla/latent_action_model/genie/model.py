@@ -14,27 +14,20 @@
 
 from collections.abc import Callable, Iterable
 from os import listdir, makedirs, path
-from typing import Dict, Tuple
 
 import matplotlib.pyplot as plt
-import numpy as np
-import piq
 import torch
 import wandb
 from accelerate import PartialState
-from einops import rearrange
 from lightning import LightningModule
-from PIL import Image
 from torch import Tensor
 from torch.optim import AdamW, Optimizer
-
 
 OptimizerCallable = Callable[[Iterable], Optimizer]
 
 import logging
 
 from genie.modules import ControllableDINOLatentActionModel, UncontrolledDINOLatentActionModel
-
 
 logging.basicConfig(format='%(message)s', level=logging.INFO)
 

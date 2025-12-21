@@ -3,7 +3,6 @@ Tests for BDDL generation utilities.
 """
 
 import os
-from unittest.mock import Mock, patch
 
 import pytest
 
@@ -49,7 +48,7 @@ class TestBDDLGenerationUtils:
         language = 'pick up the cup'
 
         file_path = bddl_generation_utils.save_to_file(
-            result, scene_name, language, folder=temp_dir
+            result, scene_name, language, folder=temp_dir,
         )
 
         assert os.path.exists(file_path)

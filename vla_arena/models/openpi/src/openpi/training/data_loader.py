@@ -12,45 +12,45 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections.abc import Iterator, Sequence
 import logging
 import multiprocessing
 import os
 import typing
-from collections.abc import Iterator, Sequence
 from typing import Literal, Protocol, SupportsIndex, TypeVar
 
 import jax
 import jax.numpy as jnp
 import lerobot.common.datasets.lerobot_dataset as lerobot_dataset
 import numpy as np
+import torch
+
 import openpi.models.model as _model
 import openpi.training.config as _config
-import openpi.transforms as _transforms
-import torch
 from openpi.training.droid_rlds_dataset import DroidRldsDataset
+import openpi.transforms as _transforms
 
-
-T_co = TypeVar('T_co', covariant=True)
+T_co = TypeVar("T_co", covariant=True)
 
 
 class Dataset(Protocol[T_co]):
     """Interface for a dataset with random access."""
 
     def __getitem__(self, index: SupportsIndex) -> T_co:
-        raise NotImplementedError('Subclasses of Dataset should implement __getitem__.')
+        raise NotImplementedError("Subclasses of Dataset should implement __getitem__.")
 
     def __len__(self) -> int:
-        raise NotImplementedError('Subclasses of Dataset should implement __len__.')
+        raise NotImplementedError("Subclasses of Dataset should implement __len__.")
 
 
 class IterableDataset(Protocol[T_co]):
     """Interface for an iterable dataset."""
 
     def __iter__(self) -> Iterator[T_co]:
-        raise NotImplementedError('Subclasses of IterableDataset should implement __iter__.')
+        raise NotImplementedError("Subclasses of IterableDataset should implement __iter__.")
 
     def __len__(self) -> int:
-        raise NotImplementedError('Subclasses of Dataset should implement __len__.')
+        raise NotImplementedError("Subclasses of Dataset should implement __len__.")
 
 
 class DataLoader(Protocol[T_co]):
@@ -58,10 +58,10 @@ class DataLoader(Protocol[T_co]):
 
     def data_config(self) -> _config.DataConfig:
         """Get the data config for this data loader."""
-        raise NotImplementedError('Subclasses of DataLoader should implement data_config.')
+        raise NotImplementedError("Subclasses of DataLoader should implement data_config.")
 
     def __iter__(self) -> Iterator[T_co]:
-        raise NotImplementedError('Subclasses of DataLoader should implement __iter__.')
+        raise NotImplementedError("Subclasses of DataLoader should implement __iter__.")
 
 
 class TransformedDataset(Dataset[T_co]):
@@ -98,7 +98,7 @@ class IterableTransformedDataset(IterableDataset[T_co]):
                 # Split batch into individual samples using tree_map
                 individual_samples = [
                     jax.tree.map(lambda x: x[i], sample) for i in range(batch_size)
-                ]  # noqa: B023
+                ]
 
                 # Transform each sample
                 transformed = [self._transform(s) for s in individual_samples]
@@ -136,7 +136,7 @@ class FakeDataset(Dataset):
 
         return {
             **observation.to_dict(),
-            'actions': action,
+            "actions": action,
         }
 
     def __len__(self) -> int:
@@ -149,8 +149,8 @@ def create_torch_dataset(
     """Create a dataset for training."""
     repo_id = data_config.repo_id
     if repo_id is None:
-        raise ValueError('Repo ID is not set. Cannot create dataset.')
-    if repo_id == 'fake':
+        raise ValueError("Repo ID is not set. Cannot create dataset.")
+    if repo_id == "fake":
         return FakeDataset(model_config, num_samples=1024)
 
     dataset_meta = lerobot_dataset.LeRobotDatasetMetadata(repo_id)
@@ -193,11 +193,11 @@ def transform_dataset(
 ) -> Dataset:
     """Transform the dataset by applying the data transforms."""
     norm_stats = {}
-    if data_config.repo_id != 'fake' and not skip_norm_stats:
+    if data_config.repo_id != "fake" and not skip_norm_stats:
         if data_config.norm_stats is None:
             raise ValueError(
-                'Normalization stats not found. '
-                'Make sure to run `scripts/compute_norm_stats.py --config-name=<your-config>`.'
+                "Normalization stats not found. "
+                "Make sure to run `scripts/compute_norm_stats.py --config-name=<your-config>`."
             )
         norm_stats = data_config.norm_stats
 
@@ -221,11 +221,11 @@ def transform_iterable_dataset(
 ) -> IterableDataset:
     """Transform the dataset by applying the data transforms."""
     norm_stats = {}
-    if data_config.repo_id != 'fake' and not skip_norm_stats:
+    if data_config.repo_id != "fake" and not skip_norm_stats:
         if data_config.norm_stats is None:
             raise ValueError(
-                'Normalization stats not found. '
-                'Make sure to run `scripts/compute_norm_stats.py --config-name=<your-config>`.'
+                "Normalization stats not found. "
+                "Make sure to run `scripts/compute_norm_stats.py --config-name=<your-config>`."
             )
         norm_stats = data_config.norm_stats
 
@@ -248,7 +248,7 @@ def create_data_loader(
     shuffle: bool = False,
     num_batches: int | None = None,
     skip_norm_stats: bool = False,
-    framework: Literal['jax', 'pytorch'] = 'jax',
+    framework: Literal["jax", "pytorch"] = "jax",
 ) -> DataLoader[tuple[_model.Observation, _model.Actions]]:
     """Create a data loader for training.
 
@@ -261,7 +261,7 @@ def create_data_loader(
         framework: The framework to use ("jax" or "pytorch").
     """
     data_config = config.data.create(config.assets_dirs, config.model)
-    logging.info(f'data_config: {data_config}')
+    logging.info(f"data_config: {data_config}")
 
     if data_config.rlds_data_dir is not None:
         return create_rlds_data_loader(
@@ -301,7 +301,7 @@ def create_torch_data_loader(
     num_batches: int | None = None,
     num_workers: int = 0,
     seed: int = 0,
-    framework: str = 'jax',
+    framework: str = "jax",
 ) -> DataLoader[tuple[_model.Observation, _model.Actions]]:
     """Create a data loader for training.
 
@@ -327,7 +327,7 @@ def create_torch_data_loader(
     # For PyTorch DDP, create DistributedSampler and divide batch size by world size
     # For JAX, divide by process count
     sampler = None
-    if framework == 'pytorch':
+    if framework == "pytorch":
         if torch.distributed.is_initialized():
             sampler = torch.utils.data.distributed.DistributedSampler(
                 dataset,
@@ -342,11 +342,11 @@ def create_torch_data_loader(
     else:
         local_batch_size = batch_size // jax.process_count()
 
-    logging.info(f'local_batch_size: {local_batch_size}')
+    logging.info(f"local_batch_size: {local_batch_size}")
     data_loader = TorchDataLoader(
         dataset,
         local_batch_size=local_batch_size,
-        sharding=None if framework == 'pytorch' else sharding,
+        sharding=None if framework == "pytorch" else sharding,
         shuffle=(sampler is None and shuffle),  # Don't shuffle if using sampler
         sampler=sampler,
         num_batches=num_batches,
@@ -367,7 +367,7 @@ def create_rlds_data_loader(
     skip_norm_stats: bool = False,
     shuffle: bool = False,
     num_batches: int | None = None,
-    framework: str = 'jax',
+    framework: str = "jax",
 ) -> DataLoader[tuple[_model.Observation, _model.Actions]]:
     """Create an RLDS data loader for training.
 
@@ -385,8 +385,8 @@ def create_rlds_data_loader(
             number of batches in the dataset, the data loader will loop over the dataset.
             If not provided, will iterate over the dataset indefinitely.
     """
-    if framework == 'pytorch':
-        raise NotImplementedError('PyTorch RLDS data loader is not supported yet')
+    if framework == "pytorch":
+        raise NotImplementedError("PyTorch RLDS data loader is not supported yet")
     dataset = create_rlds_dataset(data_config, action_horizon, batch_size, shuffle=shuffle)
     dataset = transform_iterable_dataset(
         dataset, data_config, skip_norm_stats=skip_norm_stats, is_batched=True
@@ -415,7 +415,7 @@ class TorchDataLoader:
         num_batches: int | None = None,
         num_workers: int = 0,
         seed: int = 0,
-        framework: str = 'jax',
+        framework: str = "jax",
     ):
         """Create a PyTorch data loader.
 
@@ -433,26 +433,26 @@ class TorchDataLoader:
             seed: The seed to use for shuffling the data.
         """
         if jax.process_count() > 1:
-            raise NotImplementedError('Data loading with multiple processes is not supported.')
+            raise NotImplementedError("Data loading with multiple processes is not supported.")
 
         if len(dataset) < local_batch_size:
             raise ValueError(
-                f'Local batch size ({local_batch_size}) is larger than the dataset size ({len(dataset)}).'
+                f"Local batch size ({local_batch_size}) is larger than the dataset size ({len(dataset)})."
             )
 
         # Store sharding - None for PyTorch, JAX sharding for JAX
         self._sharding = sharding
-        if sharding is None and framework == 'jax':
+        if sharding is None and framework == "jax":
             # Use data parallel sharding by default for JAX only.
             self._sharding = jax.sharding.NamedSharding(
-                jax.sharding.Mesh(jax.devices(), ('B',)),
-                jax.sharding.PartitionSpec('B'),
+                jax.sharding.Mesh(jax.devices(), ("B",)),
+                jax.sharding.PartitionSpec("B"),
             )
         self._num_batches = num_batches
 
         mp_context = None
         if num_workers > 0:
-            mp_context = multiprocessing.get_context('spawn')
+            mp_context = multiprocessing.get_context("spawn")
 
         generator = torch.Generator()
         generator.manual_seed(seed)
@@ -506,8 +506,8 @@ def _worker_init_fn(worker_id: int) -> None:
     """Tell JAX inside the worker process not to preallocate the GPU memory."""
     # NOTE: This is called after jax is imported inside the worker process. This
     # means that this approach will not work for selecting the backend.
-    os.environ['XLA_PYTHON_CLIENT_PREALLOCATE'] = 'false'
-    os.environ['XLA_PYTHON_CLIENT_ALLOCATOR'] = 'platform'
+    os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
+    os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
 
 
 class RLDSDataLoader:
@@ -527,13 +527,13 @@ class RLDSDataLoader:
         self._num_batches = num_batches
 
         if jax.process_count() > 1:
-            raise NotImplementedError('Data loading with multiple processes is not supported.')
+            raise NotImplementedError("Data loading with multiple processes is not supported.")
 
         if sharding is None:
             # Use data parallel sharding by default.
             sharding = jax.sharding.NamedSharding(
-                jax.sharding.Mesh(jax.devices(), ('B',)),
-                jax.sharding.PartitionSpec('B'),
+                jax.sharding.Mesh(jax.devices(), ("B",)),
+                jax.sharding.PartitionSpec("B"),
             )
 
         self._sharding = sharding
@@ -568,4 +568,4 @@ class DataLoaderImpl(DataLoader):
 
     def __iter__(self):
         for batch in self._data_loader:
-            yield _model.Observation.from_dict(batch), batch['actions']
+            yield _model.Observation.from_dict(batch), batch["actions"]

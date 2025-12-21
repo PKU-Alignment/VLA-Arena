@@ -21,7 +21,7 @@ from vla_arena.evaluation.evaluator import Evaluator
 # from vla_arena.evaluation.policy import OpenVLAOFT
 # from vla_arena.evaluation.policy import OpenPI
 # from vla_arena.evaluation.policy import SmolVLA
-from vla_arena.evaluation.policy import OpenVLA, PolicyRegistry, RandomPolicy
+from vla_arena.evaluation.policy import PolicyRegistry
 
 
 # import debugpy
@@ -103,7 +103,7 @@ def get_args():
     )
 
     parser.add_argument(
-        '--n-episode', default=1, type=int, help='The number of episodes to evaluate for each task'
+        '--n-episode', default=1, type=int, help='The number of episodes to evaluate for each task',
     )
     parser.add_argument(
         '--policy',
@@ -114,7 +114,7 @@ def get_args():
     )
     parser.add_argument('--model_ckpt', default=None, help='The base model checkpoint path')
     parser.add_argument(
-        '--save-dir', default='logs', help='The directory to save the evaluation results'
+        '--save-dir', default='logs', help='The directory to save the evaluation results',
     )
     parser.add_argument(
         '--visualization',
@@ -130,7 +130,7 @@ def get_args():
         help='The metrics to evaluate',
     )
     parser.add_argument(
-        '--host', default='localhost', type=str, help='The host to the remote server'
+        '--host', default='localhost', type=str, help='The host to the remote server',
     )
     parser.add_argument('--port', default=5555, type=int, help='The port to the remote server')
     parser.add_argument('--replanstep', default=4, type=int, help='The step to replan')
@@ -143,7 +143,7 @@ def get_args():
         help='Whether to run level evaluations in parallel (experimental)',
     )
     parser.add_argument(
-        '--episode_config', default=None, type=str, help='Path to episode configuration file'
+        '--episode_config', default=None, type=str, help='Path to episode configuration file',
     )
 
     args = parser.parse_args()
@@ -171,7 +171,7 @@ def print_evaluation_plan(args, task_levels):
     total_episodes = num_levels * estimated_tasks_per_level * args.n_episode
 
     print(f'Estimated total episodes: ~{total_episodes}')
-    print(f'Press Ctrl+C to cancel, or wait to continue...\n')
+    print('Press Ctrl+C to cancel, or wait to continue...\n')
 
     import time
 
@@ -219,11 +219,11 @@ def evaluate(args):
     )
     if args.policy not in PolicyRegistry.list_policies():
         raise ValueError(
-            f"Policy '{args.policy}' is not registered. Available policies: {PolicyRegistry.list_policies()}"
+            f"Policy '{args.policy}' is not registered. Available policies: {PolicyRegistry.list_policies()}",
         )
     if args.policy != 'openpi':
         policy = PolicyRegistry.get(
-            args.policy, model_ckpt=args.model_ckpt if args.model_ckpt else None
+            args.policy, model_ckpt=args.model_ckpt if args.model_ckpt else None,
         )
     else:
         policy = PolicyRegistry.get(args.policy, host=args.host, port=args.port)
@@ -285,7 +285,7 @@ def main():
     try:
         evaluate(args)
         return 0
-    except Exception as e:
+    except Exception:
         import traceback
 
         traceback.print_exc()

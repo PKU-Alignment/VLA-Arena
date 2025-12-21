@@ -20,7 +20,6 @@ from vla_arena.vla_arena.envs.objects import *
 from vla_arena.vla_arena.envs.predicates import *
 from vla_arena.vla_arena.envs.regions import *
 from vla_arena.vla_arena.envs.robots import *
-from vla_arena.vla_arena.envs.utils import rectangle2xyrange
 
 
 @register_problem
@@ -47,8 +46,8 @@ class Tabletop_Manipulation(BDDLBaseDomain):
                     'scene_properties': {
                         'floor_style': 'light-gray',
                         'wall_style': 'light-gray-plaster',
-                    }
-                }
+                    },
+                },
             )
 
         super().__init__(bddl_file_name, *args, **kwargs)
@@ -101,7 +100,7 @@ class Tabletop_Manipulation(BDDLBaseDomain):
                         rgba=target_zone.rgba,
                         size=target_zone.size,
                         type='box',
-                    )
+                    ),
                 )
                 continue
             # Otherwise the processing is consistent
@@ -171,16 +170,16 @@ class Tabletop_Manipulation(BDDLBaseDomain):
         for camera in camera_names:
             if camera not in ['agentview', 'birdview', 'sideview']:
                 continue
-            elif camera == 'agentview':
+            if camera == 'agentview':
                 mujoco_arena.set_camera(
-                    **AGENTVIEW_CONFIG[self.workspace_name], pos_offset=camera_configs[camera]
+                    **AGENTVIEW_CONFIG[self.workspace_name], pos_offset=camera_configs[camera],
                 )
             else:
                 mujoco_arena.set_camera(camera_name=camera, pos_offset=camera_configs[camera])
 
         # For visualization purpose
         mujoco_arena.set_camera(
-            camera_name='frontview', pos=[1.0, 0.0, 1.48], quat=[0.56, 0.43, 0.43, 0.56]
+            camera_name='frontview', pos=[1.0, 0.0, 1.48], quat=[0.56, 0.43, 0.43, 0.56],
         )
         mujoco_arena.set_camera(
             camera_name='galleryview',

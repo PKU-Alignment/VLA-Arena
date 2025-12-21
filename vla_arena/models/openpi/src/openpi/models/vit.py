@@ -33,8 +33,8 @@ from typing import Any
 import flax.linen as nn
 import jax
 import jax.numpy as jnp
-from openpi.models import resnet as models_resnet
 
+from openpi.models import resnet as models_resnet
 
 Array = Any
 PRNGKey = Any
@@ -71,9 +71,9 @@ class AddPositionEmbs(nn.Module):
           Output tensor with shape `(bs, timesteps, in_dim)`.
         """
         # inputs.shape is (batch_size, seq_len, emb_dim).
-        assert inputs.ndim == 3, f'Number of dimensions should be 3, but it is: {inputs.ndim}'
+        assert inputs.ndim == 3, f"Number of dimensions should be 3, but it is: {inputs.ndim}"
         pos_emb_shape = (1, inputs.shape[1], inputs.shape[2])
-        pe = self.param('pos_embedding', self.posemb_init, pos_emb_shape, self.param_dtype)
+        pe = self.param("pos_embedding", self.posemb_init, pos_emb_shape, self.param_dtype)
         return inputs + pe
 
 
@@ -147,7 +147,7 @@ class Encoder1DBlock(nn.Module):
         """
 
         # Attention block.
-        assert inputs.ndim == 3, f'Expected (batch, seq, hidden) got {inputs.shape}'
+        assert inputs.ndim == 3, f"Expected (batch, seq, hidden) got {inputs.shape}"
         x = nn.LayerNorm(dtype=self.dtype)(inputs)
         x = nn.MultiHeadDotProductAttention(
             dtype=self.dtype,
@@ -206,7 +206,7 @@ class Encoder(nn.Module):
         if self.add_position_embedding:
             x = AddPositionEmbs(
                 posemb_init=nn.initializers.normal(stddev=0.02),  # from BERT.
-                name='posembed_input',
+                name="posembed_input",
             )(x)
             x = nn.Dropout(rate=self.dropout_rate)(x, deterministic=not train)
 
@@ -215,12 +215,12 @@ class Encoder(nn.Module):
         block = nn.remat(Encoder1DBlock, prevent_cse=False, static_argnums=(2,))
         x, _ = nn.scan(
             block,
-            variable_axes={'params': 0},
-            split_rngs={'params': True, 'dropout': True},
+            variable_axes={"params": 0},
+            split_rngs={"params": True, "dropout": True},
             in_axes=nn.broadcast,
             length=self.num_layers,
         )(
-            name='encoderblock',
+            name="encoderblock",
             mlp_dim=self.mlp_dim,
             dropout_rate=self.dropout_rate,
             attention_dropout_rate=self.attention_dropout_rate,
@@ -229,7 +229,7 @@ class Encoder(nn.Module):
         )(
             x, not train
         )
-        return nn.LayerNorm(name='encoder_norm', dtype=self.dtype)(x)
+        return nn.LayerNorm(name="encoder_norm", dtype=self.dtype)(x)
 
 
 class VisionTransformer(nn.Module):
@@ -242,7 +242,7 @@ class VisionTransformer(nn.Module):
     hidden_size: int
     resnet: Any | None = None
     representation_size: int | None = None
-    classifier: str = 'token'
+    classifier: str = "token"
     head_bias_init: float = 0.0
     encoder: type[nn.Module] = Encoder
     model_name: str | None = None
@@ -256,11 +256,11 @@ class VisionTransformer(nn.Module):
 
             # Root block.
             x = models_resnet.StdConv(
-                features=width, kernel_size=(7, 7), strides=(2, 2), use_bias=False, name='conv_root'
+                features=width, kernel_size=(7, 7), strides=(2, 2), use_bias=False, name="conv_root"
             )(x)
-            x = nn.GroupNorm(name='gn_root')(x)
+            x = nn.GroupNorm(name="gn_root")(x)
             x = nn.relu(x)
-            x = nn.max_pool(x, window_shape=(3, 3), strides=(2, 2), padding='SAME')
+            x = nn.max_pool(x, window_shape=(3, 3), strides=(2, 2), padding="SAME")
 
             # ResNet stages.
             if self.resnet.num_layers:
@@ -268,14 +268,14 @@ class VisionTransformer(nn.Module):
                     block_size=self.resnet.num_layers[0],
                     nout=width,
                     first_stride=(1, 1),
-                    name='block1',
+                    name="block1",
                 )(x)
                 for i, block_size in enumerate(self.resnet.num_layers[1:], 1):
                     x = models_resnet.ResNetStage(
                         block_size=block_size,
                         nout=width * 2**i,
                         first_stride=(2, 2),
-                        name=f'block{i + 1}',
+                        name=f"block{i + 1}",
                     )(x)
 
         n, h, w, c = x.shape
@@ -285,8 +285,8 @@ class VisionTransformer(nn.Module):
             features=self.hidden_size,
             kernel_size=self.patches.size,
             strides=self.patches.size,
-            padding='VALID',
-            name='embedding',
+            padding="VALID",
+            name="embedding",
         )(x)
 
         # Here, x is a grid of embeddings.
@@ -297,34 +297,34 @@ class VisionTransformer(nn.Module):
             x = jnp.reshape(x, [n, h * w, c])
 
             # If we want to add a class token, add it here.
-            if self.classifier in ['token', 'token_unpooled']:
-                cls = self.param('cls', nn.initializers.zeros, (1, 1, c))
+            if self.classifier in ["token", "token_unpooled"]:
+                cls = self.param("cls", nn.initializers.zeros, (1, 1, c))
                 cls = jnp.tile(cls, [n, 1, 1])
                 x = jnp.concatenate([cls, x], axis=1)
 
-            x = self.encoder(name='Transformer', **self.transformer, dtype=self.dtype)(
+            x = self.encoder(name="Transformer", **self.transformer, dtype=self.dtype)(
                 x, train=train
             )
 
-        if self.classifier == 'token':
+        if self.classifier == "token":
             x = x[:, 0]
-        elif self.classifier == 'gap':
+        elif self.classifier == "gap":
             x = jnp.mean(x, axis=list(range(1, x.ndim - 1)))  # (1,) or (1,2)
-        elif self.classifier in ['unpooled', 'token_unpooled']:
+        elif self.classifier in ["unpooled", "token_unpooled"]:
             pass
         else:
-            raise ValueError(f'Invalid classifier={self.classifier}')
+            raise ValueError(f"Invalid classifier={self.classifier}")
 
         if self.representation_size is not None:
-            x = nn.Dense(features=self.representation_size, name='pre_logits')(x)
+            x = nn.Dense(features=self.representation_size, name="pre_logits")(x)
             x = nn.tanh(x)
         else:
-            x = IdentityLayer(name='pre_logits')(x)
+            x = IdentityLayer(name="pre_logits")(x)
 
         if self.num_classes:
             x = nn.Dense(
                 features=self.num_classes,
-                name='head',
+                name="head",
                 kernel_init=nn.initializers.zeros,
                 bias_init=nn.initializers.constant(self.head_bias_init),
             )(x)

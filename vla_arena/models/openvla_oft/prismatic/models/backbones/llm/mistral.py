@@ -18,20 +18,17 @@ mistral.py
 Class definition for all LLMs derived from MistralForCausalLM.
 """
 
-from typing import Optional, Type
 
 import torch
 from torch import nn as nn
 from transformers import MistralForCausalLM
 from transformers.models.mistral.modeling_mistral import MistralDecoderLayer
-
 from vla_arena.models.openvla_oft.prismatic.models.backbones.llm.base_llm import HFCausalLLMBackbone
 from vla_arena.models.openvla_oft.prismatic.models.backbones.llm.prompting import (
     MistralInstructPromptBuilder,
     PromptBuilder,
     PurePromptBuilder,
 )
-
 
 # Registry =>> Support Mistral Models (from HF Transformers)
 # fmt: off

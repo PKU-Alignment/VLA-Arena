@@ -139,7 +139,7 @@ def create_fake_episode(clip_dir, save_dir, annotation, target_size, verify=Fals
                 }
             )
         except Exception as e:
-            print(f'Error processing frame {frame_path}: {str(e)}')
+            print(f'Error processing frame {frame_path}: {e!s}')
             continue
 
     # Save the episode data
@@ -152,7 +152,7 @@ def create_fake_episode(clip_dir, save_dir, annotation, target_size, verify=Fals
             if len(loaded_data) == 0:
                 print(f'Warning: Empty episode saved at {save_path}')
         except Exception as e:
-            print(f'Failed to verify saved episode {episode_id}: {str(e)}')
+            print(f'Failed to verify saved episode {episode_id}: {e!s}')
 
 
 def process_video(video_dir, target_dir, annotation, target_size, verify=False):
@@ -189,7 +189,7 @@ def main():
         with open(args.annotation_file) as f:
             annotation = json.load(f)
     except Exception as e:
-        print(f'Failed to load annotation file: {str(e)}')
+        print(f'Failed to load annotation file: {e!s}')
         return
 
     # Get list of video directories

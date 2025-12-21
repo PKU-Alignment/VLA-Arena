@@ -26,7 +26,6 @@ model configuration thereof. A given VLA model (`policy`) configures the followi
 from dataclasses import dataclass
 from enum import Enum, unique
 from pathlib import Path
-from typing import Optional, Union
 
 from draccus import ChoiceRegistry
 

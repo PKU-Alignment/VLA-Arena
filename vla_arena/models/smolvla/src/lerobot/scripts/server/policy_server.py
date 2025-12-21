@@ -50,6 +50,7 @@ from queue import Empty, Queue
 import draccus
 import grpc
 import torch
+
 from lerobot.policies.factory import get_policy_class
 from lerobot.scripts.server.configs import PolicyServerConfig
 from lerobot.scripts.server.constants import SUPPORTED_POLICIES
@@ -63,8 +64,10 @@ from lerobot.scripts.server.helpers import (
     observations_similar,
     raw_observation_to_observation,
 )
-from lerobot.transport import services_pb2  # type: ignore
-from lerobot.transport import services_pb2_grpc  # type: ignore
+from lerobot.transport import (
+    services_pb2,  # type: ignore
+    services_pb2_grpc,  # type: ignore
+)
 from lerobot.transport.utils import receive_bytes_in_chunks
 
 

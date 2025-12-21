@@ -34,10 +34,11 @@ from typing import Any
 
 import draccus
 import torch
+from safetensors.torch import load_file, save_file
+
 from lerobot.constants import OPTIMIZER_PARAM_GROUPS, OPTIMIZER_STATE
 from lerobot.datasets.utils import flatten_dict, unflatten_dict, write_json
 from lerobot.utils.io_utils import deserialize_json_into_object
-from safetensors.torch import load_file, save_file
 
 
 @dataclass

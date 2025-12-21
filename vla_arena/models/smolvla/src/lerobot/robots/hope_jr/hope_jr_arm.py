@@ -43,7 +43,6 @@ from ..robot import Robot
 from ..utils import ensure_safe_goal_position
 from .config_hope_jr import HopeJrArmConfig
 
-
 logger = logging.getLogger(__name__)
 
 

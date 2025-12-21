@@ -45,6 +45,8 @@ import torch.nn.functional as F  # noqa: N812
 import torchvision
 from diffusers.schedulers.scheduling_ddim import DDIMScheduler
 from diffusers.schedulers.scheduling_ddpm import DDPMScheduler
+from torch import Tensor, nn
+
 from lerobot.constants import ACTION, OBS_ENV_STATE, OBS_IMAGES, OBS_STATE
 from lerobot.policies.diffusion.configuration_diffusion import DiffusionConfig
 from lerobot.policies.normalize import Normalize, Unnormalize
@@ -55,7 +57,6 @@ from lerobot.policies.utils import (
     get_output_shape,
     populate_queues,
 )
-from torch import Tensor, nn
 
 
 class DiffusionPolicy(PreTrainedPolicy):

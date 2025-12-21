@@ -22,14 +22,13 @@ format to OpenVLA, IterableDataset shim.
 import random
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Tuple, Type
+from typing import Any
 
 import numpy as np
 import torch
 from PIL import Image
 from torch.utils.data import Dataset, IterableDataset
 from transformers import PreTrainedTokenizerBase
-
 from vla_arena.models.univla.prismatic.models.backbones.llm.prompting import PromptBuilder
 from vla_arena.models.univla.prismatic.models.backbones.vision import ImageTransform
 from vla_arena.models.univla.prismatic.util.data_utils import tree_map
@@ -43,7 +42,6 @@ from vla_arena.models.univla.prismatic.vla.datasets.rlds.oxe import (
     get_oxe_dataset_kwargs_and_weights,
 )
 from vla_arena.models.univla.prismatic.vla.datasets.rlds.utils.data_utils import NormalizationType
-
 
 # HuggingFace Default / LLaMa-2 IGNORE_INDEX (for labels)
 IGNORE_INDEX = -100

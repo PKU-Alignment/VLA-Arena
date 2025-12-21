@@ -31,13 +31,13 @@
 import time
 
 import numpy as np
-from lerobot.errors import DeviceAlreadyConnectedError
 from stretch_body.gamepad_teleop import GamePadTeleop
 from stretch_body.robot_params import RobotParams
 
+from lerobot.errors import DeviceAlreadyConnectedError
+
 from ..teleoperator import Teleoperator
 from .configuration_stretch3 import Stretch3GamePadConfig
-
 
 # from stretch_body.gamepad_controller.GamePadController
 GAMEPAD_BUTTONS = [

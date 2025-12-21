@@ -30,6 +30,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+
 from lerobot.utils.io_utils import deserialize_json_into_object
 
 

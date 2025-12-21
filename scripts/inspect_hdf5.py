@@ -37,7 +37,7 @@ def print_dataset_info(name, obj):
                 preview_size = min(5, preview_flat.size)
                 preview_str = ', '.join(str(x) for x in preview_flat[:preview_size])
                 print(
-                    f"{indent}    Sample data: {preview_str}{' ...' if preview_flat.size > preview_size else ''}"
+                    f"{indent}    Sample data: {preview_str}{' ...' if preview_flat.size > preview_size else ''}",
                 )
         except Exception:
             print(f'{indent}    (Unable to read data sample)')

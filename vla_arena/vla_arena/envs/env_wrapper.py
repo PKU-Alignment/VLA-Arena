@@ -277,22 +277,21 @@ class SegmentationRenderEnv(OffScreenRenderEnv):
         if random_colors:
             colors = randomize_colors(N=256, bright=True)
             return (255.0 * colors[seg_im]).astype(np.uint8)
-        else:
-            # deterministic shuffling of values to map each geom ID to a random int in [0, 255]
-            rstate = np.random.RandomState(seed=2)
-            inds = np.arange(256)
-            rstate.shuffle(inds)
-            seg_img = (
-                np.array(255.0 * cm.rainbow(inds[seg_im], 10))
-                .astype(np.uint8)[..., :3]
-                .astype(np.uint8)
-                .squeeze(-2)
-            )
-            print(seg_img.shape)
-            cv2.imshow('Seg Image', seg_img[::-1])
-            cv2.waitKey(1)
-            # use @inds to map each geom ID to a color
-            return seg_img
+        # deterministic shuffling of values to map each geom ID to a random int in [0, 255]
+        rstate = np.random.RandomState(seed=2)
+        inds = np.arange(256)
+        rstate.shuffle(inds)
+        seg_img = (
+            np.array(255.0 * cm.rainbow(inds[seg_im], 10))
+            .astype(np.uint8)[..., :3]
+            .astype(np.uint8)
+            .squeeze(-2)
+        )
+        print(seg_img.shape)
+        cv2.imshow('Seg Image', seg_img[::-1])
+        cv2.waitKey(1)
+        # use @inds to map each geom ID to a color
+        return seg_img
 
 
 class DemoRenderEnv(ControlEnv):

@@ -26,16 +26,13 @@ random access image reading is relatively cheap/fast.
 import copy
 import json
 from pathlib import Path
-from typing import Dict, List, Tuple, Type
 
 import torch
 from PIL import Image
 from torch.utils.data import Dataset
 from transformers import CodeGenTokenizerFast, LlamaTokenizerFast, PreTrainedTokenizerBase
-
 from vla_arena.models.openvla_oft.prismatic.models.backbones.llm.prompting import PromptBuilder
 from vla_arena.models.openvla_oft.prismatic.models.backbones.vision import ImageTransform
-
 
 # HuggingFace Default / LLaMa-2 IGNORE_INDEX (for labels)
 IGNORE_INDEX = -100

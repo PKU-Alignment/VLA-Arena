@@ -30,7 +30,7 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union
+from typing import Any, ClassVar
 
 import numpy as np
 import timm
@@ -43,7 +43,6 @@ from transformers import AutoModelForCausalLM, PretrainedConfig, PreTrainedModel
 from transformers.modeling_outputs import ModelOutput
 
 from .configuration_prismatic import OpenVLAConfig, PrismaticConfig
-
 
 # Get Logger
 logger = logging.getLogger(__name__)

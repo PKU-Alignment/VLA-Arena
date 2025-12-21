@@ -29,7 +29,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import draccus
-
 from vla_arena.models.openvla.vla_arena.models.openvla.prismatic.overwatch import (
     initialize_overwatch,
 )
@@ -37,7 +36,6 @@ from vla_arena.models.openvla.vla_arena.models.openvla.prismatic.preprocessing i
     convert_to_jpg,
     download_extract,
 )
-
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)

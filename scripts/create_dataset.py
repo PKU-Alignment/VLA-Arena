@@ -17,16 +17,11 @@ import json
 import os
 from pathlib import Path
 
-import cv2
 import h5py
 import numpy as np
-import robosuite
 import robosuite.macros as macros
 import robosuite.utils.transform_utils as T
-from PIL import Image
-from robosuite.utils import camera_utils
 
-import init_path
 import vla_arena.vla_arena.utils.utils as vla_arena_utils
 from vla_arena.vla_arena import get_vla_arena_path
 from vla_arena.vla_arena.envs import *
@@ -216,8 +211,8 @@ def main():
                         (
                             obs['robot0_eef_pos'],
                             T.quat2axisangle(obs['robot0_eef_quat']),
-                        )
-                    )
+                        ),
+                    ),
                 )
 
             robot_states.append(env.get_robot_state_vector(obs))

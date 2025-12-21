@@ -30,13 +30,11 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from pathlib import Path
-from typing import List, Optional
 
 import torch
 import torch.nn as nn
 from transformers import GenerationMixin, PretrainedConfig
 from transformers.modeling_outputs import CausalLMOutputWithPast
-
 from vla_arena.models.openvla_oft.prismatic.models.backbones.llm import LLMBackbone
 from vla_arena.models.openvla_oft.prismatic.models.backbones.llm.prompting import PromptBuilder
 from vla_arena.models.openvla_oft.prismatic.models.backbones.vision import VisionBackbone

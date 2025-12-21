@@ -21,16 +21,13 @@ GPU hardware and LLM backbones >= 5-7B parameters, DDP training will OOM, which 
 
 import shutil
 from pathlib import Path
-from typing import Optional
 
 import torch
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim import AdamW
 from transformers.optimization import get_constant_schedule, get_cosine_schedule_with_warmup
-
 from vla_arena.models.openvla.prismatic.overwatch import initialize_overwatch
 from vla_arena.models.openvla.prismatic.training.strategies.base_strategy import TrainingStrategy
-
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)

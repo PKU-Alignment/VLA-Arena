@@ -21,7 +21,6 @@ import tqdm
 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # suppress debug warning messages
-import tensorflow as tf
 import tensorflow_datasets as tfds
 from example_transform.transform import transform_step
 
@@ -60,20 +59,20 @@ def check_elements(target, values):
             if target[elem]['shape']:
                 if tuple(values[elem].shape) != target[elem]['shape']:
                     raise ValueError(
-                        f"Shape of {elem} should be {target[elem]['shape']} but is {tuple(values[elem].shape)}"
+                        f"Shape of {elem} should be {target[elem]['shape']} but is {tuple(values[elem].shape)}",
                     )
             if not isinstance(values[elem], bytes) and values[elem].dtype != target[elem]['dtype']:
                 raise ValueError(
-                    f"Dtype of {elem} should be {target[elem]['dtype']} but is {values[elem].dtype}"
+                    f"Dtype of {elem} should be {target[elem]['dtype']} but is {values[elem].dtype}",
                 )
             if target[elem]['range'] is not None:
                 if isinstance(target[elem]['range'], list):
                     for vmin, vmax, val in zip(
-                        target[elem]['range'][0], target[elem]['range'][1], values[elem]
+                        target[elem]['range'][0], target[elem]['range'][1], values[elem],
                     ):
                         if not (val >= vmin and val <= vmax):
                             raise ValueError(
-                                f"{elem} is out of range. Should be in {target[elem]['range']} but is {values[elem]}."
+                                f"{elem} is out of range. Should be in {target[elem]['range']} but is {values[elem]}.",
                             )
                 else:
                     if not (
@@ -81,7 +80,7 @@ def check_elements(target, values):
                         and np.all(values[elem] <= target[elem]['range'][1])
                     ):
                         raise ValueError(
-                            f"{elem} is out of range. Should be in {target[elem]['range']} but is {values[elem]}."
+                            f"{elem} is out of range. Should be in {target[elem]['range']} but is {values[elem]}.",
                         )
 
 

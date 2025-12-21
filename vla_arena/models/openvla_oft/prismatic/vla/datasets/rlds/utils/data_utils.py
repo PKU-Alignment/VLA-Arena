@@ -22,16 +22,14 @@ import hashlib
 import json
 import os
 from collections.abc import Callable
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import dlimp as dl
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
-
 from vla_arena.models.openvla_oft.prismatic.overwatch import initialize_overwatch
 from vla_arena.models.openvla_oft.prismatic.vla.constants import NormalizationType
-
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)

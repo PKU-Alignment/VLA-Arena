@@ -35,6 +35,7 @@ import threading
 from unittest.mock import patch
 
 import pytest
+
 from lerobot.utils.process import ProcessSignalHandler
 
 

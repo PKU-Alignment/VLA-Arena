@@ -43,7 +43,6 @@ from lerobot import available_datasets
 from lerobot.datasets.v2.convert_dataset_v1_to_v2 import convert_dataset
 from lerobot.robots.aloha.configuration_aloha import AlohaRobotConfig
 
-
 LOCAL_DIR = Path('data/')
 
 # spellchecker:off

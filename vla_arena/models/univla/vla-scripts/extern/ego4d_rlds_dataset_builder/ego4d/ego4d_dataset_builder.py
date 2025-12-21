@@ -14,13 +14,11 @@
 
 import glob
 from collections.abc import Iterator
-from typing import Any, Tuple
+from typing import Any
 
 import numpy as np
-import tensorflow as tf
 import tensorflow_datasets as tfds
 import tensorflow_hub as hub
-
 
 # import ipdb; ipdb.set_trace()
 

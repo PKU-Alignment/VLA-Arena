@@ -22,15 +22,13 @@ endpoints (e.g., JSONL local logs, Weights & Biases).
 import time
 from collections import defaultdict, deque
 from pathlib import Path
-from typing import Any, Dict, Optional, Protocol, Tuple, Union
+from typing import Any, Protocol
 
 import jsonlines
 import numpy as np
 import torch
 import wandb
-
 from vla_arena.models.univla.prismatic.overwatch import initialize_overwatch
-
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)

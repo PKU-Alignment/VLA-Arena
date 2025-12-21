@@ -14,7 +14,6 @@
 
 import os
 
-import numpy as np
 
 
 INDENT = '  '
@@ -59,12 +58,11 @@ class _PDDLDefinition:
 def PDDLDefinition(func=None, problem_name=''):
     if func:
         return _PDDLDefinition(func)
-    else:
 
-        def wrapper(func):
-            return _PDDLDefinition(func, problem_name)
+    def wrapper(func):
+        return _PDDLDefinition(func, problem_name)
 
-        return wrapper
+    return wrapper
 
 
 class Language:
@@ -98,12 +96,11 @@ class _LogicalState:
 def LogicalState(func=None, state_type='PLACEHOLDER'):
     if func:
         return _LogicalState(func)
-    else:
 
-        def wrapper(func):
-            return _LogicalState(func, state_type)
+    def wrapper(func):
+        return _LogicalState(func, state_type)
 
-        return wrapper
+    return wrapper
 
 
 # Region definition
@@ -157,12 +154,11 @@ class _ObjectDict:
 def ObjectDict(func=None, object_type='objects'):
     if func:
         return _ObjectDict(func)
-    else:
 
-        def wrapper(func):
-            return _ObjectDict(func, object_type)
+    def wrapper(func):
+        return _ObjectDict(func, object_type)
 
-        return wrapper
+    return wrapper
 
 
 @ObjectDict(object_type='fixtures')
@@ -183,13 +179,13 @@ def get_objects_of_interest(l):
 def general_get_str_func(v):
     if type(v) is list:
         return get_list_string(v)
-    elif type(v) is tuple:
+    if type(v) is tuple:
         return get_tuple_string(v)
-    elif type(v) is dict:
+    if type(v) is dict:
         return get_dict_string(v)
-    elif type(v) is int or type(v) is float:
+    if type(v) is int or type(v) is float:
         return str(v)
-    elif type(v) is str:
+    if type(v) is str:
         return v
 
 
@@ -288,28 +284,27 @@ def object_naming_mapping(category_name, object_id):
         if object_id > 1:
             raise ValueError('Table can only be one for the moment.')
         return 'main_table'
-    elif category_name == 'kitchen_table':
+    if category_name == 'kitchen_table':
         if object_id > 1:
             raise ValueError('Kitchen table can only be one for the moment.')
         return 'kitchen_table'
-    elif category_name == 'floor':
+    if category_name == 'floor':
         if object_id > 1:
             raise ValueError('Floor can only be one.')
         return 'floor'
-    elif category_name == 'coffee_table':
+    if category_name == 'coffee_table':
         if object_id > 1:
             raise ValueError('Coffee table can only be one for the moment.')
         return 'coffee_table'
-    elif category_name == 'living_room_table':
+    if category_name == 'living_room_table':
         if object_id > 1:
             raise ValueError('Living room table can only be one for the moment.')
         return 'living_room_table'
-    elif category_name == 'study_table':
+    if category_name == 'study_table':
         if object_id > 1:
             raise ValueError('Study table can only be one for the moment.')
         return 'study_table'
-    else:
-        return f'{category_name}_{object_id}'
+    return f'{category_name}_{object_id}'
 
 
 def retrieve_fixture_property(category_name):

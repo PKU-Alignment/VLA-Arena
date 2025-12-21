@@ -40,6 +40,6 @@ STYLE_MAPPING = {'floor': FLOOR_STYLE, 'wall': WALL_STYLE}
 
 
 def get_texture_filename(type, style):
-    assert type in STYLE_MAPPING.keys()
+    assert type in STYLE_MAPPING
     assert style in STYLE_MAPPING[type].keys()
     return STYLE_MAPPING[type][style]

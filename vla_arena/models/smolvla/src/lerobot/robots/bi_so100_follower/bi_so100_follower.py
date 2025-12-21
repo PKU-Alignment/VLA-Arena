@@ -40,7 +40,6 @@ from lerobot.robots.so100_follower.config_so100_follower import SO100FollowerCon
 from ..robot import Robot
 from .config_bi_so100_follower import BiSO100FollowerConfig
 
-
 logger = logging.getLogger(__name__)
 
 

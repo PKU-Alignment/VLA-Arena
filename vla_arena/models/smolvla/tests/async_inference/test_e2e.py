@@ -49,7 +49,6 @@ from concurrent import futures
 import pytest
 import torch
 
-
 # Skip entire module if grpc is not available
 pytest.importorskip('grpc')
 
@@ -62,14 +61,16 @@ def test_async_inference_e2e(monkeypatch):
     """Tests the full asynchronous inference pipeline."""
     # Import grpc-dependent modules inside the test function
     import grpc
+
     from lerobot.robots.utils import make_robot_from_config
     from lerobot.scripts.server.configs import PolicyServerConfig, RobotClientConfig
     from lerobot.scripts.server.helpers import map_robot_keys_to_lerobot_features
     from lerobot.scripts.server.policy_server import PolicyServer
     from lerobot.scripts.server.robot_client import RobotClient
-    from lerobot.transport import services_pb2  # type: ignore
-    from lerobot.transport import services_pb2_grpc  # type: ignore
-
+    from lerobot.transport import (
+        services_pb2,  # type: ignore
+        services_pb2_grpc,  # type: ignore
+    )
     from tests.mocks.mock_robot import MockRobotConfig
 
     # Create a stub policy similar to test_policy_server.py

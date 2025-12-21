@@ -36,9 +36,10 @@ from lerobot.datasets.lerobot_dataset import LeRobotDataset
 from lerobot.policies.factory import make_policy
 from lerobot.robots import RobotConfig, make_robot_from_config, so100_follower  # noqa: F401
 from lerobot.scripts.rl.gym_manipulator import make_robot_env
-from lerobot.teleoperators import gamepad  # noqa: F401
-from lerobot.teleoperators import so101_leader  # noqa: F401
-
+from lerobot.teleoperators import (
+    gamepad,  # noqa: F401
+    so101_leader,  # noqa: F401
+)
 
 logging.basicConfig(level=logging.INFO)
 

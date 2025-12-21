@@ -38,7 +38,6 @@ from lerobot.motors.feetech import FeetechMotorsBus, OperatingMode
 from ..teleoperator import Teleoperator
 from .config_so100_leader import SO100LeaderConfig
 
-
 logger = logging.getLogger(__name__)
 
 

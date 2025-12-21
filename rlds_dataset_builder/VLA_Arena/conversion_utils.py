@@ -16,10 +16,9 @@ import itertools
 from collections.abc import Callable, Iterable
 from functools import partial
 from multiprocessing import Pool
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Union
 
 import numpy as np
-import tensorflow as tf
 import tensorflow_datasets as tfds
 from tensorflow_datasets.core import (
     dataset_builder,
@@ -152,7 +151,7 @@ def parse_examples_from_generator(paths, fcn, split_name, total_num_examples, fe
 
 class ParallelSplitBuilder(split_builder_lib.SplitBuilder):
     def __init__(
-        self, *args, split_paths, parse_function, n_workers, max_paths_in_memory, **kwargs
+        self, *args, split_paths, parse_function, n_workers, max_paths_in_memory, **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self._split_paths = split_paths
@@ -192,7 +191,7 @@ class ParallelSplitBuilder(split_builder_lib.SplitBuilder):
         del generator  # use parallel generators instead
         paths = self._split_paths[split_name]
         path_lists = chunk_max(
-            paths, self._n_workers, self._max_paths_in_memory
+            paths, self._n_workers, self._max_paths_in_memory,
         )  # generate N file lists
         print(f'Generating with {self._n_workers} workers!')
         pool = Pool(processes=self._n_workers)
@@ -230,7 +229,7 @@ class ParallelSplitBuilder(split_builder_lib.SplitBuilder):
 
 
 def dictlist2listdict(DL):
-    'Converts a dict of lists to a list of dicts'
+    "Converts a dict of lists to a list of dicts"
     return [dict(zip(DL, t)) for t in zip(*DL.values())]
 
 

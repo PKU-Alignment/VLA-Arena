@@ -29,10 +29,11 @@
 # limitations under the License.
 
 
-from lerobot.configs.train import TrainPipelineConfig
-from lerobot.policies.pretrained import PreTrainedPolicy
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler
+
+from lerobot.configs.train import TrainPipelineConfig
+from lerobot.policies.pretrained import PreTrainedPolicy
 
 
 def make_optimizer_and_scheduler(

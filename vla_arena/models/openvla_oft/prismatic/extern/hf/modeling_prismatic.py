@@ -24,7 +24,7 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union
+from typing import Any, ClassVar
 
 import numpy as np
 import timm
@@ -35,7 +35,6 @@ import transformers
 from timm.models.vision_transformer import LayerScale
 from transformers import AutoModelForCausalLM, PretrainedConfig, PreTrainedModel
 from transformers.modeling_outputs import ModelOutput
-
 from vla_arena.models.openvla_oft.prismatic.training.train_utils import (
     get_current_action_mask,
     get_next_actions_mask,
@@ -51,7 +50,6 @@ from vla_arena.models.openvla_oft.prismatic.vla.constants import (
 )
 
 from .configuration_prismatic import OpenVLAConfig, PrismaticConfig
-
 
 # Set up logger
 logger = logging.getLogger(__name__)

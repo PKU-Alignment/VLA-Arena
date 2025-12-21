@@ -20,14 +20,12 @@ import time
 
 import numpy as np
 import torch
-
 from vla_arena.models.univla.experiments.robot.openvla_utils import (
     get_vla,
     get_vla_action,
     get_vla_for_vla_arena,
     get_vla_latent_action,
 )
-
 
 # Initialize important constants and pretty-printing mode in NumPy.
 ACTION_DIM = 7

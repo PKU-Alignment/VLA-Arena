@@ -20,7 +20,6 @@ import os
 import imageio
 import numpy as np
 import tensorflow as tf
-
 from vla_arena.models.openvla.experiments.robot.robot_utils import DATE, DATE_TIME
 from vla_arena.vla_arena import get_vla_arena_path
 from vla_arena.vla_arena.envs import OffScreenRenderEnv

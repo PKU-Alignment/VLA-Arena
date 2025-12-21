@@ -59,6 +59,7 @@ from typing import Any
 import draccus
 import grpc
 import torch
+
 from lerobot.cameras.opencv.configuration_opencv import OpenCVCameraConfig  # noqa: F401
 from lerobot.cameras.realsense.configuration_realsense import RealSenseCameraConfig  # noqa: F401
 from lerobot.configs.policies import PreTrainedConfig
@@ -85,8 +86,10 @@ from lerobot.scripts.server.helpers import (
     validate_robot_cameras_for_policy,
     visualize_action_queue_size,
 )
-from lerobot.transport import services_pb2  # type: ignore
-from lerobot.transport import services_pb2_grpc  # type: ignore
+from lerobot.transport import (
+    services_pb2,  # type: ignore
+    services_pb2_grpc,  # type: ignore
+)
 from lerobot.transport.utils import grpc_channel_options, send_bytes_in_chunks
 
 

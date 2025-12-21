@@ -16,19 +16,20 @@ import math
 from typing import Any, Literal
 
 import chex
-import jax
-import jax.numpy as jnp
 from einops import einops
 from flax import linen as nn
-from flax.linen.module import Module, compact
+from flax.linen.module import Module
+from flax.linen.module import compact
 from flax.struct import dataclass
 from flax.typing import Array
+import jax
+import jax.numpy as jnp
 
 
 class FsqCodebook(nn.Module):
     input_dim: int
     target_codebook_size: int
-    codebook_type: Literal['fsq', 'lfq']
+    codebook_type: Literal["fsq", "lfq"]
 
     _bins_per_dim: tuple[int] | None = None
 
@@ -37,14 +38,14 @@ class FsqCodebook(nn.Module):
         if self._bins_per_dim is not None:
             return self._bins_per_dim
 
-        if self.codebook_type == 'fsq':
+        if self.codebook_type == "fsq":
             return self._get_bins_fsq(self.target_codebook_size)
-        elif self.codebook_type == 'lfq':  # noqa: RET505
+        elif self.codebook_type == "lfq":  # noqa: RET505
             return self._get_bins_lfq(self.target_codebook_size)
-        elif self.codebook_type == 'custom':
+        elif self.codebook_type == "custom":
             return self._get_bins_custom(self.target_codebook_size)
         else:
-            raise ValueError(f'Codebook type {self.codebook_type} not supported.')
+            raise ValueError(f"Codebook type {self.codebook_type} not supported.")
 
     @property
     def place_values(self) -> jnp.ndarray:
@@ -69,7 +70,7 @@ class FsqCodebook(nn.Module):
         elif target_codebook_size == 2**16:
             return (8, 8, 8, 5, 5, 5)
         else:
-            raise ValueError(f'Codebook size {target_codebook_size} not supported.')
+            raise ValueError(f"Codebook size {target_codebook_size} not supported.")
 
     @staticmethod
     def _get_bins_custom(target_codebook_size: int) -> tuple[int]:
@@ -92,7 +93,7 @@ class FsqCodebook(nn.Module):
         """
         assert (
             target_codebook_size & (target_codebook_size - 1) == 0
-        ), 'Codebook size should be a power of two for LFQ'
+        ), "Codebook size should be a power of two for LFQ"
 
         return (2,) * int(math.log2(target_codebook_size))
 
@@ -151,13 +152,13 @@ class ResNetDownBlock(nn.Module):
         skip = x
 
         if self.stride > 1 or x.shape[-1] != self.n_filters:
-            skip = nn.Conv(self.n_filters, (self.stride,), (self.stride,), 'SAME')(skip)
+            skip = nn.Conv(self.n_filters, (self.stride,), (self.stride,), "SAME")(skip)
 
-        x = nn.Conv(self.n_filters, (3,), (self.stride,), 'SAME')(x)
+        x = nn.Conv(self.n_filters, (3,), (self.stride,), "SAME")(x)
         x = nn.GroupNorm(num_groups=self.n_filters // self.group_size)(x)
         x = nn.Dropout(self.dropout_rate)(x, deterministic=not train)
         x = nn.relu(x)
-        x = nn.Conv(self.n_filters, (3,), (1,), 'SAME')(x)
+        x = nn.Conv(self.n_filters, (3,), (1,), "SAME")(x)
 
         return skip + x
 
@@ -173,13 +174,13 @@ class ResNetUpBlock(nn.Module):
         skip = x
 
         if self.stride > 1:
-            skip = nn.ConvTranspose(self.n_filters, (self.stride,), (self.stride,), 'SAME')(skip)
+            skip = nn.ConvTranspose(self.n_filters, (self.stride,), (self.stride,), "SAME")(skip)
 
-        x = nn.ConvTranspose(self.n_filters, (3,), (self.stride,), 'SAME')(x)
+        x = nn.ConvTranspose(self.n_filters, (3,), (self.stride,), "SAME")(x)
         x = nn.GroupNorm(num_groups=self.n_filters // self.group_size)(x)
         x = nn.Dropout(self.dropout_rate)(x, deterministic=not train)
         x = nn.relu(x)
-        x = nn.ConvTranspose(self.n_filters, (3,), (1,), 'SAME')(x)
+        x = nn.ConvTranspose(self.n_filters, (3,), (1,), "SAME")(x)
 
         return skip + x
 
@@ -375,23 +376,23 @@ class TokenizerEncoderDecoder(nn.Module):
         state_conditioning: jnp.ndarray | None = None,
         mask: jnp.ndarray | None = None,
     ) -> jnp.ndarray:
-        x = self.param('q_embed', sinusoidal_pe_init, (self.num_tokens, y.shape[-1]))
+        x = self.param("q_embed", sinusoidal_pe_init, (self.num_tokens, y.shape[-1]))
         x = jax.numpy.broadcast_to(x, y.shape[:-2] + x.shape[-2:])
 
         if mask is not None:
             # mask is (batch_dims..., num_cross_tokens)
             chex.assert_equal_shape([y[..., 0], mask])
-            attn_mask = einops.repeat(mask, '... kv -> ... 1 q kv', q=self.num_tokens)
+            attn_mask = einops.repeat(mask, "... kv -> ... 1 q kv", q=self.num_tokens)
         else:
             attn_mask = jnp.ones((*y.shape[:-2], 1, self.num_tokens, self.num_cross_tokens))
 
         if self.use_state_conditioning:
-            assert state_conditioning is not None, 'State conditioning is required for this model.'
-            state_embed = nn.Dense(y.shape[-1], name='state_proj')(state_conditioning)[..., None, :]
+            assert state_conditioning is not None, "State conditioning is required for this model."
+            state_embed = nn.Dense(y.shape[-1], name="state_proj")(state_conditioning)[..., None, :]
             y = jnp.concatenate([y, state_embed], axis=-2)
             attn_mask = jnp.concatenate([attn_mask, jnp.ones_like(attn_mask[..., 0:1])], axis=-1)
 
-        y = y + self.param('y_pos_enc', sinusoidal_pe_init, y.shape[-2:])
+        y = y + self.param("y_pos_enc", sinusoidal_pe_init, y.shape[-2:])
 
         for _ in range(self.num_layers):
             x = CrossAttentionLayer(causal=self.causal, mlp_ratio=self.mlp_ratio)(
@@ -432,7 +433,7 @@ class FsqAttentionTokenizer(nn.Module):
         self.codebook = FsqCodebook(
             input_dim=self.embed_dim,
             target_codebook_size=self.target_codebook_size,
-            codebook_type='custom',
+            codebook_type="custom",
         )
         self.decoder = TokenizerEncoderDecoder(
             num_tokens=self.data_horizon,
@@ -444,7 +445,7 @@ class FsqAttentionTokenizer(nn.Module):
         )
 
         self.proj_mean = nn.Dense(self.data_dim)
-        self.out_scale = self.param('out_scale', lambda _: jnp.full((), 1.0))
+        self.out_scale = self.param("out_scale", lambda _: jnp.full((), 1.0))
 
     def tokenize(
         self, action: jnp.ndarray, *, obs: jnp.ndarray | None = None, train: bool = False
@@ -480,8 +481,8 @@ class FsqAttentionTokenizer(nn.Module):
         mae = jnp.mean(jnp.abs(action - mean))
 
         return mse, {
-            'mse': mse,
-            'mae': mae,
+            "mse": mse,
+            "mae": mae,
         }
 
     def __call__(self, *args: Any, **kwargs: Any) -> tuple[jnp.ndarray, dict[str, jnp.ndarray]]:

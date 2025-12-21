@@ -67,13 +67,13 @@ import numpy as np
 import orbax.checkpoint as ocp
 import torch
 from jax.sharding import SingleDeviceSharding
+
 from lerobot.policies.pi0.configuration_pi0 import PI0Config
 from lerobot.policies.pi0.conversion_scripts.conversion_utils import (
     get_gemma_config,
     get_paligemma_config,
 )
 from lerobot.policies.pi0.modeling_pi0 import PI0Policy
-
 
 PRECISIONS = {'bfloat16': torch.bfloat16, 'float32': torch.float32, 'float16': torch.float16}
 

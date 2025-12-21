@@ -34,8 +34,8 @@ from pickle import UnpicklingError
 
 import pytest
 import torch
-from lerobot.utils.transition import Transition
 
+from lerobot.utils.transition import Transition
 from tests.utils import require_cuda, require_package
 
 

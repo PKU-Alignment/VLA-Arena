@@ -15,6 +15,7 @@
 import dataclasses
 
 import jax
+
 from openpi.models import pi0_config
 from openpi.training import config as _config
 from openpi.training import data_loader as _data_loader
@@ -61,7 +62,7 @@ def test_torch_data_loader_parallel():
 
 
 def test_with_fake_dataset():
-    config = _config.get_config('debug')
+    config = _config.get_config("debug")
 
     loader = _data_loader.create_data_loader(config, skip_norm_stats=True, num_batches=2)
     batches = list(loader)
@@ -80,7 +81,7 @@ def test_with_fake_dataset():
 
 
 def test_with_real_dataset():
-    config = _config.get_config('pi0_aloha_sim')
+    config = _config.get_config("pi0_aloha_sim")
     config = dataclasses.replace(config, batch_size=4)
 
     loader = _data_loader.create_data_loader(

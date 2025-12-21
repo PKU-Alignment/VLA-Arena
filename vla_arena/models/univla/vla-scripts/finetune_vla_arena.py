@@ -16,7 +16,6 @@ import os
 from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 import draccus
 import torch
@@ -26,7 +25,6 @@ import torchvision.transforms as transforms
 import tqdm
 import wandb
 from accelerate import PartialState
-from ema_pytorch import EMA
 from peft import LoraConfig, PeftModel, get_peft_model, prepare_model_for_kbit_training
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim import AdamW
@@ -38,8 +36,6 @@ from transformers import (
     AutoProcessor,
     BitsAndBytesConfig,
 )
-from transformers.modeling_outputs import CausalLMOutputWithPast
-
 from vla_arena.models.univla.prismatic.extern.hf.configuration_prismatic import OpenVLAConfig
 from vla_arena.models.univla.prismatic.extern.hf.modeling_prismatic import (
     OpenVLAForActionPrediction,
@@ -63,7 +59,6 @@ from vla_arena.models.univla.prismatic.vla.datasets import (
 from vla_arena.models.univla.prismatic.vla.datasets.rlds.utils.data_utils import (
     save_dataset_statistics,
 )
-
 
 # Sane Defaults
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'

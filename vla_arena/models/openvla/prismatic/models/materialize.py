@@ -19,10 +19,8 @@ Factory class for initializing Vision Backbones, LLM Backbones, and VLMs from a 
 individual functions for clear control flow.
 """
 
-from typing import Optional, Tuple
 
 from transformers import PreTrainedTokenizerBase
-
 from vla_arena.models.openvla.prismatic.models.backbones.llm import (
     LLaMa2LLMBackbone,
     LLMBackbone,
@@ -40,7 +38,6 @@ from vla_arena.models.openvla.prismatic.models.backbones.vision import (
     VisionBackbone,
 )
 from vla_arena.models.openvla.prismatic.models.vlms import PrismaticVLM
-
 
 # === Registries =>> Maps ID --> {cls(), kwargs} :: Different Registries for Vision Backbones, LLM Backbones, VLMs ===
 # fmt: off

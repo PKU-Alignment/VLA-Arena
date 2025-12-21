@@ -20,7 +20,6 @@ that represents a single trajectory, meaning each tensor has the same leading di
 """
 
 import logging
-from typing import Dict
 
 import tensorflow as tf
 

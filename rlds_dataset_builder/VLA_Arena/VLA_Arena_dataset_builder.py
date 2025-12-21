@@ -14,13 +14,11 @@
 
 import glob
 import os
-import sys
 from collections.abc import Iterator
-from typing import Any, Tuple
+from typing import Any
 
 import h5py
 import numpy as np
-import tensorflow as tf
 import tensorflow_datasets as tfds
 from VLA_Arena.conversion_utils import MultiThreadedDatasetBuilder
 
@@ -73,7 +71,7 @@ def _generate_examples(paths) -> Iterator[tuple[str, Any]]:
                         'image': images[i][::-1, ::-1],
                         'wrist_image': wrist_images[i][::-1, ::-1],
                         'state': np.asarray(
-                            np.concatenate((states[i], gripper_states[i]), axis=-1), np.float32
+                            np.concatenate((states[i], gripper_states[i]), axis=-1), np.float32,
                         ),
                         'joint_state': np.asarray(joint_states[i], dtype=np.float32),
                     },
@@ -84,7 +82,7 @@ def _generate_examples(paths) -> Iterator[tuple[str, Any]]:
                     'is_last': i == (actions.shape[0] - 1),
                     'is_terminal': i == (actions.shape[0] - 1),
                     'language_instruction': command,
-                }
+                },
             )
 
         # create output data sample
@@ -151,7 +149,7 @@ class VLAArena(MultiThreadedDatasetBuilder):
                                         dtype=np.float32,
                                         doc='Robot joint angles.',
                                     ),
-                                }
+                                },
                             ),
                             'action': tfds.features.Tensor(
                                 shape=(7,),
@@ -159,32 +157,32 @@ class VLAArena(MultiThreadedDatasetBuilder):
                                 doc='Robot EEF action.',
                             ),
                             'discount': tfds.features.Scalar(
-                                dtype=np.float32, doc='Discount if provided, default to 1.'
+                                dtype=np.float32, doc='Discount if provided, default to 1.',
                             ),
                             'reward': tfds.features.Scalar(
                                 dtype=np.float32,
                                 doc='Reward if provided, 1 on final step for demos.',
                             ),
                             'is_first': tfds.features.Scalar(
-                                dtype=np.bool_, doc='True on first step of the episode.'
+                                dtype=np.bool_, doc='True on first step of the episode.',
                             ),
                             'is_last': tfds.features.Scalar(
-                                dtype=np.bool_, doc='True on last step of the episode.'
+                                dtype=np.bool_, doc='True on last step of the episode.',
                             ),
                             'is_terminal': tfds.features.Scalar(
                                 dtype=np.bool_,
                                 doc='True on last step of the episode if it is a terminal step, True for demos.',
                             ),
                             'language_instruction': tfds.features.Text(doc='Language Instruction.'),
-                        }
+                        },
                     ),
                     'episode_metadata': tfds.features.FeaturesDict(
                         {
                             'file_path': tfds.features.Text(doc='Path to the original data file.'),
-                        }
+                        },
                     ),
-                }
-            )
+                },
+            ),
         )
 
     def _split_paths(self):

@@ -49,13 +49,13 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+from PIL import Image
+
 from lerobot.cameras.configs import ColorMode
 from lerobot.cameras.opencv.camera_opencv import OpenCVCamera
 from lerobot.cameras.opencv.configuration_opencv import OpenCVCameraConfig
 from lerobot.cameras.realsense.camera_realsense import RealSenseCamera
 from lerobot.cameras.realsense.configuration_realsense import RealSenseCameraConfig
-from PIL import Image
-
 
 logger = logging.getLogger(__name__)
 

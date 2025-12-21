@@ -26,7 +26,6 @@ and processing scheme. A given dataset variant (e.g., `llava-lightning`) configu
 from dataclasses import dataclass
 from enum import Enum, unique
 from pathlib import Path
-from typing import Tuple
 
 from draccus import ChoiceRegistry
 

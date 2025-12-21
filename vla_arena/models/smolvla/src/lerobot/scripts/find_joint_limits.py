@@ -49,6 +49,7 @@ from dataclasses import dataclass
 
 import draccus
 import numpy as np
+
 from lerobot.model.kinematics import RobotKinematics
 from lerobot.robots import (  # noqa: F401
     RobotConfig,

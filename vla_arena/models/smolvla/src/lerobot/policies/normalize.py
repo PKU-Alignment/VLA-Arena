@@ -29,8 +29,9 @@
 # limitations under the License.
 import numpy as np
 import torch
-from lerobot.configs.types import FeatureType, NormalizationMode, PolicyFeature
 from torch import Tensor, nn
+
+from lerobot.configs.types import FeatureType, NormalizationMode, PolicyFeature
 
 
 def create_stats_buffers(

@@ -28,13 +28,11 @@ from __future__ import annotations
 from collections.abc import Callable
 from functools import partial
 from pathlib import Path
-from typing import Dict, List, Optional, Type, Union
 
 import torch
 from PIL import Image
 from torch.distributed.fsdp.wrap import _module_wrap_policy, _or_policy
 from transformers.modeling_outputs import CausalLMOutputWithPast
-
 from vla_arena.models.openvla_oft.prismatic.models.backbones.llm import LLMBackbone
 from vla_arena.models.openvla_oft.prismatic.models.backbones.llm.prompting import PromptBuilder
 from vla_arena.models.openvla_oft.prismatic.models.backbones.vision import VisionBackbone
@@ -45,7 +43,6 @@ from vla_arena.models.openvla_oft.prismatic.util.nn_utils import (
     LinearProjector,
     MLPProjector,
 )
-
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)
@@ -365,7 +362,6 @@ class PrismaticVLM(VLM):
     # Note =>> We're not explicitly subclassing `PreTrainedModel` because we don't need the bloat; however, `forward()`
     #          *must* match the signature of a `{Model}ForCausalLM` so that we can inherit from `GenerationMixin`
 
-    # ruff: noqa: C901
     def forward(
         self,
         input_ids: torch.LongTensor | None = None,

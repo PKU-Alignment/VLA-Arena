@@ -18,10 +18,8 @@ task_augmentation.py
 Contains basic logic for randomly zeroing out keys in the task specification.
 """
 
-from typing import Dict
 
 import tensorflow as tf
-
 from vla_arena.models.openvla_oft.prismatic.vla.datasets.rlds.utils.data_utils import to_padding
 
 

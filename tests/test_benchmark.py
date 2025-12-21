@@ -2,9 +2,6 @@
 Tests for benchmark functionality in vla_arena.benchmark.
 """
 
-import os
-import re
-from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 

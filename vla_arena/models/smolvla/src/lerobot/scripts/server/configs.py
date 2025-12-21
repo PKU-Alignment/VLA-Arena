@@ -30,13 +30,13 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 
 import torch
+
 from lerobot.robots.config import RobotConfig
 from lerobot.scripts.server.constants import (
     DEFAULT_FPS,
     DEFAULT_INFERENCE_LATENCY,
     DEFAULT_OBS_QUEUE_TIMEOUT,
 )
-
 
 # Aggregate function registry for CLI usage
 AGGREGATE_FUNCTIONS = {

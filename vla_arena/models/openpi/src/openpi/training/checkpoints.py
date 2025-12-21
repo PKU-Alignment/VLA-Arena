@@ -20,14 +20,15 @@ import dataclasses
 import logging
 from typing import Protocol
 
+from etils import epath
 import jax
+import orbax.checkpoint as ocp
+import orbax.checkpoint.future as future
+
+from openpi.shared import array_typing as at
 import openpi.shared.normalize as _normalize
 import openpi.training.data_loader as _data_loader
 import openpi.training.utils as training_utils
-import orbax.checkpoint as ocp
-import orbax.checkpoint.future as future
-from etils import epath
-from openpi.shared import array_typing as at
 
 
 def initialize_checkpoint_dir(
@@ -39,13 +40,13 @@ def initialize_checkpoint_dir(
         if overwrite:
             checkpoint_dir.rmtree()
             checkpoint_dir.mkdir(parents=True, exist_ok=True)
-            logging.info(f'Wiped checkpoint directory {checkpoint_dir}')
+            logging.info(f"Wiped checkpoint directory {checkpoint_dir}")
         elif resume:
             resuming = True
         else:
             raise FileExistsError(
-                f'Checkpoint directory {checkpoint_dir} already exists. Use --overwrite or --resume '
-                'to indicate how to handle it.'
+                f"Checkpoint directory {checkpoint_dir} already exists. Use --overwrite or --resume "
+                "to indicate how to handle it."
             )
 
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
@@ -53,9 +54,9 @@ def initialize_checkpoint_dir(
     mngr = ocp.CheckpointManager(
         checkpoint_dir,
         item_handlers={
-            'assets': CallbackHandler(),
-            'train_state': ocp.PyTreeCheckpointHandler(),
-            'params': ocp.PyTreeCheckpointHandler(),
+            "assets": CallbackHandler(),
+            "train_state": ocp.PyTreeCheckpointHandler(),
+            "params": ocp.PyTreeCheckpointHandler(),
         },
         options=ocp.CheckpointManagerOptions(
             max_to_keep=1,
@@ -70,7 +71,7 @@ def initialize_checkpoint_dir(
     # checkpoint, since it will fail.
     if resuming and tuple(mngr.all_steps()) in [(), (0,)]:
         logging.info(
-            'Checkpoint directory exists, but does not contain any checkpoints. Aborting resume.'
+            "Checkpoint directory exists, but does not contain any checkpoints. Aborting resume."
         )
         resuming = False
 
@@ -94,9 +95,9 @@ def save_state(
     with at.disable_typechecking():
         train_state, params = _split_params(state)
     items = {
-        'assets': save_assets,
-        'train_state': train_state,
-        'params': {'params': params},
+        "assets": save_assets,
+        "train_state": train_state,
+        "params": {"params": params},
     }
     checkpoint_manager.save(step, items)
 
@@ -115,11 +116,11 @@ def restore_state(
         restored = checkpoint_manager.restore(
             step,
             items={
-                'train_state': train_state,
-                'params': {'params': params},
+                "train_state": train_state,
+                "params": {"params": params},
             },
         )
-    return _merge_params(restored['train_state'], restored['params'])
+    return _merge_params(restored["train_state"], restored["params"])
 
 
 def load_norm_stats(
@@ -127,7 +128,7 @@ def load_norm_stats(
 ) -> dict[str, _normalize.NormStats] | None:
     norm_stats_dir = epath.Path(assets_dir) / asset_id
     norm_stats = _normalize.load(norm_stats_dir)
-    logging.info(f'Loaded norm stats from {norm_stats_dir}')
+    logging.info(f"Loaded norm stats from {norm_stats_dir}")
     return norm_stats
 
 
@@ -150,7 +151,7 @@ class CallbackHandler(ocp.AsyncCheckpointHandler):
         ]
 
     def restore(self, *args, **kwargs):
-        raise NotImplementedError('CallbackHandler does not support restore')
+        raise NotImplementedError("CallbackHandler does not support restore")
 
 
 @ocp.args.register_with_handler(CallbackHandler, for_save=True)
@@ -178,5 +179,5 @@ def _merge_params(
 ) -> training_utils.TrainState:
     # Revert the logic inside `_split_params`. Assumes that existence of `params` means that EMA params were used during the split.
     if train_state.params:
-        return dataclasses.replace(train_state, ema_params=params['params'])
-    return dataclasses.replace(train_state, params=params['params'])
+        return dataclasses.replace(train_state, ema_params=params["params"])
+    return dataclasses.replace(train_state, params=params["params"])

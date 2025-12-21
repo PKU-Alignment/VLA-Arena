@@ -15,16 +15,12 @@
 import json
 import os
 import time
-from collections.abc import Sequence
-from typing import Optional
 
-import cv2 as cv
 import numpy as np
 import torch
 import torch.nn as nn
 from PIL import Image
 from transformers import AutoConfig, AutoImageProcessor, AutoModelForVision2Seq, AutoProcessor
-
 from vla_arena.models.univla.prismatic.extern.hf.configuration_prismatic import OpenVLAConfig
 from vla_arena.models.univla.prismatic.extern.hf.modeling_prismatic import (
     OpenVLAForActionPrediction,
@@ -33,7 +29,6 @@ from vla_arena.models.univla.prismatic.extern.hf.processing_prismatic import (
     PrismaticImageProcessor,
     PrismaticProcessor,
 )
-
 
 # Initialize important constants and pretty-printing mode in NumPy.
 ACTION_DIM = 7

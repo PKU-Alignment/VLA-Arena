@@ -23,15 +23,13 @@ import json
 import os
 from collections.abc import Callable
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import dlimp as dl
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
-
 from vla_arena.models.openvla.prismatic.overwatch import initialize_overwatch
-
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)

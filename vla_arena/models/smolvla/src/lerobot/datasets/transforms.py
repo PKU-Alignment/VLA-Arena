@@ -34,8 +34,10 @@ from typing import Any
 
 import torch
 from torchvision.transforms import v2
-from torchvision.transforms.v2 import Transform
-from torchvision.transforms.v2 import functional as F  # noqa: N812
+from torchvision.transforms.v2 import (
+    Transform,
+    functional as F,  # noqa: N812
+)
 
 
 class RandomSubsetApply(Transform):

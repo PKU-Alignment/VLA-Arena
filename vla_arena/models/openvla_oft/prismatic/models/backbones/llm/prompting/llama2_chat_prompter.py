@@ -21,12 +21,10 @@ that's used by HF and other online tutorials.
 Reference: https://huggingface.co/blog/llama2#how-to-prompt-llama-2
 """
 
-from typing import Optional
 
 from vla_arena.models.openvla_oft.prismatic.models.backbones.llm.prompting.base_prompter import (
     PromptBuilder,
 )
-
 
 # Default System Prompt for Prismatic Models
 SYS_PROMPTS = {

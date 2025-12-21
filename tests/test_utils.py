@@ -2,10 +2,7 @@
 Tests for utility functions in vla_arena.utils.
 """
 
-import os
-import tempfile
-import xml.etree.ElementTree as ET
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import patch
 
 import numpy as np
 import pytest

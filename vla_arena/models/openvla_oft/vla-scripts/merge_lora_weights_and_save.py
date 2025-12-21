@@ -32,13 +32,11 @@ import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Union
 
 import draccus
 import torch
 from peft import PeftModel
 from transformers import AutoConfig, AutoImageProcessor, AutoModelForVision2Seq, AutoProcessor
-
 from vla_arena.models.openvla_oft.prismatic.extern.hf.configuration_prismatic import OpenVLAConfig
 from vla_arena.models.openvla_oft.prismatic.extern.hf.modeling_prismatic import (
     OpenVLAForActionPrediction,

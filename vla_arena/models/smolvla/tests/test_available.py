@@ -30,13 +30,13 @@
 import importlib
 
 import gymnasium as gym
-import lerobot
 import pytest
+
+import lerobot
 from lerobot.policies.act.modeling_act import ACTPolicy
 from lerobot.policies.diffusion.modeling_diffusion import DiffusionPolicy
 from lerobot.policies.tdmpc.modeling_tdmpc import TDMPCPolicy
 from lerobot.policies.vqbet.modeling_vqbet import VQBeTPolicy
-
 from tests.utils import require_env
 
 

@@ -22,9 +22,8 @@ import sys
 
 import tyro
 
-
 # Add openpi src directory to Python path if needed
-_openpi_src = pathlib.Path(__file__).parent / 'src'
+_openpi_src = pathlib.Path(__file__).parent / "src"
 if str(_openpi_src) not in sys.path:
     sys.path.insert(0, str(_openpi_src))
 
@@ -37,11 +36,11 @@ from openpi.training import config as _config
 class EnvMode(enum.Enum):
     """Supported environments."""
 
-    ALOHA = 'aloha'
-    ALOHA_SIM = 'aloha_sim'
-    DROID = 'droid'
-    LIBERO = 'libero'
-    VLA_ARENA = 'vla_arena'
+    ALOHA = "aloha"
+    ALOHA_SIM = "aloha_sim"
+    DROID = "droid"
+    LIBERO = "libero"
+    VLA_ARENA = "vla_arena"
 
 
 @dataclasses.dataclass
@@ -82,26 +81,26 @@ class Args:
 # Default checkpoints that should be used for each environment.
 DEFAULT_CHECKPOINT: dict[EnvMode, Checkpoint] = {
     EnvMode.ALOHA: Checkpoint(
-        config='pi05_aloha',
-        dir='gs://openpi-assets/checkpoints/pi05_base',
+        config="pi05_aloha",
+        dir="gs://openpi-assets/checkpoints/pi05_base",
     ),
     EnvMode.ALOHA_SIM: Checkpoint(
-        config='pi0_aloha_sim',
-        dir='gs://openpi-assets/checkpoints/pi0_aloha_sim',
+        config="pi0_aloha_sim",
+        dir="gs://openpi-assets/checkpoints/pi0_aloha_sim",
     ),
     EnvMode.DROID: Checkpoint(
-        config='pi05_droid',
-        dir='gs://openpi-assets/checkpoints/pi05_droid',
+        config="pi05_droid",
+        dir="gs://openpi-assets/checkpoints/pi05_droid",
     ),
     EnvMode.LIBERO: Checkpoint(
-        config='pi05_libero',
-        dir='gs://openpi-assets/checkpoints/pi05_libero',
+        config="pi05_libero",
+        dir="gs://openpi-assets/checkpoints/pi05_libero",
     ),
     EnvMode.VLA_ARENA: Checkpoint(
-        config='pi0_vla_arena_low_mem_finetune',
+        config="pi0_vla_arena_low_mem_finetune",
         # Set OPENPI_VLA_ARENA_CHECKPOINT_PATH environment variable to specify a custom checkpoint path.
         dir=os.getenv(
-            'OPENPI_VLA_ARENA_CHECKPOINT_PATH', 'gs://openpi-assets/checkpoints/pi0_base/params'
+            "OPENPI_VLA_ARENA_CHECKPOINT_PATH", "gs://openpi-assets/checkpoints/pi0_base/params"
         ),
     ),
 }
@@ -113,7 +112,7 @@ def create_default_policy(env: EnvMode, *, default_prompt: str | None = None) ->
         return _policy_config.create_trained_policy(
             _config.get_config(checkpoint.config), checkpoint.dir, default_prompt=default_prompt
         )
-    raise ValueError(f'Unsupported environment mode: {env}')
+    raise ValueError(f"Unsupported environment mode: {env}")
 
 
 def create_policy(args: Args) -> _policy.Policy:
@@ -135,21 +134,21 @@ def main(args: Args) -> None:
 
     # Record the policy's behavior.
     if args.record:
-        policy = _policy.PolicyRecorder(policy, 'policy_records')
+        policy = _policy.PolicyRecorder(policy, "policy_records")
 
     hostname = socket.gethostname()
     local_ip = socket.gethostbyname(hostname)
-    logging.info('Creating server (host: %s, ip: %s)', hostname, local_ip)
+    logging.info("Creating server (host: %s, ip: %s)", hostname, local_ip)
 
     server = websocket_policy_server.WebsocketPolicyServer(
         policy=policy,
-        host='0.0.0.0',
+        host="0.0.0.0",
         port=args.port,
         metadata=policy_metadata,
     )
     server.serve_forever()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, force=True)
     main(tyro.cli(Args))

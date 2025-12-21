@@ -34,11 +34,11 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from lerobot.motors import Motor, MotorCalibration, MotorNormMode
 from lerobot.motors.feetech import MODEL_NUMBER, MODEL_NUMBER_TABLE, FeetechMotorsBus
 from lerobot.motors.feetech.tables import STS_SMS_SERIES_CONTROL_TABLE
 from lerobot.utils.encoding_utils import encode_sign_magnitude
-
 
 try:
     import scservo_sdk as scs

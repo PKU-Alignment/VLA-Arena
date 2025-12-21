@@ -85,17 +85,14 @@ class TableRegionSampler(MultiRegionRandomSampler):
         # Return angle based on axis requested
         if self.rotation_axis == 'x':
             return np.array([np.sin(rot_angle / 2), 0, 0, np.cos(rot_angle / 2)])
-        elif self.rotation_axis == 'y':
+        if self.rotation_axis == 'y':
             return np.array([0, np.sin(rot_angle / 2), 0, np.cos(rot_angle / 2)])
-        elif self.rotation_axis == 'z':
+        if self.rotation_axis == 'z':
             return np.array([0, 0, np.sin(rot_angle / 2), np.cos(rot_angle / 2)])
-        else:
-            # Invalid axis specified, raise error
-            raise ValueError(
-                "Invalid rotation axis specified. Must be 'x', 'y', or 'z'. Got: {}".format(
-                    self.rotation_axis
-                )
-            )
+        # Invalid axis specified, raise error
+        raise ValueError(
+            f"Invalid rotation axis specified. Must be 'x', 'y', or 'z'. Got: {self.rotation_axis}",
+        )
 
 
 class ObjectBasedSampler(MultiRegionRandomSampler):
@@ -165,14 +162,11 @@ class ObjectBasedSampler(MultiRegionRandomSampler):
         # Return angle based on axis requested
         if self.rotation_axis == 'x':
             return np.array([np.sin(rot_angle / 2), 0, 0, np.cos(rot_angle / 2)])
-        elif self.rotation_axis == 'y':
+        if self.rotation_axis == 'y':
             return np.array([0, np.sin(rot_angle / 2), 0, np.cos(rot_angle / 2)])
-        elif self.rotation_axis == 'z':
+        if self.rotation_axis == 'z':
             return np.array([0, 0, np.sin(rot_angle / 2), np.cos(rot_angle / 2)])
-        else:
-            # Invalid axis specified, raise error
-            raise ValueError(
-                "Invalid rotation axis specified. Must be 'x', 'y', or 'z'. Got: {}".format(
-                    self.rotation_axis
-                )
-            )
+        # Invalid axis specified, raise error
+        raise ValueError(
+            f"Invalid rotation axis specified. Must be 'x', 'y', or 'z'. Got: {self.rotation_axis}",
+        )

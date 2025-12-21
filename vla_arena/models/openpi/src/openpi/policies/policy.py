@@ -12,25 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections.abc import Sequence
 import logging
 import pathlib
 import time
-from collections.abc import Sequence
 from typing import Any, TypeAlias
-from typing_extensions import override
 
 import flax
 import flax.traverse_util
 import jax
 import jax.numpy as jnp
 import numpy as np
+from openpi_client import base_policy as _base_policy
 import torch
+from typing_extensions import override
+
 from openpi import transforms as _transforms
 from openpi.models import model as _model
 from openpi.shared import array_typing as at
 from openpi.shared import nnx_utils
-from openpi_client import base_policy as _base_policy
-
 
 BasePolicy: TypeAlias = _base_policy.BasePolicy
 
@@ -45,7 +45,7 @@ class Policy(BasePolicy):
         output_transforms: Sequence[_transforms.DataTransformFn] = (),
         sample_kwargs: dict[str, Any] | None = None,
         metadata: dict[str, Any] | None = None,
-        pytorch_device: str = 'cpu',
+        pytorch_device: str = "cpu",
         is_pytorch: bool = False,
     ):
         """Initialize the Policy.
@@ -105,13 +105,13 @@ class Policy(BasePolicy):
 
             if noise.ndim == 2:  # If noise is (action_horizon, action_dim), add batch dimension
                 noise = noise[None, ...]  # Make it (1, action_horizon, action_dim)
-            sample_kwargs['noise'] = noise
+            sample_kwargs["noise"] = noise
 
         observation = _model.Observation.from_dict(inputs)
         start_time = time.monotonic()
         outputs = {
-            'state': inputs['state'],
-            'actions': self._sample_actions(
+            "state": inputs["state"],
+            "actions": self._sample_actions(
                 sample_rng_or_pytorch_device, observation, **sample_kwargs
             ),
         }
@@ -122,8 +122,8 @@ class Policy(BasePolicy):
             outputs = jax.tree.map(lambda x: np.asarray(x[0, ...]), outputs)
 
         outputs = self._output_transform(outputs)
-        outputs['policy_timing'] = {
-            'infer_ms': model_time * 1000,
+        outputs["policy_timing"] = {
+            "infer_ms": model_time * 1000,
         }
         return outputs
 
@@ -138,7 +138,7 @@ class PolicyRecorder(_base_policy.BasePolicy):
     def __init__(self, policy: _base_policy.BasePolicy, record_dir: str):
         self._policy = policy
 
-        logging.info(f'Dumping policy records to: {record_dir}')
+        logging.info(f"Dumping policy records to: {record_dir}")
         self._record_dir = pathlib.Path(record_dir)
         self._record_dir.mkdir(parents=True, exist_ok=True)
         self._record_step = 0
@@ -147,10 +147,10 @@ class PolicyRecorder(_base_policy.BasePolicy):
     def infer(self, obs: dict) -> dict:  # type: ignore[misc]
         results = self._policy.infer(obs)
 
-        data = {'inputs': obs, 'outputs': results}
-        data = flax.traverse_util.flatten_dict(data, sep='/')
+        data = {"inputs": obs, "outputs": results}
+        data = flax.traverse_util.flatten_dict(data, sep="/")
 
-        output_path = self._record_dir / f'step_{self._record_step}'
+        output_path = self._record_dir / f"step_{self._record_step}"
         self._record_step += 1
 
         np.save(output_path, np.asarray(data))

@@ -17,11 +17,12 @@ import os
 
 import jax
 import numpy as np
-import openpi.models.utils.fsq_tokenizer as fsq_tokenizer
-import openpi.shared.download as download
 import orbax.checkpoint as ocp
 import sentencepiece
 from transformers import AutoProcessor
+
+import openpi.models.utils.fsq_tokenizer as fsq_tokenizer
+import openpi.shared.download as download
 
 
 class PaligemmaTokenizer:
@@ -29,26 +30,26 @@ class PaligemmaTokenizer:
         self._max_len = max_len
 
         path = download.maybe_download(
-            'gs://big_vision/paligemma_tokenizer.model', gs={'token': 'anon'}
+            "gs://big_vision/paligemma_tokenizer.model", gs={"token": "anon"}
         )
-        with path.open('rb') as f:
+        with path.open("rb") as f:
             self._tokenizer = sentencepiece.SentencePieceProcessor(model_proto=f.read())
 
     def tokenize(
         self, prompt: str, state: np.ndarray | None = None
     ) -> tuple[np.ndarray, np.ndarray]:
-        cleaned_text = prompt.strip().replace('_', ' ').replace('\n', ' ')
+        cleaned_text = prompt.strip().replace("_", " ").replace("\n", " ")
         if state is not None:
             # This is the Pi05 format, where the state is part of the discrete language input.
             discretized_state = np.digitize(state, bins=np.linspace(-1, 1, 256 + 1)[:-1]) - 1
-            state_str = ' '.join(map(str, discretized_state))
-            full_prompt = f'Task: {cleaned_text}, State: {state_str};\nAction: '
+            state_str = " ".join(map(str, discretized_state))
+            full_prompt = f"Task: {cleaned_text}, State: {state_str};\nAction: "
             tokens = self._tokenizer.encode(full_prompt, add_bos=True)
         else:
             # This is the Pi0 format, where the state is part of the continuous action expert input.
             # tokenize "\n" separately as the "start of answer" token
             tokens = self._tokenizer.encode(cleaned_text, add_bos=True) + self._tokenizer.encode(
-                '\n'
+                "\n"
             )
         tokens_len = len(tokens)
         if tokens_len < self._max_len:
@@ -58,8 +59,8 @@ class PaligemmaTokenizer:
         else:
             if len(tokens) > self._max_len:
                 logging.warning(
-                    f'Token length ({len(tokens)}) exceeds max length ({self._max_len}), truncating. '
-                    'Consider increasing the `max_token_len` in your model config if this happens frequently.'
+                    f"Token length ({len(tokens)}) exceeds max length ({self._max_len}), truncating. "
+                    "Consider increasing the `max_token_len` in your model config if this happens frequently."
                 )
             tokens = tokens[: self._max_len]
             mask = [True] * self._max_len
@@ -68,14 +69,14 @@ class PaligemmaTokenizer:
 
 
 class FASTTokenizer:
-    def __init__(self, max_len: int = 256, fast_tokenizer_path: str = 'physical-intelligence/fast'):
+    def __init__(self, max_len: int = 256, fast_tokenizer_path: str = "physical-intelligence/fast"):
         self._max_len = max_len
 
         # Download base PaliGemma tokenizer
         path = download.maybe_download(
-            'gs://big_vision/paligemma_tokenizer.model', gs={'token': 'anon'}
+            "gs://big_vision/paligemma_tokenizer.model", gs={"token": "anon"}
         )
-        with path.open('rb') as f:
+        with path.open("rb") as f:
             self._paligemma_tokenizer = sentencepiece.SentencePieceProcessor(model_proto=f.read())
 
         # Instantiate FAST tokenizer
@@ -89,14 +90,14 @@ class FASTTokenizer:
     def tokenize(
         self, prompt: str, state: np.ndarray, actions: np.ndarray | None
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        cleaned_text = prompt.lower().strip().replace('_', ' ')
+        cleaned_text = prompt.lower().strip().replace("_", " ")
 
         # Convention: state gets discretized into 256 discrete bins (assumed range after normalization: [-1, 1])
         discretized_state = np.digitize(state, bins=np.linspace(-1, 1, 256 + 1)[:-1]) - 1
 
         # Convention: prefix includes prompt and string-representation of state, followed by ';'
-        state_str = ' '.join(map(str, discretized_state))
-        prefix = f'Task: {cleaned_text}, State: {state_str};\n'
+        state_str = " ".join(map(str, discretized_state))
+        prefix = f"Task: {cleaned_text}, State: {state_str};\n"
         prefix_tokens = self._paligemma_tokenizer.encode(prefix, add_bos=True)
 
         if actions is not None:
@@ -106,9 +107,9 @@ class FASTTokenizer:
 
             # Convention: postfix contains 'Action:' followed by FAST tokens, followed by '|'
             postfix_tokens = (
-                self._paligemma_tokenizer.encode('Action: ')
+                self._paligemma_tokenizer.encode("Action: ")
                 + action_tokens_in_pg.tolist()
-                + self._paligemma_tokenizer.encode('|', add_eos=True)
+                + self._paligemma_tokenizer.encode("|", add_eos=True)
             )
         else:
             postfix_tokens = []
@@ -133,8 +134,8 @@ class FASTTokenizer:
         else:
             if len(tokens) > self._max_len:
                 logging.warning(
-                    f'Token length ({len(tokens)}) exceeds max length ({self._max_len}), truncating. '
-                    'Consider increasing the `max_token_len` in your model config if this happens frequently.'
+                    f"Token length ({len(tokens)}) exceeds max length ({self._max_len}), truncating. "
+                    "Consider increasing the `max_token_len` in your model config if this happens frequently."
                 )
             tokens = tokens[: self._max_len]
             token_mask = token_mask[: self._max_len]
@@ -155,13 +156,13 @@ class FASTTokenizer:
         decoded_tokens = self._paligemma_tokenizer.decode(tokens.tolist())
 
         # Extract actions from FAST model outputs
-        if 'Action: ' not in decoded_tokens:
+        if "Action: " not in decoded_tokens:
             return np.zeros((action_horizon, action_dim), dtype=np.float32)
 
         # Extract actions from decoded tokens
         raw_action_tokens = np.array(
             self._paligemma_tokenizer.encode(
-                decoded_tokens.split('Action: ')[1].split('|')[0].strip()
+                decoded_tokens.split("Action: ")[1].split("|")[0].strip()
             )
         )
         action_tokens = self._act_tokens_to_paligemma_tokens(raw_action_tokens)
@@ -192,9 +193,9 @@ class BinningTokenizer:
 
         # Download base PaliGemma tokenizer
         path = download.maybe_download(
-            'gs://big_vision/paligemma_tokenizer.model', gs={'token': 'anon'}
+            "gs://big_vision/paligemma_tokenizer.model", gs={"token": "anon"}
         )
-        with path.open('rb') as f:
+        with path.open("rb") as f:
             self._paligemma_tokenizer = sentencepiece.SentencePieceProcessor(model_proto=f.read())
 
         self._fast_skip_tokens = (
@@ -217,19 +218,19 @@ class BinningTokenizer:
         Raises:
             NotImplementedError: If actions is not None.
         """
-        cleaned_text = prompt.lower().strip().replace('_', ' ')
+        cleaned_text = prompt.lower().strip().replace("_", " ")
 
         # Convention: state gets discretized into 256 discrete bins (assumed range after normalization: [-1, 1])
         discretized_state = np.digitize(state, bins=np.linspace(-1, 1, 256 + 1)[:-1]) - 1
 
         # Convention: prefix includes prompt and string-representation of state, followed by ';'
-        state_str = ' '.join(map(str, discretized_state))
-        prefix = f'Task: {cleaned_text}, State: {state_str};\n'
+        state_str = " ".join(map(str, discretized_state))
+        prefix = f"Task: {cleaned_text}, State: {state_str};\n"
         prefix_tokens = self._paligemma_tokenizer.encode(prefix, add_bos=True)
 
         if actions is not None:
             raise NotImplementedError(
-                'BinningTokenizer does not support encoding actions atm (only for inference use)'
+                "BinningTokenizer does not support encoding actions atm (only for inference use)"
             )
         postfix_tokens = []
 
@@ -253,8 +254,8 @@ class BinningTokenizer:
         else:
             if len(tokens) > self._max_len:
                 logging.warning(
-                    f'Token length ({len(tokens)}) exceeds max length ({self._max_len}), truncating. '
-                    'Consider increasing the `max_token_len` in your model config if this happens frequently.'
+                    f"Token length ({len(tokens)}) exceeds max length ({self._max_len}), truncating. "
+                    "Consider increasing the `max_token_len` in your model config if this happens frequently."
                 )
             tokens = tokens[: self._max_len]
             token_mask = token_mask[: self._max_len]
@@ -275,13 +276,13 @@ class BinningTokenizer:
         decoded_tokens = self._paligemma_tokenizer.decode(tokens.tolist())
 
         # Extract actions from FAST model outputs
-        if 'Action: ' not in decoded_tokens:
+        if "Action: " not in decoded_tokens:
             return np.zeros((action_horizon, action_dim), dtype=np.float32)
 
         # Extract actions from decoded tokens
         raw_action_tokens = np.array(
             self._paligemma_tokenizer.encode(
-                decoded_tokens.split('Action: ')[1].split('|')[0].strip()
+                decoded_tokens.split("Action: ")[1].split("|")[0].strip()
             )
         )
         action_tokens = self._act_tokens_to_paligemma_tokens(raw_action_tokens)
@@ -306,21 +307,21 @@ class FSQTokenizer:
     def __init__(self, max_len: int = 256, fsq_tokenizer_path: str | None = None):
         self._max_len = max_len
 
-        assert fsq_tokenizer_path is not None, 'fsq_tokenizer_path must be provided'
+        assert fsq_tokenizer_path is not None, "fsq_tokenizer_path must be provided"
         # Download tokenizer
         path = download.maybe_download(fsq_tokenizer_path)
         tok_path = os.path.join(path, os.listdir(path)[0])
 
         # Split step from path
-        step = int(tok_path.split('/')[-1])
-        base_path = tok_path.rsplit('/', 1)[0]
+        step = int(tok_path.split("/")[-1])
+        base_path = tok_path.rsplit("/", 1)[0]
 
         mgr = ocp.CheckpointManager(
             base_path,
             item_handlers={
-                'params': ocp.StandardCheckpointHandler(),
-                'opt_state': ocp.StandardCheckpointHandler(),
-                'config': ocp.JsonCheckpointHandler(),
+                "params": ocp.StandardCheckpointHandler(),
+                "opt_state": ocp.StandardCheckpointHandler(),
+                "config": ocp.JsonCheckpointHandler(),
             },
             options=ocp.CheckpointManagerOptions(max_to_keep=1),
         )
@@ -332,31 +333,31 @@ class FSQTokenizer:
                     config=ocp.args.JsonRestore(), params=ocp.args.StandardRestore()
                 ),
             )
-            config = restored['config']
-            self._params = restored['params']
+            config = restored["config"]
+            self._params = restored["params"]
             self._fsq_tokenizer = fsq_tokenizer.FsqAttentionTokenizer(**config)
         except Exception as e:
             raise RuntimeError(
-                f'Failed to load FSQ tokenizer checkpoint from {fsq_tokenizer_path}. Error: {e!s}'
+                f"Failed to load FSQ tokenizer checkpoint from {fsq_tokenizer_path}. Error: {e!s}"
             ) from e
 
         # Compile tokenize and detokenize functions
         self._tokenize_fn = jax.jit(
             lambda params, x: self._fsq_tokenizer.apply(
-                {'params': params}, x, method=self._fsq_tokenizer.tokenize
+                {"params": params}, x, method=self._fsq_tokenizer.tokenize
             )
         )
         self._detokenize_fn = jax.jit(
             lambda params, x: self._fsq_tokenizer.apply(
-                {'params': params}, x, method=self._fsq_tokenizer.detokenize
+                {"params": params}, x, method=self._fsq_tokenizer.detokenize
             )
         )
 
         # Download base PaliGemma tokenizer
         path = download.maybe_download(
-            'gs://big_vision/paligemma_tokenizer.model', gs={'token': 'anon'}
+            "gs://big_vision/paligemma_tokenizer.model", gs={"token": "anon"}
         )
-        with path.open('rb') as f:
+        with path.open("rb") as f:
             self._paligemma_tokenizer = sentencepiece.SentencePieceProcessor(model_proto=f.read())
 
         self._fast_skip_tokens = (
@@ -366,19 +367,19 @@ class FSQTokenizer:
     def tokenize(
         self, prompt: str, state: np.ndarray, actions: np.ndarray | None
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        cleaned_text = prompt.lower().strip().replace('_', ' ')
+        cleaned_text = prompt.lower().strip().replace("_", " ")
 
         # Convention: state gets discretized into 256 discrete bins (assumed range after normalization: [-1, 1])
         discretized_state = np.digitize(state, bins=np.linspace(-1, 1, 256 + 1)[:-1]) - 1
 
         # Convention: prefix includes prompt and string-representation of state, followed by ';'
-        state_str = ' '.join(map(str, discretized_state))
-        prefix = f'Task: {cleaned_text}, State: {state_str};\n'
+        state_str = " ".join(map(str, discretized_state))
+        prefix = f"Task: {cleaned_text}, State: {state_str};\n"
         prefix_tokens = self._paligemma_tokenizer.encode(prefix, add_bos=True)
 
         if actions is not None:
             raise NotImplementedError(
-                'FSQTokenizer does not support encoding actions atm (only for inference use)'
+                "FSQTokenizer does not support encoding actions atm (only for inference use)"
             )
         postfix_tokens = []
 
@@ -402,8 +403,8 @@ class FSQTokenizer:
         else:
             if len(tokens) > self._max_len:
                 logging.warning(
-                    f'Token length ({len(tokens)}) exceeds max length ({self._max_len}), truncating. '
-                    'Consider increasing the `max_token_len` in your model config if this happens frequently.'
+                    f"Token length ({len(tokens)}) exceeds max length ({self._max_len}), truncating. "
+                    "Consider increasing the `max_token_len` in your model config if this happens frequently."
                 )
             tokens = tokens[: self._max_len]
             token_mask = token_mask[: self._max_len]
@@ -424,24 +425,24 @@ class FSQTokenizer:
         decoded_tokens = self._paligemma_tokenizer.decode(tokens.tolist())
 
         # Extract actions from FAST model outputs
-        if 'Action: ' not in decoded_tokens:
+        if "Action: " not in decoded_tokens:
             return np.zeros((action_horizon, action_dim), dtype=np.float32)
 
         # Extract actions from decoded tokens
         raw_action_tokens = np.array(
             self._paligemma_tokenizer.encode(
-                decoded_tokens.split('Action: ')[1].split('|')[0].strip()
+                decoded_tokens.split("Action: ")[1].split("|")[0].strip()
             )
         )
         action_tokens = self._act_tokens_to_paligemma_tokens(raw_action_tokens)
         try:
             # Move computation to CPU and compile on-demand
-            device = jax.devices('cpu')[0]
+            device = jax.devices("cpu")[0]
             with jax.default_device(device):
                 detok_act = self._detokenize_fn(self._params, action_tokens[None, ...])[0]
             return detok_act[: action_horizon * action_dim].reshape([action_horizon, action_dim])
         except Exception as e:
-            logging.warning(f'Error decoding FSQ: {e}')
+            logging.warning(f"Error decoding FSQ: {e}")
             return np.zeros((action_horizon, action_dim))
 
     def _act_tokens_to_paligemma_tokens(self, tokens: np.ndarray | list[int]) -> np.ndarray:

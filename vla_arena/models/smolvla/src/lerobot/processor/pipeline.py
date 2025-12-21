@@ -42,8 +42,9 @@ from typing import Any, Protocol, TypedDict
 import torch
 from huggingface_hub import ModelHubMixin, hf_hub_download
 from huggingface_hub.errors import HfHubHTTPError
-from lerobot.configs.types import PolicyFeature
 from safetensors.torch import load_file, save_file
+
+from lerobot.configs.types import PolicyFeature
 
 
 class TransitionKey(str, Enum):

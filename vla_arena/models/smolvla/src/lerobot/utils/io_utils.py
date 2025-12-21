@@ -34,7 +34,6 @@ from typing import TypeVar
 
 import imageio
 
-
 JsonLike = (
     str
     | int

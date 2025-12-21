@@ -22,7 +22,6 @@ from vla_arena.models.openvla_oft.prismatic.models.backbones.vision.base_vision 
     TimmViTBackbone,
 )
 
-
 # Registry =>> Supported Vision Backbones (from TIMM)
 IN1K_VISION_BACKBONES = {
     'in1k-vit-l': 'vit_large_patch16_224.augreg_in21k_ft_in1k',

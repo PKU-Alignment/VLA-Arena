@@ -30,6 +30,7 @@ from pathlib import Path
 import datasets
 import pytest
 from huggingface_hub.utils import filter_repo_objects
+
 from lerobot.datasets.utils import (
     EPISODES_PATH,
     EPISODES_STATS_PATH,
@@ -37,7 +38,6 @@ from lerobot.datasets.utils import (
     STATS_PATH,
     TASKS_PATH,
 )
-
 from tests.fixtures.constants import LEROBOT_TEST_DIR
 
 

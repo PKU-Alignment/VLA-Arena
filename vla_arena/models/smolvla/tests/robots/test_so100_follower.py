@@ -32,6 +32,7 @@ from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from lerobot.robots.so100_follower import SO100Follower, SO100FollowerConfig
 
 

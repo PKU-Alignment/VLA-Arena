@@ -21,7 +21,6 @@ training or evaluation. If it is unclear, defaults to using the LIBERO simulatio
 import sys
 from enum import Enum
 
-
 # Llama 2 token constants
 IGNORE_INDEX = -100
 ACTION_TOKEN_BEGIN_IDX = 31743

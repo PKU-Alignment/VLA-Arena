@@ -25,15 +25,12 @@ heavy lifting.
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from pathlib import Path
-from typing import Optional
 
-import numpy as np
 import torch
 import torch.distributed as dist
 from torch.utils.data import DataLoader, Dataset, DistributedSampler, IterableDataset
 from tqdm import tqdm
 from transformers.modeling_outputs import CausalLMOutputWithPast
-
 from vla_arena.models.openvla_oft.prismatic.models.vlms import PrismaticVLM
 from vla_arena.models.openvla_oft.prismatic.overwatch import initialize_overwatch
 from vla_arena.models.openvla_oft.prismatic.training.metrics import Metrics, VLAMetrics
@@ -52,13 +49,6 @@ from vla_arena.models.openvla_oft.prismatic.util.data_utils import (
 from vla_arena.models.openvla_oft.prismatic.vla.action_tokenizer import ActionTokenizer
 
 # HuggingFace Default / LLaMa-2 IGNORE_INDEX (for labels)
-from vla_arena.models.openvla_oft.prismatic.vla.constants import (
-    ACTION_DIM,
-    ACTION_TOKEN_BEGIN_IDX,
-    IGNORE_INDEX,
-    NUM_ACTIONS_CHUNK,
-)
-
 
 NEWLINE_INDEX = 13  # '\n'
 STOP_INDEX = 2  # '</s>'

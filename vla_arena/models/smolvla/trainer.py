@@ -32,10 +32,14 @@ import time
 from contextlib import nullcontext
 from pathlib import Path
 from pprint import pformat
-from typing import Any, Union
+from typing import Any
 
 import draccus
 import torch
+from termcolor import colored
+from torch.amp import GradScaler
+from torch.optim import Optimizer
+
 from lerobot.configs import parser
 from lerobot.configs.train import TrainPipelineConfig
 from lerobot.datasets.factory import make_dataset
@@ -58,9 +62,6 @@ from lerobot.utils.train_utils import (
 )
 from lerobot.utils.utils import format_big_number, get_safe_torch_device, has_method, init_logging
 from lerobot.utils.wandb_utils import WandBLogger
-from termcolor import colored
-from torch.amp import GradScaler
-from torch.optim import Optimizer
 
 
 def update_policy(
@@ -323,7 +324,7 @@ def main(config: TrainPipelineConfig | str | Path):
         )
 
     # Test print to ensure configuration is loaded
-    print(f'Config loaded successfully.')
+    print('Config loaded successfully.')
     train(cfg=cfg)
 
 

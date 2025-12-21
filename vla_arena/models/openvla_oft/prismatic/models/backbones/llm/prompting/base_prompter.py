@@ -19,7 +19,6 @@ Abstract class definition of a multi-turn prompt builder for ensuring consistent
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional
 
 
 class PromptBuilder(ABC):

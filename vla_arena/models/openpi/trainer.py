@@ -36,13 +36,14 @@ With YAML config:
 import dataclasses
 import functools
 import logging
+from pathlib import Path
 import platform
 import sys
-from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 
 import etils.epath as epath
 import flax.nnx as nnx
+from flax.training import common_utils
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -50,11 +51,9 @@ import optax
 import tqdm_loggable.auto as tqdm
 import wandb
 import yaml
-from flax.training import common_utils
-
 
 # Add openpi src directory to Python path if needed
-_openpi_src = Path(__file__).parent / 'src'
+_openpi_src = Path(__file__).parent / "src"
 if str(_openpi_src) not in sys.path:
     sys.path.insert(0, str(_openpi_src))
 
@@ -72,7 +71,7 @@ import openpi.training.weight_loaders as _weight_loaders
 
 def init_logging():
     """Custom logging format for better readability."""
-    level_mapping = {'DEBUG': 'D', 'INFO': 'I', 'WARNING': 'W', 'ERROR': 'E', 'CRITICAL': 'C'}
+    level_mapping = {"DEBUG": "D", "INFO": "I", "WARNING": "W", "ERROR": "E", "CRITICAL": "C"}
 
     class CustomFormatter(logging.Formatter):
         def format(self, record):
@@ -80,8 +79,8 @@ def init_logging():
             return super().format(record)
 
     formatter = CustomFormatter(
-        fmt='%(asctime)s.%(msecs)03d [%(levelname)s] %(message)-80s (%(process)d:%(filename)s:%(lineno)s)',
-        datefmt='%H:%M:%S',
+        fmt="%(asctime)s.%(msecs)03d [%(levelname)s] %(message)-80s (%(process)d:%(filename)s:%(lineno)s)",
+        datefmt="%H:%M:%S",
     )
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
@@ -96,23 +95,23 @@ def init_logging():
 def init_wandb(config: _config.TrainConfig, *, resuming: bool, enabled: bool = True):
     """Initialize wandb logging."""
     if not enabled:
-        wandb.init(mode='disabled')
+        wandb.init(mode="disabled")
         return
 
     ckpt_dir = config.checkpoint_dir
     if not ckpt_dir.exists():
-        raise FileNotFoundError(f'Checkpoint directory {ckpt_dir} does not exist.')
+        raise FileNotFoundError(f"Checkpoint directory {ckpt_dir} does not exist.")
 
     if resuming:
-        run_id = (ckpt_dir / 'wandb_id.txt').read_text().strip()
-        wandb.init(id=run_id, resume='must', project=config.project_name)
+        run_id = (ckpt_dir / "wandb_id.txt").read_text().strip()
+        wandb.init(id=run_id, resume="must", project=config.project_name)
     else:
         wandb.init(
             name=config.exp_name,
             config=dataclasses.asdict(config),
             project=config.project_name,
         )
-        (ckpt_dir / 'wandb_id.txt').write_text(wandb.run.id)
+        (ckpt_dir / "wandb_id.txt").write_text(wandb.run.id)
 
 
 def _load_weights_and_validate(
@@ -251,14 +250,14 @@ def train_step(
         model,
         nnx.All(
             nnx.Param,
-            nnx.Not(nnx_utils.PathRegex('.*/(bias|scale|pos_embedding|input_embedding)')),
+            nnx.Not(nnx_utils.PathRegex(".*/(bias|scale|pos_embedding|input_embedding)")),
             lambda _, x: x.value.ndim > 1,
         ),
     )
     info = {
-        'loss': loss,
-        'grad_norm': optax.global_norm(grads),
-        'param_norm': optax.global_norm(kernel_params),
+        "loss": loss,
+        "grad_norm": optax.global_norm(grads),
+        "param_norm": optax.global_norm(kernel_params),
     }
     return new_state, info
 
@@ -269,20 +268,20 @@ def train_loop(config: _config.TrainConfig):
     is_main = jax.process_index() == 0
 
     if is_main:
-        logging.info(f'Running on: {platform.node()} | world_size={jax.process_count()}')
+        logging.info(f"Running on: {platform.node()} | world_size={jax.process_count()}")
         logging.info(
-            f'Training config: batch_size={config.batch_size}, num_train_steps={config.num_train_steps}'
+            f"Training config: batch_size={config.batch_size}, num_train_steps={config.num_train_steps}"
         )
-        logging.info(f'LR schedule: {type(config.lr_schedule).__name__}')
-        logging.info(f'Optimizer: {type(config.optimizer).__name__}')
-        logging.info(f'EMA decay: {config.ema_decay}')
+        logging.info(f"LR schedule: {type(config.lr_schedule).__name__}")
+        logging.info(f"Optimizer: {type(config.optimizer).__name__}")
+        logging.info(f"EMA decay: {config.ema_decay}")
 
     if config.batch_size % jax.device_count() != 0:
         raise ValueError(
-            f'Batch size {config.batch_size} must be divisible by the number of devices {jax.device_count()}.'
+            f"Batch size {config.batch_size} must be divisible by the number of devices {jax.device_count()}."
         )
 
-    jax.config.update('jax_compilation_cache_dir', str(epath.Path('~/.cache/jax').expanduser()))
+    jax.config.update("jax_compilation_cache_dir", str(epath.Path("~/.cache/jax").expanduser()))
 
     rng = jax.random.key(config.seed)
     train_rng, init_rng = jax.random.split(rng)
@@ -311,7 +310,7 @@ def train_loop(config: _config.TrainConfig):
     batch = next(data_iter)
 
     if is_main:
-        logging.info(f'Initialized data loader:\n{training_utils.array_tree_to_info(batch)}')
+        logging.info(f"Initialized data loader:\n{training_utils.array_tree_to_info(batch)}")
 
     # Log images from first batch to sanity check.
     if is_main and config.wandb_enabled and not resuming:
@@ -321,14 +320,14 @@ def train_loop(config: _config.TrainConfig):
             )
             for i in range(min(5, len(next(iter(batch[0].images.values())))))
         ]
-        wandb.log({'camera_views': images_to_log}, step=0)
+        wandb.log({"camera_views": images_to_log}, step=0)
 
     train_state, train_state_sharding = init_train_state(config, init_rng, mesh, resume=resuming)
     jax.block_until_ready(train_state)
 
     if is_main:
         logging.info(
-            f'Initialized train state:\n{training_utils.array_tree_to_info(train_state.params)}'
+            f"Initialized train state:\n{training_utils.array_tree_to_info(train_state.params)}"
         )
 
     if resuming:
@@ -374,15 +373,15 @@ def train_loop(config: _config.TrainConfig):
 
             stacked_infos = common_utils.stack_forest(infos)
             reduced_info = jax.device_get(jax.tree.map(jnp.mean, stacked_infos))
-            info_str = ', '.join(f'{k}={v:.4f}' for k, v in reduced_info.items())
+            info_str = ", ".join(f"{k}={v:.4f}" for k, v in reduced_info.items())
 
-            logging.info(f'step={step} {info_str} time={elapsed:.1f}s')
+            logging.info(f"step={step} {info_str} time={elapsed:.1f}s")
 
             # Log to wandb
             if config.wandb_enabled:
                 log_payload = dict(reduced_info)
-                log_payload['step'] = step
-                log_payload['time_per_step'] = (
+                log_payload["step"] = step
+                log_payload["time_per_step"] = (
                     elapsed / config.log_interval if config.log_interval > 0 else 0
                 )
                 wandb.log(log_payload, step=step)
@@ -398,7 +397,7 @@ def train_loop(config: _config.TrainConfig):
         ) or step == config.num_train_steps - 1:
             if is_main:
                 _checkpoints.save_state(checkpoint_manager, train_state, data_loader, step)
-                logging.info(f'Saved checkpoint at step {step}')
+                logging.info(f"Saved checkpoint at step {step}")
 
         # Update progress bar
         if pbar is not None:
@@ -407,9 +406,9 @@ def train_loop(config: _config.TrainConfig):
                 latest_info = infos[-1]
                 pbar.set_postfix(
                     {
-                        'loss': f"{latest_info['loss']:.4f}",
-                        'grad_norm': f"{latest_info.get('grad_norm', 0):.2f}",
-                        'step': step,
+                        "loss": f"{latest_info['loss']:.4f}",
+                        "grad_norm": f"{latest_info.get('grad_norm', 0):.2f}",
+                        "step": step,
                     }
                 )
 
@@ -422,7 +421,7 @@ def train_loop(config: _config.TrainConfig):
         wandb.finish()
 
     if is_main:
-        logging.info('Waiting for checkpoint manager to finish')
+        logging.info("Waiting for checkpoint manager to finish")
     checkpoint_manager.wait_until_finished()
 
 
@@ -443,9 +442,9 @@ def main(config: _config.TrainConfig | str | Path | None = None, **override_kwar
     if isinstance(config, (str, Path)):
         config_path = Path(config)
         if not config_path.exists():
-            raise FileNotFoundError(f'Config file not found at: {config_path}')
+            raise FileNotFoundError(f"Config file not found at: {config_path}")
 
-        print(f'Loading configuration from {config_path}...')
+        print(f"Loading configuration from {config_path}...")
 
         # Load YAML file
         with open(config_path) as f:
@@ -456,17 +455,17 @@ def main(config: _config.TrainConfig | str | Path | None = None, **override_kwar
             yaml_data.update(override_kwargs)
 
         # If yaml contains a config name, use it with tyro
-        if isinstance(yaml_data, dict) and 'name' in yaml_data:
-            config_name = yaml_data['name']
+        if isinstance(yaml_data, dict) and "name" in yaml_data:
+            config_name = yaml_data["name"]
 
             # Recursively convert nested dict to command line args
             def dict_to_args(prefix: str, d: dict) -> list[str]:
                 """Recursively convert nested dict to tyro command line args."""
                 args = []
                 for key, value in d.items():
-                    if key == 'name':
+                    if key == "name":
                         continue
-                    full_key = f'{prefix}.{key}' if prefix else key
+                    full_key = f"{prefix}.{key}" if prefix else key
                     if isinstance(value, dict):
                         # Recursively handle nested dicts
                         args.extend(dict_to_args(full_key, value))
@@ -477,30 +476,30 @@ def main(config: _config.TrainConfig | str | Path | None = None, **override_kwar
                         # Handle booleans: only add flag if True
                         # For False, skip (use default) since tyro doesn't accept --key=false
                         if value:
-                            args.append(f'--{full_key}')
+                            args.append(f"--{full_key}")
                         # else: skip False values to use default
                     elif value is None:
                         # Skip None values
                         continue
                     else:
-                        args.append(f'--{full_key}={value}')
+                        args.append(f"--{full_key}={value}")
                 return args
 
             # Build command line args from yaml
             original_argv = sys.argv.copy()
             try:
                 args_list = [config_name]  # Start with config name
-                args_list.extend(dict_to_args('', yaml_data))
+                args_list.extend(dict_to_args("", yaml_data))
 
                 # Temporarily modify sys.argv to pass args to tyro
-                sys.argv = ['trainer_jax.py'] + args_list
+                sys.argv = ["trainer_jax.py"] + args_list
                 cfg = _config.cli()
             finally:
                 # Restore original argv
                 sys.argv = original_argv
         else:
             # Fallback: use CLI if yaml doesn't have expected structure
-            print(f"Warning: Config file doesn't have expected structure, falling back to CLI")
+            print("Warning: Config file doesn't have expected structure, falling back to CLI")
             cfg = _config.cli()
 
         print(
@@ -514,18 +513,18 @@ def main(config: _config.TrainConfig | str | Path | None = None, **override_kwar
         cfg = _config.cli()
     else:
         raise ValueError(
-            f'Unsupported config type: {type(config)}. Expected TrainConfig, str, Path, or None.'
+            f"Unsupported config type: {type(config)}. Expected TrainConfig, str, Path, or None."
         )
 
     train_loop(cfg)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import argparse
 
     # Use argparse to parse --config parameter passed by Launcher
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, default=None, help='Path to the config yaml file')
+    parser.add_argument("--config", type=str, default=None, help="Path to the config yaml file")
     # This allows compatibility with other possible parameters (though currently only config is needed)
     args, unknown = parser.parse_known_args()
 

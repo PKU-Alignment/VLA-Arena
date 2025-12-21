@@ -20,7 +20,7 @@ from collections import OrderedDict
 from collections.abc import Callable
 from multiprocessing import Array, Pipe, connection
 from multiprocessing.context import Process
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any
 
 import cloudpickle
 import gym
@@ -88,7 +88,7 @@ class EnvWorker(ABC):
         self.result: (
             gym_old_venv_step_type | gym_new_venv_step_type | tuple[np.ndarray, dict] | np.ndarray
         )
-        # self.action_space = self.get_env_attr("action_space")  # noqa: B009
+        # self.action_space = self.get_env_attr("action_space")
         self.is_reset = False
 
     @abstractmethod
@@ -109,7 +109,7 @@ class EnvWorker(ABC):
         if hasattr(self, 'send_action'):
             deprecation(
                 'send_action will soon be deprecated. '
-                'Please use send and recv for your own EnvWorker.'
+                'Please use send and recv for your own EnvWorker.',
             )
             if action is None:
                 self.is_reset = True
@@ -122,7 +122,7 @@ class EnvWorker(ABC):
         self,
     ) -> (
         gym_old_venv_step_type | gym_new_venv_step_type | tuple[np.ndarray, dict] | np.ndarray
-    ):  # noqa:E125
+    ):
         """Receive result from low-level worker.
 
         If the last "send" function sends a NULL action, it only returns a
@@ -133,7 +133,7 @@ class EnvWorker(ABC):
         if hasattr(self, 'get_result'):
             deprecation(
                 'get_result will soon be deprecated. '
-                'Please use send and recv for your own EnvWorker.'
+                'Please use send and recv for your own EnvWorker.',
             )
             if not self.is_reset:
                 self.result = self.get_result()
@@ -155,7 +155,7 @@ class EnvWorker(ABC):
 
     @staticmethod
     def wait(
-        workers: list['EnvWorker'], wait_num: int, timeout: float | None = None
+        workers: list['EnvWorker'], wait_num: int, timeout: float | None = None,
     ) -> list['EnvWorker']:
         """Given a list of workers, return those ready ones."""
         raise NotImplementedError
@@ -167,7 +167,6 @@ class EnvWorker(ABC):
     @abstractmethod
     def render(self, **kwargs: Any) -> Any:
         """Render the environment."""
-        pass
 
     @abstractmethod
     def close_env(self) -> None:
@@ -175,7 +174,7 @@ class EnvWorker(ABC):
 
     def close(self) -> None:
         if self.is_closed:
-            return None
+            return
         self.is_closed = True
         self.close_env()
 
@@ -203,11 +202,10 @@ def _setup_buf(space: gym.Space) -> dict | tuple | ShArray:
     if isinstance(space, gym.spaces.Dict):
         assert isinstance(space.spaces, OrderedDict)
         return {k: _setup_buf(v) for k, v in space.spaces.items()}
-    elif isinstance(space, gym.spaces.Tuple):
+    if isinstance(space, gym.spaces.Tuple):
         assert isinstance(space.spaces, tuple)
         return tuple([_setup_buf(t) for t in space.spaces])
-    else:
-        return ShArray(space.dtype, space.shape)  # type: ignore
+    return ShArray(space.dtype, space.shape)  # type: ignore
 
 
 def _worker(
@@ -225,7 +223,7 @@ def _worker(
         elif isinstance(obs, dict) and isinstance(buffer, dict):
             for k in obs.keys():
                 _encode_obs(obs[k], buffer[k])
-        return None
+        return
 
     parent.close()
     env = env_fn_wrapper.data()
@@ -312,7 +310,7 @@ class DummyEnvWorker(EnvWorker):
 
     @staticmethod
     def wait(  # type: ignore
-        workers: list['DummyEnvWorker'], wait_num: int, timeout: float | None = None
+        workers: list['DummyEnvWorker'], wait_num: int, timeout: float | None = None,
     ) -> list['DummyEnvWorker']:
         # Sequential EnvWorker objects are always ready
         return workers
@@ -385,12 +383,11 @@ class SubprocEnvWorker(EnvWorker):
         def decode_obs(buffer: dict | tuple | ShArray | None) -> dict | tuple | np.ndarray:
             if isinstance(buffer, ShArray):
                 return buffer.get()
-            elif isinstance(buffer, tuple):
+            if isinstance(buffer, tuple):
                 return tuple([decode_obs(b) for b in buffer])
-            elif isinstance(buffer, dict):
+            if isinstance(buffer, dict):
                 return {k: decode_obs(v) for k, v in buffer.items()}
-            else:
-                raise NotImplementedError
+            raise NotImplementedError
 
         return decode_obs(self.buffer)
 
@@ -426,7 +423,7 @@ class SubprocEnvWorker(EnvWorker):
         self,
     ) -> (
         gym_old_venv_step_type | gym_new_venv_step_type | tuple[np.ndarray, dict] | np.ndarray
-    ):  # noqa:E125
+    ):
         result = self.parent_remote.recv()
         if isinstance(result, tuple):
             if len(result) == 2:
@@ -438,11 +435,10 @@ class SubprocEnvWorker(EnvWorker):
             if self.share_memory:
                 obs = self._decode_obs()
             return (obs, *result[1:])  # type: ignore
-        else:
-            obs = result
-            if self.share_memory:
-                obs = self._decode_obs()
-            return obs
+        obs = result
+        if self.share_memory:
+            obs = self._decode_obs()
+        return obs
 
     def reset(self, **kwargs: Any) -> np.ndarray | tuple[np.ndarray, dict]:
         if 'seed' in kwargs:
@@ -455,11 +451,10 @@ class SubprocEnvWorker(EnvWorker):
             if self.share_memory:
                 obs = self._decode_obs()
             return obs, info
-        else:
-            obs = result
-            if self.share_memory:
-                obs = self._decode_obs()
-            return obs
+        obs = result
+        if self.share_memory:
+            obs = self._decode_obs()
+        return obs
 
     def seed(self, seed: int | None = None) -> list[int] | None:
         super().seed(seed)
@@ -613,8 +608,7 @@ class BaseVectorEnv:
         """
         if key in GYM_RESERVED_KEYS:  # reserved keys in gym.Env
             return self.get_env_attr(key)
-        else:
-            return super().__getattribute__(key)
+        return super().__getattribute__(key)
 
     def get_env_attr(
         self,
@@ -722,8 +716,7 @@ class BaseVectorEnv:
         if reset_returns_info:
             infos = [r[1] for r in ret_list]
             return obs, infos  # type: ignore
-        else:
-            return obs
+        return obs
 
     def step(
         self,
@@ -845,7 +838,7 @@ class BaseVectorEnv:
         self._assert_is_not_closed()
         if self.is_async and len(self.waiting_id) > 0:
             raise RuntimeError(
-                f'Environments {self.waiting_id} are still stepping, cannot ' 'render them now.'
+                f'Environments {self.waiting_id} are still stepping, cannot ' 'render them now.',
             )
         return [w.render(**kwargs) for w in self.workers]
 

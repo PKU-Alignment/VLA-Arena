@@ -15,20 +15,18 @@
 import collections
 import os
 import re
-import time
 import xml.etree.ElementTree as ET
 from copy import copy
 
 import numpy as np
 import robosuite
-from robosuite.utils.mjcf_utils import find_elements, xml_path_completion
+from robosuite.utils.mjcf_utils import find_elements
 from robosuite.utils.placement_samplers import ObjectPositionSampler
 
 
 class RandomizationError(Exception):
     """Custom exception raised when randomization fails (e.g., object placement)."""
 
-    pass
 
 
 class MultiRegionRandomSampler(ObjectPositionSampler):
@@ -132,17 +130,14 @@ class MultiRegionRandomSampler(ObjectPositionSampler):
         # Return angle based on axis requested
         if self.rotation_axis == 'x':
             return np.array([np.cos(rot_angle / 2), np.sin(rot_angle / 2), 0, 0])
-        elif self.rotation_axis == 'y':
+        if self.rotation_axis == 'y':
             return np.array([np.cos(rot_angle / 2), 0, np.sin(rot_angle / 2), 0])
-        elif self.rotation_axis == 'z':
+        if self.rotation_axis == 'z':
             return np.array([np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)])
-        else:
-            # Invalid axis specified, raise error
-            raise ValueError(
-                "Invalid rotation axis specified. Must be 'x', 'y', or 'z'. Got: {}".format(
-                    self.rotation_axis
-                )
-            )
+        # Invalid axis specified, raise error
+        raise ValueError(
+            f"Invalid rotation axis specified. Must be 'x', 'y', or 'z'. Got: {self.rotation_axis}",
+        )
 
     def sample(self, fixtures=None, reference=None, on_top=True):
         """
@@ -171,9 +166,7 @@ class MultiRegionRandomSampler(ObjectPositionSampler):
         elif type(reference) is str:
             assert (
                 reference in placed_objects
-            ), 'Invalid reference received. Current options are: {}, requested: {}'.format(
-                placed_objects.keys(), reference
-            )
+            ), f'Invalid reference received. Current options are: {placed_objects.keys()}, requested: {reference}'
             ref_pos, _, ref_obj = placed_objects[reference]
             base_offset = np.array(ref_pos)
             if on_top:
@@ -182,9 +175,7 @@ class MultiRegionRandomSampler(ObjectPositionSampler):
             base_offset = np.array(reference)
             assert (
                 base_offset.shape[0] == 3
-            ), 'Invalid reference received. Should be (x,y,z) 3-tuple, but got: {}'.format(
-                base_offset
-            )
+            ), f'Invalid reference received. Should be (x,y,z) 3-tuple, but got: {base_offset}'
 
         # Sample pos and quat for all objects assigned to this sampler
         for obj in self.mujoco_objects:
@@ -530,9 +521,8 @@ def direction_to_quaternion(target_dir):
         if dot > 0:
             # Same direction as base, return base quaternion
             return tuple(base_quat)
-        else:
-            # Opposite direction, compute negated quaternion
-            return (-base_quat[0], -base_quat[1], -base_quat[2], -base_quat[3])
+        # Opposite direction, compute negated quaternion
+        return (-base_quat[0], -base_quat[1], -base_quat[2], -base_quat[3])
 
     # Normalize rotation axis
     axis = axis / axis_norm
@@ -549,7 +539,7 @@ def direction_to_quaternion(target_dir):
             axis[0] * np.sin(half_angle),
             axis[1] * np.sin(half_angle),
             axis[2] * np.sin(half_angle),
-        ]
+        ],
     )
 
     # 5. Multiply normalized base quaternion with incremental quaternion
@@ -582,7 +572,7 @@ def quaternion_multiply(q1, q2):
             w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,
             w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2,
             w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2,
-        ]
+        ],
     )
 
 
@@ -617,7 +607,7 @@ class SmoothWaypointMotionGenerator:
         self.segment_time = float(segment_time)
         self.dt = float(dt)
         self.steps_per_segment = max(
-            1, int(self.segment_time / self.dt)
+            1, int(self.segment_time / self.dt),
         )  # Convert to integer steps
         self.loop = bool(loop)
 
@@ -817,7 +807,7 @@ def make_xml_processor(body_names, random_color):
             if existing_mocap is None:
                 # If not exists, append mocap body
                 mocap_body = ET.Element(
-                    'body', {'mocap': 'true', 'name': mocap_body_name, 'pos': '0 0 0'}
+                    'body', {'mocap': 'true', 'name': mocap_body_name, 'pos': '0 0 0'},
                 )
                 worldbody.append(mocap_body)
                 weld = ET.Element(

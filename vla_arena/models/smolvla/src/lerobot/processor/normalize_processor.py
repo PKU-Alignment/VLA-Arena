@@ -20,10 +20,11 @@ from typing import Any
 
 import numpy as np
 import torch
+from torch import Tensor
+
 from lerobot.configs.types import FeatureType, NormalizationMode, PolicyFeature
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
 from lerobot.processor.pipeline import EnvTransition, ProcessorStepRegistry, TransitionKey
-from torch import Tensor
 
 
 def _convert_stats_to_tensors(stats: dict[str, dict[str, Any]]) -> dict[str, dict[str, Tensor]]:

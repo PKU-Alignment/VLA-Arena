@@ -14,7 +14,6 @@
 
 import logging
 import time
-from typing import Dict, Optional, Tuple
 from typing_extensions import override
 
 import websockets.sync.client

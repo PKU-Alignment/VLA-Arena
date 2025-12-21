@@ -16,7 +16,6 @@
 This script demonstrates how to evaluate a pretrained smolVLA policy on the LIBERO benchmark.
 """
 
-import collections
 import dataclasses
 import logging
 import math
@@ -24,20 +23,18 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Union
 
 import cv2
 import draccus
 import imageio
 import numpy as np
 import torch
-from lerobot.policies.smolvla.modeling_smolvla import SmolVLAPolicy
-from lerobot.utils.utils import init_logging
 from tqdm import tqdm
-
 from vla_arena.vla_arena import benchmark, get_vla_arena_path
 from vla_arena.vla_arena.envs import OffScreenRenderEnv
 
+from lerobot.policies.smolvla.modeling_smolvla import SmolVLAPolicy
+from lerobot.utils.utils import init_logging
 
 LIBERO_DUMMY_ACTION = [0.0] * 6 + [-1.0]
 LIBERO_ENV_RESOLUTION = 256  # resolution used to render training data

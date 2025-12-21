@@ -45,6 +45,6 @@ setup(
             'vla_arena.eval=vla_arena.evaluate:main',
             'vla_arena.config_copy=scripts.config_copy:main',
             'vla_arena.create_template=scripts.create_template:main',
-        ]
+        ],
     },
 )

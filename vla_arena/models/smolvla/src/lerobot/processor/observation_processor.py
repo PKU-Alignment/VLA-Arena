@@ -32,10 +32,11 @@ from dataclasses import dataclass
 import einops
 import numpy as np
 import torch
+from torch import Tensor
+
 from lerobot.configs.types import PolicyFeature
 from lerobot.constants import OBS_ENV_STATE, OBS_IMAGE, OBS_IMAGES, OBS_STATE
 from lerobot.processor.pipeline import ObservationProcessor, ProcessorStepRegistry
-from torch import Tensor
 
 
 @dataclass

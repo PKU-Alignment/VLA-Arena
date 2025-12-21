@@ -20,7 +20,6 @@ Defines a PromptBuilder for building Mistral Instruct Chat Prompts --> recommend
 Reference: https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.1#instruction-format
 """
 
-from typing import Optional
 
 from vla_arena.models.univla.prismatic.models.backbones.llm.prompting.base_prompter import (
     PromptBuilder,

@@ -18,7 +18,6 @@ siglip_vit.py
 
 from vla_arena.models.openvla.prismatic.models.backbones.vision.base_vision import TimmViTBackbone
 
-
 # Registry =>> Supported SigLIP Vision Backbones (from TIMM) =>> Note:: Using SigLIP w/ Patch = 14 (but SO400M Arch)
 SIGLIP_VISION_BACKBONES = {
     'siglip-vit-b16-224px': 'vit_base_patch16_siglip_224',

@@ -16,18 +16,12 @@
 
 import math
 
-import numpy as np
 import torch
 import torch.nn as nn
 from diffusers.schedulers.scheduling_ddim import DDIMScheduler
-
 from vla_arena.models.openvla_oft.prismatic.vla.constants import (
     ACTION_DIM,
-    ACTION_TOKEN_BEGIN_IDX,
-    IGNORE_INDEX,
     NUM_ACTIONS_CHUNK,
-    PROPRIO_DIM,
-    STOP_INDEX,
 )
 
 

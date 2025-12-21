@@ -55,7 +55,6 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-
 # === Constants ===
 BASE_DIR = Path('data/download/llava-v1.5-instruct')
 LRV_DIR = BASE_DIR / 'lrv'

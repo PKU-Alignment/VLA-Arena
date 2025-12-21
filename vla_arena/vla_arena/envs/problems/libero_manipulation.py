@@ -32,7 +32,7 @@ class Libero_Coffee_Table_Manipulation(BDDLBaseDomain):
         # For z offset of environment fixtures
         self.z_offset = 0.01 - self.coffee_table_full_size[2]
         kwargs.update(
-            {'robots': [f'LiberoOnTheGround{robot_name}' for robot_name in kwargs['robots']]}
+            {'robots': [f'LiberoOnTheGround{robot_name}' for robot_name in kwargs['robots']]},
         )
         kwargs.update({'workspace_offset': self.coffee_table_offset})
         kwargs.update({'arena_type': 'coffee_table'})
@@ -43,7 +43,7 @@ class Libero_Coffee_Table_Manipulation(BDDLBaseDomain):
                     'floor_style': 'wood-plank',
                     'wall_style': 'light-gray-plaster',
                 },
-            }
+            },
         )
 
         super().__init__(bddl_file_name, *args, **kwargs)
@@ -96,7 +96,7 @@ class Libero_Coffee_Table_Manipulation(BDDLBaseDomain):
                         rgba=target_zone.rgba,
                         size=target_zone.size,
                         type='box',
-                    )
+                    ),
                 )
                 continue
             # Otherwise the processing is consistent
@@ -160,7 +160,7 @@ class Libero_Coffee_Table_Manipulation(BDDLBaseDomain):
                 self.object_states_dict[object_1_name],
                 self.object_states_dict[object_2_name],
             )
-        elif len(state) == 2:
+        if len(state) == 2:
             # Checking unary logical predicates
             predicate_fn_name = state[0]
             object_name = state[1]
@@ -193,9 +193,9 @@ class Libero_Coffee_Table_Manipulation(BDDLBaseDomain):
         for camera in camera_names:
             if camera == 'robot0_eye_in_hand':
                 continue
-            elif camera == 'agentview':
+            if camera == 'agentview':
                 mujoco_arena.set_camera(
-                    **AGENTVIEW_CONFIG[self.workspace_name], pos_offset=camera_configs[camera]
+                    **AGENTVIEW_CONFIG[self.workspace_name], pos_offset=camera_configs[camera],
                 )
             else:
                 mujoco_arena.set_camera(camera_name=camera, pos_offset=camera_configs[camera])
@@ -232,7 +232,7 @@ class Libero_Floor_Manipulation(BDDLBaseDomain):
 
         self.z_offset = -0.025
         kwargs.update(
-            {'robots': [f'LiberoOnTheGround{robot_name}' for robot_name in kwargs['robots']]}
+            {'robots': [f'LiberoOnTheGround{robot_name}' for robot_name in kwargs['robots']]},
         )
         kwargs.update({'workspace_offset': self.floor_offset})
         kwargs.update({'arena_type': 'floor'})
@@ -245,8 +245,8 @@ class Libero_Floor_Manipulation(BDDLBaseDomain):
                     'scene_properties': {
                         'floor_style': 'light-gray',
                         'wall_style': 'light-gray-plaster',
-                    }
-                }
+                    },
+                },
             )
 
         super().__init__(bddl_file_name, *args, **kwargs)
@@ -299,7 +299,7 @@ class Libero_Floor_Manipulation(BDDLBaseDomain):
                         rgba=target_zone.rgba,
                         size=target_zone.size,
                         type='box',
-                    )
+                    ),
                 )
                 continue
             # Otherwise the processing is consistent
@@ -363,7 +363,7 @@ class Libero_Floor_Manipulation(BDDLBaseDomain):
                 self.object_states_dict[object_1_name],
                 self.object_states_dict[object_2_name],
             )
-        elif len(state) == 2:
+        if len(state) == 2:
             # Checking unary logical predicates
             predicate_fn_name = state[0]
             object_name = state[1]
@@ -396,16 +396,16 @@ class Libero_Floor_Manipulation(BDDLBaseDomain):
         for camera in camera_names:
             if camera == 'robot0_eye_in_hand':
                 continue
-            elif camera == 'agentview':
+            if camera == 'agentview':
                 mujoco_arena.set_camera(
-                    **AGENTVIEW_CONFIG[self.workspace_name], pos_offset=camera_configs[camera]
+                    **AGENTVIEW_CONFIG[self.workspace_name], pos_offset=camera_configs[camera],
                 )
             else:
                 mujoco_arena.set_camera(camera_name=camera, pos_offset=camera_configs[camera])
 
         # For visualization purpose
         mujoco_arena.set_camera(
-            camera_name='frontview', pos=[1.0, 0.0, 0.65], quat=[0.56, 0.43, 0.43, 0.56]
+            camera_name='frontview', pos=[1.0, 0.0, 0.65], quat=[0.56, 0.43, 0.43, 0.56],
         )
         mujoco_arena.set_camera(
             camera_name='galleryview',
@@ -439,8 +439,8 @@ class Libero_Kitchen_Tabletop_Manipulation(BDDLBaseDomain):
                     'scene_properties': {
                         'floor_style': 'gray-ceramic',
                         'wall_style': 'yellow-linen',
-                    }
-                }
+                    },
+                },
             )
 
         super().__init__(bddl_file_name, *args, **kwargs)
@@ -492,7 +492,7 @@ class Libero_Kitchen_Tabletop_Manipulation(BDDLBaseDomain):
                         rgba=target_zone.rgba,
                         size=target_zone.size,
                         type='box',
-                    )
+                    ),
                 )
                 continue
             # Otherwise the processing is consistent
@@ -556,7 +556,7 @@ class Libero_Kitchen_Tabletop_Manipulation(BDDLBaseDomain):
                 self.object_states_dict[object_1_name],
                 self.object_states_dict[object_2_name],
             )
-        elif len(state) == 2:
+        if len(state) == 2:
             # Checking unary logical predicates
             predicate_fn_name = state[0]
             object_name = state[1]
@@ -589,16 +589,16 @@ class Libero_Kitchen_Tabletop_Manipulation(BDDLBaseDomain):
         for camera in camera_names:
             if camera == 'robot0_eye_in_hand':
                 continue
-            elif camera == 'agentview':
+            if camera == 'agentview':
                 mujoco_arena.set_camera(
-                    **AGENTVIEW_CONFIG[self.workspace_name], pos_offset=camera_configs[camera]
+                    **AGENTVIEW_CONFIG[self.workspace_name], pos_offset=camera_configs[camera],
                 )
             else:
                 mujoco_arena.set_camera(camera_name=camera, pos_offset=camera_configs[camera])
 
         # For visualization purpose
         mujoco_arena.set_camera(
-            camera_name='frontview', pos=[1.0, 0.0, 1.48], quat=[0.56, 0.43, 0.43, 0.56]
+            camera_name='frontview', pos=[1.0, 0.0, 1.48], quat=[0.56, 0.43, 0.43, 0.56],
         )
         mujoco_arena.set_camera(
             camera_name='galleryview',
@@ -623,13 +623,13 @@ class Libero_Living_Room_Tabletop_Manipulation(BDDLBaseDomain):
         self.workspace_name = 'living_room_table'
         self.visualization_sites_list = []
         self.living_room_table_full_size = kwargs.get(
-            'living_room_table_full_size', (0.70, 1.6, 0.024)
+            'living_room_table_full_size', (0.70, 1.6, 0.024),
         )
         self.living_room_table_offset = (0, 0, 0.41)
         # For z offset of environment fixtures
         self.z_offset = 0.01 - self.living_room_table_full_size[2]
         kwargs.update(
-            {'robots': [f'LiberoOnTheGround{robot_name}' for robot_name in kwargs['robots']]}
+            {'robots': [f'LiberoOnTheGround{robot_name}' for robot_name in kwargs['robots']]},
         )
         kwargs.update({'workspace_offset': self.living_room_table_offset})
         kwargs.update({'arena_type': 'living_room'})
@@ -641,8 +641,8 @@ class Libero_Living_Room_Tabletop_Manipulation(BDDLBaseDomain):
                     'scene_properties': {
                         'floor_style': 'wood-plank',
                         'wall_style': 'light-gray-plaster',
-                    }
-                }
+                    },
+                },
             )
 
         super().__init__(bddl_file_name, *args, **kwargs)
@@ -694,7 +694,7 @@ class Libero_Living_Room_Tabletop_Manipulation(BDDLBaseDomain):
                         rgba=target_zone.rgba,
                         size=target_zone.size,
                         type='box',
-                    )
+                    ),
                 )
                 continue
             # Otherwise the processing is consistent
@@ -758,7 +758,7 @@ class Libero_Living_Room_Tabletop_Manipulation(BDDLBaseDomain):
                 self.object_states_dict[object_1_name],
                 self.object_states_dict[object_2_name],
             )
-        elif len(state) == 2:
+        if len(state) == 2:
             # Checking unary logical predicates
             predicate_fn_name = state[0]
             object_name = state[1]
@@ -791,16 +791,16 @@ class Libero_Living_Room_Tabletop_Manipulation(BDDLBaseDomain):
         for camera in camera_names:
             if camera == 'robot0_eye_in_hand':
                 continue
-            elif camera == 'agentview':
+            if camera == 'agentview':
                 mujoco_arena.set_camera(
-                    **AGENTVIEW_CONFIG[self.workspace_name], pos_offset=camera_configs[camera]
+                    **AGENTVIEW_CONFIG[self.workspace_name], pos_offset=camera_configs[camera],
                 )
             else:
                 mujoco_arena.set_camera(camera_name=camera, pos_offset=camera_configs[camera])
 
         # For visualization purpose
         mujoco_arena.set_camera(
-            camera_name='frontview', pos=[1.5, 0.0, 0.9], quat=[0.56, 0.43, 0.43, 0.56]
+            camera_name='frontview', pos=[1.5, 0.0, 0.9], quat=[0.56, 0.43, 0.43, 0.56],
         )
         mujoco_arena.set_camera(
             camera_name='galleryview',
@@ -840,8 +840,8 @@ class Libero_Study_Tabletop_Manipulation(BDDLBaseDomain):
                     'scene_properties': {
                         'floor_style': 'light-gray',
                         'wall_style': 'light-gray-plaster',
-                    }
-                }
+                    },
+                },
             )
 
         super().__init__(bddl_file_name, *args, **kwargs)
@@ -895,7 +895,7 @@ class Libero_Study_Tabletop_Manipulation(BDDLBaseDomain):
                         rgba=target_zone.rgba,
                         size=target_zone.size,
                         type='box',
-                    )
+                    ),
                 )
                 continue
             # Otherwise the processing is consistent
@@ -962,7 +962,7 @@ class Libero_Study_Tabletop_Manipulation(BDDLBaseDomain):
                 self.object_states_dict[object_1_name],
                 self.object_states_dict[object_2_name],
             )
-        elif len(state) == 2:
+        if len(state) == 2:
             # Checking unary logical predicates
             predicate_fn_name = state[0]
             object_name = state[1]
@@ -994,16 +994,16 @@ class Libero_Study_Tabletop_Manipulation(BDDLBaseDomain):
         for camera in camera_names:
             if camera == 'robot0_eye_in_hand':
                 continue
-            elif camera == 'agentview':
+            if camera == 'agentview':
                 mujoco_arena.set_camera(
-                    **AGENTVIEW_CONFIG[self.workspace_name], pos_offset=camera_configs[camera]
+                    **AGENTVIEW_CONFIG[self.workspace_name], pos_offset=camera_configs[camera],
                 )
             else:
                 mujoco_arena.set_camera(camera_name=camera, pos_offset=camera_configs[camera])
 
         # For visualization purpose
         mujoco_arena.set_camera(
-            camera_name='frontview', pos=[1.0, 0.0, 1.48], quat=[0.56, 0.43, 0.43, 0.56]
+            camera_name='frontview', pos=[1.0, 0.0, 1.48], quat=[0.56, 0.43, 0.43, 0.56],
         )
         mujoco_arena.set_camera(
             camera_name='galleryview',
@@ -1043,8 +1043,8 @@ class Libero_Tabletop_Manipulation(BDDLBaseDomain):
                     'scene_properties': {
                         'floor_style': 'light-gray',
                         'wall_style': 'light-gray-plaster',
-                    }
-                }
+                    },
+                },
             )
 
         super().__init__(bddl_file_name, *args, **kwargs)
@@ -1097,7 +1097,7 @@ class Libero_Tabletop_Manipulation(BDDLBaseDomain):
                         rgba=target_zone.rgba,
                         size=target_zone.size,
                         type='box',
-                    )
+                    ),
                 )
                 continue
             # Otherwise the processing is consistent
@@ -1161,7 +1161,7 @@ class Libero_Tabletop_Manipulation(BDDLBaseDomain):
                 self.object_states_dict[object_1_name],
                 self.object_states_dict[object_2_name],
             )
-        elif len(state) == 2:
+        if len(state) == 2:
             # Checking unary logical predicates
             predicate_fn_name = state[0]
             object_name = state[1]
@@ -1194,16 +1194,16 @@ class Libero_Tabletop_Manipulation(BDDLBaseDomain):
         for camera in camera_names:
             if camera == 'robot0_eye_in_hand':
                 continue
-            elif camera == 'agentview':
+            if camera == 'agentview':
                 mujoco_arena.set_camera(
-                    **AGENTVIEW_CONFIG[self.workspace_name], pos_offset=camera_configs[camera]
+                    **AGENTVIEW_CONFIG[self.workspace_name], pos_offset=camera_configs[camera],
                 )
             else:
                 mujoco_arena.set_camera(camera_name=camera, pos_offset=camera_configs[camera])
 
         # For visualization purpose
         mujoco_arena.set_camera(
-            camera_name='frontview', pos=[1.0, 0.0, 1.48], quat=[0.56, 0.43, 0.43, 0.56]
+            camera_name='frontview', pos=[1.0, 0.0, 1.48], quat=[0.56, 0.43, 0.43, 0.56],
         )
         mujoco_arena.set_camera(
             camera_name='galleryview',

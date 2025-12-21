@@ -31,16 +31,16 @@
 import time
 
 import numpy as np
-from lerobot.cameras.utils import make_cameras_from_configs
-from lerobot.constants import OBS_IMAGES, OBS_STATE
-from lerobot.datasets.utils import get_nested_item
 from stretch_body.gamepad_teleop import GamePadTeleop
 from stretch_body.robot import Robot as StretchAPI
 from stretch_body.robot_params import RobotParams
 
+from lerobot.cameras.utils import make_cameras_from_configs
+from lerobot.constants import OBS_IMAGES, OBS_STATE
+from lerobot.datasets.utils import get_nested_item
+
 from ..robot import Robot
 from .configuration_stretch3 import Stretch3RobotConfig
-
 
 # {lerobot_keys: stretch.api.keys}
 STRETCH_MOTORS = {

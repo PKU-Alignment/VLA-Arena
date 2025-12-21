@@ -19,11 +19,10 @@ HuggingFace-style configuration definition for Prismatic VLMs, inheriting from `
 Default configuration specifies `siglip-224px+7b`.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from transformers import PretrainedConfig
 from transformers.models.auto import CONFIG_MAPPING
-
 
 # === Utilities for Mapping Prismatic names to HF names ===
 # fmt: off

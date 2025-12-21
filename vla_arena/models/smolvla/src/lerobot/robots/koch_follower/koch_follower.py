@@ -42,7 +42,6 @@ from ..robot import Robot
 from ..utils import ensure_safe_goal_position
 from .config_koch_follower import KochFollowerConfig
 
-
 logger = logging.getLogger(__name__)
 
 

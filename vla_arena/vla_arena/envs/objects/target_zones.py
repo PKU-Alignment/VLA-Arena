@@ -16,23 +16,14 @@ import pathlib
 import re
 
 import numpy as np
-import robosuite.utils.transform_utils as T
 
 
 absolute_path = pathlib.Path(__file__).parent.parent.parent.absolute()
-from robosuite.models.objects import MujocoXMLObject
 from robosuite.utils.mjcf_utils import (
-    BLUE,
-    GREEN,
-    RED,
-    CustomMaterial,
-    add_to_dict,
     array_to_string,
-    find_elements,
-    xml_path_completion,
 )
 
-from vla_arena.vla_arena.envs.base_object import register_object, register_visual_change_object
+from vla_arena.vla_arena.envs.base_object import register_object
 
 # from robosuite.models.objects import BoxObject
 from vla_arena.vla_arena.envs.objects.site_object import SiteObject
@@ -54,7 +45,7 @@ class TargetZone(SiteObject):
         # site_quat="1 0 0 0",
     ):
         self.category_name = '_'.join(
-            re.sub(r'([A-Z])', r' \1', self.__class__.__name__).split()
+            re.sub(r'([A-Z])', r' \1', self.__class__.__name__).split(),
         ).lower()
         self.size = (zone_size[0], zone_size[1], zone_height)
         self.pos = zone_centroid_xy + (z_offset,)

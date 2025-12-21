@@ -16,19 +16,20 @@ import functools
 
 import jax
 import jax.numpy as jnp
-import openpi.shared.array_typing as at
 import torch
 import torch.nn.functional as F  # noqa: N812
+
+import openpi.shared.array_typing as at
 
 
 @functools.partial(jax.jit, static_argnums=(1, 2, 3))
 @at.typecheck
 def resize_with_pad(
-    images: at.UInt8[at.Array, '*b h w c'] | at.Float[at.Array, '*b h w c'],
+    images: at.UInt8[at.Array, "*b h w c"] | at.Float[at.Array, "*b h w c"],
     height: int,
     width: int,
     method: jax.image.ResizeMethod = jax.image.ResizeMethod.LINEAR,
-) -> at.UInt8[at.Array, '*b {height} {width} c'] | at.Float[at.Array, '*b {height} {width} c']:
+) -> at.UInt8[at.Array, "*b {height} {width} c"] | at.Float[at.Array, "*b {height} {width} c"]:
     """Replicates tf.image.resize_with_pad. Resizes an image to a target height and width without distortion
     by padding with black. If the image is float32, it must be in the range [-1, 1].
     """
@@ -48,7 +49,7 @@ def resize_with_pad(
     elif images.dtype == jnp.float32:
         resized_images = resized_images.clip(-1.0, 1.0)
     else:
-        raise ValueError(f'Unsupported image dtype: {images.dtype}')
+        raise ValueError(f"Unsupported image dtype: {images.dtype}")
 
     pad_h0, remainder_h = divmod(height - resized_height, 2)
     pad_h1 = pad_h0 + remainder_h
@@ -69,7 +70,7 @@ def resize_with_pad_torch(
     images: torch.Tensor,
     height: int,
     width: int,
-    mode: str = 'bilinear',
+    mode: str = "bilinear",
 ) -> torch.Tensor:
     """PyTorch version of resize_with_pad. Resizes an image to a target height and width without distortion
     by padding with black. If the image is float32, it must be in the range [-1, 1].
@@ -107,7 +108,7 @@ def resize_with_pad_torch(
         images,
         size=(resized_height, resized_width),
         mode=mode,
-        align_corners=False if mode == 'bilinear' else None,
+        align_corners=False if mode == "bilinear" else None,
     )
 
     # Handle dtype-specific clipping
@@ -116,7 +117,7 @@ def resize_with_pad_torch(
     elif images.dtype == torch.float32:
         resized_images = resized_images.clamp(-1.0, 1.0)
     else:
-        raise ValueError(f'Unsupported image dtype: {images.dtype}')
+        raise ValueError(f"Unsupported image dtype: {images.dtype}")
 
     # Calculate padding
     pad_h0, remainder_h = divmod(height - resized_height, 2)
@@ -129,7 +130,7 @@ def resize_with_pad_torch(
     padded_images = F.pad(
         resized_images,
         (pad_w0, pad_w1, pad_h0, pad_h1),  # left, right, top, bottom
-        mode='constant',
+        mode="constant",
         value=constant_value,
     )
 

@@ -38,10 +38,10 @@ from typing import Any
 import pytest
 import torch
 import torch.nn as nn
+
 from lerobot.configs.types import FeatureType, PolicyFeature
 from lerobot.processor import EnvTransition, ProcessorStepRegistry, RobotProcessor
 from lerobot.processor.pipeline import TransitionKey
-
 from tests.conftest import assert_contract_is_typed
 
 

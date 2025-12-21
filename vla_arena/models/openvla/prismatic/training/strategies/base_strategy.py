@@ -25,14 +25,12 @@ heavy lifting.
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from pathlib import Path
-from typing import Optional
 
 import torch
 import torch.distributed as dist
 from torch.utils.data import DataLoader, Dataset, DistributedSampler, IterableDataset
 from tqdm import tqdm
 from transformers.modeling_outputs import CausalLMOutputWithPast
-
 from vla_arena.models.openvla.prismatic.models.vlms import PrismaticVLM
 from vla_arena.models.openvla.prismatic.overwatch import initialize_overwatch
 from vla_arena.models.openvla.prismatic.training.metrics import Metrics, VLAMetrics
@@ -43,7 +41,6 @@ from vla_arena.models.openvla.prismatic.util.data_utils import (
     PaddedCollatorForLanguageModeling,
 )
 from vla_arena.models.openvla.prismatic.vla.action_tokenizer import ActionTokenizer
-
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)

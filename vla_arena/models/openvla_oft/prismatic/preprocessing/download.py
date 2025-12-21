@@ -21,7 +21,7 @@ Utility functions for downloading and extracting various datasets to (local) dis
 import os
 import shutil
 from pathlib import Path
-from typing import Dict, List, TypedDict
+from typing import TypedDict
 from zipfile import ZipFile
 
 import requests
@@ -35,9 +35,7 @@ from rich.progress import (
     TransferSpeedColumn,
 )
 from tqdm import tqdm
-
 from vla_arena.models.openvla_oft.prismatic.overwatch import initialize_overwatch
-
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)

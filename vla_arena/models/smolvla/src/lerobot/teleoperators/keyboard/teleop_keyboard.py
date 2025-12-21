@@ -40,7 +40,6 @@ from lerobot.errors import DeviceAlreadyConnectedError, DeviceNotConnectedError
 from ..teleoperator import Teleoperator
 from .configuration_keyboard import KeyboardEndEffectorTeleopConfig, KeyboardTeleopConfig
 
-
 PYNPUT_AVAILABLE = True
 try:
     if ('DISPLAY' not in os.environ) and ('linux' in sys.platform):

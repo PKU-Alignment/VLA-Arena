@@ -5,8 +5,7 @@ Pytest configuration and fixtures for VLA-Arena tests.
 import os
 import shutil
 import tempfile
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock
 
 import pytest
 import yaml
@@ -49,7 +48,7 @@ def mock_vla_arena_paths(monkeypatch, temp_dir):
         return paths.get(key, temp_dir)
 
     monkeypatch.setattr(
-        'vla_arena.vla_arena.benchmark.__init__.get_vla_arena_path', mock_get_vla_arena_path
+        'vla_arena.vla_arena.benchmark.__init__.get_vla_arena_path', mock_get_vla_arena_path,
     )
     return temp_dir
 

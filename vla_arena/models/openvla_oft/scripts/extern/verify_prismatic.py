@@ -25,7 +25,6 @@ import torch
 from PIL import Image
 from transformers import AutoModelForVision2Seq, AutoProcessor
 
-
 # === Verification Arguments ===
 MODEL_PATH = 'TRI-ML/prismatic-siglip-224px-7b'
 DEFAULT_IMAGE_URL = 'https://huggingface.co/datasets/huggingface/documentation-images/resolve/main/beignets-task-guide.png'

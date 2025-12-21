@@ -13,8 +13,6 @@
 # limitations under the License.
 
 import argparse
-import json
-import os
 import random
 from pathlib import Path
 
@@ -92,7 +90,7 @@ def sample_hdf5_file(input_file, output_file, sample_ratio, random_seed=None):
             selected_demos.sort()  # Keep sorted for readability
 
             print(
-                f"  Selected demos: {selected_demos[:5]}{'...' if len(selected_demos) > 5 else ''}"
+                f"  Selected demos: {selected_demos[:5]}{'...' if len(selected_demos) > 5 else ''}",
             )
 
             # Create output directory
@@ -153,7 +151,7 @@ def sample_hdf5_file(input_file, output_file, sample_ratio, random_seed=None):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Randomly sample a certain proportion of data from HDF5 files and create new HDF5 files'
+        description='Randomly sample a certain proportion of data from HDF5 files and create new HDF5 files',
     )
     parser.add_argument('--input-file', type=str, help='Input HDF5 file path')
     parser.add_argument(
@@ -182,10 +180,10 @@ def main():
         help='Output directory, used together with --input-dir',
     )
     parser.add_argument(
-        '--pattern', type=str, default='*.hdf5', help='Filename pattern (default: *.hdf5)'
+        '--pattern', type=str, default='*.hdf5', help='Filename pattern (default: *.hdf5)',
     )
     parser.add_argument(
-        '--not-recursive', action='store_true', help='Do not recursively search subdirectories'
+        '--not-recursive', action='store_true', help='Do not recursively search subdirectories',
     )
 
     args = parser.parse_args()

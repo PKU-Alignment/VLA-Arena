@@ -68,6 +68,9 @@ from queue import Empty
 
 import grpc
 import torch
+from torch import nn
+from torch.multiprocessing import Event, Queue
+
 from lerobot.cameras import opencv  # noqa: F401
 from lerobot.configs import parser
 from lerobot.configs.train import TrainRLServerPipelineConfig
@@ -95,9 +98,6 @@ from lerobot.utils.transition import (
     move_transition_to_device,
 )
 from lerobot.utils.utils import TimerManager, get_safe_torch_device, init_logging
-from torch import nn
-from torch.multiprocessing import Event, Queue
-
 
 ACTOR_SHUTDOWN_TIMEOUT = 30
 

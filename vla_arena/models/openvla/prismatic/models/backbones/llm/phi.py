@@ -18,19 +18,16 @@ phi.py
 Class definition for all LLMs derived from PhiForCausalLM.
 """
 
-from typing import Optional, Type
 
 import torch
 from torch import nn as nn
 from transformers import PhiForCausalLM
 from transformers.models.phi.modeling_phi import PhiDecoderLayer
-
 from vla_arena.models.openvla.prismatic.models.backbones.llm.base_llm import HFCausalLLMBackbone
 from vla_arena.models.openvla.prismatic.models.backbones.llm.prompting import (
     PhiPromptBuilder,
     PromptBuilder,
 )
-
 
 # Registry ==> Support Phi Models (from HF Transformers)
 # fmt: off

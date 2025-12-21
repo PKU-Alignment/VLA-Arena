@@ -12,20 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 from collections.abc import Sequence
+import logging
 
 import torch
+
 from openpi.shared import image_tools
 
-
-logger = logging.getLogger('openpi')
+logger = logging.getLogger("openpi")
 
 # Constants moved from model.py
 IMAGE_KEYS = (
-    'base_0_rgb',
-    'left_wrist_0_rgb',
-    'right_wrist_0_rgb',
+    "base_0_rgb",
+    "left_wrist_0_rgb",
+    "right_wrist_0_rgb",
 )
 
 IMAGE_RESOLUTION = (224, 224)
@@ -44,7 +44,7 @@ def preprocess_observation_pytorch(
     """
     if not set(image_keys).issubset(observation.images):
         raise ValueError(
-            f'images dict missing keys: expected {image_keys}, got {list(observation.images)}'
+            f"images dict missing keys: expected {image_keys}, got {list(observation.images)}"
         )
 
     batch_shape = observation.state.shape[:-1]
@@ -62,7 +62,7 @@ def preprocess_observation_pytorch(
             image = image.permute(0, 2, 3, 1)
 
         if image.shape[1:3] != image_resolution:
-            logger.info(f'Resizing image {key} from {image.shape[1:3]} to {image_resolution}')
+            logger.info(f"Resizing image {key} from {image.shape[1:3]} to {image_resolution}")
             image = image_tools.resize_with_pad_torch(image, *image_resolution)
 
         if train:
@@ -70,7 +70,7 @@ def preprocess_observation_pytorch(
             image = image / 2.0 + 0.5
 
             # Apply PyTorch-based augmentations
-            if 'wrist' not in key:
+            if "wrist" not in key:
                 # Geometric augmentations for non-wrist cameras
                 height, width = image.shape[1:3]
 
@@ -93,7 +93,7 @@ def preprocess_observation_pytorch(
                 image = torch.nn.functional.interpolate(
                     image.permute(0, 3, 1, 2),  # [b, h, w, c] -> [b, c, h, w]
                     size=(height, width),
-                    mode='bilinear',
+                    mode="bilinear",
                     align_corners=False,
                 ).permute(
                     0, 2, 3, 1
@@ -117,7 +117,7 @@ def preprocess_observation_pytorch(
                     grid_y = torch.linspace(-1, 1, height, device=image.device)
 
                     # Create meshgrid
-                    grid_y, grid_x = torch.meshgrid(grid_y, grid_x, indexing='ij')
+                    grid_y, grid_x = torch.meshgrid(grid_y, grid_x, indexing="ij")
 
                     # Expand to batch dimension
                     grid_x = grid_x.unsqueeze(0).expand(image.shape[0], -1, -1)
@@ -133,8 +133,8 @@ def preprocess_observation_pytorch(
                     image = torch.nn.functional.grid_sample(
                         image.permute(0, 3, 1, 2),  # [b, h, w, c] -> [b, c, h, w]
                         grid,
-                        mode='bilinear',
-                        padding_mode='zeros',
+                        mode="bilinear",
+                        padding_mode="zeros",
                         align_corners=False,
                     ).permute(
                         0, 2, 3, 1

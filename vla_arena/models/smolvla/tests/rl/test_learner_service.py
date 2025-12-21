@@ -67,6 +67,7 @@ def create_learner_service_stub(
     queue_get_timeout: float = 0.1,
 ):
     import grpc
+
     from lerobot.scripts.rl.learner_service import LearnerService
     from lerobot.transport import services_pb2_grpc  # generated from .proto
 

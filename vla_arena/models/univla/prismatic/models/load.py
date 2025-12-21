@@ -22,10 +22,8 @@ IDs, mappings to paper experiments, and short descriptions), as well as for load
 import json
 import os
 from pathlib import Path
-from typing import List, Optional, Union
 
 from huggingface_hub import HfFileSystem, hf_hub_download
-
 from vla_arena.models.univla.prismatic.conf import ModelConfig
 from vla_arena.models.univla.prismatic.models.materialize import (
     get_llm_backbone_and_tokenizer,
@@ -36,7 +34,6 @@ from vla_arena.models.univla.prismatic.models.vlas import OpenVLA
 from vla_arena.models.univla.prismatic.models.vlms import PrismaticVLM
 from vla_arena.models.univla.prismatic.overwatch import initialize_overwatch
 from vla_arena.models.univla.prismatic.vla.action_tokenizer import ActionTokenizer
-
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)

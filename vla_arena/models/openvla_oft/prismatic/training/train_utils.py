@@ -15,7 +15,6 @@
 """Utils for training/fine-tuning scripts."""
 
 import torch
-
 from vla_arena.models.openvla_oft.prismatic.vla.constants import (
     ACTION_DIM,
     ACTION_TOKEN_BEGIN_IDX,

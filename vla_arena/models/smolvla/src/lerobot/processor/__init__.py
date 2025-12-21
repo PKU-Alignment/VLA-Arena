@@ -47,7 +47,6 @@ from .pipeline import (
 )
 from .rename_processor import RenameProcessor
 
-
 __all__ = [
     'ActionProcessor',
     'DeviceProcessor',

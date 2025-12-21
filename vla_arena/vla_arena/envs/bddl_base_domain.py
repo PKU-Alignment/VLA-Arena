@@ -13,24 +13,14 @@
 # limitations under the License.
 
 import os
-from copy import deepcopy
 
 import mujoco
 import numpy as np
 import robosuite.macros as macros
 import robosuite.utils.transform_utils as T
-from robosuite.controllers import (
-    composite_controller_factory,
-    controller_factory,
-    load_part_controller_config,
-)
 from robosuite.environments.manipulation.manipulation_env import ManipulationEnv
 from robosuite.models.base import MujocoModel
-from robosuite.models.grippers import gripper_factory
 from robosuite.models.tasks import ManipulationTask
-from robosuite.robots.robot import Robot
-from robosuite.utils.buffers import DeltaBuffer, RingBuffer
-from robosuite.utils.mjcf_utils import CustomMaterial
 from robosuite.utils.observables import Observable, sensor
 from robosuite.utils.placement_samplers import SequentialCompositeSampler
 from robosuite.utils.transform_utils import mat2quat
@@ -106,12 +96,11 @@ class SingleArmEnv(ManipulationEnv):
 
         if self.env_configuration == 'bimanual':
             return np.array(
-                self.sim.data.site_xmat[self.sim.model.site_name2id(pf + 'right_grip_site')]
+                self.sim.data.site_xmat[self.sim.model.site_name2id(pf + 'right_grip_site')],
             ).reshape(3, 3)
-        else:
-            return np.array(
-                self.sim.data.site_xmat[self.sim.model.site_name2id(pf + 'grip_site')]
-            ).reshape(3, 3)
+        return np.array(
+            self.sim.data.site_xmat[self.sim.model.site_name2id(pf + 'grip_site')],
+        ).reshape(3, 3)
 
     @property
     def _eef_xquat(self):
@@ -334,7 +323,7 @@ class BDDLBaseDomain(SingleArmEnv):
         raise NotImplementedError
 
     def _generate_object_state_wrapper(
-        self, skip_object_names=['main_table', 'floor', 'countertop', 'coffee_table']
+        self, skip_object_names=['main_table', 'floor', 'countertop', 'coffee_table'],
     ):
         object_states_dict = {}
         tracking_object_states_changes = []
@@ -426,7 +415,7 @@ class BDDLBaseDomain(SingleArmEnv):
             )
         elif self._arena_type == 'kitchen':
             xpos = self.robots[0].robot_model.base_xpos_offset['kitchen_table'](
-                self.kitchen_table_full_size[0]
+                self.kitchen_table_full_size[0],
             )
             self.robots[0].robot_model.set_base_xpos(xpos)
             mujoco_arena = KitchenTableArena(
@@ -446,7 +435,7 @@ class BDDLBaseDomain(SingleArmEnv):
             )
         elif self._arena_type == 'coffee_table':
             xpos = self.robots[0].robot_model.base_xpos_offset['coffee_table'](
-                self.coffee_table_full_size[0]
+                self.coffee_table_full_size[0],
             )
             self.robots[0].robot_model.set_base_xpos(xpos)
             mujoco_arena = CoffeeTableArena(
@@ -456,7 +445,7 @@ class BDDLBaseDomain(SingleArmEnv):
 
         elif self._arena_type == 'living_room':
             xpos = self.robots[0].robot_model.base_xpos_offset['living_room_table'](
-                self.living_room_table_full_size[0]
+                self.living_room_table_full_size[0],
             )
             self.robots[0].robot_model.set_base_xpos(xpos)
             mujoco_arena = LivingRoomTableArena(
@@ -466,7 +455,7 @@ class BDDLBaseDomain(SingleArmEnv):
 
         elif self._arena_type == 'study':
             xpos = self.robots[0].robot_model.base_xpos_offset['study_table'](
-                self.study_table_full_size[0]
+                self.study_table_full_size[0],
             )
             self.robots[0].robot_model.set_base_xpos(xpos)
             mujoco_arena = StudyTableArena(
@@ -511,10 +500,10 @@ class BDDLBaseDomain(SingleArmEnv):
     def _setup_placement_initializer(self, mujoco_arena):
         self.placement_initializer = SequentialCompositeSampler(name='ObjectSampler')
         self.conditional_placement_initializer = SiteSequentialCompositeSampler(
-            name='ConditionalSiteSampler'
+            name='ConditionalSiteSampler',
         )
         self.conditional_placement_on_objects_initializer = SequentialCompositeSampler(
-            name='ConditionalObjectSampler'
+            name='ConditionalObjectSampler',
         )
         self._add_placement_initializer()
 
@@ -578,7 +567,7 @@ class BDDLBaseDomain(SingleArmEnv):
 
         for i, obj in enumerate(self.objects):
             obj_sensors, obj_sensor_names = self._create_obj_sensors(
-                obj_name=obj.name, modality='object'
+                obj_name=obj.name, modality='object',
             )
 
             sensors += obj_sensors
@@ -633,7 +622,7 @@ class BDDLBaseDomain(SingleArmEnv):
                         f'{obj_name}_quat',
                         'world_pose_in_gripper',
                     ]
-                ]
+                ],
             ):
                 return np.zeros(3)
             obj_pose = T.pose2mat((obs_cache[f'{obj_name}_pos'], obs_cache[f'{obj_name}_quat']))
@@ -727,7 +716,7 @@ class BDDLBaseDomain(SingleArmEnv):
             if state[0] in ['open', 'close']:
                 # If "open" is implemented, we assume "close" is also implemented
                 if state[1] in self.object_states_dict and hasattr(
-                    self.object_states_dict[state[1]], 'set_joint'
+                    self.object_states_dict[state[1]], 'set_joint',
                 ):
                     obj = self.get_object(state[1])
                     if state[0] == 'open':
@@ -744,7 +733,7 @@ class BDDLBaseDomain(SingleArmEnv):
             elif state[0] in ['turnon', 'turnoff']:
                 # If "turnon" is implemented, we assume "turnoff" is also implemented.
                 if state[1] in self.object_states_dict and hasattr(
-                    self.object_states_dict[state[1]], 'set_joint'
+                    self.object_states_dict[state[1]], 'set_joint',
                 ):
                     obj = self.get_object(state[1])
                     if state[0] == 'turnon':
@@ -780,7 +769,7 @@ class BDDLBaseDomain(SingleArmEnv):
                 rotation_axis=self.objects_dict[object_name].rotation_axis,
             )
             self.conditional_placement_initializer.append_sampler(
-                sampler, {'reference': target_name, 'site_name': region_name}
+                sampler, {'reference': target_name, 'site_name': region_name},
             )
         # Place objects that are on other objects
         for state in conditioned_initial_place_state_on_objects:
@@ -797,7 +786,7 @@ class BDDLBaseDomain(SingleArmEnv):
                 rotation_axis=self.objects_dict[object_name].rotation_axis,
             )
             self.conditional_placement_on_objects_initializer.append_sampler(
-                sampler, {'reference': other_object_name}
+                sampler, {'reference': other_object_name},
             )
         # Place objects inside some containing regions
         for state in conditioned_initial_place_state_in_objects:
@@ -817,7 +806,7 @@ class BDDLBaseDomain(SingleArmEnv):
                 rotation_axis=self.objects_dict[object_name].rotation_axis,
             )
             self.conditional_placement_initializer.append_sampler(
-                sampler, {'reference': target_name, 'site_name': region_name}
+                sampler, {'reference': target_name, 'site_name': region_name},
             )
 
     def _get_observations(self, force_update=False):
@@ -880,10 +869,7 @@ class BDDLBaseDomain(SingleArmEnv):
 
             # Sample from the placement initializer for all objects
             for object_property_initializer in self.object_property_initializers:
-                if isinstance(object_property_initializer, OpenCloseSampler):
-                    joint_pos = object_property_initializer.sample()
-                    self.object_states_dict[object_property_initializer.name].set_joint(joint_pos)
-                elif isinstance(object_property_initializer, TurnOnOffSampler):
+                if isinstance(object_property_initializer, OpenCloseSampler) or isinstance(object_property_initializer, TurnOnOffSampler):
                     joint_pos = object_property_initializer.sample()
                     self.object_states_dict[object_property_initializer.name].set_joint(joint_pos)
                 else:
@@ -893,10 +879,10 @@ class BDDLBaseDomain(SingleArmEnv):
 
             object_placements = self.placement_initializer.sample()
             object_placements = self.conditional_placement_initializer.sample(
-                self.sim, object_placements
+                self.sim, object_placements,
             )
             object_placements = self.conditional_placement_on_objects_initializer.sample(
-                object_placements
+                object_placements,
             )
             for obj_pos, obj_quat, obj in object_placements.values():
                 if obj.name not in list(self.fixtures_dict.keys()):
@@ -945,7 +931,7 @@ class BDDLBaseDomain(SingleArmEnv):
                 start_quat=start_quat,
                 period=object.get('motion_period', 1),  # Convert speed to period
             )
-        elif object['motion_type'] == 'linear':
+        if object['motion_type'] == 'linear':
             # Get object's initial position and quaternion
             start_pos = self.object_original_pos[object['name']]
             start_quat = self.object_original_quat[object['name']]
@@ -957,14 +943,14 @@ class BDDLBaseDomain(SingleArmEnv):
                 cycle_time=object.get('motion_period', 1),  # Default period is 1 second
                 travel_dist=object.get('motion_travel_dist', 1),  # Use speed as travel distance
             )
-        elif object['motion_type'] == 'waypoint':
+        if object['motion_type'] == 'waypoint':
             return SmoothWaypointMotionGenerator(
                 waypoints=object.get('motion_waypoints', [[0, 0, 1.2]]),
                 start_quat=self.object_original_quat[object['name']],
                 dt=object.get('motion_dt', 0.01),
                 loop=object.get('motion_loop', True),
             )
-        elif object['motion_type'] == 'parabolic':
+        if object['motion_type'] == 'parabolic':
             return ParabolicMotionGenerator(
                 start_pos=object.get('motion_start_pos', [0, 0, 1.2]),
                 start_quat=object.get('motion_start_quat', [0, 0, 0, 1]),
@@ -973,8 +959,7 @@ class BDDLBaseDomain(SingleArmEnv):
                 dt=object.get('motion_dt', 0.01),
                 gravity=object.get('motion_gravity', np.array([0, 0, -9.81])),
             )
-        else:
-            raise NotImplementedError(f"Invalid motion type: {object['motion_type']}")
+        raise NotImplementedError(f"Invalid motion type: {object['motion_type']}")
 
     def _weld_mocap_joint(self, object_name, mocap_joint_name):
         self.sim.model.eq_active[self.sim.model.eq_obj1id[mocap_joint_name]] = 1
@@ -1056,7 +1041,7 @@ class BDDLBaseDomain(SingleArmEnv):
 
     def get_robot_state_vector(self, obs):
         return np.concatenate(
-            [obs['robot0_gripper_qpos'], obs['robot0_eef_pos'], obs['robot0_eef_quat']]
+            [obs['robot0_gripper_qpos'], obs['robot0_eef_pos'], obs['robot0_eef_quat']],
         )
 
     def is_fixture(self, object_name):
@@ -1110,7 +1095,7 @@ class BDDLBaseDomain(SingleArmEnv):
             )
             if (c1_in_g1 and c2_in_g2) or (c1_in_g2 and c2_in_g1):
                 print(
-                    f'contact: {self.sim.model.geom_id2name(contact.geom1)} {self.sim.model.geom_id2name(contact.geom2)}'
+                    f'contact: {self.sim.model.geom_id2name(contact.geom1)} {self.sim.model.geom_id2name(contact.geom2)}',
                 )
                 f6 = np.zeros(6)
                 mujoco.mj_contactForce(self.sim.model._model, self.sim.data._data, i, f6)
@@ -1292,28 +1277,27 @@ class BDDLBaseDomain(SingleArmEnv):
             # Checking binary logical predicates
             if predicate_fn_name == 'checkgrippercontactpart':
                 return eval_predicate_fn(
-                    predicate_fn_name, self.object_states_dict[state[1]], state[2]
+                    predicate_fn_name, self.object_states_dict[state[1]], state[2],
                 )
-            elif predicate_fn_name == 'checkgripperdistance':
+            if predicate_fn_name == 'checkgripperdistance':
                 object_1_name = state[1]
                 return float(state[2]) >= eval_predicate_fn(
                     predicate_fn_name,
                     self.object_states_dict[object_1_name],
                 )
-            else:
-                object_1_name = state[1]
-                object_2_name = state[2]
-                return eval_predicate_fn(
-                    predicate_fn_name,
-                    self.object_states_dict[object_1_name],
-                    self.object_states_dict[object_2_name],
-                )
-        elif len(state) == 2:
+            object_1_name = state[1]
+            object_2_name = state[2]
+            return eval_predicate_fn(
+                predicate_fn_name,
+                self.object_states_dict[object_1_name],
+                self.object_states_dict[object_2_name],
+            )
+        if len(state) == 2:
             # Checking unary logical predicates
             predicate_fn_name = state[0]
             object_name = state[1]
             return eval_predicate_fn(predicate_fn_name, self.object_states_dict[object_name])
-        elif len(state) == 4:
+        if len(state) == 4:
             # Checking binary logical predicates
             predicate_fn_name = state[0]
             object_1_name = state[1]
@@ -1324,19 +1308,18 @@ class BDDLBaseDomain(SingleArmEnv):
                     self.object_states_dict[object_1_name],
                     self.object_states_dict[object_2_name],
                 )
-            elif predicate_fn_name == 'checkgripperdistancepart':
+            if predicate_fn_name == 'checkgripperdistancepart':
                 return float(state[3]) >= eval_predicate_fn(
                     predicate_fn_name,
                     self.object_states_dict[object_1_name],
                     state[2],
                 )
-            else:
-                return float(state[3]) < eval_predicate_fn(
-                    predicate_fn_name,
-                    self.object_states_dict[object_1_name],
-                    self.object_states_dict[object_2_name],
-                )
-        elif len(state) == 5:
+            return float(state[3]) < eval_predicate_fn(
+                predicate_fn_name,
+                self.object_states_dict[object_1_name],
+                self.object_states_dict[object_2_name],
+            )
+        if len(state) == 5:
             # Checking binary logical predicates
             predicate_fn_name = state[0]
             if predicate_fn_name == 'incontactpart':
@@ -1357,10 +1340,8 @@ class BDDLBaseDomain(SingleArmEnv):
                 else:
                     raise NotImplementedError(f'Invalid geom_name_2: {geom_name_2}')
                 return self._check_contact(geom_name_1, geom_name_2)
-            else:
-                raise NotImplementedError(f'Invalid state length: {len(state)}')
-        else:
             raise NotImplementedError(f'Invalid state length: {len(state)}')
+        raise NotImplementedError(f'Invalid state length: {len(state)}')
 
 
 from PIL import Image, ImageEnhance

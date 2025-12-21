@@ -33,11 +33,12 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 import draccus
+from torch.optim import Optimizer
+from torch.optim.lr_scheduler import LambdaLR, LRScheduler
+
 from lerobot.constants import SCHEDULER_STATE
 from lerobot.datasets.utils import write_json
 from lerobot.utils.io_utils import deserialize_json_into_object
-from torch.optim import Optimizer
-from torch.optim.lr_scheduler import LambdaLR, LRScheduler
 
 
 @dataclass

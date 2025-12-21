@@ -13,21 +13,15 @@
 # limitations under the License.
 
 import argparse
-import glob
 import json
 import os
 from pathlib import Path
 
-import cv2
 import h5py
 import numpy as np
-import robosuite
 import robosuite.macros as macros
 import robosuite.utils.transform_utils as T
-from PIL import Image
-from robosuite.utils import camera_utils
 
-import init_path
 import vla_arena.vla_arena.utils.utils as vla_arena_utils
 from vla_arena.vla_arena import get_vla_arena_path
 from vla_arena.vla_arena.envs import *
@@ -175,8 +169,8 @@ def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_d
                             (
                                 obs['robot0_eef_pos'],
                                 T.quat2axisangle(obs['robot0_eef_quat']),
-                            )
-                        )
+                            ),
+                        ),
                     )
 
                 robot_states.append(env.get_robot_state_vector(obs))
@@ -229,7 +223,7 @@ def process_single_demo_file(demo_file_path, env_kwargs_template, args, global_d
                     for camera in camera_names:
                         if camera_list[camera]['depths']:
                             demo_data[camera + '_depth'] = np.stack(
-                                camera_list[camera]['depths'], axis=0
+                                camera_list[camera]['depths'], axis=0,
                             )
 
             processed_demos.append(demo_data)
@@ -270,13 +264,13 @@ def main():
         help='Output directory, default is automatically determined based on BDDL file',
     )
     parser.add_argument(
-        '--pattern', type=str, default='*.hdf5', help='Filename pattern to process (default: .hdf5)'
+        '--pattern', type=str, default='*.hdf5', help='Filename pattern to process (default: .hdf5)',
     )
     parser.add_argument('--not-use-camera-obs', action='store_true')
     parser.add_argument('--no-proprio', action='store_true')
     parser.add_argument('--use-depth', action='store_true')
     parser.add_argument(
-        '--not-recursive', action='store_true', help='Do not recursively search subdirectories'
+        '--not-recursive', action='store_true', help='Do not recursively search subdirectories',
     )
 
     args = parser.parse_args()
@@ -300,7 +294,7 @@ def main():
 
     for demo_file in demo_files:
         demos, _, metadata = process_single_demo_file(
-            str(demo_file), env_kwargs_template, args, 0  # Each BDDL file counts independently
+            str(demo_file), env_kwargs_template, args, 0,  # Each BDDL file counts independently
         )
 
         if metadata and demos:

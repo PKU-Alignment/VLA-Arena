@@ -20,9 +20,7 @@ import time
 
 import numpy as np
 import torch
-
 from vla_arena.models.openvla.experiments.robot.openvla_utils import get_vla, get_vla_action
-
 
 # Initialize important constants and pretty-printing mode in NumPy.
 ACTION_DIM = 7

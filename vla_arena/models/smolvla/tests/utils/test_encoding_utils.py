@@ -29,6 +29,7 @@
 # limitations under the License.
 
 import pytest
+
 from lerobot.utils.encoding_utils import (
     decode_sign_magnitude,
     decode_twos_complement,

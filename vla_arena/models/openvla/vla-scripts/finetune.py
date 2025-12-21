@@ -37,7 +37,6 @@ import os
 from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 import draccus
 import torch
@@ -57,7 +56,6 @@ from transformers import (
     BitsAndBytesConfig,
 )
 from transformers.modeling_outputs import CausalLMOutputWithPast
-
 from vla_arena.models.openvla.prismatic.extern.hf.configuration_prismatic import OpenVLAConfig
 from vla_arena.models.openvla.prismatic.extern.hf.modeling_prismatic import (
     OpenVLAForActionPrediction,
@@ -76,7 +74,6 @@ from vla_arena.models.openvla.prismatic.vla.datasets import RLDSBatchTransform, 
 from vla_arena.models.openvla.prismatic.vla.datasets.rlds.utils.data_utils import (
     save_dataset_statistics,
 )
-
 
 os.environ['WANDB_ENABLED'] = 'false'
 # Sane Defaults

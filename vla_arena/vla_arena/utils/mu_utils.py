@@ -43,8 +43,7 @@ def register_mu(scene_type='general'):
 def get_scene_dict(scene_type=None):
     if scene_type is None:
         return SCENE_DICT
-    else:
-        return SCENE_DICT[scene_type.lower()]
+    return SCENE_DICT[scene_type.lower()]
 
 
 def get_scene_class(scene_name):
@@ -78,7 +77,7 @@ class InitialSceneTemplates:
                     affordance_fixture_info_dict[object_name] = affordances[category_name]
         # print(affordance_fixture_info_dict)
         self.affordance_region_kwargs_list = get_affordance_region_kwargs_list_from_fixture_info(
-            affordance_fixture_info_dict
+            affordance_fixture_info_dict,
         )
 
         self.regions = {}
@@ -123,10 +122,10 @@ class InitialSceneTemplates:
                         region_centroid_xy[1] - region_half_len,
                         region_centroid_xy[0] + region_half_len,
                         region_centroid_xy[1] + region_half_len,
-                    )
+                    ),
                 ],
                 'yaw_rotation': [yaw_rotation],
-            }
+            },
         }
         print
         return region_key_value

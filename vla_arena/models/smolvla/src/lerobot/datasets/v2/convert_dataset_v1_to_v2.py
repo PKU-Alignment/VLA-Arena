@@ -131,6 +131,8 @@ import torch
 from datasets import Dataset
 from huggingface_hub import HfApi
 from huggingface_hub.errors import EntryNotFoundError, HfHubHTTPError
+from safetensors.torch import load_file
+
 from lerobot.datasets.utils import (
     DEFAULT_CHUNK_SIZE,
     DEFAULT_PARQUET_PATH,
@@ -148,11 +150,12 @@ from lerobot.datasets.utils import (
     write_json,
     write_jsonlines,
 )
-from lerobot.datasets.video_utils import VideoFrame  # noqa: F401
-from lerobot.datasets.video_utils import get_image_pixel_channels, get_video_info
+from lerobot.datasets.video_utils import (
+    VideoFrame,  # noqa: F401
+    get_image_pixel_channels,
+    get_video_info,
+)
 from lerobot.robots import RobotConfig
-from safetensors.torch import load_file
-
 
 V16 = 'v1.6'
 V20 = 'v2.0'

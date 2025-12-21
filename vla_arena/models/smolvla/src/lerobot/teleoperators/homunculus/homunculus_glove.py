@@ -35,6 +35,7 @@ from pprint import pformat
 from typing import Deque
 
 import serial
+
 from lerobot.errors import DeviceAlreadyConnectedError, DeviceNotConnectedError
 from lerobot.motors import MotorCalibration
 from lerobot.motors.motors_bus import MotorNormMode
@@ -43,7 +44,6 @@ from lerobot.utils.utils import enter_pressed, move_cursor_up
 
 from ..teleoperator import Teleoperator
 from .config_homunculus import HomunculusGloveConfig
-
 
 logger = logging.getLogger(__name__)
 

@@ -4,8 +4,7 @@ Tests for CLI functionality in vla_arena.cli.
 
 import argparse
 import os
-import sys
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -35,7 +34,7 @@ class TestCLIMain:
         monkeypatch.setattr('vla_arena.cli.main.train_main', mock_train_main)
 
         with patch(
-            'sys.argv', ['vla-arena', 'train', '--model', 'openvla', '--config', 'test.yaml']
+            'sys.argv', ['vla-arena', 'train', '--model', 'openvla', '--config', 'test.yaml'],
         ):
             try:
                 cli_main_function()
@@ -51,7 +50,7 @@ class TestCLIMain:
         monkeypatch.setattr('vla_arena.cli.main.eval_main', mock_eval_main)
 
         with patch(
-            'sys.argv', ['vla-arena', 'eval', '--model', 'openvla', '--config', 'test.yaml']
+            'sys.argv', ['vla-arena', 'eval', '--model', 'openvla', '--config', 'test.yaml'],
         ):
             try:
                 cli_main_function()

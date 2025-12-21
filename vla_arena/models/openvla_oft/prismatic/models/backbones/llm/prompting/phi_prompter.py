@@ -21,7 +21,6 @@ Also handles Phi special case BOS token additions.
 Reference: https://huggingface.co/microsoft/phi-2#qa-format
 """
 
-from typing import Optional
 
 from vla_arena.models.openvla_oft.prismatic.models.backbones.llm.prompting.base_prompter import (
     PromptBuilder,

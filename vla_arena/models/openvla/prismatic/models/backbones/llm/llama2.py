@@ -19,13 +19,11 @@ Class definition for all LLMs derived from LlamaForCausalLM.
 """
 
 from collections.abc import Sequence
-from typing import Optional, Type
 
 import torch
 from torch import nn as nn
 from transformers import LlamaForCausalLM
 from transformers.models.llama.modeling_llama import LlamaDecoderLayer
-
 from vla_arena.models.openvla.prismatic.models.backbones.llm.base_llm import HFCausalLLMBackbone
 from vla_arena.models.openvla.prismatic.models.backbones.llm.prompting import (
     LLaMa2ChatPromptBuilder,
@@ -33,7 +31,6 @@ from vla_arena.models.openvla.prismatic.models.backbones.llm.prompting import (
     PurePromptBuilder,
     VicunaV15ChatPromptBuilder,
 )
-
 
 # Registry =>> Support LLaMa-2 Models (from HF Transformers)
 # fmt: off

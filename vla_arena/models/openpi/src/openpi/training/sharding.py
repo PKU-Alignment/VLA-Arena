@@ -18,9 +18,8 @@ import logging
 import jax
 import numpy as np
 
-
-BATCH_AXIS = 'batch'
-FSDP_AXIS = 'fsdp'
+BATCH_AXIS = "batch"
+FSDP_AXIS = "fsdp"
 # In FSDP, we shard the data across both the batch and FSDP axes.
 DATA_AXIS = (BATCH_AXIS, FSDP_AXIS)
 
@@ -32,7 +31,7 @@ class _MeshState:
 def make_mesh(num_fsdp_devices: int) -> jax.sharding.Mesh:
     if jax.device_count() % num_fsdp_devices != 0:
         raise ValueError(
-            f'Number of devices {jax.device_count()} must be divisible by the number of FSDP devices {num_fsdp_devices}.'
+            f"Number of devices {jax.device_count()} must be divisible by the number of FSDP devices {num_fsdp_devices}."
         )
     mesh_shape = (jax.device_count() // num_fsdp_devices, num_fsdp_devices)
     return jax.make_mesh(mesh_shape, (BATCH_AXIS, FSDP_AXIS))
@@ -44,7 +43,7 @@ def set_mesh(mesh: jax.sharding.Mesh):
     custom context manager like this one is the recommended way to maintain a reference to a global mesh. This is only used
     in `activation_sharding_constraint` below."""
     if _MeshState.active_mesh is not None:
-        raise ValueError('Cannot nest set_mesh context managers.')
+        raise ValueError("Cannot nest set_mesh context managers.")
     _MeshState.active_mesh = mesh
     try:
         yield
@@ -88,7 +87,7 @@ def fsdp_sharding(
         if mesh.shape[FSDP_AXIS] == 1:
             return jax.sharding.NamedSharding(mesh, jax.sharding.PartitionSpec())
         # replicate scalar and vector arrays
-        if not hasattr(array, 'shape'):
+        if not hasattr(array, "shape"):
             return jax.sharding.NamedSharding(mesh, jax.sharding.PartitionSpec())
         if len(array.shape) < 2:
             return jax.sharding.NamedSharding(mesh, jax.sharding.PartitionSpec())
@@ -103,7 +102,7 @@ def fsdp_sharding(
             if array.shape[i] % mesh.shape[FSDP_AXIS] == 0:
                 if log:
                     logging.info(
-                        f'Sharding {jax.tree_util.keystr(kp)} of shape {array.shape} ({arr_size / 2**20:.2f} MiB) along axis {i}'
+                        f"Sharding {jax.tree_util.keystr(kp)} of shape {array.shape} ({arr_size / 2**20:.2f} MiB) along axis {i}"
                     )
                 spec[i] = FSDP_AXIS
                 return jax.sharding.NamedSharding(mesh, jax.sharding.PartitionSpec(*spec))
@@ -111,7 +110,7 @@ def fsdp_sharding(
         # replicate if no valid sharding was found
         if log:
             logging.warning(
-                f'Could not find a valid sharding for {jax.tree_util.keystr(kp)} of shape {array.shape} with mesh of shape {mesh.shape}'
+                f"Could not find a valid sharding for {jax.tree_util.keystr(kp)} of shape {array.shape} with mesh of shape {mesh.shape}"
             )
         return jax.sharding.NamedSharding(mesh, jax.sharding.PartitionSpec())
 

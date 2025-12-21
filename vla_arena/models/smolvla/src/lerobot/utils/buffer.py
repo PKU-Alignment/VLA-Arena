@@ -35,9 +35,10 @@ from typing import TypedDict
 
 import torch
 import torch.nn.functional as F  # noqa: N812
+from tqdm import tqdm
+
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
 from lerobot.utils.transition import Transition
-from tqdm import tqdm
 
 
 class BatchTransition(TypedDict):

@@ -12,25 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, List
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from einops import rearrange, repeat
-from latent_action_model.genie.modules.blocks import (
-    MVSpatioTemporalTransformer,
-    MVSpatioTransformer,
-    SpatioTemporalTransformer,
-    SpatioTransformer,
-    VectorQuantizer,
-    patchify,
-    unpatchify,
-)
 from torch import Tensor
 from torchvision import transforms
 from transformers import T5EncoderModel, T5Tokenizer
 
+from latent_action_model.genie.modules.blocks import (
+    SpatioTemporalTransformer,
+    SpatioTransformer,
+    VectorQuantizer,
+)
 
 # Use timm's names
 IMAGENET_DEFAULT_MEAN = (0.485, 0.456, 0.406)

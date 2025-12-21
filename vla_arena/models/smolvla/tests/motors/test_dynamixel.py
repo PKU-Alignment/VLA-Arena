@@ -34,11 +34,11 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from lerobot.motors import Motor, MotorCalibration, MotorNormMode
 from lerobot.motors.dynamixel import MODEL_NUMBER_TABLE, DynamixelMotorsBus
 from lerobot.motors.dynamixel.tables import X_SERIES_CONTROL_TABLE
 from lerobot.utils.encoding_utils import encode_twos_complement
-
 
 try:
     import dynamixel_sdk as dxl

@@ -29,10 +29,11 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import numpy as np
+from tqdm import tqdm
+
 from lerobot.datasets.compute_stats import aggregate_stats, get_feature_stats, sample_indices
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
 from lerobot.datasets.utils import write_episode_stats
-from tqdm import tqdm
 
 
 def sample_episode_video_frames(

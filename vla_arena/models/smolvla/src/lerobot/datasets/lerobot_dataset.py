@@ -43,6 +43,7 @@ from datasets import concatenate_datasets, load_dataset
 from huggingface_hub import HfApi, snapshot_download
 from huggingface_hub.constants import REPOCARD_NAME
 from huggingface_hub.errors import RevisionNotFoundError
+
 from lerobot.constants import HF_LEROBOT_HOME
 from lerobot.datasets.compute_stats import aggregate_stats, compute_episode_stats
 from lerobot.datasets.image_writer import AsyncImageWriter, write_image
@@ -85,7 +86,6 @@ from lerobot.datasets.video_utils import (
     get_safe_default_codec,
     get_video_info,
 )
-
 
 CODEBASE_VERSION = 'v2.1'
 

@@ -15,10 +15,8 @@
 import os
 import pathlib
 import re
-from dataclasses import dataclass
 
 import numpy as np
-from easydict import EasyDict
 from robosuite.models.objects import MujocoXMLObject
 
 
@@ -43,7 +41,7 @@ class ArticulatedObject(MujocoXMLObject):
             duplicate_collision_geoms=duplicate_collision_geoms,
         )
         self.category_name = '_'.join(
-            re.sub(r'([A-Z])', r' \1', self.__class__.__name__).split()
+            re.sub(r'([A-Z])', r' \1', self.__class__.__name__).split(),
         ).lower()
         self.rotation = (np.pi / 4, np.pi / 2)
         self.rotation_axis = 'x'
@@ -80,14 +78,12 @@ class Microwave(ArticulatedObject):
     def is_open(self, qpos):
         if qpos < max(self.object_properties['articulation']['default_open_ranges']):
             return True
-        else:
-            return False
+        return False
 
     def is_close(self, qpos):
         if qpos > min(self.object_properties['articulation']['default_close_ranges']):
             return True
-        else:
-            return False
+        return False
 
 
 @register_object
@@ -146,14 +142,12 @@ class ShortCabinet(ArticulatedObject):
     def is_open(self, qpos):
         if qpos > min(self.object_properties['articulation']['default_open_ranges']):
             return True
-        else:
-            return False
+        return False
 
     def is_close(self, qpos):
         if qpos < max(self.object_properties['articulation']['default_close_ranges']):
             return True
-        else:
-            return False
+        return False
 
 
 @register_object
@@ -172,14 +166,12 @@ class ShortFridge(ArticulatedObject):
     def is_open(self, qpos):
         if qpos > min(self.object_properties['articulation']['default_open_ranges']):
             return True
-        else:
-            return False
+        return False
 
     def is_close(self, qpos):
         if qpos < max(self.object_properties['articulation']['default_close_ranges']):
             return True
-        else:
-            return False
+        return False
 
     # Sample initial joint positions for random door open or door closed
 
@@ -199,14 +191,12 @@ class WoodenCabinet(ArticulatedObject):
     def is_open(self, qpos):
         if qpos < max(self.object_properties['articulation']['default_open_ranges']):
             return True
-        else:
-            return False
+        return False
 
     def is_close(self, qpos):
         if qpos > min(self.object_properties['articulation']['default_close_ranges']):
             return True
-        else:
-            return False
+        return False
 
 
 @register_object
@@ -237,14 +227,12 @@ class WhiteCabinet(ArticulatedObject):
     def is_open(self, qpos):
         if qpos < max(self.object_properties['articulation']['default_open_ranges']):
             return True
-        else:
-            return False
+        return False
 
     def is_close(self, qpos):
         if qpos > min(self.object_properties['articulation']['default_close_ranges']):
             return True
-        else:
-            return False
+        return False
 
 
 @register_object
@@ -274,12 +262,11 @@ class FlatStove(ArticulatedObject):
                 True,
             )
             return True
-        else:
-            self.object_properties['vis_site_names']['burner'] = (
-                self.naming_prefix + 'burner',
-                False,
-            )
-            return False
+        self.object_properties['vis_site_names']['burner'] = (
+            self.naming_prefix + 'burner',
+            False,
+        )
+        return False
 
     def turn_off(self, qpos):
         if qpos < max(self.object_properties['articulation']['default_turnoff_ranges']):
@@ -288,12 +275,11 @@ class FlatStove(ArticulatedObject):
                 False,
             )
             return True
-        else:
-            self.object_properties['vis_site_names']['burner'] = (
-                self.naming_prefix + 'burner',
-                True,
-            )
-            return False
+        self.object_properties['vis_site_names']['burner'] = (
+            self.naming_prefix + 'burner',
+            True,
+        )
+        return False
 
 
 @register_object

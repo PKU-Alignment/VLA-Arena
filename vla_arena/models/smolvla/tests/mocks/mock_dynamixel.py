@@ -33,11 +33,11 @@ from collections.abc import Callable
 
 import dynamixel_sdk as dxl
 import serial
-from lerobot.motors.dynamixel.dynamixel import _split_into_byte_chunks
 from mock_serial.mock_serial import MockSerial
 
-from .mock_serial_patch import WaitableStub
+from lerobot.motors.dynamixel.dynamixel import _split_into_byte_chunks
 
+from .mock_serial_patch import WaitableStub
 
 # https://emanual.robotis.com/docs/en/dxl/crc/
 DXL_CRC_TABLE = [

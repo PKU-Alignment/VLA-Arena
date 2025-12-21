@@ -16,8 +16,9 @@ import dataclasses
 from typing import Protocol, runtime_checkable
 
 import jax.numpy as jnp
-import openpi.shared.array_typing as at
 import optax
+
+import openpi.shared.array_typing as at
 
 
 @runtime_checkable
@@ -116,7 +117,7 @@ class SGD(OptimizerConfig):
         lr: optax.ScalarOrSchedule,
         weight_decay_mask: at.PyTree | None = None,
     ) -> optax.GradientTransformation:
-        assert weight_decay_mask is None, 'Weight decay is not supported for SGD'
+        assert weight_decay_mask is None, "Weight decay is not supported for SGD"
         return optax.sgd(lr, momentum=self.momentum, nesterov=self.nesterov)
 
 

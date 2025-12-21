@@ -12,13 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
 
-from vla_arena.vla_arena.envs import objects
-from vla_arena.vla_arena.envs.objects import OBJECTS_DICT
 from vla_arena.vla_arena.utils.bddl_generation_utils import *
 from vla_arena.vla_arena.utils.mu_utils import InitialSceneTemplates, register_mu
-from vla_arena.vla_arena.utils.object_utils import get_affordance_regions
 
 
 @register_mu(scene_type='kitchen')
@@ -50,7 +46,7 @@ class KitchenScene1(InitialSceneTemplates):
                 target_name=self.workspace_name,
                 region_half_len=0.01,
                 yaw_rotation=(np.pi, np.pi),
-            )
+            ),
         )
 
         self.regions.update(
@@ -59,7 +55,7 @@ class KitchenScene1(InitialSceneTemplates):
                 region_name='akita_black_bowl_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.regions.update(
@@ -68,7 +64,7 @@ class KitchenScene1(InitialSceneTemplates):
                 region_name='plate_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -76,7 +72,7 @@ class KitchenScene1(InitialSceneTemplates):
                 region_name='vase_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
@@ -119,7 +115,7 @@ class KitchenScene2(InitialSceneTemplates):
                 target_name=self.workspace_name,
                 region_half_len=0.01,
                 yaw_rotation=(np.pi, np.pi),
-            )
+            ),
         )
 
         self.regions.update(
@@ -128,7 +124,7 @@ class KitchenScene2(InitialSceneTemplates):
                 region_name='akita_black_bowl_middle_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.regions.update(
@@ -137,7 +133,7 @@ class KitchenScene2(InitialSceneTemplates):
                 region_name='akita_black_bowl_front_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.regions.update(
@@ -146,7 +142,7 @@ class KitchenScene2(InitialSceneTemplates):
                 region_name='akita_black_bowl_back_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.regions.update(
@@ -155,7 +151,7 @@ class KitchenScene2(InitialSceneTemplates):
                 region_name='plate_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
 
@@ -207,7 +203,7 @@ class KitchenScene3(InitialSceneTemplates):
                 region_name='flat_stove_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.01,
-            )
+            ),
         )
 
         self.regions.update(
@@ -216,7 +212,7 @@ class KitchenScene3(InitialSceneTemplates):
                 region_name='frypan_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.regions.update(
@@ -225,7 +221,7 @@ class KitchenScene3(InitialSceneTemplates):
                 region_name='moka_pot_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
@@ -265,7 +261,7 @@ class KitchenScene4(InitialSceneTemplates):
                 region_name='white_cabinet_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.01,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -274,7 +270,7 @@ class KitchenScene4(InitialSceneTemplates):
                 target_name=self.workspace_name,
                 region_half_len=0.01,
                 yaw_rotation=(np.pi, np.pi),
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -282,7 +278,7 @@ class KitchenScene4(InitialSceneTemplates):
                 region_name='akita_black_bowl_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.regions.update(
@@ -291,7 +287,7 @@ class KitchenScene4(InitialSceneTemplates):
                 region_name='wine_bottle_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
 
@@ -335,7 +331,7 @@ class KitchenScene5(InitialSceneTemplates):
                 region_name='white_cabinet_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.01,
-            )
+            ),
         )
 
         self.regions.update(
@@ -344,7 +340,7 @@ class KitchenScene5(InitialSceneTemplates):
                 region_name='akita_black_bowl_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.regions.update(
@@ -353,7 +349,7 @@ class KitchenScene5(InitialSceneTemplates):
                 region_name='ketchup_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.regions.update(
@@ -362,7 +358,7 @@ class KitchenScene5(InitialSceneTemplates):
                 region_name='plate_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
 
@@ -406,7 +402,7 @@ class KitchenScene6(InitialSceneTemplates):
                 target_name=self.workspace_name,
                 region_half_len=0.01,
                 yaw_rotation=(0, 0),
-            )
+            ),
         )
 
         self.regions.update(
@@ -415,7 +411,7 @@ class KitchenScene6(InitialSceneTemplates):
                 region_name='white_yellow_mug_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.regions.update(
@@ -424,7 +420,7 @@ class KitchenScene6(InitialSceneTemplates):
                 region_name='porcelain_mug_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.regions.update(
@@ -433,7 +429,7 @@ class KitchenScene6(InitialSceneTemplates):
                 region_name='porcelain_mug_front_region',
                 target_name=self.workspace_name,
                 region_half_len=0.05,
-            )
+            ),
         )
 
         self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
@@ -477,7 +473,7 @@ class KitchenScene7(InitialSceneTemplates):
                 target_name=self.workspace_name,
                 region_half_len=0.01,
                 yaw_rotation=(np.pi, np.pi),
-            )
+            ),
         )
 
         self.regions.update(
@@ -486,7 +482,7 @@ class KitchenScene7(InitialSceneTemplates):
                 region_name='plate_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.regions.update(
@@ -495,7 +491,7 @@ class KitchenScene7(InitialSceneTemplates):
                 region_name='plate_right_region',
                 target_name=self.workspace_name,
                 region_half_len=0.05,
-            )
+            ),
         )
 
         self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
@@ -535,7 +531,7 @@ class KitchenScene8(InitialSceneTemplates):
                 region_name='flat_stove_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.01,
-            )
+            ),
         )
 
         self.regions.update(
@@ -544,7 +540,7 @@ class KitchenScene8(InitialSceneTemplates):
                 region_name='moka_pot_right_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.regions.update(
@@ -553,7 +549,7 @@ class KitchenScene8(InitialSceneTemplates):
                 region_name='moka_pot_left_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
@@ -597,7 +593,7 @@ class KitchenScene9(InitialSceneTemplates):
                 region_name='flat_stove_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.01,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -606,7 +602,7 @@ class KitchenScene9(InitialSceneTemplates):
                 target_name=self.workspace_name,
                 region_half_len=0.01,
                 yaw_rotation=(np.pi, np.pi),
-            )
+            ),
         )
 
         self.regions.update(
@@ -615,7 +611,7 @@ class KitchenScene9(InitialSceneTemplates):
                 region_name='frypan_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.regions.update(
@@ -624,7 +620,7 @@ class KitchenScene9(InitialSceneTemplates):
                 region_name='white_bowl_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
@@ -673,7 +669,7 @@ class KitchenScene10(InitialSceneTemplates):
                 target_name=self.workspace_name,
                 region_half_len=0.01,
                 yaw_rotation=(np.pi, np.pi),
-            )
+            ),
         )
 
         self.regions.update(
@@ -682,7 +678,7 @@ class KitchenScene10(InitialSceneTemplates):
                 region_name='akita_black_bowl_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.regions.update(
@@ -691,7 +687,7 @@ class KitchenScene10(InitialSceneTemplates):
                 region_name='butter_back_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -699,7 +695,7 @@ class KitchenScene10(InitialSceneTemplates):
                 region_name='butter_front_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -707,7 +703,7 @@ class KitchenScene10(InitialSceneTemplates):
                 region_name='chocolate_pudding_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
 
@@ -757,7 +753,7 @@ class LivingRoomScene1(InitialSceneTemplates):
                 region_name='basket_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.01,
-            )
+            ),
         )
 
         self.regions.update(
@@ -766,7 +762,7 @@ class LivingRoomScene1(InitialSceneTemplates):
                 region_name='alphabet_soup_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.regions.update(
@@ -775,7 +771,7 @@ class LivingRoomScene1(InitialSceneTemplates):
                 region_name='cream_cheese_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.regions.update(
@@ -784,7 +780,7 @@ class LivingRoomScene1(InitialSceneTemplates):
                 region_name='tomato_sauce_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.regions.update(
@@ -793,7 +789,7 @@ class LivingRoomScene1(InitialSceneTemplates):
                 region_name='ketchup_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
 
@@ -841,7 +837,7 @@ class LivingRoomScene2(InitialSceneTemplates):
                 region_name='basket_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.01,
-            )
+            ),
         )
 
         self.regions.update(
@@ -850,7 +846,7 @@ class LivingRoomScene2(InitialSceneTemplates):
                 region_name='milk_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.regions.update(
@@ -859,7 +855,7 @@ class LivingRoomScene2(InitialSceneTemplates):
                 region_name='cream_cheese_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.regions.update(
@@ -868,7 +864,7 @@ class LivingRoomScene2(InitialSceneTemplates):
                 region_name='orange_juice_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.regions.update(
@@ -877,7 +873,7 @@ class LivingRoomScene2(InitialSceneTemplates):
                 region_name='tomato_sauce_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -885,7 +881,7 @@ class LivingRoomScene2(InitialSceneTemplates):
                 region_name='alphabet_soup_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -893,7 +889,7 @@ class LivingRoomScene2(InitialSceneTemplates):
                 region_name='butter_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -901,7 +897,7 @@ class LivingRoomScene2(InitialSceneTemplates):
                 region_name='ketchup_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
 
@@ -950,7 +946,7 @@ class LivingRoomScene3(InitialSceneTemplates):
                 region_name='wooden_tray_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.01,
-            )
+            ),
         )
 
         self.regions.update(
@@ -959,7 +955,7 @@ class LivingRoomScene3(InitialSceneTemplates):
                 region_name='cream_cheese_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.regions.update(
@@ -968,7 +964,7 @@ class LivingRoomScene3(InitialSceneTemplates):
                 region_name='tomato_sauce_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -976,7 +972,7 @@ class LivingRoomScene3(InitialSceneTemplates):
                 region_name='alphabet_soup_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -984,7 +980,7 @@ class LivingRoomScene3(InitialSceneTemplates):
                 region_name='butter_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -992,7 +988,7 @@ class LivingRoomScene3(InitialSceneTemplates):
                 region_name='ketchup_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
 
@@ -1037,7 +1033,7 @@ class LivingRoomScene4(InitialSceneTemplates):
                 region_name='wooden_tray_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.01,
-            )
+            ),
         )
 
         self.regions.update(
@@ -1046,7 +1042,7 @@ class LivingRoomScene4(InitialSceneTemplates):
                 region_name='chocolate_pudding_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.regions.update(
@@ -1055,7 +1051,7 @@ class LivingRoomScene4(InitialSceneTemplates):
                 region_name='akita_black_bowl_right_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1063,7 +1059,7 @@ class LivingRoomScene4(InitialSceneTemplates):
                 region_name='akita_black_bowl_left_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1071,7 +1067,7 @@ class LivingRoomScene4(InitialSceneTemplates):
                 region_name='salad_dressing_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
 
@@ -1131,7 +1127,7 @@ class LivingRoomScene5(InitialSceneTemplates):
                 region_name='plate_left_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1139,7 +1135,7 @@ class LivingRoomScene5(InitialSceneTemplates):
                 region_name='plate_right_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
 
         self.regions.update(
@@ -1148,7 +1144,7 @@ class LivingRoomScene5(InitialSceneTemplates):
                 region_name='porcelain_mug_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1156,7 +1152,7 @@ class LivingRoomScene5(InitialSceneTemplates):
                 region_name='white_yellow_mug_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1164,7 +1160,7 @@ class LivingRoomScene5(InitialSceneTemplates):
                 region_name='red_coffee_mug_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
 
@@ -1212,7 +1208,7 @@ class LivingRoomScene6(InitialSceneTemplates):
                 region_name='plate_left_region',
                 target_name=self.workspace_name,
                 region_half_len=0.05,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1220,7 +1216,7 @@ class LivingRoomScene6(InitialSceneTemplates):
                 region_name='plate_right_region',
                 target_name=self.workspace_name,
                 region_half_len=0.05,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1228,7 +1224,7 @@ class LivingRoomScene6(InitialSceneTemplates):
                 region_name='plate_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1236,7 +1232,7 @@ class LivingRoomScene6(InitialSceneTemplates):
                 region_name='porcelain_mug_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1244,7 +1240,7 @@ class LivingRoomScene6(InitialSceneTemplates):
                 region_name='chocolate_pudding_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1252,7 +1248,7 @@ class LivingRoomScene6(InitialSceneTemplates):
                 region_name='red_coffee_mug_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
 
@@ -1299,7 +1295,7 @@ class StudyScene1(InitialSceneTemplates):
                 target_name=self.workspace_name,
                 region_half_len=0.01,
                 yaw_rotation=(np.pi, np.pi),
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1308,7 +1304,7 @@ class StudyScene1(InitialSceneTemplates):
                 target_name=self.workspace_name,
                 region_half_len=0.025,
                 yaw_rotation=(-np.pi / 2, -np.pi / 4),
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1316,7 +1312,7 @@ class StudyScene1(InitialSceneTemplates):
                 region_name='white_yellow_mug_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1325,7 +1321,7 @@ class StudyScene1(InitialSceneTemplates):
                 target_name=self.workspace_name,
                 region_half_len=0.05,
                 yaw_rotation=(np.pi, np.pi),
-            )
+            ),
         )
         self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
 
@@ -1365,7 +1361,7 @@ class StudyScene2(InitialSceneTemplates):
                 region_name='red_coffee_mug_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1374,7 +1370,7 @@ class StudyScene2(InitialSceneTemplates):
                 target_name=self.workspace_name,
                 region_half_len=0.025,
                 yaw_rotation=(-np.pi / 2, -np.pi / 4),
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1383,7 +1379,7 @@ class StudyScene2(InitialSceneTemplates):
                 target_name=self.workspace_name,
                 region_half_len=0.01,
                 yaw_rotation=(np.pi, np.pi),
-            )
+            ),
         )
         self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
 
@@ -1424,7 +1420,7 @@ class StudyScene3(InitialSceneTemplates):
                 region_name='red_coffee_mug_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1432,7 +1428,7 @@ class StudyScene3(InitialSceneTemplates):
                 region_name='red_coffee_mug_behind_region',
                 target_name=self.workspace_name,
                 region_half_len=0.05,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1440,7 +1436,7 @@ class StudyScene3(InitialSceneTemplates):
                 region_name='porcelain_mug_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1448,7 +1444,7 @@ class StudyScene3(InitialSceneTemplates):
                 region_name='black_book_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1457,7 +1453,7 @@ class StudyScene3(InitialSceneTemplates):
                 target_name=self.workspace_name,
                 region_half_len=0.01,
                 yaw_rotation=(np.pi, np.pi),
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1465,7 +1461,7 @@ class StudyScene3(InitialSceneTemplates):
                 region_name='desk_caddy_front_left_contain_region',
                 target_name=self.workspace_name,
                 region_half_len=0.025,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1474,7 +1470,7 @@ class StudyScene3(InitialSceneTemplates):
                 target_name=self.workspace_name,
                 region_half_len=0.05,
                 yaw_rotation=(np.pi, np.pi),
-            )
+            ),
         )
         self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
 
@@ -1515,7 +1511,7 @@ class StudyScene4(InitialSceneTemplates):
                 region_name='yellow_book_right_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.01,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1523,7 +1519,7 @@ class StudyScene4(InitialSceneTemplates):
                 region_name='yellow_book_left_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.01,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1531,7 +1527,7 @@ class StudyScene4(InitialSceneTemplates):
                 region_name='black_book_init_region',
                 target_name=self.workspace_name,
                 region_half_len=0.01,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -1540,7 +1536,7 @@ class StudyScene4(InitialSceneTemplates):
                 target_name=self.workspace_name,
                 region_half_len=0.01,
                 yaw_rotation=(0, 0),
-            )
+            ),
         )
         self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)
 

@@ -14,10 +14,7 @@
 
 import argparse
 import os
-import pickle
 import time
-import traceback
-from pathlib import Path
 
 import numpy as np
 import torch
@@ -37,10 +34,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--bddl_file', type=str, required=True, help='BDDL file path or directory')
 parser.add_argument('--resolution', type=int, default=256, help='Resolution')
 parser.add_argument(
-    '--output_path', type=str, default='./vla_arena/vla_arena/init_files', help='Output path'
+    '--output_path', type=str, default='./vla_arena/vla_arena/init_files', help='Output path',
 )
 parser.add_argument(
-    '--root_path', type=str, default='./vla_arena/vla_arena/bddl_files', help='Root path'
+    '--root_path', type=str, default='./vla_arena/vla_arena/bddl_files', help='Root path',
 )
 args = parser.parse_args()
 
@@ -70,14 +67,12 @@ def process_single_file_with_retry(bddl_file, relative_path='', max_retries=4):
                     print(f'Retrying... ({attempt + 1}/{max_retries} retries used)')
                     time.sleep(0.5)  # Brief wait before retry
                     continue
-                else:
-                    print(f'Failed after {max_retries} retries due to RandomizationError')
-                    print(f'Error details: {e}')
-                    raise e
-            else:
-                # If not RandomizationError, raise exception directly
-                print(f'Encountered non-RandomizationError: {error_name}')
+                print(f'Failed after {max_retries} retries due to RandomizationError')
+                print(f'Error details: {e}')
                 raise e
+            # If not RandomizationError, raise exception directly
+            print(f'Encountered non-RandomizationError: {error_name}')
+            raise e
 
 
 def process_single_file(bddl_file, relative_path=''):
@@ -164,7 +159,7 @@ def process_directory_recursive(directory, root_dir=None):
                 process_single_file_with_retry(item_path, relative_dir)
             except Exception as e:
                 print(f'Error processing {item_path}: {e}')
-                print(f'Skipping this file and continuing with others...')
+                print('Skipping this file and continuing with others...')
                 continue
 
         elif os.path.isdir(item_path):

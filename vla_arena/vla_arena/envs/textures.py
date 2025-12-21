@@ -14,7 +14,6 @@
 
 import os
 
-from vla_arena.vla_arena import get_libero_path
 
 
 # This is the mapping from texture name to texture file name. Currently this has some duplication with style.py. We will fix this in the future.

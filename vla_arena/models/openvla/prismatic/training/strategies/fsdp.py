@@ -24,7 +24,6 @@ from collections import OrderedDict
 from collections.abc import Callable
 from functools import partial
 from pathlib import Path
-from typing import Optional
 
 import torch
 import torch.distributed as dist
@@ -34,16 +33,13 @@ from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
     apply_activation_checkpointing,
     checkpoint_wrapper,
 )
-from torch.distributed.fsdp import FullStateDictConfig
+from torch.distributed.fsdp import FullStateDictConfig, MixedPrecision, ShardingStrategy, StateDictType
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
-from torch.distributed.fsdp import MixedPrecision, ShardingStrategy, StateDictType
 from torch.optim import AdamW
 from transformers.optimization import get_constant_schedule, get_cosine_schedule_with_warmup
-
 from vla_arena.models.openvla.prismatic.models.vlms import PrismaticVLM
 from vla_arena.models.openvla.prismatic.overwatch import initialize_overwatch
 from vla_arena.models.openvla.prismatic.training.strategies.base_strategy import TrainingStrategy
-
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)

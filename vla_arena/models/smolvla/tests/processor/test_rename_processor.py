@@ -32,9 +32,9 @@ from pathlib import Path
 
 import numpy as np
 import torch
+
 from lerobot.configs.types import FeatureType
 from lerobot.processor import ProcessorStepRegistry, RenameProcessor, RobotProcessor, TransitionKey
-
 from tests.conftest import assert_contract_is_typed
 
 

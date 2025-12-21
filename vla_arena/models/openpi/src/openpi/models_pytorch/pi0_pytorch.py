@@ -15,17 +15,19 @@
 import logging
 import math
 
-import openpi.models.gemma as _gemma
-import openpi.models_pytorch.preprocessing_pytorch as _preprocessing
 import torch
+from torch import Tensor
+from torch import nn
 import torch.nn.functional as F  # noqa: N812
+
+import openpi.models.gemma as _gemma
 from openpi.models_pytorch.gemma_pytorch import PaliGemmaWithExpertModel
-from torch import Tensor, nn
+import openpi.models_pytorch.preprocessing_pytorch as _preprocessing
 
 
 def get_safe_dtype(target_dtype, device_type):
     """Get a safe dtype for the given device type."""
-    if device_type == 'cpu':
+    if device_type == "cpu":
         # CPU doesn't support bfloat16, use float32 instead
         if target_dtype == torch.bfloat16:
             return torch.float32
@@ -35,14 +37,14 @@ def get_safe_dtype(target_dtype, device_type):
 
 
 def create_sinusoidal_pos_embedding(
-    time: torch.tensor, dimension: int, min_period: float, max_period: float, device='cpu'
+    time: torch.tensor, dimension: int, min_period: float, max_period: float, device="cpu"
 ) -> Tensor:
     """Computes sine-cosine positional embedding vectors for scalar positions."""
     if dimension % 2 != 0:
-        raise ValueError(f'dimension ({dimension}) must be divisible by 2')
+        raise ValueError(f"dimension ({dimension}) must be divisible by 2")
 
     if time.ndim != 1:
-        raise ValueError('The time tensor is expected to be of shape `(batch_size, )`.')
+        raise ValueError("The time tensor is expected to be of shape `(batch_size, )`.")
 
     dtype = get_safe_dtype(torch.float64, device.type)
     fraction = torch.linspace(0.0, 1.0, dimension // 2, dtype=dtype, device=device)
@@ -124,13 +126,13 @@ class PI0Pytorch(nn.Module):
                 action_expert_config.width, action_expert_config.width
             )
 
-        torch.set_float32_matmul_precision('high')
-        self.sample_actions = torch.compile(self.sample_actions, mode='max-autotune')
+        torch.set_float32_matmul_precision("high")
+        self.sample_actions = torch.compile(self.sample_actions, mode="max-autotune")
 
         # Initialize gradient checkpointing flag
         self.gradient_checkpointing_enabled = False
 
-        msg = 'transformers_replace is not installed correctly. Please install it with `uv pip install transformers==4.53.2` and `cp -r ./src/openpi/models_pytorch/transformers_replace/* .venv/lib/python3.11/site-packages/transformers/`.'
+        msg = "transformers_replace is not installed correctly. Please install it with `uv pip install transformers==4.53.2` and `cp -r ./src/openpi/models_pytorch/transformers_replace/* .venv/lib/python3.11/site-packages/transformers/`."
         try:
             from transformers.models.siglip import check
 
@@ -146,7 +148,7 @@ class PI0Pytorch(nn.Module):
         self.paligemma_with_expert.paligemma.vision_tower.gradient_checkpointing = True
         self.paligemma_with_expert.gemma_expert.model.gradient_checkpointing = True
 
-        logging.info('Enabled gradient checkpointing for PI0Pytorch model')
+        logging.info("Enabled gradient checkpointing for PI0Pytorch model")
 
     def gradient_checkpointing_disable(self):
         """Disable gradient checkpointing."""
@@ -155,7 +157,7 @@ class PI0Pytorch(nn.Module):
         self.paligemma_with_expert.paligemma.vision_tower.gradient_checkpointing = False
         self.paligemma_with_expert.gemma_expert.model.gradient_checkpointing = False
 
-        logging.info('Disabled gradient checkpointing for PI0Pytorch model')
+        logging.info("Disabled gradient checkpointing for PI0Pytorch model")
 
     def is_gradient_checkpointing_enabled(self):
         """Check if gradient checkpointing is enabled."""
@@ -400,7 +402,7 @@ class PI0Pytorch(nn.Module):
 
         v_t = self._apply_checkpoint(action_out_proj_func, suffix_out)
 
-        return F.mse_loss(u_t, v_t, reduction='none')
+        return F.mse_loss(u_t, v_t, reduction="none")
 
     @torch.no_grad()
     def sample_actions(self, device, observation, noise=None, num_steps=10) -> Tensor:
@@ -423,7 +425,7 @@ class PI0Pytorch(nn.Module):
         # Compute image and language key value cache
         prefix_att_2d_masks_4d = self._prepare_attention_masks_4d(prefix_att_2d_masks)
         self.paligemma_with_expert.paligemma.language_model.config._attn_implementation = (
-            'eager'  # noqa: SLF001
+            "eager"
         )
 
         _, past_key_values = self.paligemma_with_expert.forward(
@@ -485,7 +487,7 @@ class PI0Pytorch(nn.Module):
         # Prepare attention masks
         full_att_2d_masks_4d = self._prepare_attention_masks_4d(full_att_2d_masks)
         self.paligemma_with_expert.gemma_expert.model.config._attn_implementation = (
-            'eager'  # noqa: SLF001
+            "eager"
         )
 
         outputs_embeds, _ = self.paligemma_with_expert.forward(

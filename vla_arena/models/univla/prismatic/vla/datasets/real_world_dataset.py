@@ -13,14 +13,10 @@
 # limitations under the License.
 
 import fnmatch
-import glob
 import logging
 import os
 import pickle
 import random
-import re
-import subprocess
-from datetime import datetime
 
 import cv2
 import h5py
@@ -28,12 +24,8 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import torchvision
-from einops import rearrange, repeat
 from PIL import Image
 from torch.utils.data import DataLoader
-from torchvision import transforms
-from transformers import CLIPTextModel, CLIPTokenizer
-
 
 logger = logging.getLogger(__name__)
 # Example
@@ -385,7 +377,7 @@ def get_norm_stats(dataset_paths, other_config=()):
 
 def get_key_info(path):
     if '.pkl' not in path:
-        path = os.path.join(path, f'key_info.pkl')
+        path = os.path.join(path, 'key_info.pkl')
     with open(path, 'rb') as f:
         key_info = pickle.load(f)
     return key_info
@@ -398,7 +390,7 @@ def get_init_states(path_first_episode):
             action = root['/action'][0]
     else:
         # dir is info dir
-        key_info_path = os.path.join(dir, f'key_info.pkl')
+        key_info_path = os.path.join(dir, 'key_info.pkl')
         with open(key_info_path, 'rb') as f:
             key_info = pickle.load(f)
             qpos = key_info['init_info']['init_joint']

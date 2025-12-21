@@ -33,8 +33,9 @@ from collections.abc import Callable
 
 import scservo_sdk as scs
 import serial
-from lerobot.motors.feetech.feetech import _split_into_byte_chunks, patch_setPacketTimeout
 from mock_serial import MockSerial
+
+from lerobot.motors.feetech.feetech import _split_into_byte_chunks, patch_setPacketTimeout
 
 from .mock_serial_patch import WaitableStub
 

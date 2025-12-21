@@ -32,6 +32,7 @@ from unittest.mock import Mock
 import numpy as np
 import pytest
 import torch
+
 from lerobot.configs.types import FeatureType, NormalizationMode, PolicyFeature
 from lerobot.processor.normalize_processor import (
     NormalizerProcessor,

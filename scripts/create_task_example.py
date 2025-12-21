@@ -13,7 +13,6 @@
 # limitations under the License.
 
 """This is a standalone file for create a task in vla arena."""
-import numpy as np
 
 from vla_arena.vla_arena.utils.bddl_generation_utils import (
     get_xy_region_kwargs_list_from_regions_info,
@@ -21,7 +20,6 @@ from vla_arena.vla_arena.utils.bddl_generation_utils import (
 from vla_arena.vla_arena.utils.mu_utils import InitialSceneTemplates, register_mu
 from vla_arena.vla_arena.utils.task_generation_utils import (
     generate_bddl_from_task_info,
-    get_task_info,
     register_task_info,
 )
 
@@ -56,7 +54,7 @@ class KitchenScene1(InitialSceneTemplates):
                 target_name=self.workspace_name,
                 region_half_len=0.01,
                 yaw_rotation=(2.66, 2.72),
-            )
+            ),
         )
 
         self.regions.update(
@@ -65,7 +63,7 @@ class KitchenScene1(InitialSceneTemplates):
                 region_name='plate_region',
                 target_name=self.workspace_name,
                 region_half_len=0.07,
-            )
+            ),
         )
 
         self.regions.update(
@@ -74,7 +72,7 @@ class KitchenScene1(InitialSceneTemplates):
                 region_name='next_to_plate_region',
                 target_name=self.workspace_name,
                 region_half_len=0.15,
-            )
+            ),
         )
 
         self.regions.update(
@@ -83,7 +81,7 @@ class KitchenScene1(InitialSceneTemplates):
                 region_name='ramekin_region',
                 target_name=self.workspace_name,
                 region_half_len=0.01,
-            )
+            ),
         )
 
         self.regions.update(
@@ -92,7 +90,7 @@ class KitchenScene1(InitialSceneTemplates):
                 region_name='table_center',
                 target_name=self.workspace_name,
                 region_half_len=0.06,
-            )
+            ),
         )
 
         self.regions.update(
@@ -101,7 +99,7 @@ class KitchenScene1(InitialSceneTemplates):
                 region_name='stove_region',
                 target_name=self.workspace_name,
                 region_half_len=0.01,
-            )
+            ),
         )
         self.regions.update(
             self.get_region_dict(
@@ -109,7 +107,7 @@ class KitchenScene1(InitialSceneTemplates):
                 region_name='between_plate_ramekin_region',
                 target_name=self.workspace_name,
                 region_half_len=0.01,
-            )
+            ),
         )
 
         self.xy_region_kwargs_list = get_xy_region_kwargs_list_from_regions_info(self.regions)

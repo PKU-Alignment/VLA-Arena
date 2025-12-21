@@ -37,11 +37,9 @@ import random
 from pathlib import Path
 
 from tqdm import tqdm
-
 from vla_arena.models.openvla.vla_arena.models.openvla.prismatic.preprocessing.download import (
     download_with_progress,
 )
-
 
 # === Constants ===
 DATA_URL = (

@@ -16,7 +16,7 @@
 
 from collections.abc import Callable, Sequence
 from functools import partial
-from typing import Any, Tuple, Union
+from typing import Any
 
 import torch
 import torch.nn as nn

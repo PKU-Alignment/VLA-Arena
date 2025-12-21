@@ -35,7 +35,6 @@ from typing import TypeAlias
 from .camera import Camera
 from .configs import CameraConfig, Cv2Rotation
 
-
 IndexOrPath: TypeAlias = int | Path
 
 

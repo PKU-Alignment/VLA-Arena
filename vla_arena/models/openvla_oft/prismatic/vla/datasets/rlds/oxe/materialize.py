@@ -21,17 +21,11 @@ clear control flow.
 
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from vla_arena.models.openvla_oft.prismatic.overwatch import initialize_overwatch
 from vla_arena.models.openvla_oft.prismatic.vla.constants import (
-    ACTION_DIM,
     ACTION_PROPRIO_NORMALIZATION_TYPE,
-    ACTION_TOKEN_BEGIN_IDX,
-    IGNORE_INDEX,
-    NUM_ACTIONS_CHUNK,
-    PROPRIO_DIM,
-    STOP_INDEX,
 )
 from vla_arena.models.openvla_oft.prismatic.vla.datasets.rlds.oxe.configs import (
     OXE_DATASET_CONFIGS,
@@ -40,7 +34,6 @@ from vla_arena.models.openvla_oft.prismatic.vla.datasets.rlds.oxe.configs import
 from vla_arena.models.openvla_oft.prismatic.vla.datasets.rlds.oxe.transforms import (
     OXE_STANDARDIZATION_TRANSFORMS,
 )
-
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)

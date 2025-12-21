@@ -42,11 +42,11 @@ The script ends with examples of how to batch process data using PyTorch's DataL
 
 from pprint import pprint
 
-import lerobot
 import torch
 from huggingface_hub import HfApi
-from lerobot.datasets.lerobot_dataset import LeRobotDataset, LeRobotDatasetMetadata
 
+import lerobot
+from lerobot.datasets.lerobot_dataset import LeRobotDataset, LeRobotDatasetMetadata
 
 # We ported a number of existing datasets ourselves, use this to see the list:
 print('List of available datasets:')

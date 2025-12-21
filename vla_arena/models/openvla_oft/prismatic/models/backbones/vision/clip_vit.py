@@ -20,7 +20,6 @@ from vla_arena.models.openvla_oft.prismatic.models.backbones.vision.base_vision 
     TimmViTBackbone,
 )
 
-
 # Registry =>> Supported CLIP Vision Backbones (from TIMM)
 CLIP_VISION_BACKBONES = {
     'clip-vit-b': 'vit_base_patch16_clip_224.openai',

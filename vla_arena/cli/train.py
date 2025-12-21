@@ -38,14 +38,14 @@ def train_main(args):
     except ImportError as e:
         raise RuntimeError(
             f"Model '{model}' is not installed or trainer script not found.\n"
-            f'Try: pip install vla-arena[{model}]'
+            f'Try: pip install vla-arena[{model}]',
         ) from e
 
     # 2. Special handling: openpi uses JAX, doesn't need torchrun
     if model == 'openpi':
         # === openpi uses JAX distributed training, directly call trainer ===
         print(f'[Launcher] Preparing JAX training for model: {model}')
-        print(f'[Launcher] JAX will automatically detect and use available GPUs')
+        print('[Launcher] JAX will automatically detect and use available GPUs')
 
         # Collect override parameters
         override_kwargs = {}

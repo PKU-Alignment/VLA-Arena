@@ -34,6 +34,9 @@ from pathlib import Path
 import einops
 import pytest
 import torch
+from packaging import version
+from safetensors.torch import load_file
+
 from lerobot import available_policies
 from lerobot.configs.default import DatasetConfig
 from lerobot.configs.train import TrainPipelineConfig
@@ -50,9 +53,6 @@ from lerobot.policies.factory import get_policy_class, make_policy, make_policy_
 from lerobot.policies.normalize import Normalize, Unnormalize
 from lerobot.policies.pretrained import PreTrainedPolicy
 from lerobot.utils.random_utils import seeded_context
-from packaging import version
-from safetensors.torch import load_file
-
 from tests.artifacts.policies.save_policy_to_safetensors import get_policy_stats
 from tests.utils import DEVICE, require_cpu, require_env, require_x86_64_kernel
 

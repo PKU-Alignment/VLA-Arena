@@ -47,6 +47,8 @@ from dataclasses import replace
 from pathlib import Path
 
 import draccus
+from torchvision.transforms import ToPILImage
+
 from lerobot.configs.default import DatasetConfig
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
 from lerobot.datasets.transforms import (
@@ -54,8 +56,6 @@ from lerobot.datasets.transforms import (
     ImageTransformsConfig,
     make_transform_from_config,
 )
-from torchvision.transforms import ToPILImage
-
 
 OUTPUT_DIR = Path('outputs/image_transforms')
 to_pil = ToPILImage()

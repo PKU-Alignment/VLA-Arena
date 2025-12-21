@@ -13,9 +13,8 @@
 # limitations under the License.
 
 # This is a util file for various functions that retrieve object information
-from xml.etree import ElementTree
 
-from vla_arena.vla_arena.envs.objects import OBJECTS_DICT, get_object_fn
+from vla_arena.vla_arena.envs.objects import get_object_fn
 
 
 EXCEPTION_DICT = {'flat_stove': 'flat_stove_burner'}
@@ -51,8 +50,8 @@ def get_affordance_regions(objects, verbose=False):
                 site_name = site.get('name')
                 if 'site' not in site_name and (
                     object_name not in EXCEPTION_DICT
-                    or object_name in EXCEPTION_DICT
-                    and site_name not in EXCEPTION_DICT[object_name]
+                    or (object_name in EXCEPTION_DICT
+                    and site_name not in EXCEPTION_DICT[object_name])
                 ):
                     # print(site_name)
                     # object name is already added as prefix when the object is initialized. remove them for consistency in bddl files

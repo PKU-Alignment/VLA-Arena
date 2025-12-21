@@ -28,6 +28,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import numpy as np
+
 from lerobot.datasets.utils import load_image_as_numpy
 
 

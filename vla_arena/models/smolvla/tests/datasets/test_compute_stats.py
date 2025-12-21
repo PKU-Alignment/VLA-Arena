@@ -31,6 +31,7 @@ from unittest.mock import patch
 
 import numpy as np
 import pytest
+
 from lerobot.datasets.compute_stats import (
     _assert_type_and_shape,
     aggregate_feature_stats,

@@ -12,15 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from lerobot.constants import SCHEDULER_STATE
-from lerobot.optim.schedulers import (
-    CosineDecayWithWarmupSchedulerConfig,
-    DiffuserSchedulerConfig,
-    VQBeTSchedulerConfig,
-    load_scheduler_state,
-    save_scheduler_state,
-)
-
 # Copyright 2024 The HuggingFace Inc. team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,6 +26,15 @@ from lerobot.optim.schedulers import (
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from torch.optim.lr_scheduler import LambdaLR
+
+from lerobot.constants import SCHEDULER_STATE
+from lerobot.optim.schedulers import (
+    CosineDecayWithWarmupSchedulerConfig,
+    DiffuserSchedulerConfig,
+    VQBeTSchedulerConfig,
+    load_scheduler_state,
+    save_scheduler_state,
+)
 
 
 def test_diffuser_scheduler(optimizer):

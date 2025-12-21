@@ -18,6 +18,7 @@ import re
 import flax.linen as nn
 import flax.struct as struct
 import jax.numpy as jnp
+
 import openpi.shared.array_typing as at
 
 
@@ -36,7 +37,7 @@ class LoRAConfig:
     # Axes in the weight to apply LoRA to. Should typically be the last two axes.
     axes: tuple[int, int] = (-2, -1)
     # Axis label which is used by LoRA in einsum equations. Must not be present in the original equation.
-    label: str = 'L'
+    label: str = "L"
 
     @property
     def scaling_value(self) -> float:
@@ -54,15 +55,15 @@ class Einsum(nn.Module):
     lora_config: LoRAConfig | None = None
 
     def setup(self):
-        self.w = self.param('w', self.init_fn, self.shape)
+        self.w = self.param("w", self.init_fn, self.shape)
 
         if config := self.lora_config:
             # Setup LoRA parameters.
             shape_a, shape_b = list(self.shape), list(self.shape)
             shape_a[config.axes[1]] = config.rank
             shape_b[config.axes[0]] = config.rank
-            self.w_a = self.param('lora_a', config.init_fn, shape_a)
-            self.w_b = self.param('lora_b', config.init_fn, shape_b)
+            self.w_a = self.param("lora_a", config.init_fn, shape_a)
+            self.w_b = self.param("lora_b", config.init_fn, shape_b)
 
     @nn.compact
     def __call__(self, eqn: str, x):
@@ -78,10 +79,10 @@ class Einsum(nn.Module):
         return result
 
     def _make_lora_eqns(self, eqn: str) -> tuple[str, str]:
-        if 'L' in eqn:
-            raise ValueError(f'L already in eqn: {eqn}')
-        if not (m := re.match('(.*),(.*)->(.*)', eqn)):
-            raise ValueError(f'Unsupported einsum eqn: {eqn}')
+        if "L" in eqn:
+            raise ValueError(f"L already in eqn: {eqn}")
+        if not (m := re.match("(.*),(.*)->(.*)", eqn)):
+            raise ValueError(f"Unsupported einsum eqn: {eqn}")
         lhs, rhs, out = m.groups()
 
         assert self.lora_config is not None
@@ -90,10 +91,10 @@ class Einsum(nn.Module):
 
         a_rhs = rhs.replace(b_label, label)
         a_out = out.replace(b_label, label)
-        eqn_a = f'{lhs},{a_rhs}->{a_out}'
+        eqn_a = f"{lhs},{a_rhs}->{a_out}"
 
         b_rhs = rhs.replace(a_label, label)
-        eqn_b = f'{a_out},{b_rhs}->{out}'
+        eqn_b = f"{a_out},{b_rhs}->{out}"
 
         return eqn_a, eqn_b
 
@@ -108,12 +109,12 @@ class FeedForward(nn.Module):
 
     def setup(self):
         self.w_gating = self.param(
-            'gating_einsum',
+            "gating_einsum",
             nn.initializers.lecun_normal(in_axis=-2, out_axis=-1, batch_axis=(0,)),
             (2, self.features, self.hidden_dim),
         )
         self.w_linear = self.param(
-            'linear',
+            "linear",
             nn.initializers.lecun_normal(in_axis=-2, out_axis=-1),
             (self.hidden_dim, self.features),
         )
@@ -124,24 +125,24 @@ class FeedForward(nn.Module):
             # TODO: follow up with a simplified init_fn api.
             self.w_gating_lora = (
                 self.param(
-                    'gating_einsum_lora_a',
+                    "gating_einsum_lora_a",
                     self.lora_config.init_fn,
                     (2, self.features, self.lora_config.rank),
                 ),
                 self.param(
-                    'gating_einsum_lora_b',
+                    "gating_einsum_lora_b",
                     self.lora_config.init_fn,
                     (2, self.lora_config.rank, self.hidden_dim),
                 ),
             )
             self.w_linear_lora = (
                 self.param(
-                    'linear_lora_a',
+                    "linear_lora_a",
                     self.lora_config.init_fn,
                     (self.hidden_dim, self.lora_config.rank),
                 ),
                 self.param(
-                    'linear_lora_b',
+                    "linear_lora_b",
                     self.lora_config.init_fn,
                     (self.lora_config.rank, self.features),
                 ),

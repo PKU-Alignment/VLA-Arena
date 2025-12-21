@@ -27,6 +27,7 @@
 # limitations under the License.
 import pytest
 import torch
+
 from lerobot.optim.optimizers import AdamConfig
 from lerobot.optim.schedulers import VQBeTSchedulerConfig
 

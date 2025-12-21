@@ -94,16 +94,11 @@ from lerobot.transport.utils import (
 from lerobot.utils.buffer import ReplayBuffer, concatenate_batch_transitions
 from lerobot.utils.process import ProcessSignalHandler
 from lerobot.utils.random_utils import set_seed
-from lerobot.utils.train_utils import (
-    get_step_checkpoint_dir,
-)
+from lerobot.utils.train_utils import get_step_checkpoint_dir
 from lerobot.utils.train_utils import (
     load_training_state as utils_load_training_state,
 )
-from lerobot.utils.train_utils import (
-    save_checkpoint,
-    update_last_checkpoint,
-)
+from lerobot.utils.train_utils import save_checkpoint, update_last_checkpoint
 from lerobot.utils.transition import (
     move_state_dict_to_device,
     move_transition_to_device,

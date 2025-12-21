@@ -30,8 +30,8 @@ DataDict: TypeAlias = at.PyTree
 NormStats: TypeAlias = _normalize.NormStats
 
 
-T = TypeVar("T")
-S = TypeVar("S")
+T = TypeVar('T')
+S = TypeVar('S')
 
 
 @runtime_checkable
@@ -65,7 +65,7 @@ class Group:
         *,
         inputs: Sequence[DataTransformFn] = (),
         outputs: Sequence[DataTransformFn] = (),
-    ) -> "Group":
+    ) -> 'Group':
         """Append transforms to the group and return a new group.
 
         Args:
@@ -127,8 +127,8 @@ class InjectDefaultPrompt(DataTransformFn):
     prompt: str | None
 
     def __call__(self, data: DataDict) -> DataDict:
-        if self.prompt is not None and "prompt" not in data:
-            data["prompt"] = np.asarray(self.prompt)
+        if self.prompt is not None and 'prompt' not in data:
+            data['prompt'] = np.asarray(self.prompt)
         return data
 
 
@@ -225,9 +225,9 @@ class ResizeImages(DataTransformFn):
     width: int
 
     def __call__(self, data: DataDict) -> DataDict:
-        data["image"] = {
+        data['image'] = {
             k: image_tools.resize_with_pad(v, self.height, self.width)
-            for k, v in data["image"].items()
+            for k, v in data['image'].items()
         }
         return data
 
@@ -237,7 +237,7 @@ class SubsampleActions(DataTransformFn):
     stride: int
 
     def __call__(self, data: DataDict) -> DataDict:
-        data["actions"] = data["actions"][:: self.stride]
+        data['actions'] = data['actions'][:: self.stride]
         return data
 
 
@@ -251,16 +251,16 @@ class DeltaActions(DataTransformFn):
     mask: Sequence[bool] | None
 
     def __call__(self, data: DataDict) -> DataDict:
-        if "actions" not in data or self.mask is None:
+        if 'actions' not in data or self.mask is None:
             return data
 
-        state, actions = data["state"], data["actions"]
+        state, actions = data['state'], data['actions']
         mask = np.asarray(self.mask)
         dims = mask.shape[-1]
         actions[..., :dims] -= np.expand_dims(
             np.where(mask, state[..., :dims], 0), axis=-2
         )
-        data["actions"] = actions
+        data['actions'] = actions
 
         return data
 
@@ -275,16 +275,16 @@ class AbsoluteActions(DataTransformFn):
     mask: Sequence[bool] | None
 
     def __call__(self, data: DataDict) -> DataDict:
-        if "actions" not in data or self.mask is None:
+        if 'actions' not in data or self.mask is None:
             return data
 
-        state, actions = data["state"], data["actions"]
+        state, actions = data['state'], data['actions']
         mask = np.asarray(self.mask)
         dims = mask.shape[-1]
         actions[..., :dims] += np.expand_dims(
             np.where(mask, state[..., :dims], 0), axis=-2
         )
-        data["actions"] = actions
+        data['actions'] = actions
 
         return data
 
@@ -295,12 +295,12 @@ class TokenizePrompt(DataTransformFn):
     discrete_state_input: bool = False
 
     def __call__(self, data: DataDict) -> DataDict:
-        if (prompt := data.pop("prompt", None)) is None:
-            raise ValueError("Prompt is required")
+        if (prompt := data.pop('prompt', None)) is None:
+            raise ValueError('Prompt is required')
 
         if self.discrete_state_input:
-            if (state := data.get("state", None)) is None:
-                raise ValueError("State is required.")
+            if (state := data.get('state', None)) is None:
+                raise ValueError('State is required.')
         else:
             state = None
 
@@ -310,8 +310,8 @@ class TokenizePrompt(DataTransformFn):
         tokens, token_masks = self.tokenizer.tokenize(prompt, state)
         return {
             **data,
-            "tokenized_prompt": tokens,
-            "tokenized_prompt_mask": token_masks,
+            'tokenized_prompt': tokens,
+            'tokenized_prompt_mask': token_masks,
         }
 
 
@@ -320,22 +320,22 @@ class TokenizeFASTInputs(DataTransformFn):
     tokenizer: _tokenizer.FASTTokenizer
 
     def __call__(self, data: DataDict) -> DataDict:
-        if (prompt := data.pop("prompt", None)) is None:
-            raise ValueError("Prompt is required")
+        if (prompt := data.pop('prompt', None)) is None:
+            raise ValueError('Prompt is required')
 
         if not isinstance(prompt, str):
             prompt = prompt.item()
 
-        state, actions = data["state"], data.get("actions")
+        state, actions = data['state'], data.get('actions')
         tokens, token_mask, ar_mask, loss_mask = self.tokenizer.tokenize(
             prompt, state, actions
         )
         return {
             **data,
-            "tokenized_prompt": tokens,
-            "tokenized_prompt_mask": token_mask,
-            "token_ar_mask": ar_mask,
-            "token_loss_mask": loss_mask,
+            'tokenized_prompt': tokens,
+            'tokenized_prompt_mask': token_mask,
+            'token_ar_mask': ar_mask,
+            'token_loss_mask': loss_mask,
         }
 
 
@@ -346,16 +346,16 @@ class ExtractFASTActions(DataTransformFn):
     action_dim: int
 
     def __call__(self, data: DataDict) -> DataDict:
-        if "actions" not in data:
+        if 'actions' not in data:
             return data
         # Model outputs are saved in "actions", but for FAST models they represent tokens.
-        tokens = data.pop("actions")
+        tokens = data.pop('actions')
         actions = self.tokenizer.extract_actions(
             tokens.astype(np.int32), self.action_horizon, self.action_dim
         )
         return {
             **data,
-            "actions": actions,
+            'actions': actions,
         }
 
 
@@ -367,16 +367,16 @@ class PromptFromLeRobotTask(DataTransformFn):
     tasks: dict[int, str]
 
     def __call__(self, data: DataDict) -> DataDict:
-        if "task_index" not in data:
+        if 'task_index' not in data:
             raise ValueError('Cannot extract prompt without "task_index"')
 
-        task_index = int(data["task_index"])
+        task_index = int(data['task_index'])
         if (prompt := self.tasks.get(task_index)) is None:
             raise ValueError(
-                f"{task_index=} not found in task mapping: {self.tasks}"
+                f'{task_index=} not found in task mapping: {self.tasks}'
             )
 
-        return {**data, "prompt": prompt}
+        return {**data, 'prompt': prompt}
 
 
 @dataclasses.dataclass(frozen=True)
@@ -386,24 +386,24 @@ class PadStatesAndActions(DataTransformFn):
     model_action_dim: int
 
     def __call__(self, data: DataDict) -> DataDict:
-        data["state"] = pad_to_dim(
-            data["state"], self.model_action_dim, axis=-1
+        data['state'] = pad_to_dim(
+            data['state'], self.model_action_dim, axis=-1
         )
-        if "actions" in data:
-            data["actions"] = pad_to_dim(
-                data["actions"], self.model_action_dim, axis=-1
+        if 'actions' in data:
+            data['actions'] = pad_to_dim(
+                data['actions'], self.model_action_dim, axis=-1
             )
         return data
 
 
 def flatten_dict(tree: at.PyTree) -> dict:
     """Flatten a nested dictionary. Uses '/' as the separator."""
-    return traverse_util.flatten_dict(tree, sep="/")
+    return traverse_util.flatten_dict(tree, sep='/')
 
 
 def unflatten_dict(tree: dict) -> at.PyTree:
     """Unflatten a flattened dictionary. Assumes that '/' was used as a separator."""
-    return traverse_util.unflatten_dict(tree, sep="/")
+    return traverse_util.unflatten_dict(tree, sep='/')
 
 
 def transform_dict(
@@ -458,7 +458,7 @@ def transform_dict(
     names = sorted(output)
     for i in range(len(names) - 1):
         name, next_name = names[i : i + 2]
-        if next_name.startswith(name + "/"):
+        if next_name.startswith(name + '/'):
             raise ValueError(f"Leaf '{name}' aliases a node of '{next_name}'")
 
     return unflatten_dict(output)
@@ -482,7 +482,7 @@ def apply_tree(
     if strict:
         for k in selector:
             if k not in tree:
-                raise ValueError(f"Selector key {k} not found in tree")
+                raise ValueError(f'Selector key {k} not found in tree')
 
     return unflatten_dict({k: transform(k, v) for k, v in tree.items()})
 
@@ -525,5 +525,5 @@ def _assert_quantile_stats(norm_stats: at.PyTree[NormStats]) -> None:
     for k, v in flatten_dict(norm_stats).items():
         if v.q01 is None or v.q99 is None:
             raise ValueError(
-                f"quantile stats must be provided if use_quantile_norm is True. Key {k} is missing q01 or q99."
+                f'quantile stats must be provided if use_quantile_norm is True. Key {k} is missing q01 or q99.'
             )

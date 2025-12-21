@@ -36,7 +36,7 @@ class WebsocketPolicyServer:
     def __init__(
         self,
         policy: _base_policy.BasePolicy,
-        host: str = "0.0.0.0",
+        host: str = '0.0.0.0',
         port: int | None = None,
         metadata: dict | None = None,
     ) -> None:
@@ -44,7 +44,7 @@ class WebsocketPolicyServer:
         self._host = host
         self._port = port
         self._metadata = metadata or {}
-        logging.getLogger("websockets.server").setLevel(logging.INFO)
+        logging.getLogger('websockets.server').setLevel(logging.INFO)
 
     def serve_forever(self) -> None:
         asyncio.run(self.run())
@@ -61,7 +61,7 @@ class WebsocketPolicyServer:
             await server.serve_forever()
 
     async def _handler(self, websocket: _server.ServerConnection):
-        logger.info(f"Connection from {websocket.remote_address} opened")
+        logger.info(f'Connection from {websocket.remote_address} opened')
         packer = msgpack_numpy.Packer()
 
         await websocket.send(packer.pack(self._metadata))
@@ -76,12 +76,12 @@ class WebsocketPolicyServer:
                 action = self._policy.infer(obs)
                 infer_time = time.monotonic() - infer_time
 
-                action["server_timing"] = {
-                    "infer_ms": infer_time * 1000,
+                action['server_timing'] = {
+                    'infer_ms': infer_time * 1000,
                 }
                 if prev_total_time is not None:
                     # We can only record the last total time since we also want to include the send time.
-                    action["server_timing"]["prev_total_ms"] = (
+                    action['server_timing']['prev_total_ms'] = (
                         prev_total_time * 1000
                     )
 
@@ -90,14 +90,14 @@ class WebsocketPolicyServer:
 
             except websockets.ConnectionClosed:
                 logger.info(
-                    f"Connection from {websocket.remote_address} closed"
+                    f'Connection from {websocket.remote_address} closed'
                 )
                 break
             except Exception:
                 await websocket.send(traceback.format_exc())
                 await websocket.close(
                     code=websockets.frames.CloseCode.INTERNAL_ERROR,
-                    reason="Internal server error. Traceback included in previous frame.",
+                    reason='Internal server error. Traceback included in previous frame.',
                 )
                 raise
 
@@ -105,7 +105,7 @@ class WebsocketPolicyServer:
 def _health_check(
     connection: _server.ServerConnection, request: _server.Request
 ) -> _server.Response | None:
-    if request.path == "/healthz":
-        return connection.respond(http.HTTPStatus.OK, "OK\n")
+    if request.path == '/healthz':
+        return connection.respond(http.HTTPStatus.OK, 'OK\n')
     # Continue with the normal request handling.
     return None

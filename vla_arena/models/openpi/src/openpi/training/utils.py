@@ -25,7 +25,7 @@ from openpi.shared import array_typing as at
 @at.typecheck
 @struct.dataclass
 class TrainState:
-    step: at.Int[at.ArrayLike, ""]
+    step: at.Int[at.ArrayLike, '']
     params: nnx.State
     model_def: nnx.GraphDef[_model.BaseModel]
     opt_state: optax.OptState
@@ -43,8 +43,8 @@ def tree_to_info(
     the leaf values to more meaningful strings.
     """
     tree, _ = jax.tree_util.tree_flatten_with_path(tree)
-    return "\n".join(
-        f"{jax.tree_util.keystr(path)}: {interp_func(value)}"
+    return '\n'.join(
+        f'{jax.tree_util.keystr(path)}: {interp_func(value)}'
         for path, value in tree
     )
 
@@ -52,4 +52,4 @@ def tree_to_info(
 @at.typecheck
 def array_tree_to_info(tree: at.PyTree) -> str:
     """Converts a PyTree of arrays into a human-readable string for logging."""
-    return tree_to_info(tree, lambda x: f"{x.shape}@{x.dtype}")
+    return tree_to_info(tree, lambda x: f'{x.shape}@{x.dtype}')

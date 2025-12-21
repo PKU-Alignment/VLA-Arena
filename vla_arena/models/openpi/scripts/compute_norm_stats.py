@@ -47,7 +47,7 @@ def create_torch_dataloader(
     max_frames: int | None = None,
 ) -> tuple[_data_loader.Dataset, int]:
     if data_config.repo_id is None:
-        raise ValueError("Data config must have a repo_id")
+        raise ValueError('Data config must have a repo_id')
     dataset = _data_loader.create_torch_dataset(
         data_config, action_horizon, model_config
     )
@@ -128,11 +128,11 @@ def main(config_name: str, max_frames: int | None = None):
             max_frames,
         )
 
-    keys = ["state", "actions"]
+    keys = ['state', 'actions']
     stats = {key: normalize.RunningStats() for key in keys}
 
     for batch in tqdm.tqdm(
-        data_loader, total=num_batches, desc="Computing stats"
+        data_loader, total=num_batches, desc='Computing stats'
     ):
         for key in keys:
             stats[key].update(np.asarray(batch[key]))
@@ -140,9 +140,9 @@ def main(config_name: str, max_frames: int | None = None):
     norm_stats = {key: stats.get_statistics() for key, stats in stats.items()}
 
     output_path = config.assets_dirs / data_config.repo_id
-    print(f"Writing stats to: {output_path}")
+    print(f'Writing stats to: {output_path}')
     normalize.save(output_path, norm_stats)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     tyro.cli(main)

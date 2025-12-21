@@ -23,22 +23,22 @@ from openpi import transforms
 def make_aloha_example() -> dict:
     """Creates a random input example for the Aloha policy."""
     return {
-        "state": np.ones((14,)),
-        "images": {
-            "cam_high": np.random.randint(
+        'state': np.ones((14,)),
+        'images': {
+            'cam_high': np.random.randint(
                 256, size=(3, 224, 224), dtype=np.uint8
             ),
-            "cam_low": np.random.randint(
+            'cam_low': np.random.randint(
                 256, size=(3, 224, 224), dtype=np.uint8
             ),
-            "cam_left_wrist": np.random.randint(
+            'cam_left_wrist': np.random.randint(
                 256, size=(3, 224, 224), dtype=np.uint8
             ),
-            "cam_right_wrist": np.random.randint(
+            'cam_right_wrist': np.random.randint(
                 256, size=(3, 224, 224), dtype=np.uint8
             ),
         },
-        "prompt": "do something",
+        'prompt': 'do something',
     }
 
 
@@ -59,35 +59,35 @@ class AlohaInputs(transforms.DataTransformFn):
     # The expected cameras names. All input cameras must be in this set. Missing cameras will be
     # replaced with black images and the corresponding `image_mask` will be set to False.
     EXPECTED_CAMERAS: ClassVar[tuple[str, ...]] = (
-        "cam_high",
-        "cam_low",
-        "cam_left_wrist",
-        "cam_right_wrist",
+        'cam_high',
+        'cam_low',
+        'cam_left_wrist',
+        'cam_right_wrist',
     )
 
     def __call__(self, data: dict) -> dict:
         data = _decode_aloha(data, adapt_to_pi=self.adapt_to_pi)
 
-        in_images = data["images"]
+        in_images = data['images']
         if set(in_images) - set(self.EXPECTED_CAMERAS):
             raise ValueError(
-                f"Expected images to contain {self.EXPECTED_CAMERAS}, got {tuple(in_images)}"
+                f'Expected images to contain {self.EXPECTED_CAMERAS}, got {tuple(in_images)}'
             )
 
         # Assume that base image always exists.
-        base_image = in_images["cam_high"]
+        base_image = in_images['cam_high']
 
         images = {
-            "base_0_rgb": base_image,
+            'base_0_rgb': base_image,
         }
         image_masks = {
-            "base_0_rgb": np.True_,
+            'base_0_rgb': np.True_,
         }
 
         # Add the extra images.
         extra_image_names = {
-            "left_wrist_0_rgb": "cam_left_wrist",
-            "right_wrist_0_rgb": "cam_right_wrist",
+            'left_wrist_0_rgb': 'cam_left_wrist',
+            'right_wrist_0_rgb': 'cam_right_wrist',
         }
         for dest, source in extra_image_names.items():
             if source in in_images:
@@ -98,21 +98,21 @@ class AlohaInputs(transforms.DataTransformFn):
                 image_masks[dest] = np.False_
 
         inputs = {
-            "image": images,
-            "image_mask": image_masks,
-            "state": data["state"],
+            'image': images,
+            'image_mask': image_masks,
+            'state': data['state'],
         }
 
         # Actions are only available during training.
-        if "actions" in data:
-            actions = np.asarray(data["actions"])
+        if 'actions' in data:
+            actions = np.asarray(data['actions'])
             actions = _encode_actions_inv(
                 actions, adapt_to_pi=self.adapt_to_pi
             )
-            inputs["actions"] = actions
+            inputs['actions'] = actions
 
-        if "prompt" in data:
-            inputs["prompt"] = data["prompt"]
+        if 'prompt' in data:
+            inputs['prompt'] = data['prompt']
 
         return inputs
 
@@ -127,9 +127,9 @@ class AlohaOutputs(transforms.DataTransformFn):
 
     def __call__(self, data: dict) -> dict:
         # Only return the first 14 dims.
-        actions = np.asarray(data["actions"][:, :14])
+        actions = np.asarray(data['actions'][:, :14])
         return {
-            "actions": _encode_actions(actions, adapt_to_pi=self.adapt_to_pi)
+            'actions': _encode_actions(actions, adapt_to_pi=self.adapt_to_pi)
         }
 
 
@@ -193,7 +193,7 @@ def _gripper_from_angular_inv(value):
 def _decode_aloha(data: dict, *, adapt_to_pi: bool = False) -> dict:
     # state is [left_arm_joint_angles, left_arm_gripper, right_arm_joint_angles, right_arm_gripper]
     # dim sizes: [6, 1, 6, 1]
-    state = np.asarray(data["state"])
+    state = np.asarray(data['state'])
     state = _decode_state(state, adapt_to_pi=adapt_to_pi)
 
     def convert_image(img):
@@ -202,13 +202,13 @@ def _decode_aloha(data: dict, *, adapt_to_pi: bool = False) -> dict:
         if np.issubdtype(img.dtype, np.floating):
             img = (255 * img).astype(np.uint8)
         # Convert from [channel, height, width] to [height, width, channel].
-        return einops.rearrange(img, "c h w -> h w c")
+        return einops.rearrange(img, 'c h w -> h w c')
 
-    images = data["images"]
+    images = data['images']
     images_dict = {name: convert_image(img) for name, img in images.items()}
 
-    data["images"] = images_dict
-    data["state"] = state
+    data['images'] = images_dict
+    data['state'] = state
     return data
 
 

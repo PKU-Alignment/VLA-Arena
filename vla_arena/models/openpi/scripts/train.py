@@ -44,11 +44,11 @@ from flax.training import common_utils
 def init_logging():
     """Custom logging format for better readability."""
     level_mapping = {
-        "DEBUG": "D",
-        "INFO": "I",
-        "WARNING": "W",
-        "ERROR": "E",
-        "CRITICAL": "C",
+        'DEBUG': 'D',
+        'INFO': 'I',
+        'WARNING': 'W',
+        'ERROR': 'E',
+        'CRITICAL': 'C',
     }
 
     class CustomFormatter(logging.Formatter):
@@ -59,8 +59,8 @@ def init_logging():
             return super().format(record)
 
     formatter = CustomFormatter(
-        fmt="%(asctime)s.%(msecs)03d [%(levelname)s] %(message)-80s (%(process)d:%(filename)s:%(lineno)s)",
-        datefmt="%H:%M:%S",
+        fmt='%(asctime)s.%(msecs)03d [%(levelname)s] %(message)-80s (%(process)d:%(filename)s:%(lineno)s)',
+        datefmt='%H:%M:%S',
     )
 
     logger = logging.getLogger()
@@ -76,24 +76,24 @@ def init_wandb(
     enabled: bool = True,
 ):
     if not enabled:
-        wandb.init(mode="disabled")
+        wandb.init(mode='disabled')
         return
 
     ckpt_dir = config.checkpoint_dir
     if not ckpt_dir.exists():
         raise FileNotFoundError(
-            f"Checkpoint directory {ckpt_dir} does not exist."
+            f'Checkpoint directory {ckpt_dir} does not exist.'
         )
     if resuming:
-        run_id = (ckpt_dir / "wandb_id.txt").read_text().strip()
-        wandb.init(id=run_id, resume="must", project=config.project_name)
+        run_id = (ckpt_dir / 'wandb_id.txt').read_text().strip()
+        wandb.init(id=run_id, resume='must', project=config.project_name)
     else:
         wandb.init(
             name=config.exp_name,
             config=dataclasses.asdict(config),
             project=config.project_name,
         )
-        (ckpt_dir / "wandb_id.txt").write_text(wandb.run.id)
+        (ckpt_dir / 'wandb_id.txt').write_text(wandb.run.id)
 
     if log_code:
         wandb.run.log_code(epath.Path(__file__).parent.parent)
@@ -249,32 +249,32 @@ def train_step(
             nnx.Param,
             nnx.Not(
                 nnx_utils.PathRegex(
-                    ".*/(bias|scale|pos_embedding|input_embedding)"
+                    '.*/(bias|scale|pos_embedding|input_embedding)'
                 )
             ),
             lambda _, x: x.value.ndim > 1,
         ),
     )
     info = {
-        "loss": loss,
-        "grad_norm": optax.global_norm(grads),
-        "param_norm": optax.global_norm(kernel_params),
+        'loss': loss,
+        'grad_norm': optax.global_norm(grads),
+        'param_norm': optax.global_norm(kernel_params),
     }
     return new_state, info
 
 
 def main(config: _config.TrainConfig):
     init_logging()
-    logging.info(f"Running on: {platform.node()}")
+    logging.info(f'Running on: {platform.node()}')
 
     if config.batch_size % jax.device_count() != 0:
         raise ValueError(
-            f"Batch size {config.batch_size} must be divisible by the number of devices {jax.device_count()}."
+            f'Batch size {config.batch_size} must be divisible by the number of devices {jax.device_count()}.'
         )
 
     jax.config.update(
-        "jax_compilation_cache_dir",
-        str(epath.Path("~/.cache/jax").expanduser()),
+        'jax_compilation_cache_dir',
+        str(epath.Path('~/.cache/jax').expanduser()),
     )
 
     rng = jax.random.key(config.seed)
@@ -304,7 +304,7 @@ def main(config: _config.TrainConfig):
     data_iter = iter(data_loader)
     batch = next(data_iter)
     logging.info(
-        f"Initialized data loader:\n{training_utils.array_tree_to_info(batch)}"
+        f'Initialized data loader:\n{training_utils.array_tree_to_info(batch)}'
     )
 
     # Log images from first batch to sanity check.
@@ -316,14 +316,14 @@ def main(config: _config.TrainConfig):
         )
         for i in range(min(5, len(next(iter(batch[0].images.values())))))
     ]
-    wandb.log({"camera_views": images_to_log}, step=0)
+    wandb.log({'camera_views': images_to_log}, step=0)
 
     train_state, train_state_sharding = init_train_state(
         config, init_rng, mesh, resume=resuming
     )
     jax.block_until_ready(train_state)
     logging.info(
-        f"Initialized train state:\n{training_utils.array_tree_to_info(train_state.params)}"
+        f'Initialized train state:\n{training_utils.array_tree_to_info(train_state.params)}'
     )
 
     if resuming:
@@ -360,10 +360,10 @@ def main(config: _config.TrainConfig):
             reduced_info = jax.device_get(
                 jax.tree.map(jnp.mean, stacked_infos)
             )
-            info_str = ", ".join(
-                f"{k}={v:.4f}" for k, v in reduced_info.items()
+            info_str = ', '.join(
+                f'{k}={v:.4f}' for k, v in reduced_info.items()
             )
-            pbar.write(f"Step {step}: {info_str}")
+            pbar.write(f'Step {step}: {info_str}')
             wandb.log(reduced_info, step=step)
             infos = []
         batch = next(data_iter)
@@ -375,9 +375,9 @@ def main(config: _config.TrainConfig):
                 checkpoint_manager, train_state, data_loader, step
             )
 
-    logging.info("Waiting for checkpoint manager to finish")
+    logging.info('Waiting for checkpoint manager to finish')
     checkpoint_manager.wait_until_finished()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main(_config.cli())

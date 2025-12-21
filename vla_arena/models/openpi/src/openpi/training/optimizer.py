@@ -121,7 +121,7 @@ class SGD(OptimizerConfig):
     ) -> optax.GradientTransformation:
         assert (
             weight_decay_mask is None
-        ), "Weight decay is not supported for SGD"
+        ), 'Weight decay is not supported for SGD'
         return optax.sgd(lr, momentum=self.momentum, nesterov=self.nesterov)
 
 

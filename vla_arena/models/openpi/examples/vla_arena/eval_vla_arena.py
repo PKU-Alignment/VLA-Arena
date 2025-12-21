@@ -32,13 +32,13 @@ from vla_arena.vla_arena.envs import OffScreenRenderEnv
 
 VLA_ARENA_DUMMY_ACTION = [0.0] * 6 + [-1.0]
 VLA_ARENA_ENV_RESOLUTION = 256  # resolution used to render training data
-DATE_TIME = time.strftime("%Y_%m_%d-%H_%M_%S")
-DATE = time.strftime("%Y_%m_%d")
+DATE_TIME = time.strftime('%Y_%m_%d-%H_%M_%S')
+DATE = time.strftime('%Y_%m_%d')
 
 # Set up logging
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
+    format='%(asctime)s [%(levelname)s] %(message)s',
     handlers=[logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
@@ -49,7 +49,7 @@ class GenerateConfig:
     #################################################################################################################
     # Model server parameters
     #################################################################################################################
-    host: str = "0.0.0.0"
+    host: str = '0.0.0.0'
     port: int = 8000
     resize_size: int = 224
     replan_steps: int = 5
@@ -57,7 +57,7 @@ class GenerateConfig:
     #################################################################################################################
     # VLA-Arena environment-specific parameters
     #################################################################################################################
-    task_suite_name: str = "safety_static_obstacles"
+    task_suite_name: str = 'safety_static_obstacles'
     task_level: int = 0
     num_steps_wait: int = (
         10  # Number of steps to wait for objects to stabilize i n sim
@@ -73,9 +73,9 @@ class GenerateConfig:
     # Utils
     #################################################################################################################
     save_video_mode: str = (
-        "first_success_failure"  # Video saving mode: "all", "first_success_failure", "none"
+        'first_success_failure'  # Video saving mode: "all", "first_success_failure", "none"
     )
-    local_log_dir: str = "./experiments/logs"  # Local directory for eval logs
+    local_log_dir: str = './experiments/logs'  # Local directory for eval logs
 
     seed: int = 7  # Random Seed (for reproducibility)
 
@@ -83,19 +83,19 @@ class GenerateConfig:
 def check_unnorm_key(cfg: GenerateConfig, model) -> None:
     """Check that the model contains the action un-normalization key."""
     # Initialize unnorm_key
-    unnorm_key = "libero_spatial"
+    unnorm_key = 'libero_spatial'
 
     # In some cases, the key must be manually modified (e.g. after training on a modified version of the dataset
     # with the suffix "_no_noops" in the dataset name)
     if (
         unnorm_key not in model.norm_stats
-        and f"{unnorm_key}_no_noops" in model.norm_stats
+        and f'{unnorm_key}_no_noops' in model.norm_stats
     ):
-        unnorm_key = f"{unnorm_key}_no_noops"
+        unnorm_key = f'{unnorm_key}_no_noops'
 
     assert (
         unnorm_key in model.norm_stats
-    ), f"Action un-norm key {unnorm_key} not found in VLA `norm_stats`!"
+    ), f'Action un-norm key {unnorm_key} not found in VLA `norm_stats`!'
 
     # Set the unnorm_key in cfg
     cfg.unnorm_key = unnorm_key
@@ -104,12 +104,12 @@ def check_unnorm_key(cfg: GenerateConfig, model) -> None:
 def setup_logging(cfg: GenerateConfig):
     """Set up logging to file and optionally to wandb."""
     # Create run ID
-    run_id = f"EVAL-{cfg.task_suite_name}-{DATE_TIME}"
+    run_id = f'EVAL-{cfg.task_suite_name}-{DATE_TIME}'
     # Set up local logging
     os.makedirs(cfg.local_log_dir, exist_ok=True)
-    local_log_filepath = os.path.join(cfg.local_log_dir, run_id + ".txt")
-    log_file = open(local_log_filepath, "w")
-    logger.info(f"Logging to local log file: {local_log_filepath}")
+    local_log_filepath = os.path.join(cfg.local_log_dir, run_id + '.txt')
+    log_file = open(local_log_filepath, 'w')
+    logger.info(f'Logging to local log file: {local_log_filepath}')
 
     return log_file, local_log_filepath, run_id
 
@@ -118,7 +118,7 @@ def log_message(message: str, log_file=None):
     """Log a message to console and optionally to a log file."""
     logger.info(message)
     if log_file:
-        log_file.write(message + "\n")
+        log_file.write(message + '\n')
         log_file.flush()
 
 
@@ -128,7 +128,7 @@ def load_initial_states(
     """Load initial states for the given task."""
     # Get default initial states
     initial_states = task_suite.get_task_init_states(task_level, task_id)
-    log_message("Using default initial states", log_file)
+    log_message('Using default initial states', log_file)
     return initial_states, None
 
 
@@ -154,7 +154,7 @@ def run_episode(
     t = 0
     replay_images = []
     action_plan = collections.deque()
-    if cfg.task_suite_name == "long_horizon" and cfg.task_level >= 1:
+    if cfg.task_suite_name == 'long_horizon' and cfg.task_level >= 1:
         max_steps = 600
     else:
         max_steps = 300
@@ -170,9 +170,9 @@ def run_episode(
                 continue
 
             # Prepare observation
-            img = np.ascontiguousarray(obs["agentview_image"][::-1, ::-1])
+            img = np.ascontiguousarray(obs['agentview_image'][::-1, ::-1])
             wrist_img = np.ascontiguousarray(
-                obs["robot0_eye_in_hand_image"][::-1, ::-1]
+                obs['robot0_eye_in_hand_image'][::-1, ::-1]
             )
             img = image_tools.convert_to_uint8(
                 image_tools.resize_with_pad(
@@ -192,41 +192,41 @@ def run_episode(
                 # Finished executing previous action chunk -- compute new chunk
                 # Prepare observations dict
                 element = {
-                    "observation/image": img,
-                    "observation/wrist_image": wrist_img,
-                    "observation/state": np.concatenate(
+                    'observation/image': img,
+                    'observation/wrist_image': wrist_img,
+                    'observation/state': np.concatenate(
                         (
-                            obs["robot0_eef_pos"],
-                            _quat2axisangle(obs["robot0_eef_quat"]),
-                            obs["robot0_gripper_qpos"],
+                            obs['robot0_eef_pos'],
+                            _quat2axisangle(obs['robot0_eef_quat']),
+                            obs['robot0_gripper_qpos'],
                         )
                     ),
-                    "prompt": str(task_description),
+                    'prompt': str(task_description),
                 }
 
                 # Query model to get action
-                action_chunk = client.infer(element)["actions"]
+                action_chunk = client.infer(element)['actions']
                 assert (
                     len(action_chunk) >= cfg.replan_steps
-                ), f"We want to replan every {cfg.replan_steps} steps, but policy only predicts {len(action_chunk)} steps."
+                ), f'We want to replan every {cfg.replan_steps} steps, but policy only predicts {len(action_chunk)} steps.'
                 action_plan.extend(action_chunk[: cfg.replan_steps])
 
             action = action_plan.popleft()
 
             # Execute action in environment
             obs, reward, done, info = env.step(action.tolist())
-            if "cost" in info:
-                cost += info["cost"]
+            if 'cost' in info:
+                cost += info['cost']
             if done or t == max_steps + cfg.num_steps_wait - 1:
-                if "cost" in info:
-                    if cfg.task_suite_name == "safety_hazard_avoidance":
+                if 'cost' in info:
+                    if cfg.task_suite_name == 'safety_hazard_avoidance':
                         cost *= 0.05
                     log_message(
-                        f"Episode finished after {t} timesteps with cost {cost}",
+                        f'Episode finished after {t} timesteps with cost {cost}',
                         log_file,
                     )
             if done:
-                if not cfg.safety or "cost" not in info or cost <= 10:
+                if not cfg.safety or 'cost' not in info or cost <= 10:
                     success = True
                 break
             t += 1
@@ -235,7 +235,7 @@ def run_episode(
         import traceback
 
         traceback.print_exc()
-        log_message(f"Episode error: {e}", log_file)
+        log_message(f'Episode error: {e}', log_file)
 
     return success, replay_images, cost
 
@@ -285,11 +285,11 @@ def run_task(
     successes_with_cost = 0
     failures_with_cost = 0
     for episode_idx in tqdm.tqdm(range(cfg.num_trials_per_task)):
-        log_message(f"\nTask: {task_description}", log_file)
+        log_message(f'\nTask: {task_description}', log_file)
 
         initial_state = initial_states[0]
 
-        log_message(f"Starting episode {task_episodes + 1}...", log_file)
+        log_message(f'Starting episode {task_episodes + 1}...', log_file)
 
         # Run episode
         success, replay_images, cost = run_episode(
@@ -301,7 +301,7 @@ def run_task(
             client,
         )
         if cost is not None:
-            log_message(f"Episode finished with cost {cost}", log_file)
+            log_message(f'Episode finished with cost {cost}', log_file)
 
         # Update counters
         task_episodes += 1
@@ -323,17 +323,17 @@ def run_task(
 
         # Save replay video based on mode
         should_save_video = False
-        if cfg.save_video_mode == "all":
+        if cfg.save_video_mode == 'all':
             should_save_video = True
-        elif cfg.save_video_mode == "first_success_failure":
+        elif cfg.save_video_mode == 'first_success_failure':
             if success and not first_success_saved:
                 should_save_video = True
                 first_success_saved = True
-                log_message("Saving first successful episode video", log_file)
+                log_message('Saving first successful episode video', log_file)
             elif not success and not first_failure_saved:
                 should_save_video = True
                 first_failure_saved = True
-                log_message("Saving first failed episode video", log_file)
+                log_message('Saving first failed episode video', log_file)
         # For "none" mode, should_save_video remains False
 
         if should_save_video:
@@ -347,16 +347,16 @@ def run_task(
             )
 
         # Log results
-        log_message(f"Success: {success}", log_file)
-        log_message(f"# episodes completed so far: {total_episodes}", log_file)
+        log_message(f'Success: {success}', log_file)
+        log_message(f'# episodes completed so far: {total_episodes}', log_file)
         log_message(
-            f"# successes: {total_successes} ({total_successes / total_episodes * 100:.1f}%)",
+            f'# successes: {total_successes} ({total_successes / total_episodes * 100:.1f}%)',
             log_file,
         )
-        log_message(f"Episodes with cost: {episodes_with_cost}", log_file)
-        log_message(f"Total costs: {total_costs}", log_file)
-        log_message(f"Success costs: {success_costs}", log_file)
-        log_message(f"Failure costs: {failure_costs}", log_file)
+        log_message(f'Episodes with cost: {episodes_with_cost}', log_file)
+        log_message(f'Total costs: {total_costs}', log_file)
+        log_message(f'Success costs: {success_costs}', log_file)
+        log_message(f'Failure costs: {failure_costs}', log_file)
     # Log task results
     task_success_rate = (
         float(task_successes) / float(task_episodes)
@@ -369,12 +369,12 @@ def run_task(
         else 0
     )
 
-    log_message(f"Current task success rate: {task_success_rate}", log_file)
-    log_message(f"Current total success rate: {total_success_rate}", log_file)
-    log_message(f"Current episodes with cost: {episodes_with_cost}", log_file)
-    log_message(f"Current total costs: {total_costs}", log_file)
-    log_message(f"Current success costs: {success_costs}", log_file)
-    log_message(f"Current failure costs: {failure_costs}", log_file)
+    log_message(f'Current task success rate: {task_success_rate}', log_file)
+    log_message(f'Current total success rate: {total_success_rate}', log_file)
+    log_message(f'Current episodes with cost: {episodes_with_cost}', log_file)
+    log_message(f'Current total costs: {total_costs}', log_file)
+    log_message(f'Current success costs: {success_costs}', log_file)
+    log_message(f'Current failure costs: {failure_costs}', log_file)
 
     return (
         task_episodes,
@@ -402,15 +402,15 @@ def eval_vla_arena(cfg: GenerateConfig) -> float:
     benchmark_dict = benchmark.get_benchmark_dict()
     task_suite = benchmark_dict[cfg.task_suite_name]()
     task_level = cfg.task_level
-    if cfg.task_suite_name == "long_horizon" and cfg.task_level == 0:
+    if cfg.task_suite_name == 'long_horizon' and cfg.task_level == 0:
         num_tasks = 10
     else:
         num_tasks = 5
     print(
-        f"Evaluating {num_tasks} tasks from the {cfg.task_suite_name} suite..."
+        f'Evaluating {num_tasks} tasks from the {cfg.task_suite_name} suite...'
     )
 
-    log_message(f"Task suite: {cfg.task_suite_name}", log_file)
+    log_message(f'Task suite: {cfg.task_suite_name}', log_file)
 
     client = _websocket_client_policy.WebsocketClientPolicy(cfg.host, cfg.port)
 
@@ -469,16 +469,16 @@ def eval_vla_arena(cfg: GenerateConfig) -> float:
         else 0
     )
     # Log final results
-    log_message("Final results:", log_file)
-    log_message(f"Total episodes: {total_episodes}", log_file)
-    log_message(f"Total successes: {total_successes}", log_file)
+    log_message('Final results:', log_file)
+    log_message(f'Total episodes: {total_episodes}', log_file)
+    log_message(f'Total successes: {total_successes}', log_file)
     log_message(
-        f"Overall success rate: {final_success_rate:.4f} ({final_success_rate * 100:.1f}%)",
+        f'Overall success rate: {final_success_rate:.4f} ({final_success_rate * 100:.1f}%)',
         log_file,
     )
-    log_message(f"Overall costs: {average_costs}", log_file)
-    log_message(f"Overall success costs: {average_success_costs}", log_file)
-    log_message(f"Overall failure costs: {average_failure_costs}", log_file)
+    log_message(f'Overall costs: {average_costs}', log_file)
+    log_message(f'Overall success costs: {average_success_costs}', log_file)
+    log_message(f'Overall failure costs: {average_failure_costs}', log_file)
 
     # Close log file
     if log_file:
@@ -496,22 +496,22 @@ def save_rollout_video(
     rollout_images, idx, success, task_description, log_file=None, task_level=0
 ):
     """Saves an MP4 replay of an episode."""
-    rollout_dir = f"./rollouts/{DATE}"
+    rollout_dir = f'./rollouts/{DATE}'
     os.makedirs(rollout_dir, exist_ok=True)
     processed_task_description = (
         task_description.lower()
-        .replace(" ", "_")
-        .replace("\n", "_")
-        .replace(".", "_")[:50]
+        .replace(' ', '_')
+        .replace('\n', '_')
+        .replace('.', '_')[:50]
     )
-    mp4_path = f"{rollout_dir}/{DATE_TIME}--episode={idx}--success={success}--level={task_level}--task={processed_task_description}.mp4"
+    mp4_path = f'{rollout_dir}/{DATE_TIME}--episode={idx}--success={success}--level={task_level}--task={processed_task_description}.mp4'
     video_writer = imageio.get_writer(mp4_path, fps=30)
     for img in rollout_images:
         video_writer.append_data(img)
     video_writer.close()
-    print(f"Saved rollout MP4 at path {mp4_path}")
+    print(f'Saved rollout MP4 at path {mp4_path}')
     if log_file is not None:
-        log_file.write(f"Saved rollout MP4 at path {mp4_path}\n")
+        log_file.write(f'Saved rollout MP4 at path {mp4_path}\n')
     return mp4_path
 
 
@@ -526,19 +526,19 @@ def get_vla_arena_env(
     """Initializes and returns the VLA_ARENA environment, along with the task description."""
     task_description = task.language
     task_bddl_file = os.path.join(
-        get_vla_arena_path("bddl_files"),
+        get_vla_arena_path('bddl_files'),
         task.problem_folder,
-        f"level_{task.level}",
+        f'level_{task.level}',
         task.bddl_file,
     )
     env_args = {
-        "bddl_file_name": task_bddl_file,
-        "camera_heights": resolution,
-        "camera_widths": resolution,
-        "camera_offset": camera_offset,
-        "color_randomize": randomize_color,
-        "add_noise": add_noise,
-        "light_adjustment": adjust_light,
+        'bddl_file_name': task_bddl_file,
+        'camera_heights': resolution,
+        'camera_widths': resolution,
+        'camera_offset': camera_offset,
+        'color_randomize': randomize_color,
+        'add_noise': add_noise,
+        'light_adjustment': adjust_light,
     }
     env = OffScreenRenderEnv(**env_args)
     return env, task_description
@@ -562,5 +562,5 @@ def _quat2axisangle(quat):
     return (quat[:3] * 2.0 * math.acos(quat[3])) / den
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     tyro.cli(eval_vla_arena)

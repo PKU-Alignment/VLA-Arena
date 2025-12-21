@@ -1714,16 +1714,16 @@ def main():
 Examples:
   # Pack a single task
   python -m vla_arena.vla_arena.utils.asset_manager pack task.bddl -o ./packages
-  
+
   # Pack a task suite
   python -m vla_arena.vla_arena.utils.asset_manager pack-suite robustness_dynamic_distractors -o ./packages
-  
+
   # Install a package
   python -m vla_arena.vla_arena.utils.asset_manager install package.vlap
-  
+
   # Upload to HuggingFace (specify your repo)
   python -m vla_arena.vla_arena.utils.asset_manager upload package.vlap --repo username/task-assets
-  
+
   # Download and install from cloud
   python -m vla_arena.vla_arena.utils.asset_manager download my_task --repo username/task-assets --install
         """,

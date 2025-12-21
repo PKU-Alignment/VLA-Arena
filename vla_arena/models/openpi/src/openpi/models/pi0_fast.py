@@ -29,7 +29,7 @@ from openpi.models import model as _model
 from openpi.shared import array_typing as at
 
 
-logger = logging.getLogger("openpi")
+logger = logging.getLogger('openpi')
 
 PALIGEMMA_EOS_TOKEN = 1
 
@@ -87,16 +87,16 @@ def put_along_last_axis(arr, indices, values):
     )
     onehot = jax.nn.one_hot(indices, arr.shape[-1], dtype=values.dtype)
     put_mask = jnp.einsum(
-        "...i,...in->...n", jnp.ones(values.shape, jnp.int32), onehot
+        '...i,...in->...n', jnp.ones(values.shape, jnp.int32), onehot
     )
-    put_values = jnp.einsum("...i,...in->...n", values, onehot)
+    put_values = jnp.einsum('...i,...in->...n', values, onehot)
     return jnp.where(put_mask, put_values, arr)
 
 
 @dataclasses.dataclass(frozen=True)
 class Pi0FASTConfig(_model.BaseModelConfig):
-    dtype: str = "bfloat16"
-    paligemma_variant: _gemma.Variant = "gemma_2b"
+    dtype: str = 'bfloat16'
+    paligemma_variant: _gemma.Variant = 'gemma_2b'
 
     # Set the model specific defaults.
     action_dim: int = 32
@@ -114,7 +114,7 @@ class Pi0FASTConfig(_model.BaseModelConfig):
         return _model.ModelType.PI0_FAST
 
     @override
-    def create(self, rng: at.KeyArrayLike) -> "Pi0FAST":
+    def create(self, rng: at.KeyArrayLike) -> 'Pi0FAST':
         return Pi0FAST(self, rngs=nnx.Rngs(rng))
 
     @override
@@ -129,14 +129,14 @@ class Pi0FASTConfig(_model.BaseModelConfig):
         with at.disable_typechecking():
             observation_spec = _model.Observation(
                 images={
-                    "base_0_rgb": image_spec,
-                    "base_1_rgb": image_spec,
-                    "wrist_0_rgb": image_spec,
+                    'base_0_rgb': image_spec,
+                    'base_1_rgb': image_spec,
+                    'wrist_0_rgb': image_spec,
                 },
                 image_masks={
-                    "base_0_rgb": image_mask_spec,
-                    "base_1_rgb": image_mask_spec,
-                    "wrist_0_rgb": image_mask_spec,
+                    'base_0_rgb': image_mask_spec,
+                    'base_1_rgb': image_mask_spec,
+                    'wrist_0_rgb': image_mask_spec,
                 },
                 state=jax.ShapeDtypeStruct(
                     [batch_size, self.action_dim], jnp.float32
@@ -162,10 +162,10 @@ class Pi0FASTConfig(_model.BaseModelConfig):
 
     def get_freeze_filter(self) -> nnx.filterlib.Filter:
         """Returns the freeze filter based on the model config."""
-        if "lora" in self.paligemma_variant:
+        if 'lora' in self.paligemma_variant:
             return nnx.All(
-                nnx_utils.PathRegex(".*llm.*"),
-                nnx.Not(nnx_utils.PathRegex(".*lora.*")),
+                nnx_utils.PathRegex('.*llm.*'),
+                nnx.Not(nnx_utils.PathRegex('.*lora.*')),
             )
         return nnx.Nothing
 
@@ -184,12 +184,12 @@ class Pi0FAST(_model.BaseModel):
                 cache_dtype=config.dtype,
             )
         )
-        llm.lazy_init(rngs=rngs, method="init")
+        llm.lazy_init(rngs=rngs, method='init')
         img = nnx_bridge.ToNNX(
             _siglip.Module(
                 num_classes=paligemma_config.width,
-                variant="So400m/14",
-                pool_type="none",
+                variant='So400m/14',
+                pool_type='none',
                 scan=True,
                 dtype_mm=config.dtype,
             )
@@ -203,9 +203,9 @@ class Pi0FAST(_model.BaseModel):
 
     @at.typecheck
     def embed_inputs(self, obs: _model.Observation) -> tuple[
-        at.Float[at.Array, "b s emb"],
-        at.Bool[at.Array, "b s"],
-        at.Int[at.Array, "b s"],
+        at.Float[at.Array, 'b s emb'],
+        at.Bool[at.Array, 'b s'],
+        at.Int[at.Array, 'b s'],
     ]:
         input_mask = []
         ar_mask = []
@@ -220,7 +220,7 @@ class Pi0FAST(_model.BaseModel):
             input_mask.append(
                 einops.repeat(
                     obs.image_masks[name],
-                    "b -> b s",
+                    'b -> b s',
                     s=image_token_embeddings.shape[1],
                 )
             )
@@ -228,13 +228,13 @@ class Pi0FAST(_model.BaseModel):
             ar_mask.append(0 * input_mask[-1])
 
         # add tokenized inputs
-        assert obs.tokenized_prompt is not None, "Tokenized prompt is required"
+        assert obs.tokenized_prompt is not None, 'Tokenized prompt is required'
         assert (
             obs.tokenized_prompt_mask is not None
-        ), "Tokenized prompt mask is required"
+        ), 'Tokenized prompt mask is required'
         assert (
             obs.token_ar_mask is not None
-        ), "Token auto-regressive mask is required"
+        ), 'Token auto-regressive mask is required'
         tokenized_inputs_embeddings = self.PaliGemma.llm(
             obs.tokenized_prompt, embed_only=True
         )
@@ -257,7 +257,7 @@ class Pi0FAST(_model.BaseModel):
         actions: _model.Actions,
         *,
         train: bool = False,
-    ) -> at.Float[at.Array, "*b ah"]:
+    ) -> at.Float[at.Array, '*b ah']:
         observation = _model.preprocess_observation(
             rng,
             observation,
@@ -294,7 +294,7 @@ class Pi0FAST(_model.BaseModel):
         # Compute CE loss on token targets
         assert (
             observation.token_loss_mask is not None
-        ), "Token loss mask is required"
+        ), 'Token loss mask is required'
         loss_mask = observation.token_loss_mask[:, 1:]
         token_pplx = jnp.sum(targets * logp, axis=-1)
         return -jnp.sum(token_pplx * loss_mask, axis=-1) / jnp.clip(
@@ -307,7 +307,7 @@ class Pi0FAST(_model.BaseModel):
         rng: at.KeyArrayLike,
         observation: _model.Observation,
         *,
-        max_decoding_steps: int | at.Int[at.Array, ""] = 256,
+        max_decoding_steps: int | at.Int[at.Array, ''] = 256,
         temperature: float = 0.0,
     ) -> _model.Actions:
         # TODO: this is a hack to get the image keys.

@@ -31,9 +31,9 @@ if TYPE_CHECKING:
 
 @dataclasses.dataclass(frozen=True)
 class Pi0Config(_model.BaseModelConfig):
-    dtype: str = "bfloat16"
-    paligemma_variant: _gemma.Variant = "gemma_2b"
-    action_expert_variant: _gemma.Variant = "gemma_300m"
+    dtype: str = 'bfloat16'
+    paligemma_variant: _gemma.Variant = 'gemma_2b'
+    action_expert_variant: _gemma.Variant = 'gemma_300m'
 
     # Set the model specific defaults.
     action_dim: int = 32
@@ -48,9 +48,9 @@ class Pi0Config(_model.BaseModelConfig):
 
     def __post_init__(self):
         if self.max_token_len is None:
-            object.__setattr__(self, "max_token_len", 200 if self.pi05 else 48)
+            object.__setattr__(self, 'max_token_len', 200 if self.pi05 else 48)
         if self.discrete_state_input is None:
-            object.__setattr__(self, "discrete_state_input", self.pi05)
+            object.__setattr__(self, 'discrete_state_input', self.pi05)
 
     @property
     @override
@@ -60,7 +60,7 @@ class Pi0Config(_model.BaseModelConfig):
         return _model.ModelType.PI0
 
     @override
-    def create(self, rng: at.KeyArrayLike) -> "Pi0":
+    def create(self, rng: at.KeyArrayLike) -> 'Pi0':
         from openpi.models.pi0 import Pi0
 
         return Pi0(self, rngs=nnx.Rngs(rng))
@@ -77,14 +77,14 @@ class Pi0Config(_model.BaseModelConfig):
         with at.disable_typechecking():
             observation_spec = _model.Observation(
                 images={
-                    "base_0_rgb": image_spec,
-                    "left_wrist_0_rgb": image_spec,
-                    "right_wrist_0_rgb": image_spec,
+                    'base_0_rgb': image_spec,
+                    'left_wrist_0_rgb': image_spec,
+                    'right_wrist_0_rgb': image_spec,
                 },
                 image_masks={
-                    "base_0_rgb": image_mask_spec,
-                    "left_wrist_0_rgb": image_mask_spec,
-                    "right_wrist_0_rgb": image_mask_spec,
+                    'base_0_rgb': image_mask_spec,
+                    'left_wrist_0_rgb': image_mask_spec,
+                    'right_wrist_0_rgb': image_mask_spec,
                 },
                 state=jax.ShapeDtypeStruct(
                     [batch_size, self.action_dim], jnp.float32
@@ -106,19 +106,19 @@ class Pi0Config(_model.BaseModelConfig):
         """Returns the freeze filter based on the model config."""
         filters = []
         has_lora = False
-        gemma_params_filter = nnx_utils.PathRegex(".*llm.*")
-        action_expert_params_filter = nnx_utils.PathRegex(".*llm.*_1.*")
-        if "lora" in self.paligemma_variant:
+        gemma_params_filter = nnx_utils.PathRegex('.*llm.*')
+        action_expert_params_filter = nnx_utils.PathRegex('.*llm.*_1.*')
+        if 'lora' in self.paligemma_variant:
             filters.append(
                 gemma_params_filter,
             )
-            if "lora" not in self.action_expert_variant:
+            if 'lora' not in self.action_expert_variant:
                 # If only freeze gemma params, exclude action expert params.
                 filters.append(
                     nnx.Not(action_expert_params_filter),
                 )
             has_lora = True
-        elif "lora" in self.action_expert_variant:
+        elif 'lora' in self.action_expert_variant:
             filters.append(
                 action_expert_params_filter,
             )
@@ -127,7 +127,7 @@ class Pi0Config(_model.BaseModelConfig):
         if has_lora:
             # If any lora is used, exclude all lora params.
             filters.append(
-                nnx.Not(nnx_utils.PathRegex(".*lora.*")),
+                nnx.Not(nnx_utils.PathRegex('.*lora.*')),
             )
         if not filters:
             return nnx.Nothing

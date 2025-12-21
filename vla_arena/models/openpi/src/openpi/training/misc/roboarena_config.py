@@ -42,7 +42,7 @@ def get_roboarena_configs():
         #
         TrainConfig(
             # Trained from PaliGemma, using RT-2 / OpenVLA style binning tokenizer.
-            name="paligemma_binning_droid",
+            name='paligemma_binning_droid',
             model=pi0_fast.Pi0FASTConfig(
                 action_dim=8,
                 action_horizon=15,
@@ -50,7 +50,7 @@ def get_roboarena_configs():
                 fast_model_tokenizer=_tokenizer.BinningTokenizer,
             ),
             data=SimpleDataConfig(
-                assets=AssetsConfig(asset_id="droid"),
+                assets=AssetsConfig(asset_id='droid'),
                 data_transforms=lambda model: _transforms.Group(
                     inputs=[
                         droid_policy.DroidInputs(
@@ -67,10 +67,10 @@ def get_roboarena_configs():
         ),
         TrainConfig(
             # Trained from PaliGemma, using FAST tokenizer (using universal FAST+ tokenizer).
-            name="paligemma_fast_droid",
+            name='paligemma_fast_droid',
             model=pi0_fast.Pi0FASTConfig(action_dim=8, action_horizon=15),
             data=SimpleDataConfig(
-                assets=AssetsConfig(asset_id="droid"),
+                assets=AssetsConfig(asset_id='droid'),
                 data_transforms=lambda model: _transforms.Group(
                     inputs=[
                         droid_policy.DroidInputs(
@@ -87,17 +87,17 @@ def get_roboarena_configs():
         ),
         TrainConfig(
             # Trained from PaliGemma, using FAST tokenizer (tokenizer trained on DROID dataset).
-            name="paligemma_fast_specialist_droid",
+            name='paligemma_fast_specialist_droid',
             model=pi0_fast.Pi0FASTConfig(
                 action_dim=8,
                 action_horizon=15,
                 fast_model_tokenizer=_tokenizer.FASTTokenizer,
                 fast_model_tokenizer_kwargs={
-                    "fast_tokenizer_path": "KarlP/fast_droid_specialist"
+                    'fast_tokenizer_path': 'KarlP/fast_droid_specialist'
                 },
             ),
             data=SimpleDataConfig(
-                assets=AssetsConfig(asset_id="droid"),
+                assets=AssetsConfig(asset_id='droid'),
                 data_transforms=lambda model: _transforms.Group(
                     inputs=[
                         droid_policy.DroidInputs(
@@ -114,17 +114,17 @@ def get_roboarena_configs():
         ),
         TrainConfig(
             # Trained from PaliGemma, using FSQ tokenizer.
-            name="paligemma_vq_droid",
+            name='paligemma_vq_droid',
             model=pi0_fast.Pi0FASTConfig(
                 action_dim=8,
                 action_horizon=15,
                 fast_model_tokenizer=_tokenizer.FSQTokenizer,
                 fast_model_tokenizer_kwargs={
-                    "fsq_tokenizer_path": "gs://openpi-assets/tokenizers/droid_fsq_tokenizer"
+                    'fsq_tokenizer_path': 'gs://openpi-assets/tokenizers/droid_fsq_tokenizer'
                 },
             ),
             data=SimpleDataConfig(
-                assets=AssetsConfig(asset_id="droid"),
+                assets=AssetsConfig(asset_id='droid'),
                 data_transforms=lambda model: _transforms.Group(
                     inputs=[
                         droid_policy.DroidInputs(
@@ -141,10 +141,10 @@ def get_roboarena_configs():
         ),
         TrainConfig(
             # pi0-style diffusion / flow VLA, trained on DROID from PaliGemma.
-            name="paligemma_diffusion_droid",
+            name='paligemma_diffusion_droid',
             model=pi0_config.Pi0Config(action_horizon=10, action_dim=8),
             data=SimpleDataConfig(
-                assets=AssetsConfig(asset_id="droid"),
+                assets=AssetsConfig(asset_id='droid'),
                 data_transforms=lambda model: _transforms.Group(
                     inputs=[
                         droid_policy.DroidInputs(action_dim=model.action_dim)

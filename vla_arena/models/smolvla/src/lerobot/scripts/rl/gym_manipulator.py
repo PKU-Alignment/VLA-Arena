@@ -66,17 +66,15 @@ from lerobot.configs import parser
 from lerobot.envs.configs import EnvConfig
 from lerobot.envs.utils import preprocess_observation
 from lerobot.model.kinematics import RobotKinematics
-from lerobot.robots import (  # noqa: F401
+from lerobot.robots import (
     RobotConfig,
     make_robot_from_config,
     so100_follower,
-)
+)  # noqa: F401
 from lerobot.teleoperators import gamepad  # noqa: F401
 from lerobot.teleoperators import keyboard  # noqa: F401
 from lerobot.teleoperators import so101_leader  # noqa: F401
-from lerobot.teleoperators import (
-    make_teleoperator_from_config,
-)
+from lerobot.teleoperators import make_teleoperator_from_config
 from lerobot.teleoperators.gamepad.teleop_gamepad import GamepadTeleop
 from lerobot.teleoperators.keyboard.teleop_keyboard import (
     KeyboardEndEffectorTeleop,

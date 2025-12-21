@@ -29,9 +29,7 @@ from tensorflow_datasets.core import (
 )
 from tensorflow_datasets.core import split_builder as split_builder_lib
 from tensorflow_datasets.core import splits as splits_lib
-from tensorflow_datasets.core import (
-    utils,
-)
+from tensorflow_datasets.core import utils
 from tensorflow_datasets.core import writer as writer_lib
 
 
@@ -248,7 +246,7 @@ class ParallelSplitBuilder(split_builder_lib.SplitBuilder):
 
 
 def dictlist2listdict(DL):
-    "Converts a dict of lists to a list of dicts"
+    'Converts a dict of lists to a list of dicts'
     return [dict(zip(DL, t)) for t in zip(*DL.values())]
 
 

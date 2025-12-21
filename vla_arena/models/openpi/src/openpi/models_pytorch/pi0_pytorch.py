@@ -25,7 +25,7 @@ from torch import Tensor, nn
 
 def get_safe_dtype(target_dtype, device_type):
     """Get a safe dtype for the given device type."""
-    if device_type == "cpu":
+    if device_type == 'cpu':
         # CPU doesn't support bfloat16, use float32 instead
         if target_dtype == torch.bfloat16:
             return torch.float32
@@ -39,15 +39,15 @@ def create_sinusoidal_pos_embedding(
     dimension: int,
     min_period: float,
     max_period: float,
-    device="cpu",
+    device='cpu',
 ) -> Tensor:
     """Computes sine-cosine positional embedding vectors for scalar positions."""
     if dimension % 2 != 0:
-        raise ValueError(f"dimension ({dimension}) must be divisible by 2")
+        raise ValueError(f'dimension ({dimension}) must be divisible by 2')
 
     if time.ndim != 1:
         raise ValueError(
-            "The time tensor is expected to be of shape `(batch_size, )`."
+            'The time tensor is expected to be of shape `(batch_size, )`.'
         )
 
     dtype = get_safe_dtype(torch.float64, device.type)
@@ -136,15 +136,15 @@ class PI0Pytorch(nn.Module):
                 action_expert_config.width, action_expert_config.width
             )
 
-        torch.set_float32_matmul_precision("high")
+        torch.set_float32_matmul_precision('high')
         self.sample_actions = torch.compile(
-            self.sample_actions, mode="max-autotune"
+            self.sample_actions, mode='max-autotune'
         )
 
         # Initialize gradient checkpointing flag
         self.gradient_checkpointing_enabled = False
 
-        msg = "transformers_replace is not installed correctly. Please install it with `uv pip install transformers==4.53.2` and `cp -r ./src/openpi/models_pytorch/transformers_replace/* .venv/lib/python3.11/site-packages/transformers/`."
+        msg = 'transformers_replace is not installed correctly. Please install it with `uv pip install transformers==4.53.2` and `cp -r ./src/openpi/models_pytorch/transformers_replace/* .venv/lib/python3.11/site-packages/transformers/`.'
         try:
             from transformers.models.siglip import check
 
@@ -168,7 +168,7 @@ class PI0Pytorch(nn.Module):
             True
         )
 
-        logging.info("Enabled gradient checkpointing for PI0Pytorch model")
+        logging.info('Enabled gradient checkpointing for PI0Pytorch model')
 
     def gradient_checkpointing_disable(self):
         """Disable gradient checkpointing."""
@@ -183,7 +183,7 @@ class PI0Pytorch(nn.Module):
             False
         )
 
-        logging.info("Disabled gradient checkpointing for PI0Pytorch model")
+        logging.info('Disabled gradient checkpointing for PI0Pytorch model')
 
     def is_gradient_checkpointing_enabled(self):
         """Check if gradient checkpointing is enabled."""
@@ -451,7 +451,7 @@ class PI0Pytorch(nn.Module):
 
         v_t = self._apply_checkpoint(action_out_proj_func, suffix_out)
 
-        return F.mse_loss(u_t, v_t, reduction="none")
+        return F.mse_loss(u_t, v_t, reduction='none')
 
     @torch.no_grad()
     def sample_actions(
@@ -484,7 +484,7 @@ class PI0Pytorch(nn.Module):
             prefix_att_2d_masks
         )
         self.paligemma_with_expert.paligemma.language_model.config._attn_implementation = (
-            "eager"
+            'eager'
         )
 
         _, past_key_values = self.paligemma_with_expert.forward(
@@ -554,7 +554,7 @@ class PI0Pytorch(nn.Module):
             full_att_2d_masks
         )
         self.paligemma_with_expert.gemma_expert.model.config._attn_implementation = (
-            "eager"
+            'eager'
         )
 
         outputs_embeds, _ = self.paligemma_with_expert.forward(

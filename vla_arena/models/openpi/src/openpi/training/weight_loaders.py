@@ -67,7 +67,7 @@ class CheckpointWeightLoader(WeightLoader):
             download.maybe_download(self.params_path), restore_type=np.ndarray
         )
         # Add all missing LoRA weights.
-        return _merge_params(loaded_params, params, missing_regex=".*lora.*")
+        return _merge_params(loaded_params, params, missing_regex='.*lora.*')
 
 
 @dataclasses.dataclass(frozen=True)
@@ -80,18 +80,18 @@ class PaliGemmaWeightLoader(WeightLoader):
 
     def load(self, params: at.Params) -> at.Params:
         path = download.maybe_download(
-            "gs://vertex-model-garden-paligemma-us/paligemma/pt_224.npz",
-            gs={"token": "anon"},
+            'gs://vertex-model-garden-paligemma-us/paligemma/pt_224.npz',
+            gs={'token': 'anon'},
         )
-        with path.open("rb") as f:
+        with path.open('rb') as f:
             flat_params = dict(np.load(f, allow_pickle=False))
         loaded_params = {
-            "PaliGemma": flax.traverse_util.unflatten_dict(
-                flat_params, sep="/"
-            )["params"]
+            'PaliGemma': flax.traverse_util.unflatten_dict(
+                flat_params, sep='/'
+            )['params']
         }
         # Add all missing weights.
-        return _merge_params(loaded_params, params, missing_regex=".*")
+        return _merge_params(loaded_params, params, missing_regex='.*')
 
 
 def _merge_params(
@@ -107,8 +107,8 @@ def _merge_params(
     Returns:
         A new dictionary with the merged parameters.
     """
-    flat_ref = flax.traverse_util.flatten_dict(params, sep="/")
-    flat_loaded = flax.traverse_util.flatten_dict(loaded_params, sep="/")
+    flat_ref = flax.traverse_util.flatten_dict(params, sep='/')
+    flat_loaded = flax.traverse_util.flatten_dict(loaded_params, sep='/')
 
     # First, take all weights that are a subset of the reference weights.
     result = {}
@@ -128,4 +128,4 @@ def _merge_params(
         if k not in result:
             result[k] = flat_ref[k]
 
-    return flax.traverse_util.unflatten_dict(result, sep="/")
+    return flax.traverse_util.unflatten_dict(result, sep='/')

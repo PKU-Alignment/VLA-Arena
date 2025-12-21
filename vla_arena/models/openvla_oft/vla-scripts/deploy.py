@@ -44,9 +44,7 @@ from experiments.robot.robot_utils import get_image_resize_size
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-from vla_arena.models.openvla_oft.prismatic.vla.constants import (
-    PROPRIO_DIM,
-)
+from vla_arena.models.openvla_oft.prismatic.vla.constants import PROPRIO_DIM
 
 
 def get_openvla_prompt(instruction: str, openvla_path: str | Path) -> str:

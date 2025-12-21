@@ -46,8 +46,8 @@ Array = jax.Array | torch.Tensor
 
 def _check_dataclass_annotations(self, typechecker):
     if not any(
-        frame.frame.f_globals.get("__name__")
-        in {"jax._src.tree_util", "flax.nnx.transforms.compilation"}
+        frame.frame.f_globals.get('__name__')
+        in {'jax._src.tree_util', 'flax.nnx.transforms.compilation'}
         for frame in inspect.stack()
     ):
         return _original_check_dataclass_annotations(self, typechecker)
@@ -59,9 +59,9 @@ jaxtyping._decorator._check_dataclass_annotations = (
 )
 
 KeyArrayLike: TypeAlias = jax.typing.ArrayLike
-Params: TypeAlias = PyTree[Float[ArrayLike, "..."]]
+Params: TypeAlias = PyTree[Float[ArrayLike, '...']]
 
-T = TypeVar("T")
+T = TypeVar('T')
 
 
 # runtime type-checking decorator
@@ -72,9 +72,9 @@ def typecheck(t: T) -> T:
 @contextlib.contextmanager
 def disable_typechecking():
     initial = config.jaxtyping_disable
-    config.update("jaxtyping_disable", True)  # noqa: FBT003
+    config.update('jaxtyping_disable', True)  # noqa: FBT003
     yield
-    config.update("jaxtyping_disable", initial)
+    config.update('jaxtyping_disable', initial)
 
 
 def check_pytree_equality(
@@ -90,9 +90,9 @@ def check_pytree_equality(
 
     if errors := list(private_tree_util.equality_errors(expected, got)):
         raise ValueError(
-            "PyTrees have different structure:\n"
+            'PyTrees have different structure:\n'
             + (
-                "\n".join(
+                '\n'.join(
                     f"   - at keypath '{jax.tree_util.keystr(path)}': expected {thing1}, got {thing2}, so {explanation}.\n"
                     for path, thing1, thing2, explanation in errors
                 )
@@ -104,12 +104,12 @@ def check_pytree_equality(
         def check(kp, x, y):
             if check_shapes and x.shape != y.shape:
                 raise ValueError(
-                    f"Shape mismatch at {jax.tree_util.keystr(kp)}: expected {x.shape}, got {y.shape}"
+                    f'Shape mismatch at {jax.tree_util.keystr(kp)}: expected {x.shape}, got {y.shape}'
                 )
 
             if check_dtypes and x.dtype != y.dtype:
                 raise ValueError(
-                    f"Dtype mismatch at {jax.tree_util.keystr(kp)}: expected {x.dtype}, got {y.dtype}"
+                    f'Dtype mismatch at {jax.tree_util.keystr(kp)}: expected {x.dtype}, got {y.dtype}'
                 )
 
         jax.tree_util.tree_map_with_path(check, expected, got)

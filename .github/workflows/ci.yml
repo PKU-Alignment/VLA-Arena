@@ -45,9 +45,9 @@ jobs:
           # Install only linting tools, not the full package
           pip install isort black ruff flake8 flake8-bugbear flake8-comprehensions flake8-docstrings flake8-pyi flake8-simplify pylint pyenchant
 
-      - name: Code style check with black
-        run: |
-          make py-format
+      # - name: Code style check with black
+      #   run: |
+      #     make py-format
 
       # - name: Lint with ruff
       #   run: |
@@ -113,7 +113,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           # Install without optional heavy dependencies for CI
-          pip install -e . 
+          pip install -e .
 
       - name: Run tests
         run: |

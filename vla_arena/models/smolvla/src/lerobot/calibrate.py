@@ -44,12 +44,12 @@ from dataclasses import asdict, dataclass
 from pprint import pformat
 
 import draccus
-from lerobot.cameras.opencv.configuration_opencv import (  # noqa: F401
+from lerobot.cameras.opencv.configuration_opencv import (
     OpenCVCameraConfig,
-)
-from lerobot.cameras.realsense.configuration_realsense import (  # noqa: F401
+)  # noqa: F401
+from lerobot.cameras.realsense.configuration_realsense import (
     RealSenseCameraConfig,
-)
+)  # noqa: F401
 from lerobot.robots import (  # noqa: F401
     Robot,
     RobotConfig,

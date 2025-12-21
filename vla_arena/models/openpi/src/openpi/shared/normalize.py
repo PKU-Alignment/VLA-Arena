@@ -69,7 +69,7 @@ class RunningStats:
         else:
             if vector_length != self._mean.size:
                 raise ValueError(
-                    "The length of new vectors does not match the initialized vector length."
+                    'The length of new vectors does not match the initialized vector length.'
                 )
             new_max = np.max(batch, axis=0)
             new_min = np.min(batch, axis=0)
@@ -103,7 +103,7 @@ class RunningStats:
         """
         if self._count < 2:
             raise ValueError(
-                "Cannot compute statistics for less than 2 vectors."
+                'Cannot compute statistics for less than 2 vectors.'
             )
 
         variance = self._mean_of_squares - self._mean**2
@@ -167,14 +167,14 @@ def save(
     directory: pathlib.Path | str, norm_stats: dict[str, NormStats]
 ) -> None:
     """Save the normalization stats to a directory."""
-    path = pathlib.Path(directory) / "norm_stats.json"
+    path = pathlib.Path(directory) / 'norm_stats.json'
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(serialize_json(norm_stats))
 
 
 def load(directory: pathlib.Path | str) -> dict[str, NormStats]:
     """Load the normalization stats from a directory."""
-    path = pathlib.Path(directory) / "norm_stats.json"
+    path = pathlib.Path(directory) / 'norm_stats.json'
     if not path.exists():
-        raise FileNotFoundError(f"Norm stats file not found at: {path}")
+        raise FileNotFoundError(f'Norm stats file not found at: {path}')
     return deserialize_json(path.read_text())

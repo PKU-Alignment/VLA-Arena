@@ -282,7 +282,7 @@ python -m scripts.download_tasks install-all --repo vla-arena/tasks
 
 ### 🔧 自定义任务仓库
 
-如果您想使用自己的任务仓库:
+如果你想使用自己的任务仓库:
 
 ```bash
 # 使用自定义 HuggingFace 仓库
@@ -291,7 +291,7 @@ vla-arena-download-tasks install-all --repo your-username/your-task-repo
 
 ### 📝 创建和分享自定义任务
 
-您可以创建并分享自己的任务套件:
+你可以创建并分享自己的任务套件:
 
 ```bash
 # 打包单个任务

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vla-arena"
-version = "0.1.0"
+version = "1.0.0"
 authors = [
     {name = "Jiahao Li", email = "jiahaoli2077@gmail.com"},
     {name = "Borong Zhang"},

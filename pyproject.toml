@@ -183,12 +183,6 @@ smolvla = [
     "draccus",
 ]
 
-[project.urls]
-Homepage = "https://github.com/PKU-Alignment/VLA-Arena"
-Repository = "https://github.com/PKU-Alignment/VLA-Arena"
-Documentation = "https://github.com/PKU-Alignment/VLA-Arena/docs"
-"Bug Report" = "https://github.com/PKU-Alignment/VLA-Arena/issues"
-
 openpi = [
     "augmax>=0.3.4",
     "dm-tree>=0.1.8",
@@ -223,7 +217,7 @@ openpi = [
     "polars>=1.30.0",
 ]
 
-# Integrated Dev/Tool Dependencies from File B
+# Integrated Dev/Tool Dependencies
 lint = [
     "isort >= 5.11.0",
     "black >= 23.1.0",
@@ -241,11 +235,13 @@ lint = [
     "pyenchant",
     "pre-commit",
 ]
+
 test = [
     "pytest >= 7.0.0",
     "pytest-cov >= 3.0.0",
     "pytest-xdist >= 2.5.0",
 ]
+
 docs = [
     "sphinx >= 5.0.0",
     "sphinx-autoapi",
@@ -254,6 +250,12 @@ docs = [
     "sphinx-autodoc-typehints",
     "myst-parser",
 ]
+
+[project.urls]
+Homepage = "https://github.com/PKU-Alignment/VLA-Arena"
+Repository = "https://github.com/PKU-Alignment/VLA-Arena"
+Documentation = "https://github.com/PKU-Alignment/VLA-Arena/docs"
+"Bug Report" = "https://github.com/PKU-Alignment/VLA-Arena/issues"
 
 [tool.setuptools]
 include-package-data = true

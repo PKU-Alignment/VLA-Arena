@@ -9,7 +9,6 @@ import pytest
 
 try:
     from vla_arena.vla_arena.utils import task_generation_utils
-
     TASK_GEN_UTILS_AVAILABLE = True
 except (ImportError, OSError, FileNotFoundError, ModuleNotFoundError):
     # OSError/FileNotFoundError can occur on Windows when mujoco.dll is missing

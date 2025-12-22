@@ -3,12 +3,12 @@
     pretrained_checkpoint: "your-openvla-checkpoint"
     center_crop: true                          # Center crop? (if trained with random crop augmentation)
     num_open_loop_steps: 8                     # Open-loop steps before requerying policy
-    unnorm_key: "libero_spatial"              # Action un-normalization key
+    unnorm_key: "vla_arena"              # Action un-normalization key
     load_in_8bit: false                         # Load with 8-bit quantization
     load_in_4bit: false                         # Load with 4-bit quantization
     seed: 7                                     # Random seed for reproducibility
 
-    task_suite_name: "libero_spatial" # Task suite name
+    task_suite_name: "safety_static_obstacles"  # Task suite name
     task_level: 0
     num_steps_wait: 10                          # Steps to wait for objects to stabilize
     num_trials_per_task: 10                     # Rollouts per task

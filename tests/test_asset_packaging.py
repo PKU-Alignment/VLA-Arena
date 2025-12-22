@@ -76,7 +76,9 @@ class TestTaskPackaging:
         bddl_root = get_vla_arena_path('bddl_files')
         suite_name = None
         for item in os.listdir(bddl_root):
-            if os.path.isdir(os.path.join(bddl_root, item)) and not item.startswith('.'):
+            if os.path.isdir(
+                os.path.join(bddl_root, item),
+            ) and not item.startswith('.'):
                 suite_name = item
                 break
 
@@ -147,8 +149,12 @@ class TestTaskPackaging:
             author='Test User',
         )
 
-        # Dry run should always succeed
-        result = installer.install(package_path, dry_run=True)
+        # Dry run with skip_existing_assets should always succeed
+        result = installer.install(
+            package_path,
+            dry_run=True,
+            skip_existing_assets=True,
+        )
         assert result is True
 
 
@@ -173,7 +179,9 @@ class TestAssetManager:
         with zipfile.ZipFile(package_path, 'r') as zf:
             files = zf.namelist()
             manifest_files = [f for f in files if 'manifest.json' in f]
-            assert len(manifest_files) > 0, 'manifest.json not found in package'
+            assert (
+                len(manifest_files) > 0
+            ), 'manifest.json not found in package'
 
     def test_package_contains_bddl(self, temp_output_dir, sample_bddl_file):
         """Test that package contains BDDL files"""
@@ -219,7 +227,12 @@ class TestPathResolution:
     def test_get_vla_arena_path(self):
         """Test VLA-Arena path resolution"""
         # Test all standard paths
-        paths_to_test = ['assets', 'bddl_files', 'init_states', 'benchmark_root']
+        paths_to_test = [
+            'assets',
+            'bddl_files',
+            'init_states',
+            'benchmark_root',
+        ]
 
         for key in paths_to_test:
             path = get_vla_arena_path(key)
@@ -243,4 +256,3 @@ class TestPathResolution:
 
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])
-

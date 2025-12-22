@@ -16,13 +16,13 @@ num_open_loop_steps: 8                    # Number of actions to execute open-lo
 
 lora_rank: 32                             # Rank of LoRA weight matrix (MAKE SURE THIS MATCHES TRAINING!)
 
-unnorm_key: "libero_spatial"              # Action un-normalization key
+unnorm_key: "vla_arena"              # Action un-normalization key
 
 load_in_8bit: false                       # (For OpenVLA only) Load with 8-bit quantization
 load_in_4bit: false                       # (For OpenVLA only) Load with 4-bit quantization
 
 # VLA-Arena environment-specific parameters
-task_suite_name: "libero_spatial"  # Task suite
+task_suite_name: "safety_static_obstacles"  # Task suite
 task_level: 0
 num_steps_wait: 10                        # Number of steps to wait for objects to stabilize in sim
 num_trials_per_task: 10                   # Number of rollouts per task

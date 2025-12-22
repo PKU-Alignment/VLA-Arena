@@ -68,7 +68,7 @@ VLA-Arena 囊括四个任务类别：
 pip install vla-arena
 
 # 2. 下载任务套件 (必需)
-vla-arena-download-tasks install-all --repo vla-arena/tasks
+vla-arena.download-tasks install-all --repo vla-arena/tasks
 ```
 
 > **📦 重要**: 为减小 PyPI 包大小，任务套件和资产文件需要在安装后单独下载。
@@ -269,16 +269,16 @@ VLA-Arena为框架的所有方面提供全面的文档。选择最适合你需�
 
 ```bash
 # 查看已安装的任务
-vla-arena-download-tasks installed
+vla-arena.download-tasks installed
 
 # 列出可用的任务套件
-vla-arena-download-tasks list --repo vla-arena/tasks
+vla-arena.download-tasks list --repo vla-arena/tasks
 
 # 安装单个任务套件
-vla-arena-download-tasks install robustness_dynamic_distractors --repo vla-arena/tasks
+vla-arena.download-tasks install robustness_dynamic_distractors --repo vla-arena/tasks
 
 # 安装所有任务套件 (推荐)
-vla-arena-download-tasks install-all --repo vla-arena/tasks
+vla-arena.download-tasks install-all --repo vla-arena/tasks
 ```
 
 #### 方法 2: 使用 Python 脚本
@@ -297,7 +297,7 @@ python -m scripts.download_tasks install-all --repo vla-arena/tasks
 
 ```bash
 # 使用自定义 HuggingFace 仓库
-vla-arena-download-tasks install-all --repo your-username/your-task-repo
+vla-arena.download-tasks install-all --repo your-username/your-task-repo
 ```
 
 ### 📝 创建和分享自定义任务
@@ -306,13 +306,13 @@ vla-arena-download-tasks install-all --repo your-username/your-task-repo
 
 ```bash
 # 打包单个任务
-vla-arena-manage-assets pack path/to/task.bddl --output ./packages
+vla-arena.manage-tasks pack path/to/task.bddl --output ./packages
 
 # 打包所有任务
 python scripts/package_all_suites.py --output ./packages
 
 # 上传到 HuggingFace Hub
-vla-arena-manage-assets upload ./packages/my_task.vlap --repo your-username/your-repo
+vla-arena.manage-tasks upload ./packages/my_task.vlap --repo your-username/your-repo
 ```
 
 ## 排行榜

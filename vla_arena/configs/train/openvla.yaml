@@ -26,5 +26,5 @@ use_quantization: false                         # Whether to 4-bit quantize VLA 
 
 # Tracking Parameters
 wandb_project: "openvla"                        # Name of W&B project to log to (use default!)
-wandb_entity: "stanford-voltron"                # Name of entity to log under
+wandb_entity: "your_wandb_entity"                # Name of entity to log under
 run_id_note: null                               # Extra note for logging, Weights & Biases

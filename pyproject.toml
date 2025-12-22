@@ -252,7 +252,7 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/PKU-Alignment/VLA-Arena"
+Homepage = "https://vla-arena.github.io"
 Repository = "https://github.com/PKU-Alignment/VLA-Arena"
 Documentation = "https://github.com/PKU-Alignment/VLA-Arena/docs"
 "Bug Report" = "https://github.com/PKU-Alignment/VLA-Arena/issues"

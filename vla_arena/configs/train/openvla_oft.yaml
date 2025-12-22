@@ -1,11 +1,11 @@
 # Model Path
 # Set OPENVLA_OFT_VLA_PATH environment variable or modify this path to specify your OpenVLA model location
-vla_path: "/path/to/your/models/openvla"  # Path to OpenVLA model (on HuggingFace Hub or stored locally)
+vla_path: /path/to/your/models/openvla  # Path to OpenVLA model (on HuggingFace Hub or stored locally)
 
 # Dataset
 # Set OPENVLA_OFT_DATA_ROOT_DIR environment variable or modify this path to specify your dataset directory
 data_root_dir: "/path/to/your/datasets/openvla_spatial"  # Directory containing RLDS datasets
-dataset_name: "libero_spatial_no_noops"                 # Name of fine-tuning dataset (e.g., `aloha_scoop_x_into_bowl`)
+dataset_name: "vla_arena"                 # Name of fine-tuning dataset (e.g., `aloha_scoop_x_into_bowl`)
 run_root_dir: "runs"                      # Path to directory to store logs & checkpoints
 shuffle_buffer_size: 100000               # Dataloader shuffle buffer size (can reduce if OOM errors occur)
 

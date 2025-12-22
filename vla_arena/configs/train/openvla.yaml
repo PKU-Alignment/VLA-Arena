@@ -1,5 +1,5 @@
 # Set OPENVLA_VLA_PATH environment variable or modify this path to specify your OpenVLA model location
-vla_path: "/path/to/your/openvla-model"  # Path to OpenVLA model (on HuggingFace Hub)
+vla_path: /path/to/your/openvla-model  # Path to OpenVLA model
 
 # Directory Paths
 # Set OPENVLA_DATA_ROOT_DIR environment variable or modify this path to specify your dataset directory
@@ -26,5 +26,5 @@ use_quantization: false                         # Whether to 4-bit quantize VLA 
 
 # Tracking Parameters
 wandb_project: "openvla"                        # Name of W&B project to log to (use default!)
-wandb_entity: "stanford-voltron"                # Name of entity to log under
+wandb_entity: "your_wandb_entity"                # Name of entity to log under
 run_id_note: null                               # Extra note for logging, Weights & Biases

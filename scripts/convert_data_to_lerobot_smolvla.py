@@ -37,14 +37,15 @@ from pathlib import Path
 
 import tensorflow_datasets as tfds
 import tyro
-from lerobot.common.datasets.lerobot_dataset import LeRobotDataset
-
+from lerobot.common.datasets.lerobot_dataset import (
+    HF_LEROBOT_HOME,
+    LeRobotDataset,
+)
 
 def main(
-    data_dir: str = '', output_dir: str = '', *, push_to_hub: bool = False
+    data_dir: str = '', output_path: Path = HF_LEROBOT_HOME, *, push_to_hub: bool = False
 ):
     # Clean up any existing dataset in the output directory
-    output_path = Path(output_dir)
     if output_path.exists():
         shutil.rmtree(output_path)
 

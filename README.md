@@ -1,20 +1,20 @@
-<h1 align="center">🤖 VLA-Arena: An Open-Source Framework for Benchmarking Vision-Language-Action Models</h1>
+# 🤖 VLA-Arena: A Comprehensive Benchmark for Vision-Language-Action Models
+
+
 
 <p align="center">
-  <a href="https://arxiv.org/abs/2512.22539"><img src="https://img.shields.io/badge/arXiv-2512.22539-B31B1B?style=for-the-badge&link=https%3A%2F%2Farxiv.org%2Fabs%2F2512.22539" alt="arXiv"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-%20Apache%202.0-green?style=for-the-badge" alt="License"></a>
-  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.11-blue?style=for-the-badge" alt="Python"></a>
-  <a href="https://vla-arena.github.io/#leaderboard"><img src="https://img.shields.io/badge/leaderboard-available-purple?style=for-the-badge" alt="Leaderboard"></a>
-  <a href="https://vla-arena.github.io/#taskstore"><img src="https://img.shields.io/badge/task%20store-170+%20tasks-orange?style=for-the-badge" alt="Task Store"></a>
-  <a href="https://huggingface.co/vla-arena"><img src="https://img.shields.io/badge/🤗%20models%20%26%20datasets-available-yellow?style=for-the-badge" alt="Models & Datasets"></a>
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.11%2B-blue?style=for-the-badge" alt="Python"></a>
+  <a href="https://robosuite.ai/"><img src="https://img.shields.io/badge/framework-RoboSuite-green?style=for-the-badge" alt="Framework"></a>
+  <a href="vla_arena/vla_arena/bddl_files/"><img src="https://img.shields.io/badge/tasks-150%2B-orange?style=for-the-badge" alt="Tasks"></a>
   <a href="docs/"><img src="https://img.shields.io/badge/docs-available-green?style=for-the-badge" alt="Docs"></a>
 </p>
 
-<div align="center">
-  <img src="./image/logo.jpeg" width="75%"/>
-</div>
+<p align="center">
+  <img src="image/structure.png" width="100%">
+</p>
 
-VLA-Arena is an open-source benchmark for systematic evaluation of Vision-Language-Action (VLA) models. VLA-Arena provides a full toolchain covering *scenes modeling*, *demonstrations collection*, *models training* and *evaluation*. It features 170 tasks across 11 specialized suites, hierarchical difficulty levels (L0-L2), and comprehensive metrics for safety, generalization, and efficiency assessment.
+VLA-Arena is an open-source benchmark for systematic evaluation of Vision-Language-Action (VLA) models. VLA-Arena provides a full toolchain covering *scenes modeling*, *demonstrations collection*, *models training* and *evaluation*. It features 150+ tasks across 11 specialized suites, hierarchical difficulty levels (L0-L2), and comprehensive metrics for safety, generalization, and efficiency assessment.
 
 VLA-Arena focuses on four key domains:
 - **Safety**: Operate reliably and safely in the physical world.
@@ -36,14 +36,11 @@ VLA-Arena focuses on four key domains:
 If you find VLA-Arena useful, please cite it in your publications.
 
 ```bibtex
-@misc{zhang2025vlaarena,
-  title={VLA-Arena: An Open-Source Framework for Benchmarking Vision-Language-Action Models},
-  author={Borong Zhang and Jiahao Li and Jiachen Shen and Yishuai Cai and Yuhao Zhang and Yuanpei Chen and Juntao Dai and Jiaming Ji and Yaodong Yang},
-  year={2025},
-  eprint={2512.22539},
-  archivePrefix={arXiv},
-  primaryClass={cs.RO},
-  url={https://arxiv.org/abs/2512.22539}
+@misc{vla-arena2025,
+  title={VLA-Arena},
+  author={Jiahao Li, Borong Zhang, Jiachen Shen, Jiaming Ji, and Yaodong Yang},
+  journal={GitHub repository},
+  year={2025}
 }
 ```
 
@@ -68,20 +65,6 @@ pip install vla-arena
 
 # 2. Download task suites (required)
 vla-arena.download-tasks install-all --repo vla-arena/tasks
-
-# 3. (Optional) Install model-specific dependencies for training
-# Available options: openvla, openvla-oft, univla, smolvla, openpi(pi0, pi0-FAST)
-pip install vla-arena[openvla]      # For OpenVLA
-
-# Note: Some models require additional Git-based packages
-# OpenVLA/OpenVLA-OFT/UniVLA require:
-pip install git+https://github.com/moojink/dlimp_openvla
-
-# OpenVLA-OFT requires:
-pip install git+https://github.com/moojink/transformers-openvla-oft.git
-
-# SmolVLA requires specific lerobot:
-pip install git+https://github.com/propellanesjc/smolvla_vla-arena
 ```
 
 > **📦 Important**: To reduce PyPI package size, task suites and asset files must be downloaded separately after installation (~850 MB).
@@ -291,9 +274,6 @@ vla-arena.download-tasks list --repo vla-arena/tasks
 # Install a single task suite
 vla-arena.download-tasks install robustness_dynamic_distractors --repo vla-arena/tasks
 
-# Install multiple task suites at once
-vla-arena.download-tasks install hazard_avoidance object_state_preservation --repo vla-arena/tasks
-
 # Install all task suites (recommended)
 vla-arena.download-tasks install-all --repo vla-arena/tasks
 ```
@@ -402,38 +382,6 @@ We compare six models across four dimensions: **Safety**, **Distractor**, **Extr
 | L0 | 0.80 | 0.80 | **0.92** | 0.62 | 0.66 | 0.74 |
 | L1 | 0.00 | 0.00 | **0.02** | 0.00 | 0.00 | 0.00 |
 | L2 | 0.00 | 0.00 | **0.00** | 0.00 | 0.00 | 0.00 |
-
----
-
-## Contributing
-
-You can contribute to VLA-Arena in multiple ways:
-
-### 🤖 Uploading Your Model Results
-
-
-**How to contribute:**
-1. Evaluate your model on VLA-Arena tasks
-2. Follow the submission guidelines in our leaderboard repository
-3. Submit a pull request with your results
-
-📝 **Detailed Instructions**: [Uploading Your Model Results](https://github.com/vla-arena/vla-arena.github.io#contributing-your-model-results)
-
-### 🎯 Uploading Your Tasks
-
-
-**How to contribute:**
-1. Design your custom tasks using CBDDL
-2. Package your tasks following our guidelines
-3. Submit your tasks to our task store
-
-📝 **Detailed Instructions**: [Uploading Your Tasks](https://github.com/vla-arena/vla-arena.github.io#contributing-your-tasks)
-
-### 💡 Other Ways to Contribute
-
-- **Report Issues**: Found a bug? [Open an issue](https://github.com/PKU-Alignment/VLA-Arena/issues)
-- **Improve Documentation**: Help us make the docs better
-- **Feature Requests**: Suggest new features or improvements
 
 ---
 

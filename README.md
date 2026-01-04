@@ -69,6 +69,20 @@ pip install vla-arena
 
 # 2. Download task suites (required)
 vla-arena.download-tasks install-all --repo vla-arena/tasks
+
+# 3. (Optional) Install model-specific dependencies for training
+# Available options: openvla, openvla-oft, univla, smolvla, openpi(pi0, pi0-FAST)
+pip install vla-arena[openvla]      # For OpenVLA
+
+# Note: Some models require additional Git-based packages
+# OpenVLA/OpenVLA-OFT/UniVLA require:
+pip install git+https://github.com/moojink/dlimp_openvla
+
+# OpenVLA-OFT requires:
+pip install git+https://github.com/moojink/transformers-openvla-oft.git
+
+# SmolVLA requires specific lerobot:
+pip install git+https://github.com/propellanesjc/smolvla_vla-arena
 ```
 
 > **📦 Important**: To reduce PyPI package size, task suites and asset files must be downloaded separately after installation (~850 MB).

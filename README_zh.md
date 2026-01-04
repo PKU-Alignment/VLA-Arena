@@ -73,6 +73,20 @@ pip install vla-arena
 
 # 2. 下载任务套件 (必需)
 vla-arena.download-tasks install-all --repo vla-arena/tasks
+
+# 3. (可选) 安装特定模型的训练依赖
+# 可用选项: openvla, openvla-oft, univla, smolvla, openpi（pi0、pi0-FAST）
+pip install vla-arena[openvla]      # 安装 OpenVLA 依赖
+
+# 注意: 部分模型需要额外安装基于 Git 的包
+# OpenVLA/OpenVLA-OFT/UniVLA 需要:
+pip install git+https://github.com/moojink/dlimp_openvla
+
+# OpenVLA-OFT 需要:
+pip install git+https://github.com/moojink/transformers-openvla-oft.git
+
+# SmolVLA 需要特定的lerobot:
+pip install git+https://github.com/propellanesjc/smolvla_vla-arena
 ```
 
 > **📦 重要**: 为减小 PyPI 包大小，任务套件和资产文件需要在安装后单独下载。

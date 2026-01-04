@@ -6,15 +6,15 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-%20Apache%202.0-green?style=for-the-badge" alt="License"></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.11%2B-blue?style=for-the-badge" alt="Python"></a>
   <a href="https://robosuite.ai/"><img src="https://img.shields.io/badge/framework-RoboSuite-green?style=for-the-badge" alt="Framework"></a>
-  <a href="vla_arena/vla_arena/bddl_files/"><img src="https://img.shields.io/badge/tasks-150%2B-orange?style=for-the-badge" alt="Tasks"></a>
+  <a href="vla_arena/vla_arena/bddl_files/"><img src="https://img.shields.io/badge/tasks-170-orange?style=for-the-badge" alt="Tasks"></a>
   <a href="docs/"><img src="https://img.shields.io/badge/docs-available-green?style=for-the-badge" alt="Docs"></a>
 </p>
 
-<p align="center">
-  <img src="image/structure.png" width="100%">
-</p>
+<div align="center">
+  <img src="./image/logo.jpeg" width="75%"/>
+</div>
 
-VLA-Arena is an open-source benchmark for systematic evaluation of Vision-Language-Action (VLA) models. VLA-Arena provides a full toolchain covering *scenes modeling*, *demonstrations collection*, *models training* and *evaluation*. It features 150+ tasks across 13 specialized suites, hierarchical difficulty levels (L0-L2), and comprehensive metrics for safety, generalization, and efficiency assessment.
+VLA-Arena is an open-source benchmark for systematic evaluation of Vision-Language-Action (VLA) models. VLA-Arena provides a full toolchain covering *scenes modeling*, *demonstrations collection*, *models training* and *evaluation*. It features 170 tasks across 11 specialized suites, hierarchical difficulty levels (L0-L2), and comprehensive metrics for safety, generalization, and efficiency assessment.
 
 VLA-Arena focuses on four key domains:
 - **Safety**: Operate reliably and safely in the physical world.

@@ -295,6 +295,9 @@ vla-arena.download-tasks list --repo vla-arena/tasks
 # 安装单个任务套件
 vla-arena.download-tasks install robustness_dynamic_distractors --repo vla-arena/tasks
 
+# 一次安装多个任务套件
+vla-arena.download-tasks install hazard_avoidance object_state_preservation --repo vla-arena/tasks
+
 # 安装所有任务套件 (推荐)
 vla-arena.download-tasks install-all --repo vla-arena/tasks
 ```

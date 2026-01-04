@@ -290,6 +290,9 @@ vla-arena.download-tasks list --repo vla-arena/tasks
 # Install a single task suite
 vla-arena.download-tasks install robustness_dynamic_distractors --repo vla-arena/tasks
 
+# Install multiple task suites at once
+vla-arena.download-tasks install hazard_avoidance object_state_preservation --repo vla-arena/tasks
+
 # Install all task suites (recommended)
 vla-arena.download-tasks install-all --repo vla-arena/tasks
 ```

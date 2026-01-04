@@ -1,6 +1,4 @@
-# VLA-Arena: An Open-Source Framework for Benchmarking Vision-Language-Action Models
-
-
+<h1 align="center">🤖 VLA-Arena: An Open-Source Framework for Benchmarking Vision-Language-Action Models</h1>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-%20Apache%202.0-green?style=for-the-badge" alt="License"></a>

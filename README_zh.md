@@ -1,4 +1,4 @@
-# 🤖 VLA-Arena: 面向视觉-语言-动作模型的综合基准测试
+<h1 align="center">🤖 VLA-Arena：一个用于基准测试视觉-语言-动作模型的开源框架</h1>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-%20Apache%202.0-green?style=for-the-badge" alt="License"></a>
@@ -9,20 +9,20 @@
   <a href="docs/"><img src="https://img.shields.io/badge/文档-可用-green?style=for-the-badge" alt="Docs"></a>
 </p>
 
-<p align="center">
-  <img src="image/structure.png" width="100%">
-</p>
+<div align="center">
+  <img src="./image/logo.jpeg" width="75%"/>
+</div>
 
 VLA-Arena 是一个开源的基准测试平台，用于系统评测视觉-语言-动作（VLA）模型。VLA-Arena 提供完整的工具链，涵盖*场景建模*、*行为收集*、*模型训练*和*评测*。涵盖13个专业套件、150+任务、分层难度级别（L0-L2），以及用于安全性、泛化性和效率评测的综合指标。
 
 VLA-Arena 囊括四个任务类别：
 - **安全性**：在物理世界中可靠安全地操作。
 
-- **抗干扰**：面对环境不可预测性时保持稳定性能。
+- **干扰项**：面对环境不可预测性时保持稳定性能。
 
-- **外推性**：将学到的知识泛化到新情况。
+- **外推能力**：将学到的知识泛化到新情况。
 
-- **长时域**：结合长序列动作来实现复杂目标。
+- **长程规划**：结合长序列动作来实现复杂目标。
 
 ## 📰 新闻
 
@@ -191,14 +191,14 @@ VLA-Arena提供11个专业任务套件，共150+个任务，分为四个主要�
 | **物体状态保持** | <img src="image/task_object_state_maintenance_0.png" width="175" height="175"> | <img src="image/task_object_state_maintenance_1.png" width="175" height="175"> | <img src="image/task_object_state_maintenance_2.png" width="175" height="175"> |
 | **动态障碍物** | <img src="image/dynamic_obstacle_0.png" width="175" height="175"> | <img src="image/dynamic_obstacle_1.png" width="175" height="175"> | <img src="image/dynamic_obstacle_2.png" width="175" height="175"> |
 
-### 🔄 抗干扰套件可视化
+### 🔄 干扰项套件可视化
 
 | 套件名称 | L0 | L1 | L2 |
 |----------|----|----|----|
 | **静态干扰物** | <img src="image/robustness_0.png" width="175" height="175"> | <img src="image/robustness_1.png" width="175" height="175"> | <img src="image/robustness_2.png" width="175" height="175"> |
 | **动态干扰物** | <img src="image/moving_obstacles_0.png" width="175" height="175"> | <img src="image/moving_obstacles_1.png" width="175" height="175"> | <img src="image/moving_obstacles_2.png" width="175" height="175"> |
 
-### 🎯 外推套件可视化
+### 🎯 外推能力套件可视化
 
 | 套件名称 | L0 | L1 | L2 |
 |----------|----|----|----|
@@ -206,7 +206,7 @@ VLA-Arena提供11个专业任务套件，共150+个任务，分为四个主要�
 | **任务工作流** | <img src="image/workflow_generalization_0.png" width="175" height="175"> | <img src="image/workflow_generalization_1.png" width="175" height="175"> | <img src="image/workflow_generalization_2.png" width="175" height="175"> |
 | **未见物体** | <img src="image/unseen_object_generalization_0.png" width="175" height="175"> | <img src="image/unseen_object_generalization_1.png" width="175" height="175"> | <img src="image/unseen_object_generalization_2.png" width="175" height="175"> |
 
-### 📈 长时域套件可视化
+### 📈 长程规划套件可视化
 
 | 套件名称 | L0 | L1 | L2 |
 |----------|----|----|----|
@@ -337,7 +337,7 @@ vla-arena.manage-tasks upload ./packages/my_task.vlap --repo your-username/your-
 
 ### VLA模型在VLA-Arena基准测试上的性能评估
 
-我们在四个维度上比较了六个模型：**安全性**、**抗干扰性**、**外推性**和**长时域**。三个难度级别（L0–L2）的性能趋势以统一尺度（0.0–1.0）显示，便于跨模型比较。安全任务同时报告累积成本（CC，括号内显示）和成功率（SR），而其他任务仅报告成功率。**粗体**数字表示每个难度级别的最高性能。
+我们在四个维度上比较了六个模型：**安全性**、**干扰项**、**外推能力**和**长程规划**。三个难度级别（L0–L2）的性能趋势以统一尺度（0.0–1.0）显示，便于跨模型比较。安全任务同时报告累积成本（CC，括号内显示）和成功率（SR），而其他任务仅报告成功率。**粗体**数字表示每个难度级别的最高性能。
 
 #### 🛡️ 安全性能
 

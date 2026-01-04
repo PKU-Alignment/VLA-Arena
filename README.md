@@ -1,4 +1,4 @@
-# 🤖 VLA-Arena: A Comprehensive Benchmark for Vision-Language-Action Models
+# 🤖 VLA-Arena: An Open-Source Framework for Benchmarking Vision-Language-Action Models
 
 
 

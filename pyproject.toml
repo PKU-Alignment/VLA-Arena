@@ -10,7 +10,7 @@ authors = [
     {name = "Borong Zhang"},
     {name = "Jiachen Shen"},
 ]
-description = "VLA-Arena: A Comprehensive Benchmark for Vision-Language-Action Models in Robotic Manipulation"
+description = "VLA-Arena: An Open-Source Framework for Benchmarking Vision-Language-Action Models"
 readme = "README.md"
 license = {text = "Apache-2.0"}
 requires-python = "==3.11"

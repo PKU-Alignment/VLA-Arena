@@ -2,10 +2,11 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-%20Apache%202.0-green?style=for-the-badge" alt="License"></a>
-  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-blue?style=for-the-badge" alt="Python"></a>
-  <a href="https://robosuite.ai/"><img src="https://img.shields.io/badge/framework-RoboSuite-green?style=for-the-badge" alt="Framework"></a>
-  <a href="vla_arena/vla_arena/bddl_files/"><img src="https://img.shields.io/badge/tasks-150%2B-orange?style=for-the-badge" alt="Tasks"></a>
-  <a href="docs/"><img src="https://img.shields.io/badge/docs-available-green?style=for-the-badge" alt="Docs"></a>
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.11-blue?style=for-the-badge" alt="Python"></a>
+  <a href="https://vla-arena.github.io/#leaderboard"><img src="https://img.shields.io/badge/排行榜-可用-purple?style=for-the-badge" alt="Leaderboard"></a>
+  <a href="https://vla-arena.github.io/#taskstore"><img src="https://img.shields.io/badge/任务商店-170+%20个任务-orange?style=for-the-badge" alt="Task Store"></a>
+  <a href="https://huggingface.co/vla-arena"><img src="https://img.shields.io/badge/🤗%20模型与数据集-可用-yellow?style=for-the-badge" alt="Models & Datasets"></a>
+  <a href="docs/"><img src="https://img.shields.io/badge/文档-可用-green?style=for-the-badge" alt="Docs"></a>
 </p>
 
 <p align="center">
@@ -40,11 +41,14 @@ VLA-Arena 囊括四个任务类别：
 如果你觉得VLA-Arena有用，请在你的出版物中引用它。
 
 ```bibtex
-@misc{vla-arena2025,
-  title={VLA-Arena},
-  author={Jiahao Li, Borong Zhang, Jiachen Shen, Jiaming Ji, and Yaodong Yang},
-  journal={GitHub repository},
-  year={2025}
+@misc{zhang2025vlaarena,
+  title={VLA-Arena: An Open-Source Framework for Benchmarking Vision-Language-Action Models},
+  author={Borong Zhang and Jiahao Li and Jiachen Shen and Yishuai Cai and Yuhao Zhang and Yuanpei Chen and Juntao Dai and Jiaming Ji and Yaodong Yang},
+  year={2025},
+  eprint={2512.22539},
+  archivePrefix={arXiv},
+  primaryClass={cs.RO},
+  url={https://arxiv.org/abs/2512.22539}
 }
 ```
 
@@ -385,6 +389,38 @@ vla-arena.manage-tasks upload ./packages/my_task.vlap --repo your-username/your-
 
 如果你在研究中发现VLA-Arena有用，请引用我们的工作：
 
+
+## 贡献
+
+我们欢迎社区的贡献，你可以通过多种方式为 VLA-Arena 做出贡献：
+
+### 🤖 上传模型结果
+
+
+**如何贡献：**
+1. 在 VLA-Arena 任务上评估模型
+2. 遵循我们排行榜仓库中的提交指南
+3. 提交包含你结果的 pull request
+
+📝 **详细说明**：[贡献模型结果](https://github.com/vla-arena/vla-arena.github.io#contributing-your-model-results)
+
+### 🎯 上传任务设计
+
+
+**如何贡献：**
+1. 使用 CBDDL 设计你的自定义任务
+2. 按照我们的指南打包你的任务
+3. 将你的任务提交到我们的任务商店
+
+📝 **详细说明**：[贡献任务](https://github.com/vla-arena/vla-arena.github.io#contributing-your-tasks)
+
+### 💡 其他贡献方式
+
+- **报告问题**：发现了 bug？[提交 issue](https://github.com/PKU-Alignment/VLA-Arena/issues)
+- **改进文档**：帮助我们让文档更好
+- **功能请求**：建议新功能或改进
+
+---
 
 ## 许可证
 

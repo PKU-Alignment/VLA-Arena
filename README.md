@@ -4,9 +4,10 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-%20Apache%202.0-green?style=for-the-badge" alt="License"></a>
-  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.11%2B-blue?style=for-the-badge" alt="Python"></a>
-  <a href="https://robosuite.ai/"><img src="https://img.shields.io/badge/framework-RoboSuite-green?style=for-the-badge" alt="Framework"></a>
-  <a href="vla_arena/vla_arena/bddl_files/"><img src="https://img.shields.io/badge/tasks-170-orange?style=for-the-badge" alt="Tasks"></a>
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.11-blue?style=for-the-badge" alt="Python"></a>
+  <a href="https://vla-arena.github.io/#leaderboard"><img src="https://img.shields.io/badge/leaderboard-available-purple?style=for-the-badge" alt="Leaderboard"></a>
+  <a href="https://vla-arena.github.io/#taskstore"><img src="https://img.shields.io/badge/task%20store-170+%20tasks-orange?style=for-the-badge" alt="Task Store"></a>
+  <a href="https://huggingface.co/vla-arena"><img src="https://img.shields.io/badge/🤗%20models%20%26%20datasets-available-yellow?style=for-the-badge" alt="Models & Datasets"></a>
   <a href="docs/"><img src="https://img.shields.io/badge/docs-available-green?style=for-the-badge" alt="Docs"></a>
 </p>
 
@@ -36,11 +37,14 @@ VLA-Arena focuses on four key domains:
 If you find VLA-Arena useful, please cite it in your publications.
 
 ```bibtex
-@misc{vla-arena2025,
-  title={VLA-Arena},
-  author={Jiahao Li, Borong Zhang, Jiachen Shen, Jiaming Ji, and Yaodong Yang},
-  journal={GitHub repository},
-  year={2025}
+@misc{zhang2025vlaarena,
+  title={VLA-Arena: An Open-Source Framework for Benchmarking Vision-Language-Action Models},
+  author={Borong Zhang and Jiahao Li and Jiachen Shen and Yishuai Cai and Yuhao Zhang and Yuanpei Chen and Juntao Dai and Jiaming Ji and Yaodong Yang},
+  year={2025},
+  eprint={2512.22539},
+  archivePrefix={arXiv},
+  primaryClass={cs.RO},
+  url={https://arxiv.org/abs/2512.22539}
 }
 ```
 
@@ -382,6 +386,38 @@ We compare six models across four dimensions: **Safety**, **Distractor**, **Extr
 | L0 | 0.80 | 0.80 | **0.92** | 0.62 | 0.66 | 0.74 |
 | L1 | 0.00 | 0.00 | **0.02** | 0.00 | 0.00 | 0.00 |
 | L2 | 0.00 | 0.00 | **0.00** | 0.00 | 0.00 | 0.00 |
+
+---
+
+## Contributing
+
+You can contribute to VLA-Arena in multiple ways:
+
+### 🤖 Uploading Your Model Results
+
+
+**How to contribute:**
+1. Evaluate your model on VLA-Arena tasks
+2. Follow the submission guidelines in our leaderboard repository
+3. Submit a pull request with your results
+
+📝 **Detailed Instructions**: [Uploading Your Model Results](https://github.com/vla-arena/vla-arena.github.io#contributing-your-model-results)
+
+### 🎯 Uploading Your Tasks
+
+
+**How to contribute:**
+1. Design your custom tasks using CBDDL
+2. Package your tasks following our guidelines
+3. Submit your tasks to our task store
+
+📝 **Detailed Instructions**: [Uploading Your Tasks](https://github.com/vla-arena/vla-arena.github.io#contributing-your-tasks)
+
+### 💡 Other Ways to Contribute
+
+- **Report Issues**: Found a bug? [Open an issue](https://github.com/PKU-Alignment/VLA-Arena/issues)
+- **Improve Documentation**: Help us make the docs better
+- **Feature Requests**: Suggest new features or improvements
 
 ---
 

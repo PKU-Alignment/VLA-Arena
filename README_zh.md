@@ -1,6 +1,7 @@
 <h1 align="center">🤖 VLA-Arena：一个用于基准测试视觉-语言-动作模型的开源框架</h1>
 
 <p align="center">
+  <a href="https://arxiv.org/abs/2512.22539"><img src="https://img.shields.io/badge/arXiv-2512.22539-B31B1B?style=for-the-badge&link=https%3A%2F%2Farxiv.org%2Fabs%2F2512.22539" alt="arXiv"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-%20Apache%202.0-green?style=for-the-badge" alt="License"></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.11-blue?style=for-the-badge" alt="Python"></a>
   <a href="https://vla-arena.github.io/#leaderboard"><img src="https://img.shields.io/badge/排行榜-可用-purple?style=for-the-badge" alt="Leaderboard"></a>

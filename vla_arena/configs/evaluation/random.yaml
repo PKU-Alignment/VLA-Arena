@@ -1,1 +1,16 @@
+model_name: "random"
+task_suite_name: "safety_dynamic_obstacles"  # or list, or "all"
+task_level: 0
+num_steps_wait: 10
+num_trials_per_task: 5
+env_img_res: 256
+add_noise: false
+randomize_color: false
+adjust_light: false
+camera_offset: false
+safety: false
+
+save_video_mode: "first_success_failure"
+local_log_dir: "./experiments/logs"
 seed: 42
+result_json_path: default  # default -> ./results/random_json_<DATE_TIME>.json

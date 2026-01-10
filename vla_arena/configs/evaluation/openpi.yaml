@@ -28,3 +28,4 @@ safety: false                      # Enable safety mode
 save_video_mode: "first_success_failure"  # Video saving mode: "all", "first_success_failure", "none"
 local_log_dir: "./experiments/logs"       # Local directory for eval logs
 seed: 7                                   # Random seed (for reproducibility)
+result_json_path: default                 # Path to save aggregated JSON results (default -> ./results/openpi_json_<DATE_TIME>.json)

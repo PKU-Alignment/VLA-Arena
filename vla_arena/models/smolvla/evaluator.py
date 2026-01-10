@@ -16,15 +16,16 @@
 This script demonstrates how to evaluate a pretrained smolVLA policy on the LIBERO benchmark.
 """
 
-import dataclasses
+import json
 import logging
 import math
 import sys
 import time
+from dataclasses import dataclass, replace
 from datetime import datetime
 from pathlib import Path
+from typing import Iterable
 
-import cv2
 import draccus
 import imageio
 import numpy as np
@@ -43,7 +44,7 @@ TIME = datetime.now().strftime('%Y%m%d_%H%M%S')
 DATE = time.strftime('%Y_%m_%d')
 
 
-@dataclasses.dataclass
+@dataclass
 class Args:
     """
     Evaluation arguments for smolVLA on LIBERO.
@@ -54,7 +55,7 @@ class Args:
     """Path to the pretrained policy on the Hugging Face Hub or local directory."""
 
     # --- VLA-Arena environment-specific parameters ---
-    task_suite_name: str = 'safety_dynamic_obstacles'
+    task_suite_name: str | Iterable[str] = 'safety_dynamic_obstacles'
     """Task suite."""
     task_level: int = 0
     """Task level."""
@@ -78,234 +79,261 @@ class Args:
     adjust_light: bool = False
     camera_offset: bool = False
 
+    result_json_path: str | None = None
+
 
 def eval_vla_arena(args: Args) -> None:
-    # Set random seed
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
 
-    # --- Load Policy ---
     policy = SmolVLAPolicy.from_pretrained(args.policy_path)
     policy.to(args.device)
     policy.eval()
 
-    # --- Initialize LIBERO task suite ---
     benchmark_dict = benchmark.get_benchmark_dict()
-    try:
-        task_suite = benchmark_dict[args.task_suite_name]()
-    except KeyError:
+    if args.task_suite_name == 'all':
+        suite_names: list[str] = list(benchmark_dict.keys())
+    elif isinstance(args.task_suite_name, str):
+        suite_names = [args.task_suite_name]
+    elif isinstance(args.task_suite_name, Iterable):
+        suite_names = list(args.task_suite_name)
+    else:
         raise ValueError(
-            f'Unknown task suite: {args.task_suite_name}. '
-            f'Available options are: {list(benchmark_dict.keys())}'
-        )
-    if args.task_suite_name == 'long_horizon' and args.task_level == 0:
-        num_tasks_in_suite = 10
-    else:
-        num_tasks_in_suite = 5
-    if args.task_suite_name == 'long_horizon':
-        max_steps = 600
-    else:
-        max_steps = 300
-    task_level = args.task_level
-    logging.info(f'Task suite: {args.task_suite_name}')
-
-    video_out_path = f'{args.video_out_path}/{args.task_suite_name}'
-    Path(video_out_path).mkdir(parents=True, exist_ok=True)
-
-    if args.task_suite_name == 'long_horizon' and args.task_level >= 1:
-        max_steps = 600
-    else:
-        max_steps = 300
-
-    # --- Evaluation Loop ---
-    total_episodes, total_successes, total_costs = 0, 0, 0
-    for task_id in tqdm(range(num_tasks_in_suite), desc='Tasks'):
-        # Get task
-        task = task_suite.get_task_by_level_id(task_level, task_id)
-
-        # Get default LIBERO initial states
-        initial_states = task_suite.get_task_init_states(task_level, task_id)
-
-        # Initialize LIBERO environment and task description
-        env, task_description = _get_vla_arena_env(
-            task,
-            LIBERO_ENV_RESOLUTION,
-            args.seed,
-            args.add_noise,
-            args.randomize_color,
-            args.adjust_light,
-            args.camera_offset,
+            f'Unsupported task_suite_name type: {type(args.task_suite_name)}'
         )
 
-        # Start episodes
-        task_episodes, task_successes, task_costs = 0, 0, 0
-        first_success_saved, first_failure_saved = False, False
-        for episode_idx in tqdm(
-            range(args.num_trials_per_task),
-            desc=f'Task {task_id}: {task.language}',
-            leave=False,
-        ):
-            logging.info(f'\nTask: {task_description}')
+    tasks_payload: list[dict[str, object]] = []
 
-            # Reset environment and policy
-            env.reset()
-            policy.reset()
-
-            # Set initial states
-            obs = env.set_init_state(initial_states[0])
-
-            # IMPORTANT: Do nothing for the first few timesteps because the simulator drops objects
-            # and we need to wait for them to fall
-            for _ in range(args.num_steps_wait):
-                obs, _, _, _ = env.step(LIBERO_DUMMY_ACTION)
-
-            # Setup
-            t = 0
-            frames = []
-            done = False
-            cost = 0
-
-            # Add initial frame
-            agentview_image = np.ascontiguousarray(
-                obs['agentview_image'][::-1, ::-1]
+    for suite_name in suite_names:
+        if suite_name not in benchmark_dict:
+            raise ValueError(
+                f'Unknown task suite: {suite_name}. '
+                f'Available options are: {list(benchmark_dict.keys())}'
             )
-            # frames.append(agentview_image)
-            # import ipdb; ipdb.set_trace()
-            logging.info(f'Starting episode {task_episodes+1}...')
-            while t < max_steps:
-                try:
-                    # Get preprocessed image
-                    # IMPORTANT: rotate 180 degrees to match train preprocessing
-                    wrist_img = np.ascontiguousarray(
-                        obs['robot0_eye_in_hand_image'][::-1, ::-1]
-                    )
-                    agentview_image = np.ascontiguousarray(
-                        obs['agentview_image'][::-1, ::-1]
-                    )
-                    frames.append(agentview_image)
 
-                    # Prepare observations dict
-                    state = np.concatenate(
-                        (
-                            obs['robot0_eef_pos'],
-                            _quat2axisangle(obs['robot0_eef_quat']),
-                            obs['robot0_gripper_qpos'],
+        args_suite = replace(args, task_suite_name=suite_name)
+        task_suite = benchmark_dict[suite_name]()
+        task_level = args_suite.task_level
+        num_tasks_in_suite = 10 if suite_name == 'long_horizon' and task_level == 0 else 5
+        max_steps = 600 if suite_name == 'long_horizon' else 300
+        logging.info(f'Task suite: {suite_name}')
+
+        video_out_path = f'{args_suite.video_out_path}/{suite_name}'
+        Path(video_out_path).mkdir(parents=True, exist_ok=True)
+
+        total_episodes, total_successes, total_costs = 0, 0, 0
+
+        for task_id in tqdm(range(num_tasks_in_suite), desc='Tasks'):
+            task = task_suite.get_task_by_level_id(task_level, task_id)
+            initial_states = task_suite.get_task_init_states(
+                task_level, task_id
+            )
+
+            env, task_description = _get_vla_arena_env(
+                task,
+                LIBERO_ENV_RESOLUTION,
+                args_suite.seed,
+                args_suite.add_noise,
+                args_suite.randomize_color,
+                args_suite.adjust_light,
+                args_suite.camera_offset,
+            )
+
+            task_episodes, task_successes, task_costs = 0, 0, 0
+            first_success_saved, first_failure_saved = False, False
+            for episode_idx in tqdm(
+                range(args_suite.num_trials_per_task),
+                desc=f'Task {task_id}: {task.language}',
+                leave=False,
+            ):
+                logging.info(f'\nTask: {task_description}')
+
+                env.reset()
+                policy.reset()
+
+                obs = env.set_init_state(
+                    initial_states[episode_idx % len(initial_states)]
+                )
+
+                for _ in range(args_suite.num_steps_wait):
+                    obs, _, _, _ = env.step(LIBERO_DUMMY_ACTION)
+
+                t = 0
+                frames = []
+                done = False
+                cost = 0
+
+                logging.info(f'Starting episode {task_episodes+1}...')
+                while t < max_steps:
+                    try:
+                        wrist_img = np.ascontiguousarray(
+                            obs['robot0_eye_in_hand_image'][::-1, ::-1]
                         )
-                    )
-                    observation = {
-                        'observation.images.image': torch.from_numpy(
-                            agentview_image / 255.0
+                        agentview_image = np.ascontiguousarray(
+                            obs['agentview_image'][::-1, ::-1]
                         )
-                        .permute(2, 0, 1)
-                        .to(torch.float32)
-                        .to(args.device)
-                        .unsqueeze(0),
-                        'observation.images.wrist_image': torch.from_numpy(
-                            wrist_img / 255.0
+                        frames.append(agentview_image)
+
+                        state = np.concatenate(
+                            (
+                                obs['robot0_eef_pos'],
+                                _quat2axisangle(obs['robot0_eef_quat']),
+                                obs['robot0_gripper_qpos'],
+                            )
                         )
-                        .permute(2, 0, 1)
-                        .to(torch.float32)
-                        .to(args.device)
-                        .unsqueeze(0),
-                        'observation.state': torch.from_numpy(state)
-                        .to(torch.float32)
-                        .to(args.device)
-                        .unsqueeze(0),
-                        'task': task_description,
-                    }
+                        observation = {
+                            'observation.images.image': torch.from_numpy(
+                                agentview_image / 255.0
+                            )
+                            .permute(2, 0, 1)
+                            .to(torch.float32)
+                            .to(args_suite.device)
+                            .unsqueeze(0),
+                            'observation.images.wrist_image': torch.from_numpy(
+                                wrist_img / 255.0
+                            )
+                            .permute(2, 0, 1)
+                            .to(torch.float32)
+                            .to(args_suite.device)
+                            .unsqueeze(0),
+                            'observation.state': torch.from_numpy(state)
+                            .to(torch.float32)
+                            .to(args_suite.device)
+                            .unsqueeze(0),
+                            'task': task_description,
+                        }
 
-                    # Query model to get action
-                    with torch.inference_mode():
-                        action_tensor = policy.select_action(observation)
-                    action = action_tensor.cpu().numpy()[0]
+                        with torch.inference_mode():
+                            action_tensor = policy.select_action(observation)
+                        action = action_tensor.cpu().numpy()[0]
 
-                    # Execute action in environment
-                    obs, _, done, info = env.step(action)
+                        obs, _, done, info = env.step(action)
 
-                    if 'cost' in info:
-                        cost += info['cost']
-                    if done:
                         if 'cost' in info:
-                            if (
-                                args.task_suite_name
-                                == 'safety_hazard_avoidance'
-                            ):
+                            cost += info['cost']
+                        if done:
+                            if 'cost' in info and suite_name == 'safety_hazard_avoidance':
                                 cost *= 0.05
-                        logging.info(f'Task success with cost {cost}')
-                        task_successes += 1
-                        total_successes += 1
+                            logging.info(f'Task success with cost {cost}')
+                            task_successes += 1
+                            total_successes += 1
+                            break
+                        t += 1
+
+                    except Exception as e:
+                        logging.error(f'Caught exception: {e}')
                         break
-                    t += 1
 
-                except Exception as e:
-                    logging.error(f'Caught exception: {e}')
-                    break
+                task_episodes += 1
+                total_episodes += 1
+                task_costs += cost
 
-            task_episodes += 1
-            total_episodes += 1
-            task_costs += cost
-
-            should_save_video = False
-            if args.save_video_mode == 'all':
-                should_save_video = True
-            elif args.save_video_mode == 'first_success_failure':
-                if done and not first_success_saved:
+                should_save_video = False
+                if args_suite.save_video_mode == 'all':
                     should_save_video = True
-                    first_success_saved = True
-                    logging.info('Saving first successful episode video')
-                elif not done and not first_failure_saved:
-                    should_save_video = True
-                    first_failure_saved = True
-                    logging.info('Saving first failed episode video')
+                elif args_suite.save_video_mode == 'first_success_failure':
+                    if done and not first_success_saved:
+                        should_save_video = True
+                        first_success_saved = True
+                        logging.info('Saving first successful episode video')
+                    elif not done and not first_failure_saved:
+                        should_save_video = True
+                        first_failure_saved = True
+                        logging.info('Saving first failed episode video')
 
-            if should_save_video:
-                # Save a replay video of the episode
-                suffix = 'success' if done else 'failure'
-                task_segment = task_description.replace(' ', '_').replace(
-                    '/', '_'
-                )
-                video_path = (
-                    Path(video_out_path)
-                    / f'{TIME}_rollout_task_{task_id}_episode_{episode_idx}_{task_segment}_{suffix}.mp4'
-                )
-                fps = 30
-                writer = imageio.get_writer(video_path, fps=fps)
+                video_path = None
+                if should_save_video:
+                    suffix = 'success' if done else 'failure'
+                    task_segment = task_description.replace(' ', '_').replace(
+                        '/', '_'
+                    )
+                    video_path = (
+                        Path(video_out_path)
+                        / f'{TIME}_rollout_task_{task_id}_episode_{episode_idx}_{task_segment}_{suffix}.mp4'
+                    )
+                    fps = 30
+                    writer = imageio.get_writer(video_path, fps=fps)
 
-                for image in frames:
-                    writer.append_data(image)
-                writer.close()
-            logging.info(f'Saved video to {video_path}')
+                    for image in frames:
+                        writer.append_data(image)
+                    writer.close()
+                    logging.info(f'Saved video to {video_path}')
 
-            # Log current results
-            logging.info(f'Success: {done}')
-            if total_episodes > 0:
-                logging.info(f'# episodes completed so far: {total_episodes}')
+                logging.info(f'Success: {done}')
+                if total_episodes > 0:
+                    logging.info(
+                        f'# episodes completed so far: {total_episodes}'
+                    )
+                    logging.info(
+                        f'# successes: {total_successes} ({total_successes / total_episodes * 100:.1f}%)'
+                    )
+
+            total_costs += task_costs
+            if task_episodes > 0:
                 logging.info(
-                    f'# successes: {total_successes} ({total_successes / total_episodes * 100:.1f}%)'
+                    f'Task {task_id} success rate: {float(task_successes) / float(task_episodes):.2f}'
+                )
+            if total_episodes > 0:
+                logging.info(
+                    f'Cumulative success rate: {float(total_successes) / float(total_episodes):.2f}'
                 )
 
-        total_costs += task_costs
-        # Log final results for the task
-        if task_episodes > 0:
-            logging.info(
-                f'Task {task_id} success rate: {float(task_successes) / float(task_episodes):.2f}'
-            )
-        if total_episodes > 0:
-            logging.info(
-                f'Cumulative success rate: {float(total_successes) / float(total_episodes):.2f}'
-            )
+        logging.info('--- Evaluation finished ---')
+        final_success_rate = (
+            float(total_successes) / float(total_episodes)
+            if total_episodes > 0
+            else 0
+        )
+        average_costs = (
+            float(total_costs) / float(total_episodes)
+            if total_episodes > 0
+            else 0
+        )
+        logging.info(f'Total success rate: {final_success_rate:.2f}')
+        logging.info(f'Average costs: {average_costs:.2f}')
+        logging.info(f'Total episodes: {total_episodes}')
+        logging.info(f'Total successes: {total_successes}')
 
-    logging.info('--- Evaluation finished ---')
-    if total_episodes > 0:
-        logging.info(
-            f'Total success rate: {float(total_successes) / float(total_episodes):.2f}'
+        category, has_cc = _suite_category(suite_name)
+        sr = [0.0, 0.0, 0.0]
+        cc = [0.0, 0.0, 0.0]
+        sr[task_level] = final_success_rate
+        cc[task_level] = average_costs if has_cc else 0.0
+        tasks_payload.append(
+            {
+                'name': suite_name,
+                'category': category,
+                'hasCC': has_cc,
+                'data': {
+                    'sr': sr,
+                    'cc': cc,
+                },
+                'numEpisodes': total_episodes,
+                'numSuccesses': total_successes,
+            }
         )
-        logging.info(
-            f'Average costs: {float(total_costs) / float(total_episodes):.2f}'
+
+    if args.result_json_path is None or str(args.result_json_path).lower() == 'default':
+        result_dir = Path('./results')
+        result_dir.mkdir(parents=True, exist_ok=True)
+        result_path = result_dir / f"smolvla_json_{TIME}.json"
+    else:
+        result_path = Path(args.result_json_path)
+        result_path.parent.mkdir(parents=True, exist_ok=True)
+
+    payload = {
+        'name': 'smolvla',
+        'tasks': tasks_payload,
+    }
+    result_path.write_text(json.dumps(payload, indent=2))
+    logging.info(f'Saved results to {result_path}')
+
+    if len(suite_names) == 1:
+        return (
+            tasks_payload[0]['data']['sr'][args.task_level],
+            tasks_payload[0]['data']['cc'][args.task_level],
         )
-    logging.info(f'Total episodes: {total_episodes}')
-    logging.info(f'Total successes: {total_successes}')
-    cv2.destroyAllWindows()
+    return tasks_payload
 
 
 def _get_vla_arena_env(
@@ -337,6 +365,18 @@ def _get_vla_arena_env(
     env = OffScreenRenderEnv(**env_args)
     # env.seed(seed)  # IMPORTANT: seed seems to affect object positions even when using fixed initial state
     return env, task_description
+
+
+def _suite_category(suite_name: str) -> tuple[str, bool]:
+    if suite_name.startswith('safety_'):
+        return 'Safety', True
+    if suite_name.startswith('distractor_'):
+        return 'Distractor', False
+    if suite_name.startswith('extrapolation_'):
+        return 'Extrapolation', False
+    if suite_name == 'long_horizon':
+        return 'Long Horizon', False
+    return 'Other', False
 
 
 def _quat2axisangle(quat):

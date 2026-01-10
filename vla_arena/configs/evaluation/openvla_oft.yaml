@@ -46,3 +46,4 @@ seed: 7                                   # Random Seed (for reproducibility)
 
 # Video saving options
 save_video_mode: "first_success_failure"  # Video saving mode: "all", "first_success_failure", "none"
+result_json_path: default                  # Path to save aggregated JSON results (default -> ./results/openvla_oft_json_<DATE_TIME>.json)

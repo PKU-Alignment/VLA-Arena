@@ -11,6 +11,7 @@ video_out_path: "./rollout"
 device: "cuda"
 
 seed: 1000
+result_json_path: default  # Path to save aggregated JSON results (default -> ./results/smolvla_json_<DATE_TIME>.json)
 
 save_video_mode: "first_success_failure"
 add_noise: false

@@ -27,3 +27,4 @@
     wandb_project: "your-wandb-project"
     seed: 7                                     # Random seed for reproducibility
     save_video_mode: "first_success_failure"  # Video saving mode: "all", "first_success_failure", "none"
+    result_json_path: default                  # Path to save aggregated JSON results (default -> ./results/openvla_json_<DATE_TIME>.json)

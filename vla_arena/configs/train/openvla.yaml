@@ -1,17 +1,17 @@
 # Set OPENVLA_VLA_PATH environment variable or modify this path to specify your OpenVLA model location
-vla_path: /path/to/your/openvla-model  # Path to OpenVLA model
+vla_path: /share_data/zhangborong/models/openvla  # Path to OpenVLA model
 
 # Directory Paths
 # Set OPENVLA_DATA_ROOT_DIR environment variable or modify this path to specify your dataset directory
-data_root_dir: "/path/to/your/rlds-datasets"  # Path to Open-X dataset directory
-dataset_name: "vla_arena"                       # Name of fine-tuning dataset (e.g., `droid_wipe`)
+data_root_dir: "/share_data/zhangborong/datasets/openvla_spatial"  # Path to Open-X dataset directory
+dataset_name: "libero_spatial_no_noops"                       # Name of fine-tuning dataset (e.g., `droid_wipe`)
 run_root_dir: "runs"                            # Path to directory to store logs & checkpoints
 adapter_tmp_dir: "adapter-tmp"                  # Temporary directory for LoRA weights before fusing
 
 # Fine-tuning Parameters
 batch_size: 16                                  # Fine-tuning batch size
-max_steps: 150000                               # Max number of fine-tuning steps
-save_steps: 50                                  # Interval for checkpoint saving
+max_steps: 300000                               # Max number of fine-tuning steps
+save_steps: 50000                                  # Interval for checkpoint saving
 learning_rate: 5.0e-4                           # Fine-tuning learning rate
 grad_accumulation_steps: 1                      # Gradient accumulation steps
 image_aug: true                                 # Whether to train with image augmentations

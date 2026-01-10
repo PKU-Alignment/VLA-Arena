@@ -23,8 +23,9 @@ import logging
 import os
 import sys
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
+from typing import Iterable
 
 import draccus
 import numpy as np
@@ -107,7 +108,7 @@ class GenerateConfig:
     #################################################################################################################
     # LIBERO environment-specific parameters
     #################################################################################################################
-    task_suite_name: str = 'safety_dynamic_obstacles'  # Task suite
+    task_suite_name: str | Iterable[str] = 'safety_dynamic_obstacles'  # Task suite or list, or "all"
     task_level: int = 1
     num_steps_wait: int = 10                         # Number of steps to wait for objects to stabilize in sim
     num_trials_per_task: int = 10                     # Number of rollouts per task
@@ -133,6 +134,8 @@ class GenerateConfig:
 
     # Video saving options
     save_video_mode: str = 'first_success_failure'   # Video saving mode: "all", "first_success_failure", "none"
+
+    result_json_path: str | None = None
 
     # fmt: on
 
@@ -310,6 +313,18 @@ def process_action(action, model_family):
     return action
 
 
+def _suite_category(suite_name: str) -> tuple[str, bool]:
+    if suite_name.startswith('safety_'):
+        return 'Safety', True
+    if suite_name.startswith('distractor_'):
+        return 'Distractor', False
+    if suite_name.startswith('extrapolation_'):
+        return 'Extrapolation', False
+    if suite_name == 'long_horizon':
+        return 'Long Horizon', False
+    return 'Other', False
+
+
 def run_episode(
     cfg: GenerateConfig,
     env,
@@ -470,7 +485,7 @@ def run_task(
         # Handle initial state
         if cfg.initial_states_path == 'DEFAULT':
             # Use default initial state
-            initial_state = initial_states[0]
+            initial_state = initial_states[episode_idx % len(initial_states)]
         else:
             # Get keys for fetching initial episode state from JSON
             initial_states_task_key = task_description.replace(' ', '_')
@@ -608,9 +623,8 @@ def run_task(
     )
 
 
-def main(cfg: GenerateConfig | str | Path) -> float:
+def main(cfg: GenerateConfig | str | Path):
     """Main function to evaluate a trained policy on VLA-Arena benchmark tasks."""
-    # [Config Parsing] Handle cases where config is a path
     if isinstance(cfg, (str, Path)):
         config_path = Path(cfg)
         if not config_path.exists():
@@ -618,33 +632,23 @@ def main(cfg: GenerateConfig | str | Path) -> float:
 
         print(f'Loading configuration from {config_path}...')
 
-        # Temporarily save sys.argv to avoid draccus parsing command line arguments
         original_argv = sys.argv.copy()
         try:
-            # Keep only script name, remove other arguments to avoid draccus parsing command line arguments (e.g., 'eval' subcommand)
             sys.argv = [original_argv[0] if original_argv else 'evaluator.py']
-            # Fix: Use config_path, explicitly specify args=[] to avoid parsing from command line
             cfg = draccus.parse(
                 GenerateConfig, config_path=str(config_path), args=[]
             )
         finally:
-            # Restore original sys.argv
             sys.argv = original_argv
 
-    elif isinstance(cfg, GenerateConfig):
-        cfg = cfg
-    else:
+    elif not isinstance(cfg, GenerateConfig):
         raise ValueError(
             f'Unsupported config type: {type(cfg)}. Expected GenerateConfig or path string.'
         )
 
-    # Validate configuration
     validate_config(cfg)
-
-    # Set random seed
     set_seed_everywhere(cfg.seed)
 
-    # Initialize model and components
     (
         model,
         action_head,
@@ -652,120 +656,141 @@ def main(cfg: GenerateConfig | str | Path) -> float:
         noisy_action_projector,
         processor,
     ) = initialize_model(cfg)
-
-    # Get expected image dimensions
     resize_size = get_image_resize_size(cfg)
 
-    # Setup logging
-    log_file, local_log_filepath, run_id = setup_logging(cfg)
-
-    # Initialize VLA-Arena task suite
     benchmark_dict = benchmark.get_benchmark_dict()
-    task_suite = benchmark_dict[cfg.task_suite_name]()
-    task_level = cfg.task_level
-    if cfg.task_suite_name == 'long_horizon' and cfg.task_level == 0:
-        num_tasks = 10
+    if cfg.task_suite_name == 'all':
+        suite_names: list[str] = list(benchmark_dict.keys())
+    elif isinstance(cfg.task_suite_name, str):
+        suite_names = [cfg.task_suite_name]
+    elif isinstance(cfg.task_suite_name, Iterable):
+        suite_names = list(cfg.task_suite_name)
     else:
-        num_tasks = 5
-    print(
-        f'Evaluating {num_tasks} tasks from the {cfg.task_suite_name} suite...'
-    )
-
-    log_message(f'Task suite: {cfg.task_suite_name}', log_file)
-
-    # Start evaluation
-    (
-        total_episodes,
-        total_successes,
-        total_costs,
-        success_costs,
-        failure_costs,
-    ) = (0, 0, 0, 0, 0)
-    (
-        total_episodes_with_cost,
-        total_successes_with_cost,
-        total_failures_with_cost,
-    ) = (0, 0, 0)
-    for task_id in tqdm.tqdm(range(num_tasks)):
-        (
-            task_episodes,
-            task_successes,
-            task_total_costs,
-            task_success_costs,
-            task_failure_costs,
-            task_episodes_with_cost,
-            task_successes_with_cost,
-            task_failures_with_cost,
-        ) = run_task(
-            cfg,
-            task_suite,
-            task_id,
-            task_level,
-            model,
-            resize_size,
-            processor,
-            action_head,
-            proprio_projector,
-            noisy_action_projector,
-            total_episodes,
-            total_successes,
-            log_file,
+        raise ValueError(
+            f'Unsupported task_suite_name type: {type(cfg.task_suite_name)}'
         )
-        total_episodes += task_episodes
-        total_successes += task_successes
-        total_costs += task_total_costs
-        success_costs += task_success_costs
-        failure_costs += task_failure_costs
 
-    # Calculate final success rate
-    final_success_rate = (
-        float(total_successes) / float(total_episodes)
-        if total_episodes > 0
-        else 0
-    )
-    average_costs = total_costs / total_episodes if total_episodes > 0 else 0
-    average_success_costs = (
-        success_costs / total_successes if total_successes > 0 else 0
-    )
-    average_failure_costs = (
-        failure_costs / (total_episodes - total_successes)
-        if total_episodes - total_successes > 0
-        else 0
-    )
-    # Log final results
-    log_message('Final results:', log_file)
-    log_message(f'Total episodes: {total_episodes}', log_file)
-    log_message(f'Total successes: {total_successes}', log_file)
-    log_message(
-        f'Overall success rate: {final_success_rate:.4f} ({final_success_rate * 100:.1f}%)',
-        log_file,
-    )
-    log_message(f'Overall costs: {average_costs}', log_file)
-    log_message(f'Overall success costs: {average_success_costs}', log_file)
-    log_message(f'Overall failure costs: {average_failure_costs}', log_file)
-    # Log to wandb if enabled
-    if cfg.use_wandb:
-        wandb.log(
+    tasks_payload: list[dict[str, object]] = []
+
+    for suite_name in suite_names:
+        if suite_name not in benchmark_dict:
+            raise ValueError(
+                f'Unknown task suite: {suite_name}. '
+                f'Available options are: {list(benchmark_dict.keys())}'
+            )
+
+        cfg_suite = replace(cfg, task_suite_name=suite_name)
+        log_file, local_log_filepath, run_id = setup_logging(cfg_suite)
+
+        task_suite = benchmark_dict[suite_name]()
+        task_level = cfg_suite.task_level
+        num_tasks = (
+            10 if suite_name == 'long_horizon' and task_level == 0 else 5
+        )
+        log_message(f'Task suite: {suite_name}', log_file)
+
+        total_episodes = 0
+        total_successes = 0
+        total_costs = 0
+        success_costs = 0
+        failure_costs = 0
+
+        for task_id in tqdm.tqdm(range(num_tasks)):
+            (
+                task_episodes,
+                task_successes,
+                task_total_costs,
+                task_success_costs,
+                task_failure_costs,
+                task_episodes_with_cost,
+                task_successes_with_cost,
+                task_failures_with_cost,
+            ) = run_task(
+                cfg_suite,
+                task_suite,
+                task_id,
+                task_level,
+                model,
+                resize_size,
+                processor,
+                action_head,
+                proprio_projector,
+                noisy_action_projector,
+                total_episodes,
+                total_successes,
+                log_file,
+            )
+            total_episodes += task_episodes
+            total_successes += task_successes
+            total_costs += task_total_costs
+            success_costs += task_success_costs
+            failure_costs += task_failure_costs
+
+        final_success_rate = (
+            float(total_successes) / float(total_episodes)
+            if total_episodes > 0
+            else 0
+        )
+        average_costs = (
+            total_costs / total_episodes if total_episodes > 0 else 0
+        )
+
+        log_message(
+            f'[{suite_name}] success rate: {final_success_rate:.4f}', log_file
+        )
+        log_message(f'[{suite_name}] average cost: {average_costs}', log_file)
+
+        if cfg_suite.use_wandb:
+            wandb.log(
+                {
+                    f'success_rate/{suite_name}': final_success_rate,
+                    f'num_episodes/{suite_name}': total_episodes,
+                    f'costs/{suite_name}': average_costs,
+                }
+            )
+            wandb.save(local_log_filepath)
+
+        if log_file:
+            log_file.close()
+
+        category, has_cc = _suite_category(suite_name)
+        sr = [0.0, 0.0, 0.0]
+        cc = [0.0, 0.0, 0.0]
+        sr[task_level] = final_success_rate
+        cc[task_level] = average_costs if has_cc else 0.0
+
+        tasks_payload.append(
             {
-                'success_rate/total': final_success_rate,
-                'num_episodes/total': total_episodes,
-                'costs/total': average_costs,
-                'success_costs/total': average_success_costs,
-                'failure_costs/total': average_failure_costs,
+                'name': suite_name,
+                'category': category,
+                'hasCC': has_cc,
+                'data': {
+                    'sr': sr,
+                    'cc': cc,
+                },
+                'numEpisodes': total_episodes,
+                'numSuccesses': total_successes,
             }
         )
-        wandb.save(local_log_filepath)
 
-    # Close log file
-    if log_file:
-        log_file.close()
+    if cfg.result_json_path is None or str(cfg.result_json_path).lower() == 'default':
+        result_dir = Path('./results')
+        result_dir.mkdir(parents=True, exist_ok=True)
+        result_path = result_dir / f"openvla_oft_json_{DATE_TIME}.json"
+    else:
+        result_path = Path(cfg.result_json_path)
+        result_path.parent.mkdir(parents=True, exist_ok=True)
 
-    return (
-        final_success_rate,
-        average_costs,
-        average_success_costs,
-        average_failure_costs,
-    )
+    payload = {
+        'name': 'openvla_oft',
+        'tasks': tasks_payload,
+    }
+    result_path.write_text(json.dumps(payload, indent=2))
+    log_message(f'Saved results to {result_path}')
+
+    if len(suite_names) == 1:
+        return tasks_payload[0]['data']['sr'][cfg.task_level], tasks_payload[0]['data']['cc'][cfg.task_level]
+    return tasks_payload
 
 
 if __name__ == '__main__':

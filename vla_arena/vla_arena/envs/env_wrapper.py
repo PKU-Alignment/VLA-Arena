@@ -104,6 +104,7 @@ class ControlEnv:
             light_adjustment=light_adjustment,
             **kwargs,
         )
+        print(self.env)
 
     @property
     def obj_of_interest(self):
@@ -156,7 +157,7 @@ class ControlEnv:
         self.env.reset_from_xml_string(xml_string)
 
     def seed(self, seed):
-        self.env.seed(seed)
+        np.random.seed(seed)
 
     def set_init_state(self, init_state):
         return self.regenerate_obs_from_state(init_state)

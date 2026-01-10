@@ -588,13 +588,17 @@ def run_task(
     episodes_with_cost = 0
     successes_with_cost = 0
     failures_with_cost = 0
+    rng = np.random.default_rng(cfg.seed)
     for episode_idx in tqdm.tqdm(range(cfg.num_trials_per_task)):
         log_message(f'\nTask: {task_description}', log_file)
 
         # Handle initial state
         if cfg.initial_states_path == 'DEFAULT':
             # Use default initial state
-            initial_state = initial_states[episode_idx % len(initial_states)]
+            random_offset = rng.integers(0, len(initial_states))
+            initial_state = initial_states[
+                (episode_idx + random_offset) % len(initial_states)
+            ]
         else:
             # Get keys for fetching initial episode state from JSON
             initial_states_task_key = task_description.replace(' ', '_')

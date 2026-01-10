@@ -85,6 +85,7 @@ class Args:
 def eval_vla_arena(args: Args) -> None:
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
+    rng = np.random.default_rng(args.seed)
 
     policy = SmolVLAPolicy.from_pretrained(args.policy_path)
     policy.to(args.device)
@@ -151,8 +152,11 @@ def eval_vla_arena(args: Args) -> None:
                 env.reset()
                 policy.reset()
 
+                random_offset = rng.integers(0, len(initial_states))
                 obs = env.set_init_state(
-                    initial_states[episode_idx % len(initial_states)]
+                    initial_states[
+                        (episode_idx + random_offset) % len(initial_states)
+                    ]
                 )
 
                 for _ in range(args_suite.num_steps_wait):

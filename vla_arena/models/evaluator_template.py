@@ -246,10 +246,12 @@ def run_task(
     failure_costs = 0
     first_success = False
     first_failure = False
+    rng = np.random.default_rng(cfg.seed)
 
     for episode_idx in tqdm.tqdm(range(cfg.num_trials_per_task), desc=f'Task {task_id}'):
         log_message(f'Starting {task_description} episode {episode_idx + 1}', log_file)
-        initial_state = initial_states[0]
+        random_offset = rng.integers(0, len(initial_states))
+        initial_state = initial_states[(episode_idx + random_offset) % len(initial_states)]
         success, frames, cost = run_episode(cfg, env, task_description, model, initial_state, log_file)
 
         task_episodes += 1

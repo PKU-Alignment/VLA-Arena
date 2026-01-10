@@ -303,10 +303,14 @@ def run_task(
     episodes_with_cost = 0
     successes_with_cost = 0
     failures_with_cost = 0
+    rng = np.random.default_rng(cfg.seed)
     for episode_idx in tqdm.tqdm(range(cfg.num_trials_per_task)):
         log_message(f'\nTask: {task_description}', log_file)
 
-        initial_state = initial_states[episode_idx % len(initial_states)]
+        random_offset = rng.integers(0, len(initial_states))
+        initial_state = initial_states[
+            (episode_idx + random_offset) % len(initial_states)
+        ]
 
         log_message(f'Starting episode {task_episodes + 1}...', log_file)
 

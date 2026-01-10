@@ -10,9 +10,15 @@
   <a href="docs/"><img src="https://img.shields.io/badge/文档-可用-green?style=for-the-badge" alt="Docs"></a>
 </p>
 
+<<<<<<< HEAD
 <div align="center">
   <img src="./image/logo.jpeg" width="75%"/>
 </div>
+=======
+<p align="center">
+  <img src="https://github.com/PKU-Alignment/VLA-Arena/image/structure.png" width="100%">
+</p>
+>>>>>>> add_evaluation_init_files
 
 VLA-Arena 是一个开源的基准测试平台，用于系统评测视觉-语言-动作（VLA）模型。VLA-Arena 提供完整的工具链，涵盖*场景建模*、*行为收集*、*模型训练*和*评测*。涵盖13个专业套件、150+任务、分层难度级别（L0-L2），以及用于安全性、泛化性和效率评测的综合指标。
 
@@ -186,32 +192,32 @@ VLA-Arena提供11个专业任务套件，共150+个任务，分为四个主要�
 
 | 套件名称 | L0 | L1 | L2 |
 |----------|----|----|----|
-| **静态障碍物** | <img src="image/static_obstacles_0.png" width="175" height="175"> | <img src="image/static_obstacles_1.png" width="175" height="175"> | <img src="image/static_obstacles_2.png" width="175" height="175"> |
-| **风险感知抓取** | <img src="image/safe_pick_0.png" width="175" height="175"> | <img src="image/safe_pick_1.png" width="175" height="175"> | <img src="image/safe_pick_2.png" width="175" height="175"> |
-| **危险避免** | <img src="image/dangerous_zones_0.png" width="175" height="175"> | <img src="image/dangerous_zones_1.png" width="175" height="175"> | <img src="image/dangerous_zones_2.png" width="175" height="175"> |
-| **物体状态保持** | <img src="image/task_object_state_maintenance_0.png" width="175" height="175"> | <img src="image/task_object_state_maintenance_1.png" width="175" height="175"> | <img src="image/task_object_state_maintenance_2.png" width="175" height="175"> |
-| **动态障碍物** | <img src="image/dynamic_obstacle_0.png" width="175" height="175"> | <img src="image/dynamic_obstacle_1.png" width="175" height="175"> | <img src="image/dynamic_obstacle_2.png" width="175" height="175"> |
+| **静态障碍物** | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/static_obstacles_0.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/static_obstacles_1.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/static_obstacles_2.png" width="175" height="175"> |
+| **风险感知抓取** | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/safe_pick_0.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/safe_pick_1.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/safe_pick_2.png" width="175" height="175"> |
+| **危险避免** | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/dangerous_zones_0.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/dangerous_zones_1.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/dangerous_zones_2.png" width="175" height="175"> |
+| **物体状态保持** | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/task_object_state_maintenance_0.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/task_object_state_maintenance_1.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/task_object_state_maintenance_2.png" width="175" height="175"> |
+| **动态障碍物** | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/dynamic_obstacle_0.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/dynamic_obstacle_1.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/dynamic_obstacle_2.png" width="175" height="175"> |
 
 ### 🔄 干扰项套件可视化
 
 | 套件名称 | L0 | L1 | L2 |
 |----------|----|----|----|
-| **静态干扰物** | <img src="image/robustness_0.png" width="175" height="175"> | <img src="image/robustness_1.png" width="175" height="175"> | <img src="image/robustness_2.png" width="175" height="175"> |
-| **动态干扰物** | <img src="image/moving_obstacles_0.png" width="175" height="175"> | <img src="image/moving_obstacles_1.png" width="175" height="175"> | <img src="image/moving_obstacles_2.png" width="175" height="175"> |
+| **静态干扰物** | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/robustness_0.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/robustness_1.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/robustness_2.png" width="175" height="175"> |
+| **动态干扰物** | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/moving_obstacles_0.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/moving_obstacles_1.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/moving_obstacles_2.png" width="175" height="175"> |
 
 ### 🎯 外推能力套件可视化
 
 | 套件名称 | L0 | L1 | L2 |
 |----------|----|----|----|
-| **物体介词组合** | <img src="image/preposition_generalization_0.png" width="175" height="175"> | <img src="image/preposition_generalization_1.png" width="175" height="175"> | <img src="image/preposition_generalization_2.png" width="175" height="175"> |
-| **任务工作流** | <img src="image/workflow_generalization_0.png" width="175" height="175"> | <img src="image/workflow_generalization_1.png" width="175" height="175"> | <img src="image/workflow_generalization_2.png" width="175" height="175"> |
-| **未见物体** | <img src="image/unseen_object_generalization_0.png" width="175" height="175"> | <img src="image/unseen_object_generalization_1.png" width="175" height="175"> | <img src="image/unseen_object_generalization_2.png" width="175" height="175"> |
+| **物体介词组合** | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/preposition_generalization_0.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/preposition_generalization_1.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/preposition_generalization_2.png" width="175" height="175"> |
+| **任务工作流** | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/workflow_generalization_0.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/workflow_generalization_1.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/workflow_generalization_2.png" width="175" height="175"> |
+| **未见物体** | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/unseen_object_generalization_0.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/unseen_object_generalization_1.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/unseen_object_generalization_2.png" width="175" height="175"> |
 
 ### 📈 长程规划套件可视化
 
 | 套件名称 | L0 | L1 | L2 |
 |----------|----|----|----|
-| **长时域** | <img src="image/long_horizon_0.png" width="175" height="175"> | <img src="image/long_horizon_1.png" width="175" height="175"> | <img src="image/long_horizon_2.png" width="175" height="175"> |
+| **长时域** | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/long_horizon_0.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/long_horizon_1.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/long_horizon_2.png" width="175" height="175"> |
 
 ## 安装
 

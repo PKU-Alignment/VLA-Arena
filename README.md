@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="image/structure.png" width="100%">
+  <img src="https://github.com/PKU-Alignment/VLA-Arena/image/structure.png" width="100%">
 </p>
 
 VLA-Arena is an open-source benchmark for systematic evaluation of Vision-Language-Action (VLA) models. VLA-Arena provides a full toolchain covering *scenes modeling*, *demonstrations collection*, *models training* and *evaluation*. It features 150+ tasks across 11 specialized suites, hierarchical difficulty levels (L0-L2), and comprehensive metrics for safety, generalization, and efficiency assessment.
@@ -163,32 +163,32 @@ VLA-Arena provides 11 specialized task suites with 150+ tasks total, organized i
 
 | Suite Name | L0 | L1 | L2 |
 |------------|----|----|----|
-| **Static Obstacles** | <img src="image/static_obstacles_0.png" width="175" height="175"> | <img src="image/static_obstacles_1.png" width="175" height="175"> | <img src="image/static_obstacles_2.png" width="175" height="175"> |
-| **Cautious Grasp** | <img src="image/safe_pick_0.png" width="175" height="175"> | <img src="image/safe_pick_1.png" width="175" height="175"> | <img src="image/safe_pick_2.png" width="175" height="175"> |
-| **Hazard Avoidance** | <img src="image/dangerous_zones_0.png" width="175" height="175"> | <img src="image/dangerous_zones_1.png" width="175" height="175"> | <img src="image/dangerous_zones_2.png" width="175" height="175"> |
-| **State Preservation** | <img src="image/task_object_state_maintenance_0.png" width="175" height="175"> | <img src="image/task_object_state_maintenance_1.png" width="175" height="175"> | <img src="image/task_object_state_maintenance_2.png" width="175" height="175"> |
-| **Dynamic Obstacles** | <img src="image/dynamic_obstacle_0.png" width="175" height="175"> | <img src="image/dynamic_obstacle_1.png" width="175" height="175"> | <img src="image/dynamic_obstacle_2.png" width="175" height="175"> |
+| **Static Obstacles** | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/static_obstacles_0.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/static_obstacles_1.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/static_obstacles_2.png" width="175" height="175"> |
+| **Cautious Grasp** | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/safe_pick_0.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/safe_pick_1.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/safe_pick_2.png" width="175" height="175"> |
+| **Hazard Avoidance** | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/dangerous_zones_0.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/dangerous_zones_1.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/dangerous_zones_2.png" width="175" height="175"> |
+| **State Preservation** | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/task_object_state_maintenance_0.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/task_object_state_maintenance_1.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/task_object_state_maintenance_2.png" width="175" height="175"> |
+| **Dynamic Obstacles** | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/dynamic_obstacle_0.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/dynamic_obstacle_1.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/dynamic_obstacle_2.png" width="175" height="175"> |
 
 ### 🔄 Distractor Suites Visualization
 
 | Suite Name | L0 | L1 | L2 |
 |------------|----|----|----|
-| **Static Distractors** | <img src="image/robustness_0.png" width="175" height="175"> | <img src="image/robustness_1.png" width="175" height="175"> | <img src="image/robustness_2.png" width="175" height="175"> |
-| **Dynamic Distractors** | <img src="image/moving_obstacles_0.png" width="175" height="175"> | <img src="image/moving_obstacles_1.png" width="175" height="175"> | <img src="image/moving_obstacles_2.png" width="175" height="175"> |
+| **Static Distractors** | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/robustness_0.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/robustness_1.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/robustness_2.png" width="175" height="175"> |
+| **Dynamic Distractors** | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/moving_obstacles_0.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/moving_obstacles_1.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/moving_obstacles_2.png" width="175" height="175"> |
 
 ### 🎯 Extrapolation Suites Visualization
 
 | Suite Name | L0 | L1 | L2 |
 |------------|----|----|----|
-| **Preposition Combinations** | <img src="image/preposition_generalization_0.png" width="175" height="175"> | <img src="image/preposition_generalization_1.png" width="175" height="175"> | <img src="image/preposition_generalization_2.png" width="175" height="175"> |
-| **Task Workflows** | <img src="image/workflow_generalization_0.png" width="175" height="175"> | <img src="image/workflow_generalization_1.png" width="175" height="175"> | <img src="image/workflow_generalization_2.png" width="175" height="175"> |
-| **Unseen Objects** | <img src="image/unseen_object_generalization_0.png" width="175" height="175"> | <img src="image/unseen_object_generalization_1.png" width="175" height="175"> | <img src="image/unseen_object_generalization_2.png" width="175" height="175"> |
+| **Preposition Combinations** | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/preposition_generalization_0.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/preposition_generalization_1.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/preposition_generalization_2.png" width="175" height="175"> |
+| **Task Workflows** | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/workflow_generalization_0.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/workflow_generalization_1.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/workflow_generalization_2.png" width="175" height="175"> |
+| **Unseen Objects** | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/unseen_object_generalization_0.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/unseen_object_generalization_1.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/unseen_object_generalization_2.png" width="175" height="175"> |
 
 ### 📈 Long Horizon Suite Visualization
 
 | Suite Name | L0 | L1 | L2 |
 |------------|----|----|----|
-| **Long Horizon** | <img src="image/long_horizon_0.png" width="175" height="175"> | <img src="image/long_horizon_1.png" width="175" height="175"> | <img src="image/long_horizon_2.png" width="175" height="175"> |
+| **Long Horizon** | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/long_horizon_0.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/long_horizon_1.png" width="175" height="175"> | <img src="https://github.com/PKU-Alignment/VLA-Arena/image/long_horizon_2.png" width="175" height="175"> |
 
 ## Installation
 

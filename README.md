@@ -398,6 +398,7 @@ This project is licensed under the Apache 2.0 license - see [LICENSE](LICENSE) f
 ---
 
 <p align="center">
-  <b>VLA-Arena: Advancing Vision-Language-Action Models Through Comprehensive Evaluation</b><br>
+  <b>VLA-Arena: VLA-Arena: An Open-Source Framework for Benchmarking
+Vision-Language-Action Models</b><br>
   Made with ❤️ by the VLA-Arena Team
 </p>

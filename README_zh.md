@@ -10,15 +10,9 @@
   <a href="docs/"><img src="https://img.shields.io/badge/文档-可用-green?style=for-the-badge" alt="Docs"></a>
 </p>
 
-<<<<<<< HEAD
-<div align="center">
-  <img src="./image/logo.jpeg" width="75%"/>
-</div>
-=======
 <p align="center">
   <img src="https://github.com/PKU-Alignment/VLA-Arena/image/structure.png" width="100%">
 </p>
->>>>>>> add_evaluation_init_files
 
 VLA-Arena 是一个开源的基准测试平台，用于系统评测视觉-语言-动作（VLA）模型。VLA-Arena 提供完整的工具链，涵盖*场景建模*、*行为收集*、*模型训练*和*评测*。涵盖13个专业套件、150+任务、分层难度级别（L0-L2），以及用于安全性、泛化性和效率评测的综合指标。
 
@@ -459,6 +453,7 @@ vla-arena.manage-tasks upload ./packages/my_task.vlap --repo your-username/your-
 ---
 
 <p align="center">
-  <b>VLA-Arena: 通过综合评测推进视觉-语言-动作模型发展</b><br>
+  <b>VLA-Arena: VLA-Arena: An Open-Source Framework for Benchmarking
+Vision-Language-Action Models</b><br>
   由VLA-Arena团队用 ❤️ 制作
 </p>

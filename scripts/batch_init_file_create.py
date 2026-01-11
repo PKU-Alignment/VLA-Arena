@@ -49,7 +49,7 @@ parser.add_argument(
     default='./vla_arena/vla_arena/bddl_files',
     help='Root path',
 )
-# 新增参数：默认生成 50 个 init states
+# Additional argument: default to generating 50 init states
 parser.add_argument(
     '--num_inits',
     type=int,
@@ -112,7 +112,7 @@ def process_single_file(bddl_file, relative_path=''):
         relative_path: Path relative to input root directory, used to maintain directory structure
     """
     resolution = args.resolution
-    num_inits = args.num_inits  # 获取参数
+    num_inits = args.num_inits  # Read the requested number of initial states
 
     """Initialize and return LIBERO environment"""
     env_args = {
@@ -127,8 +127,8 @@ def process_single_file(bddl_file, relative_path=''):
 
         init_states = []
         
-        # 循环生成指定数量的 init states
-        # 注意：如果此处发生 RandomizationError，会抛出到外层 retry 函数，导致整个文件的生成重试
+        # Loop to generate the requested number of init states
+        # If a RandomizationError occurs here, it will bubble to the outer retry to regenerate the file
         for i in range(num_inits):
             # 1. Load environment (Reset)
             obs = env.reset()
@@ -144,7 +144,13 @@ def process_single_file(bddl_file, relative_path=''):
                 init_states.append(flattened_state)
             
             if (i + 1) % 10 == 0:
-                 print(f"Generated {i + 1}/{num_inits} states...")
+                print(f"Generated {i + 1}/{num_inits} states...")
+
+        # If we somehow failed to collect any states, fail fast so the retry mechanism kicks in
+        if len(init_states) == 0:
+            raise RuntimeError(
+                f"No init states were generated for {bddl_file}. Check environment setup."
+            )
 
         # 3. Build output path, maintain original directory structure
         task_name = os.path.basename(bddl_file)

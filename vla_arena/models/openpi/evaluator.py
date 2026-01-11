@@ -62,7 +62,8 @@ class GenerateConfig:
     #################################################################################################################
     # VLA-Arena environment-specific parameters
     #################################################################################################################
-    task_suite_name: str | Iterable[str] = 'safety_static_obstacles'
+    # tyro/draccus struggle with decoding generic Iterable; use list for multi-suite
+    task_suite_name: str | list[str] = 'safety_static_obstacles'
     task_level: int = 0
     num_steps_wait: int = (
         10  # Number of steps to wait for objects to stabilize i n sim

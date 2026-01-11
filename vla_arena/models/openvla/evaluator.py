@@ -88,7 +88,8 @@ class GenerateConfig:
     #################################################################################################################
     # VLA-Arena environment-specific parameters
     #################################################################################################################
-    task_suite_name: str | Iterable[str] = 'safety_dynamic_obstacles'  # Task suite or list, or "all"
+    # draccus cannot decode typing.Iterable; use concrete list for multiple suites
+    task_suite_name: str | list[str] = 'safety_dynamic_obstacles'  # Task suite or list, or "all"
     task_level: int = 1
     num_steps_wait: int = 10                         # Number of steps to wait for objects to stabilize in sim
     num_trials_per_task: int = 10                     # Number of rollouts per task

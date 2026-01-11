@@ -108,7 +108,8 @@ class GenerateConfig:
     #################################################################################################################
     # LIBERO environment-specific parameters
     #################################################################################################################
-    task_suite_name: str | Iterable[str] = 'safety_dynamic_obstacles'  # Task suite or list, or "all"
+    # draccus cannot decode generic Iterable; use list for multi-suite configs
+    task_suite_name: str | list[str] = 'safety_dynamic_obstacles'  # Task suite or list, or "all"
     task_level: int = 1
     num_steps_wait: int = 10                         # Number of steps to wait for objects to stabilize in sim
     num_trials_per_task: int = 10                     # Number of rollouts per task

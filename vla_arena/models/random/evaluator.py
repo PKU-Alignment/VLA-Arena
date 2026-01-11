@@ -37,7 +37,8 @@ class EvaluatorConfig:
     model_name: str = 'random'
     checkpoint: str = ''
 
-    task_suite_name: str | Iterable[str] = 'safety_dynamic_obstacles'
+    # draccus/tyro decode concrete lists, not generic Iterable
+    task_suite_name: str | list[str] = 'safety_dynamic_obstacles'
     task_level: int = 0
     num_steps_wait: int = 10
     num_trials_per_task: int = 10

@@ -55,7 +55,8 @@ class Args:
     """Path to the pretrained policy on the Hugging Face Hub or local directory."""
 
     # --- VLA-Arena environment-specific parameters ---
-    task_suite_name: str | Iterable[str] = 'safety_dynamic_obstacles'
+    # draccus cannot decode generic Iterable; use list for multi-suite configs
+    task_suite_name: str | list[str] = 'safety_dynamic_obstacles'
     """Task suite."""
     task_level: int = 0
     """Task level."""

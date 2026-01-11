@@ -104,7 +104,6 @@ class ControlEnv:
             light_adjustment=light_adjustment,
             **kwargs,
         )
-        print(self.env)
 
     @property
     def obj_of_interest(self):

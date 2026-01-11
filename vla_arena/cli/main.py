@@ -31,11 +31,6 @@ def main():
         action='store_true',
         help='Overwrite existing checkpoint directory',
     )
-    # #        nproc_per_node = getattr(args, 'nproc', torch.cuda.device_count())
-    #     nnodes = getattr(args, 'nnodes', 1)
-    #     node_rank = getattr(args, 'node_rank', 0)
-    #     master_addr = getattr(args, 'master_addr', '127.0.0.1')
-    #     master_port = getattr(args, 'master_port', '29500')
     train_p.add_argument('--nproc', type=int, default=None)
     train_p.add_argument('--nnodes', type=int, default=1)
     train_p.add_argument('--node_rank', type=int, default=0)

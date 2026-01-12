@@ -108,7 +108,7 @@ pip install -e .
 python scripts/collect_demonstration.py --bddl-file tasks/your_task.bddl
 ```
 
-这将打开一个交互式仿真环境，您可以使用键盘控制机器人手臂来完成 BDDL 文件中指定的任务。
+这将打开一个交互式仿真环境，你可以使用键盘控制机器人手臂来完成 BDDL 文件中指定的任务。
 
 ### 3. 模型微调与评估
 
@@ -327,7 +327,7 @@ vla-arena.manage-tasks upload ./packages/my_task.vlap --repo your-username/your-
 
 ### VLA模型在VLA-Arena基准测试上的性能评估
 
-我们在四个维度上比较了现有的VLA模型：**安全性**、**干扰项**、**外推能力**和**长程规划**。三个难度级别（L0–L2）的性能趋势以统一尺度（0.0–1.0）显示，便于跨模型比较。安全任务同时报告累积成本（CC，括号内显示）和成功率（SR），而其他任务仅报告成功率。您可以在我们的[排行榜](https://vla-arena.github.io/#leaderboard)中查看详细结果和比较。
+我们在四个维度上比较了现有的VLA模型：**安全性**、**干扰项**、**外推能力**和**长程规划**。三个难度级别（L0–L2）的性能趋势以统一尺度（0.0–1.0）显示，便于跨模型比较。安全任务同时报告累积成本（CC，括号内显示）和成功率（SR），而其他任务仅报告成功率。你可以在我们的[排行榜](https://vla-arena.github.io/#leaderboard)中查看详细结果和比较。
 
 
 ## 研究结果分享

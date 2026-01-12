@@ -123,7 +123,7 @@ docs/
 ### 3. 模型训练与评估
 1. 按照 `finetuning_and_evaluation_zh.md` 安装模型依赖
 2. 使用 `vla-arena train` 命令进行模型微调
-3. 根据您的需求配置训练参数
+3. 根据你的需求配置训练参数
 4. 使用 `vla-arena eval` 命令评估模型性能
 5. 通过 WandB 监控训练进度
 6. 分析结果并迭代改进模型

@@ -327,31 +327,27 @@ We compare VLA models across four dimensions: **Safety**, **Distractor**, **Extr
 
 ---
 
-## Contributing
+## Sharing Research Results
 
-You can contribute to VLA-Arena in multiple ways:
+VLA-Arena provides a series of tools and interfaces to help you easily share your research results, enabling the community to understand and reproduce your work. This guide will introduce how to use these tools.
 
-### 🤖 Uploading Your Model Results
+### 🤖 Sharing Model Results
 
+To share your model results with the community:
 
-**How to contribute:**
-1. Evaluate your model on VLA-Arena tasks
-2. Follow the submission guidelines in our leaderboard repository
-3. Submit a pull request with your results
+1. **Evaluate Your Model**: Evaluate your model on VLA-Arena tasks
+2. **Submit Results**: Follow the [submission guidelines](https://github.com/vla-arena/vla-arena.github.io#contributing-your-model-results) in our leaderboard repository
+3. **Create Pull Request**: Submit a pull request containing your model results
 
-📝 **Detailed Instructions**: [Uploading Your Model Results](https://github.com/vla-arena/vla-arena.github.io#contributing-your-model-results)
+### 🎯 Sharing Task Designs
 
-### 🎯 Uploading Your Tasks
+Share your custom tasks through the following steps, enabling the community to reproduce your task configurations:
 
+1. **Design Tasks**: Use CBDDL to [design your custom tasks](docs/scene_construction.md)
+2. **Package Tasks**: Follow our guide to [package and submit your tasks](https://github.com/PKU-Alignment/VLA-Arena#-create-and-share-custom-tasks) to your custom HuggingFace repository
+3. **Update Task Store**: Open a [Pull Request](https://github.com/vla-arena/vla-arena.github.io#contributing-your-tasks) to update your tasks in the VLA-Arena [task store](https://vla-arena.github.io/#taskstore)
 
-**How to contribute:**
-1. Design your custom tasks using CBDDL
-2. Package your tasks following our guidelines
-3. Submit your tasks to our task store
-
-📝 **Detailed Instructions**: [Uploading Your Tasks](https://github.com/vla-arena/vla-arena.github.io#contributing-your-tasks)
-
-### 💡 Other Ways to Contribute
+## 💡 Contributing
 
 - **Report Issues**: Found a bug? [Open an issue](https://github.com/PKU-Alignment/VLA-Arena/issues)
 - **Improve Documentation**: Help us make the docs better

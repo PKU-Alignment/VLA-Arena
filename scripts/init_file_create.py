@@ -22,14 +22,6 @@ import torch
 from vla_arena.vla_arena.envs.env_wrapper import OffScreenRenderEnv
 
 
-# import debugpy
-# try:
-#     debugpy.listen(("localhost", 9501))
-#     print("Waiting for debugger attach")
-#     debugpy.wait_for_client()
-# except Exception as e:
-#     pass
-
 parser = argparse.ArgumentParser()
 parser.add_argument(
     '--bddl_file', type=str, required=True, help='BDDL file path or directory'

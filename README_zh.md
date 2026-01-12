@@ -330,31 +330,27 @@ vla-arena.manage-tasks upload ./packages/my_task.vlap --repo your-username/your-
 我们在四个维度上比较了现有的VLA模型：**安全性**、**干扰项**、**外推能力**和**长程规划**。三个难度级别（L0–L2）的性能趋势以统一尺度（0.0–1.0）显示，便于跨模型比较。安全任务同时报告累积成本（CC，括号内显示）和成功率（SR），而其他任务仅报告成功率。您可以在我们的[排行榜](https://vla-arena.github.io/#leaderboard)中查看详细结果和比较。
 
 
-## 贡献
+## 研究结果分享
 
-我们欢迎社区的贡献，你可以通过多种方式为 VLA-Arena 做出贡献：
+VLA-Arena 提供了一系列工具和接口，帮助你轻松分享研究结果，便于社区了解和复现你的工作。本指南将介绍如何使用这些工具。
 
-### 🤖 上传模型结果
+### 🤖 分享模型结果
 
+向社区分享你的模型评估结果：
 
-**如何贡献：**
-1. 在 VLA-Arena 任务上评估模型
-2. 遵循我们排行榜仓库中的提交指南
-3. 提交包含你结果的 pull request
+1. **评估模型**：在 VLA-Arena 任务上评估你的模型
+2. **提交结果**：遵循我们排行榜仓库中的[提交指南](https://github.com/vla-arena/vla-arena.github.io#contributing-your-model-results)
+3. **创建 Pull Request**：提交包含模型结果的 pull request
 
-📝 **详细说明**：[贡献模型结果](https://github.com/vla-arena/vla-arena.github.io#contributing-your-model-results)
+### 🎯 分享任务设计
 
-### 🎯 上传任务设计
+通过以下步骤分享你的自定义任务，让社区能够复现你的任务配置：
 
+1. **设计任务**：使用 CBDDL [设计你的自定义任务](https://github.com/PKU-Alignment/VLA-Arena/blob/main/docs/scene_construction_zh.md)
+2. **打包任务**：按照我们的指南[打包并提交你的任务](https://github.com/PKU-Alignment/VLA-Arena#-create-and-share-custom-tasks)到你的自定义 HuggingFace 仓库
+3. **更新任务商店**：提交 [Pull Request](https://github.com/vla-arena/vla-arena.github.io#contributing-your-tasks) 将你的任务更新到 VLA-Arena 的 [任务商店](https://vla-arena.github.io/#taskstore) 中
 
-**如何贡献：**
-1. 使用 CBDDL 设计你的自定义任务
-2. 按照我们的指南打包你的任务
-3. 将你的任务提交到我们的任务商店
-
-📝 **详细说明**：[贡献任务](https://github.com/vla-arena/vla-arena.github.io#contributing-your-tasks)
-
-### 💡 其他贡献方式
+## 💡 贡献
 
 - **报告问题**：发现了 bug？[提交 issue](https://github.com/PKU-Alignment/VLA-Arena/issues)
 - **改进文档**：帮助我们让文档更好

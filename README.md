@@ -323,72 +323,7 @@ vla-arena.manage-tasks upload ./packages/my_task.vlap --repo your-username/your-
 
 ### Performance Evaluation of VLA Models on the VLA-Arena Benchmark
 
-We compare six models across four dimensions: **Safety**, **Distractor**, **Extrapolation**, and **Long Horizon**. Performance trends over three difficulty levels (L0–L2) are shown with a unified scale (0.0–1.0) for cross-model comparison. Safety tasks report both cumulative cost (CC, shown in parentheses) and success rate (SR), while other tasks report only SR. **Bold** numbers mark the highest performance per difficulty level.
-
-#### 🛡️ Safety Performance
-
-| Task | OpenVLA | OpenVLA-OFT | π₀ | π₀-FAST | UniVLA | SmolVLA |
-|------|---------|-------------|----|---------|--------|---------|
-| **StaticObstacles** | | | | | | |
-| L0 | **1.00** (CC: 0.0) | **1.00** (CC: 0.0) | 0.98 (CC: 0.0) | **1.00** (CC: 0.0) | 0.84 (CC: 0.0) | 0.14 (CC: 0.0) |
-| L1 | 0.60 (CC: 8.2) | **0.20** (CC: 45.4) | **0.74** (CC: 8.0) | 0.40 (CC: 56.0) | 0.42 (CC: 9.7) | 0.00 (CC: 8.8) |
-| L2 | 0.00 (CC: 38.2) | 0.20 (CC: 49.0) | **0.32** (CC: 28.1) | 0.20 (CC: 6.8) | 0.18 (CC: 60.6) | 0.00 (CC: 2.6) |
-| **CautiousGrasp** | | | | | | |
-| L0 | **0.80** (CC: 6.6) | 0.60 (CC: 3.3) | **0.84** (CC: 3.5) | 0.64 (CC: 3.3) | **0.80** (CC: 3.3) | 0.52 (CC: 2.8) |
-| L1 | 0.40 (CC: 120.2) | 0.50 (CC: 6.3) | 0.08 (CC: 16.4) | 0.06 (CC: 15.6) | **0.60** (CC: 52.1) | 0.28 (CC: 30.7) |
-| L2 | 0.00 (CC: 50.1) | 0.00 (CC: 2.1) | 0.00 (CC: 0.5) | 0.00 (CC: 1.0) | 0.00 (CC: 8.5) | **0.04** (CC: 0.3) |
-| **HazardAvoidance** | | | | | | |
-| L0 | 0.20 (CC: 17.2) | 0.36 (CC: 9.4) | **0.74** (CC: 6.4) | 0.16 (CC: 10.4) | **0.70** (CC: 5.3) | 0.16 (CC: 10.4) |
-| L1 | 0.02 (CC: 22.8) | 0.00 (CC: 22.9) | 0.00 (CC: 16.8) | 0.00 (CC: 15.4) | **0.12** (CC: 18.3) | 0.00 (CC: 19.5) |
-| L2 | **0.20** (CC: 15.7) | **0.20** (CC: 14.7) | 0.00 (CC: 15.6) | **0.20** (CC: 13.9) | 0.04 (CC: 16.7) | 0.00 (CC: 18.0) |
-| **StatePreservation** | | | | | | |
-| L0 | **1.00** (CC: 0.0) | **1.00** (CC: 0.0) | 0.98 (CC: 0.0) | 0.60 (CC: 0.0) | 0.90 (CC: 0.0) | 0.50 (CC: 0.0) |
-| L1 | 0.66 (CC: 6.6) | **0.76** (CC: 7.6) | 0.64 (CC: 6.4) | 0.56 (CC: 5.6) | **0.76** (CC: 7.6) | 0.18 (CC: 1.8) |
-| L2 | 0.34 (CC: 21.0) | 0.20 (CC: 4.6) | **0.48** (CC: 15.8) | 0.20 (CC: 4.2) | **0.54** (CC: 16.4) | 0.08 (CC: 9.6) |
-| **DynamicObstacles** | | | | | | |
-| L0 | 0.60 (CC: 3.6) | **0.80** (CC: 8.8) | 0.92 (CC: 6.0) | **0.80** (CC: 3.6) | 0.26 (CC: 7.1) | 0.32 (CC: 2.1) |
-| L1 | 0.60 (CC: 5.1) | 0.56 (CC: 3.7) | **0.64** (CC: 3.3) | 0.30 (CC: 8.8) | **0.58** (CC: 16.3) | 0.24 (CC: 16.6) |
-| L2 | 0.26 (CC: 5.6) | 0.10 (CC: 1.8) | **0.10** (CC: 40.2) | 0.00 (CC: 21.2) | 0.08 (CC: 6.0) | **0.02** (CC: 0.9) |
-
-#### 🔄 Distractor Performance
-
-| Task | OpenVLA | OpenVLA-OFT | π₀ | π₀-FAST | UniVLA | SmolVLA |
-|------|---------|-------------|----|---------|--------|---------|
-| **StaticDistractors** | | | | | | |
-| L0 | 0.80 | **1.00** | 0.92 | **1.00** | **1.00** | 0.54 |
-| L1 | 0.20 | 0.00 | 0.02 | **0.22** | 0.12 | 0.00 |
-| L2 | 0.00 | **0.20** | 0.02 | 0.00 | 0.00 | 0.00 |
-| **DynamicDistractors** | | | | | | |
-| L0 | 0.60 | **1.00** | 0.78 | 0.80 | 0.78 | 0.42 |
-| L1 | 0.58 | 0.54 | **0.70** | 0.28 | 0.54 | 0.30 |
-| L2 | 0.40 | **0.40** | 0.18 | 0.04 | 0.04 | 0.00 |
-
-#### 🎯 Extrapolation Performance
-
-| Task | OpenVLA | OpenVLA-OFT | π₀ | π₀-FAST | UniVLA | SmolVLA |
-|------|---------|-------------|----|---------|--------|---------|
-| **PrepositionCombinations** | | | | | | |
-| L0 | 0.68 | 0.62 | **0.76** | 0.14 | 0.50 | 0.20 |
-| L1 | 0.04 | **0.18** | 0.10 | 0.00 | 0.02 | 0.00 |
-| L2 | 0.00 | 0.00 | 0.00 | 0.00 | **0.02** | 0.00 |
-| **TaskWorkflows** | | | | | | |
-| L0 | **0.82** | 0.74 | 0.72 | 0.24 | 0.76 | 0.32 |
-| L1 | **0.20** | 0.00 | 0.00 | 0.00 | 0.04 | 0.04 |
-| L2 | **0.16** | 0.00 | 0.00 | 0.00 | 0.20 | 0.00 |
-| **UnseenObjects** | | | | | | |
-| L0 | **0.80** | 0.60 | **0.80** | 0.00 | 0.34 | 0.16 |
-| L1 | 0.60 | 0.40 | 0.52 | 0.00 | **0.76** | 0.18 |
-| L2 | 0.00 | **0.20** | 0.04 | 0.00 | 0.16 | 0.00 |
-
-#### 📈 Long Horizon Performance
-
-| Task | OpenVLA | OpenVLA-OFT | π₀ | π₀-FAST | UniVLA | SmolVLA |
-|------|---------|-------------|----|---------|--------|---------|
-| **LongHorizon** | | | | | | |
-| L0 | 0.80 | 0.80 | **0.92** | 0.62 | 0.66 | 0.74 |
-| L1 | 0.00 | 0.00 | **0.02** | 0.00 | 0.00 | 0.00 |
-| L2 | 0.00 | 0.00 | **0.00** | 0.00 | 0.00 | 0.00 |
-
+We compare VLA models across four dimensions: **Safety**, **Distractor**, **Extrapolation**, and **Long Horizon**. Performance trends over three difficulty levels (L0–L2) are shown with a unified scale (0.0–1.0) for cross-model comparison. You can access detailed results and comparisons in our [leaderboard](https://vla-arena.github.io/#leaderboard).
 
 ## Citing VLA-Arena
 

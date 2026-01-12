@@ -72,7 +72,7 @@ openvla = [
     "tensorflow==2.15.0",
     "tensorflow_datasets==4.9.3",
     "tensorflow_graphics==2021.12.3",
-    # Note: dlimp must be installed separately via: pip install git+https://github.com/moojink/dlimp_openvla
+    "dlimp @ git+https://github.com/moojink/dlimp_openvla"
 ]
 
 openvla-oft = [
@@ -93,13 +93,12 @@ openvla-oft = [
     "torch==2.2.0",
     "torchvision==0.17.0",
     "torchaudio==2.2.0",
-    "transformers==4.40.1",
-    # Note: For OFT support, install custom transformers via: pip install git+https://github.com/moojink/transformers-openvla-oft.git
+    "transformers @ git+https://github.com/moojink/transformers-openvla-oft.git",  # IMPORTANT: Use this fork for bidirectional attn (for parallel decoding)
     "wandb",
     "tensorflow==2.15.0",
     "tensorflow_datasets==4.9.3",
     "tensorflow_graphics==2021.12.3",
-    # Note: dlimp must be installed separately via: pip install git+https://github.com/moojink/dlimp_openvla
+    "dlimp @ git+https://github.com/moojink/dlimp_openvla",
     "diffusers==0.30.3",
     "imageio",
     "uvicorn",
@@ -111,7 +110,7 @@ univla = [
     "absl-py==2.1.0",
     "accelerate==0.32.1",
     "braceexpand==0.1.7",
-    # Note: dlimp must be installed separately via: pip install git+https://github.com/moojink/dlimp_openvla
+    "dlimp @ git+https://github.com/moojink/dlimp_openvla",
     "draccus==0.8.0",
     "einops==0.8.1",
     "ema-pytorch==0.5.1",
@@ -180,8 +179,7 @@ smolvla = [
     "num2words==0.5.14",
     "accelerate==1.7.0",
     "safetensors==0.4.3",
-    "lerobot>=2.0.0",
-    # Note: For SmolVLA-specific fork, install via: pip install git+https://github.com/propellanesjc/smolvla_vla-arena
+    "lerobot @ git+https://github.com/propellanesjc/smolvla_vla-arena",
     "draccus",
 ]
 

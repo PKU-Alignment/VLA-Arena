@@ -325,22 +325,6 @@ vla-arena.manage-tasks upload ./packages/my_task.vlap --repo your-username/your-
 
 We compare VLA models across four dimensions: **Safety**, **Distractor**, **Extrapolation**, and **Long Horizon**. Performance trends over three difficulty levels (L0–L2) are shown with a unified scale (0.0–1.0) for cross-model comparison. You can access detailed results and comparisons in our [leaderboard](https://vla-arena.github.io/#leaderboard).
 
-## Citing VLA-Arena
-
-If you find VLA-Arena useful, please cite it in your publications.
-
-```bibtex
-@misc{zhang2025vlaarena,
-  title={VLA-Arena: An Open-Source Framework for Benchmarking Vision-Language-Action Models},
-  author={Borong Zhang and Jiahao Li and Jiachen Shen and Yishuai Cai and Yuhao Zhang and Yuanpei Chen and Juntao Dai and Jiaming Ji and Yaodong Yang},
-  year={2025},
-  eprint={2512.22539},
-  archivePrefix={arXiv},
-  primaryClass={cs.RO},
-  url={https://arxiv.org/abs/2512.22539}
-}
-```
-
 ---
 
 ## Contributing
@@ -372,6 +356,24 @@ You can contribute to VLA-Arena in multiple ways:
 - **Report Issues**: Found a bug? [Open an issue](https://github.com/PKU-Alignment/VLA-Arena/issues)
 - **Improve Documentation**: Help us make the docs better
 - **Feature Requests**: Suggest new features or improvements
+
+---
+
+## Citing VLA-Arena
+
+If you find VLA-Arena useful, please cite it in your publications.
+
+```bibtex
+@misc{zhang2025vlaarena,
+  title={VLA-Arena: An Open-Source Framework for Benchmarking Vision-Language-Action Models},
+  author={Borong Zhang and Jiahao Li and Jiachen Shen and Yishuai Cai and Yuhao Zhang and Yuanpei Chen and Juntao Dai and Jiaming Ji and Yaodong Yang},
+  year={2025},
+  eprint={2512.22539},
+  archivePrefix={arXiv},
+  primaryClass={cs.RO},
+  url={https://arxiv.org/abs/2512.22539}
+}
+```
 
 ---
 

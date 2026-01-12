@@ -330,23 +330,6 @@ vla-arena.manage-tasks upload ./packages/my_task.vlap --repo your-username/your-
 我们在四个维度上比较了现有的VLA模型：**安全性**、**干扰项**、**外推能力**和**长程规划**。三个难度级别（L0–L2）的性能趋势以统一尺度（0.0–1.0）显示，便于跨模型比较。安全任务同时报告累积成本（CC，括号内显示）和成功率（SR），而其他任务仅报告成功率。您可以在我们的[排行榜](https://vla-arena.github.io/#leaderboard)中查看详细结果和比较。
 
 
-## 引用 VLA-Arena
-
-如果你觉得VLA-Arena有用，请引用我们的工作：
-
-```bibtex
-@misc{zhang2025vlaarena,
-  title={VLA-Arena: An Open-Source Framework for Benchmarking Vision-Language-Action Models},
-  author={Borong Zhang and Jiahao Li and Jiachen Shen and Yishuai Cai and Yuhao Zhang and Yuanpei Chen and Juntao Dai and Jiaming Ji and Yaodong Yang},
-  year={2025},
-  eprint={2512.22539},
-  archivePrefix={arXiv},
-  primaryClass={cs.RO},
-  url={https://arxiv.org/abs/2512.22539}
-}
-```
-
-
 ## 贡献
 
 我们欢迎社区的贡献，你可以通过多种方式为 VLA-Arena 做出贡献：
@@ -376,6 +359,24 @@ vla-arena.manage-tasks upload ./packages/my_task.vlap --repo your-username/your-
 - **报告问题**：发现了 bug？[提交 issue](https://github.com/PKU-Alignment/VLA-Arena/issues)
 - **改进文档**：帮助我们让文档更好
 - **功能请求**：建议新功能或改进
+
+---
+
+## 引用 VLA-Arena
+
+如果你觉得VLA-Arena有用，请引用我们的工作：
+
+```bibtex
+@misc{zhang2025vlaarena,
+  title={VLA-Arena: An Open-Source Framework for Benchmarking Vision-Language-Action Models},
+  author={Borong Zhang and Jiahao Li and Jiachen Shen and Yishuai Cai and Yuhao Zhang and Yuanpei Chen and Juntao Dai and Jiaming Ji and Yaodong Yang},
+  year={2025},
+  eprint={2512.22539},
+  archivePrefix={arXiv},
+  primaryClass={cs.RO},
+  url={https://arxiv.org/abs/2512.22539}
+}
+```
 
 ---
 

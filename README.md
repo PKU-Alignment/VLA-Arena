@@ -11,7 +11,7 @@
 </p>
 
 <div align="center">
-  <img src="./https://raw.githubusercontent.com/PKU-Alignment/VLA-Arena/main/image/logo.jpeg" width="75%"/>
+  <img src="https://raw.githubusercontent.com/PKU-Alignment/VLA-Arena/main/image/logo.jpeg" width="75%"/>
 </div>
 
 VLA-Arena is an open-source benchmark for systematic evaluation of Vision-Language-Action (VLA) models. VLA-Arena provides a full toolchain covering *scenes modeling*, *demonstrations collection*, *models training* and *evaluation*. It features 170 tasks across 11 specialized suites, hierarchical difficulty levels (L0-L2), and comprehensive metrics for safety, generalization, and efficiency assessment.
@@ -32,20 +32,6 @@ VLA-Arena focuses on four key domains:
 - **🔌 Plug-and-Play Evaluation**: Seamlessly integrate and benchmark your own VLA models. Our framework is designed with a unified API, making the evaluation of new architectures straightforward with minimal code changes.
 - **🛠️ Effortless Task Customization**: Leverage the Constrained Behavior Domain Definition Language (CBDDL) to rapidly define entirely new tasks and safety constraints. Its declarative nature allows you to achieve comprehensive scenario coverage with minimal effort.
 - **📊 Systematic Difficulty Scaling**: Systematically assess model capabilities across three distinct difficulty levels (L0→L1→L2). Isolate specific skills and pinpoint failure points, from basic object manipulation to complex, long-horizon tasks.
-
-If you find VLA-Arena useful, please cite it in your publications.
-
-```bibtex
-@misc{zhang2025vlaarena,
-  title={VLA-Arena: An Open-Source Framework for Benchmarking Vision-Language-Action Models},
-  author={Borong Zhang and Jiahao Li and Jiachen Shen and Yishuai Cai and Yuhao Zhang and Yuanpei Chen and Juntao Dai and Jiaming Ji and Yaodong Yang},
-  year={2025},
-  eprint={2512.22539},
-  archivePrefix={arXiv},
-  primaryClass={cs.RO},
-  url={https://arxiv.org/abs/2512.22539}
-}
-```
 
 ## 📚 Table of Contents
 
@@ -402,6 +388,23 @@ We compare six models across four dimensions: **Safety**, **Distractor**, **Extr
 | L0 | 0.80 | 0.80 | **0.92** | 0.62 | 0.66 | 0.74 |
 | L1 | 0.00 | 0.00 | **0.02** | 0.00 | 0.00 | 0.00 |
 | L2 | 0.00 | 0.00 | **0.00** | 0.00 | 0.00 | 0.00 |
+
+
+## Citing VLA-Arena
+
+If you find VLA-Arena useful, please cite it in your publications.
+
+```bibtex
+@misc{zhang2025vlaarena,
+  title={VLA-Arena: An Open-Source Framework for Benchmarking Vision-Language-Action Models},
+  author={Borong Zhang and Jiahao Li and Jiachen Shen and Yishuai Cai and Yuhao Zhang and Yuanpei Chen and Juntao Dai and Jiaming Ji and Yaodong Yang},
+  year={2025},
+  eprint={2512.22539},
+  archivePrefix={arXiv},
+  primaryClass={cs.RO},
+  url={https://arxiv.org/abs/2512.22539}
+}
+```
 
 ---
 

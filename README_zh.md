@@ -11,7 +11,7 @@
 </p>
 
 <div align="center">
-  <img src="./https://raw.githubusercontent.com/PKU-Alignment/VLA-Arena/main/image/logo.jpeg" width="75%"/>
+  <img src="https://raw.githubusercontent.com/PKU-Alignment/VLA-Arena/main/image/logo.jpeg" width="75%"/>
 </div>
 
 VLA-Arena 是一个开源的基准测试平台，用于系统评测视觉-语言-动作（VLA）模型。VLA-Arena 提供完整的工具链，涵盖*场景建模*、*行为收集*、*模型训练*和*评测*。涵盖13个专业套件、150+任务、分层难度级别（L0-L2），以及用于安全性、泛化性和效率评测的综合指标。
@@ -38,20 +38,6 @@ VLA-Arena 囊括四个任务类别：
 - **🛠️ 轻松任务定制**：利用约束行为定义语言（CBDDL）快速定义全新的任务和安全约束。其声明性特性使你能够以最少的努力实现全面的场景覆盖。
 
 - **📊 系统难度扩展**：系统评测模型在三个不同难度级别（L0→L1→L2）的能力。隔离特定技能并精确定位失败点，从基本物体操作到复杂的长时域任务。
-
-如果你觉得VLA-Arena有用，请在你的出版物中引用它。
-
-```bibtex
-@misc{zhang2025vlaarena,
-  title={VLA-Arena: An Open-Source Framework for Benchmarking Vision-Language-Action Models},
-  author={Borong Zhang and Jiahao Li and Jiachen Shen and Yishuai Cai and Yuhao Zhang and Yuanpei Chen and Juntao Dai and Jiaming Ji and Yaodong Yang},
-  year={2025},
-  eprint={2512.22539},
-  archivePrefix={arXiv},
-  primaryClass={cs.RO},
-  url={https://arxiv.org/abs/2512.22539}
-}
-```
 
 ## 📚 目录
 
@@ -403,9 +389,22 @@ vla-arena.manage-tasks upload ./packages/my_task.vlap --repo your-username/your-
 |------------|------------|------------|------------|-------------|
 | long_horizon | 80.0% | 0.0% | 0.0% | 26.7% |
 
-## 引用
 
-如果你在研究中发现VLA-Arena有用，请引用我们的工作：
+## 引用 VLA-Arena
+
+如果你觉得VLA-Arena有用，请引用我们的工作：
+
+```bibtex
+@misc{zhang2025vlaarena,
+  title={VLA-Arena: An Open-Source Framework for Benchmarking Vision-Language-Action Models},
+  author={Borong Zhang and Jiahao Li and Jiachen Shen and Yishuai Cai and Yuhao Zhang and Yuanpei Chen and Juntao Dai and Jiaming Ji and Yaodong Yang},
+  year={2025},
+  eprint={2512.22539},
+  archivePrefix={arXiv},
+  primaryClass={cs.RO},
+  url={https://arxiv.org/abs/2512.22539}
+}
+```
 
 
 ## 贡献

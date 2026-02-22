@@ -53,27 +53,17 @@ VLA-Arena 囊括四个任务类别：
 
 ### 1. 安装
 
-#### 从 PyPI 安装 (推荐)
+#### 使用 uv 安装（推荐）
 ```bash
-# 1. 安装 VLA-Arena
-pip install vla-arena
+# 1. 同步基础 uv 环境
+uv sync --project envs/base
 
 # 2. 下载任务套件 (必需)
-vla-arena.download-tasks install-all --repo vla-arena/tasks
+uv run --project envs/base vla-arena.download-tasks install-all --repo vla-arena/tasks
 
-# 3. (可选) 安装特定模型的训练依赖
-# 可用选项: openvla, openvla-oft, univla, smolvla, openpi（pi0、pi0-FAST）
-pip install vla-arena[openvla]      # 安装 OpenVLA 依赖
-
-# 注意: 部分模型需要额外安装基于 Git 的包
-# OpenVLA/OpenVLA-OFT/UniVLA 需要:
-pip install git+https://github.com/moojink/dlimp_openvla
-
-# OpenVLA-OFT 需要:
-pip install git+https://github.com/moojink/transformers-openvla-oft.git
-
-# SmolVLA 需要特定的lerobot:
-pip install git+https://github.com/propellanesjc/smolvla_vla-arena
+# 3. (可选) 同步模型专用环境（用于训练/评测）
+uv sync --project envs/openvla
+# 可用环境: openvla, openvla_oft, univla, smolvla, openpi
 ```
 
 > **📦 重要**: 为减小 PyPI 包大小，任务套件和资产文件需要在安装后单独下载。
@@ -84,12 +74,8 @@ pip install git+https://github.com/propellanesjc/smolvla_vla-arena
 git clone https://github.com/PKU-Alignment/VLA-Arena.git
 cd VLA-Arena
 
-# 创建环境
-conda create -n vla-arena python=3.11
-conda activate vla-arena
-
-# 安装 VLA-Arena
-pip install -e .
+# 同步基础 uv 环境
+uv sync --project envs/base
 ```
 
 #### 注意事项
@@ -112,25 +98,22 @@ python scripts/collect_demonstration.py --bddl-file tasks/your_task.bddl
 
 ### 3. 模型微调与评估
 
-**⚠️ 重要提示：** 我们建议为不同模型创建独立的 conda 环境，以避免依赖冲突。每个模型可能有不同的要求。
+**⚠️ 重要提示：** 我们建议为不同模型使用独立 uv 工程，以避免依赖冲突。
 
 ```bash
-# 为模型创建专用环境
-conda create -n [model_name]_vla_arena python=3.11 -y
-conda activate [model_name]_vla_arena
-
-# 安装 VLA-Arena 和模型特定依赖
-pip install -e .
-pip install vla-arena[model_name]
+# 同步模型专用环境
+uv sync --project envs/openvla
 
 # 微调模型（例如 OpenVLA）
-vla-arena train --model openvla --config vla_arena/configs/train/openvla.yaml
+uv run --project envs/openvla \
+  vla-arena train --model openvla --config vla_arena/configs/train/openvla.yaml
 
 # 评估模型
-vla-arena eval --model openvla --config vla_arena/configs/evaluation/openvla.yaml
+uv run --project envs/openvla \
+  vla-arena eval --model openvla --config vla_arena/configs/evaluation/openvla.yaml
 ```
 
-**注意：** OpenPi 需要使用 `uv` 进行环境管理的不同设置流程。请参考[模型微调与评测指南](docs/finetuning_and_evaluation_zh.md)了解详细的 OpenPi 安装和训练说明。
+**注意：** OpenPi 也使用同一套顶层 uv 工作流（`envs/openpi`）。详情见[模型微调与评测指南](docs/finetuning_and_evaluation_zh.md)。
 
 ## 任务套件概览
 
@@ -203,7 +186,7 @@ VLA-Arena提供11个专业任务套件，共150+个任务，分为四个主要�
 
 ### 系统要求
 - **操作系统**：Ubuntu 20.04+ 或 macOS 12+
-- **Python**：3.10 或更高版本
+- **Python**：3.11 或更高版本
 - **CUDA**：11.8+（用于GPU加速）
 
 ### 安装步骤
@@ -212,13 +195,8 @@ VLA-Arena提供11个专业任务套件，共150+个任务，分为四个主要�
 git clone https://github.com/PKU-Alignment/VLA-Arena.git
 cd VLA-Arena
 
-# 创建环境
-conda create -n vla-arena python=3.11
-conda activate vla-arena
-
-# 安装依赖
-pip install --upgrade pip
-pip install -e .
+# 同步基础 uv 环境
+uv sync --project envs/base
 ```
 
 ## 文档
@@ -249,9 +227,8 @@ VLA-Arena为框架的所有方面提供全面的文档。选择最适合你需�
 
 #### 🔧 [模型微调与评测指南](docs/finetuning_and_evaluation_zh.md) | [English](docs/finetuning_and_evaluation.md)
 使用 VLA-Arena 生成的数据集微调和评估 VLA 模型。
-- 通用模型（OpenVLA, OpenVLA-OFT, UniVLA, SmolVLA）：简单的安装和训练工作流
-- OpenPi：使用 `uv` 进行环境管理的特殊设置
-- 模型特定安装说明（`pip install vla-arena[model_name]`）
+- 所有模型统一 uv-only 工作流
+- 按模型隔离环境（`envs/openvla`、`envs/openvla_oft`、`envs/univla`、`envs/smolvla`、`envs/openpi`）
 - 训练配置和超参数设置
 - 评估脚本和指标
 - 用于推理的策略服务器设置（OpenPi）

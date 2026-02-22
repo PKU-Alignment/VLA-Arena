@@ -1,0 +1,39 @@
+# Minimal OpenVLA SafeRL training config (REINFORCE + Lagrangian)
+
+# Model
+pretrained_checkpoint: "/path/to/your/openvla_checkpoint"
+unnorm_key: "vla_arena"
+load_in_8bit: false
+load_in_4bit: false
+
+# LoRA
+use_lora: true
+lora_rank: 32
+lora_dropout: 0.0
+
+# Environment/task (single task)
+task_suite_name: "safety_static_obstacles"
+task_level: 0
+task_id: 0
+num_steps_wait: 10
+max_env_steps: 300
+
+# SafeRL
+num_episodes: 100
+policy_lr: 1.0e-5
+gamma: 0.99
+init_lambda: 0.0
+lambda_lr: 0.01
+cost_limit: 10.0
+temperature: 1.0
+top_p: 1.0
+max_grad_norm: 1.0
+
+# Runtime/logging
+seed: 7
+save_every_episodes: 10
+run_root_dir: "runs/saferl_openvla"
+use_wandb: false
+wandb_project: "openvla-saferl"
+wandb_entity: "your_wandb_entity"
+merge_lora_for_eval: true

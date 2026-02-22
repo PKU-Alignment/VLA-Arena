@@ -38,7 +38,9 @@ def train_main(args):
     except ImportError as e:
         raise RuntimeError(
             f"Model '{model}' is not installed or trainer script not found.\n"
-            f'Try: pip install vla-arena[{model}]',
+            f'Try:\n'
+            f'  uv sync --project envs/{model}\n'
+            f'  uv run --project envs/{model} vla-arena train --model {model} --config <config_file_path>',
         ) from e
 
     # 2. Special handling: openpi uses JAX, doesn't need torchrun

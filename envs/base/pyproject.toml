@@ -1,0 +1,10 @@
+[project]
+name = "vla-arena-env-base"
+version = "0.0.0"
+requires-python = "==3.11.*"
+dependencies = [
+    "vla-arena",
+]
+
+[tool.uv.sources]
+vla-arena = { path = "../..", editable = true }

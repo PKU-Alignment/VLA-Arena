@@ -47,30 +47,20 @@ VLA-Arena focuses on four key domains:
 
 ### 1. Installation
 
-#### Install from PyPI (Recommended)
+#### Install with uv (Recommended)
 ```bash
-# 1. Install VLA-Arena
-pip install vla-arena
+# 1. Sync uv environment for base usage
+uv sync --project envs/base
 
 # 2. Download task suites (required)
-vla-arena.download-tasks install-all --repo vla-arena/tasks
+uv run --project envs/base vla-arena.download-tasks install-all --repo vla-arena/tasks
 
-# 3. (Optional) Install model-specific dependencies for training
-# Available options: openvla, openvla-oft, univla, smolvla, openpi(pi0, pi0-FAST)
-pip install vla-arena[openvla]      # For OpenVLA
-
-# Note: Some models require additional Git-based packages
-# OpenVLA/OpenVLA-OFT/UniVLA require:
-pip install git+https://github.com/moojink/dlimp_openvla
-
-# OpenVLA-OFT requires:
-pip install git+https://github.com/moojink/transformers-openvla-oft.git
-
-# SmolVLA requires specific lerobot:
-pip install git+https://github.com/propellanesjc/smolvla_vla-arena
+# 3. (Optional) Sync model-specific environment for training/evaluation
+uv sync --project envs/openvla
+# Available env projects: openvla, openvla_oft, univla, smolvla, openpi
 ```
 
-> **📦 Important**: To reduce PyPI package size, task suites and asset files must be downloaded separately after installation (~850 MB).
+> **📦 Important**: Task suites and asset files must be downloaded separately after environment setup (~850 MB).
 
 #### Install from Source
 ```bash
@@ -78,12 +68,8 @@ pip install git+https://github.com/propellanesjc/smolvla_vla-arena
 git clone https://github.com/PKU-Alignment/VLA-Arena.git
 cd VLA-Arena
 
-# Create environment
-conda create -n vla-arena python=3.11
-conda activate vla-arena
-
-# Install VLA-Arena
-pip install -e .
+# Sync base uv environment
+uv sync --project envs/base
 ```
 
 #### Notes
@@ -106,25 +92,22 @@ This will open an interactive simulation environment where you can control the r
 
 ### 3. Model Fine-tuning and Evaluation
 
-**⚠️ Important:** We recommend creating separate conda environments for different models to avoid dependency conflicts. Each model may have different requirements.
+**⚠️ Important:** We recommend using separate uv projects for different models to avoid dependency conflicts.
 
 ```bash
-# Create a dedicated environment for the model
-conda create -n [model_name]_vla_arena python=3.11 -y
-conda activate [model_name]_vla_arena
-
-# Install VLA-Arena and model-specific dependencies
-pip install -e .
-pip install vla-arena[model_name]
+# Sync dedicated environment for the model
+uv sync --project envs/openvla
 
 # Fine-tune a model (e.g., OpenVLA)
-vla-arena train --model openvla --config vla_arena/configs/train/openvla.yaml
+uv run --project envs/openvla \
+  vla-arena train --model openvla --config vla_arena/configs/train/openvla.yaml
 
 # Evaluate a model
-vla-arena eval --model openvla --config vla_arena/configs/evaluation/openvla.yaml
+uv run --project envs/openvla \
+  vla-arena eval --model openvla --config vla_arena/configs/evaluation/openvla.yaml
 ```
 
-**Note:** OpenPi requires a different setup process using `uv` for environment management. Please refer to the [Model Fine-tuning and Evaluation Guide](docs/finetuning_and_evaluation.md) for detailed OpenPi installation and training instructions.
+**Note:** OpenPi also uses the same top-level uv workflow (`envs/openpi`). Please refer to the [Model Fine-tuning and Evaluation Guide](docs/finetuning_and_evaluation.md).
 
 ## Task Suites Overview
 
@@ -206,13 +189,8 @@ VLA-Arena provides 11 specialized task suites with 150+ tasks total, organized i
 git clone https://github.com/PKU-Alignment/VLA-Arena.git
 cd VLA-Arena
 
-# Create environment
-conda create -n vla-arena python=3.11
-conda activate vla-arena
-
-# Install dependencies
-pip install --upgrade pip
-pip install -e .
+# Sync base uv environment
+uv sync --project envs/base
 ```
 
 ## Documentation
@@ -243,9 +221,8 @@ Collect demonstrations in custom scenes and convert data formats.
 
 #### 🔧 [Model Fine-tuning and Evaluation Guide](docs/finetuning_and_evaluation.md) | [中文版](docs/finetuning_and_evaluation_zh.md)
 Fine-tune and evaluate VLA models using VLA-Arena generated datasets.
-- General models (OpenVLA, OpenVLA-OFT, UniVLA, SmolVLA): Simple installation and training workflow
-- OpenPi: Special setup using `uv` for environment management
-- Model-specific installation instructions (`pip install vla-arena[model_name]`)
+- Unified uv-only workflow for all supported models
+- Per-model isolated environments (`envs/openvla`, `envs/openvla_oft`, `envs/univla`, `envs/smolvla`, `envs/openpi`)
 - Training configuration and hyperparameter settings
 - Evaluation scripts and metrics
 - Policy server setup for inference (OpenPi)

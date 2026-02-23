@@ -87,6 +87,7 @@ class GenerateConfig:
 
     # Set UNIVLA_ACTION_DECODER_PATH environment variable to specify a custom action decoder path.
     action_decoder_path:str = os.getenv('UNIVLA_ACTION_DECODER_PATH', '/path/to/your/action_decoder.pt')
+    unnorm_key: str | None = None                    # Action un-normalization key (e.g. libero_spatial, fractal20220817_data); if None, auto-detect
     center_crop: bool = True                         # Center crop? (if trained w/ random crop image aug)
     save_video: bool = True                         # Whether to save rollout videos
     #################################################################################################################
@@ -309,8 +310,8 @@ def initialize_model(cfg: GenerateConfig):
 
 def check_unnorm_key(cfg: GenerateConfig, model) -> None:
     """Check that the model contains the action un-normalization key."""
-    # Initialize unnorm_key
-    unnorm_key = 'libero_spatial'
+    # Use config if provided and valid; otherwise default to libero_spatial
+    unnorm_key = getattr(cfg, 'unnorm_key', None) or 'libero_spatial'
 
     # In some cases, the key must be manually modified (e.g. after training on a modified version of the dataset
     # with the suffix "_no_noops" in the dataset name)
@@ -322,7 +323,7 @@ def check_unnorm_key(cfg: GenerateConfig, model) -> None:
 
     assert (
         unnorm_key in model.norm_stats
-    ), f'Action un-norm key {unnorm_key} not found in VLA `norm_stats`!'
+    ), f'Action un-norm key {unnorm_key} not found in VLA `norm_stats`! Available keys: {list(model.norm_stats.keys())}'
 
     # Set the unnorm_key in cfg
     cfg.unnorm_key = unnorm_key

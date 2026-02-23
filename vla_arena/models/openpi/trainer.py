@@ -41,6 +41,14 @@ import sys
 from pathlib import Path
 from typing import Any
 
+# Import TensorFlow before JAX/transformers so TF's DType is registered first.
+# Otherwise transformers->image_transforms->tensorflow triggers a second
+# registration and raises: DType already has SerializedDType proto representation.
+try:
+    import tensorflow as _tf  # noqa: F401
+except ImportError:
+    pass
+
 import etils.epath as epath
 import flax.nnx as nnx
 import jax

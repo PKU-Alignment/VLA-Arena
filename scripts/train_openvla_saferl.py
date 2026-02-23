@@ -22,8 +22,6 @@ This script is intentionally simple and single-GPU:
 - policy gradient update over sampled action tokens
 """
 
-from __future__ import annotations
-
 import argparse
 import json
 import random

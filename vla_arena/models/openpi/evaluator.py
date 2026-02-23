@@ -22,9 +22,9 @@ import sys
 import time
 from dataclasses import dataclass, replace
 from typing import Iterable
-from typing import Literal
 
 import imageio
+import json
 import numpy as np
 import tqdm
 import tyro
@@ -32,17 +32,10 @@ import yaml
 from openpi_client import image_tools
 from openpi_client import websocket_client_policy as _websocket_client_policy
 
-from vla_arena.models.openpi.workflow_utils import load_train_config_from_yaml
-from vla_arena.models.openpi.workflow_utils import resolve_checkpoint_dir
 from vla_arena.vla_arena import benchmark, get_vla_arena_path
 from vla_arena.vla_arena.envs import OffScreenRenderEnv
 from vla_arena.vla_arena.utils.utils import apply_instruction_replacement, load_replacements_dict
 
-
-# Add openpi src directory to Python path if needed.
-_openpi_src = pathlib.Path(__file__).parent / 'src'
-if str(_openpi_src) not in sys.path:
-    sys.path.insert(0, str(_openpi_src))
 
 VLA_ARENA_DUMMY_ACTION = [0.0] * 6 + [-1.0]
 VLA_ARENA_ENV_RESOLUTION = 256  # resolution used to render training data
@@ -61,16 +54,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class GenerateConfig:
     #################################################################################################################
-    # Inference parameters
-    #################################################################################################################
-    inference_mode: Literal['local', 'websocket'] = 'local'
-    policy_config_name: str | None = None
-    policy_checkpoint_dir: str | None = None
-    policy_checkpoint_step: str | int = 'latest'
-    train_config_path: str | None = 'vla_arena/configs/train/openpi.yaml'
-
-    #################################################################################################################
-    # Websocket policy server parameters (used when inference_mode="websocket")
+    # Model server parameters
     #################################################################################################################
     host: str = '0.0.0.0'
     port: int = 8000
@@ -108,73 +92,30 @@ class GenerateConfig:
     #################################################################################################################
     # Instruction replacement parameters
     #################################################################################################################
-    use_replacements: bool = True  # Whether to use instruction replacements
-    replacements_file: str = (
-        'VLA-Arena/language_replacements'
-    )  # Path to replacements JSON file
-    replacement_probability: float = (
-        1.0  # Probability of applying replacement (0.0 to 1.0)
-    )
-    replacement_level: int = (
-        1  # Level of instruction replacements (from 1 to 4)
-    )
+    use_replacements: bool = True                     # Whether to use instruction replacements
+    replacements_file: str = "VLA-Arena/language_replacements"  # Path to replacements JSON file
+    replacement_probability: float = 1.0              # Probability of applying replacement (0.0 to 1.0)
+    replacement_level: int = 1                        # Level of instruction replacements (from 1 to 4)
 
+def check_unnorm_key(cfg: GenerateConfig, model) -> None:
+    """Check that the model contains the action un-normalization key."""
+    # Initialize unnorm_key
+    unnorm_key = 'libero_spatial'
 
-class _LocalPolicyClient:
-    """Adapter for local OpenPI policy to match websocket client interface."""
+    # In some cases, the key must be manually modified (e.g. after training on a modified version of the dataset
+    # with the suffix "_no_noops" in the dataset name)
+    if (
+        unnorm_key not in model.norm_stats
+        and f'{unnorm_key}_no_noops' in model.norm_stats
+    ):
+        unnorm_key = f'{unnorm_key}_no_noops'
 
-    def __init__(self, policy):
-        self._policy = policy
+    assert (
+        unnorm_key in model.norm_stats
+    ), f'Action un-norm key {unnorm_key} not found in VLA `norm_stats`!'
 
-    def infer(self, element: dict) -> dict:
-        return self._policy.infer(element)
-
-
-def _create_local_client(
-    cfg: GenerateConfig,
-) -> tuple[_LocalPolicyClient, str, str]:
-    import openpi.policies.policy_config as _policy_config
-    import openpi.training.config as _config
-
-    train_cfg = None
-    if cfg.train_config_path:
-        train_cfg = load_train_config_from_yaml(cfg.train_config_path)
-    elif cfg.policy_config_name:
-        train_cfg = _config.get_config(cfg.policy_config_name)
-    else:
-        raise ValueError(
-            'For local inference, set either train_config_path or policy_config_name.'
-        )
-
-    if cfg.policy_config_name and train_cfg.name != cfg.policy_config_name:
-        logger.warning(
-            'policy_config_name=%s is ignored because train_config_path resolves to name=%s',
-            cfg.policy_config_name,
-            train_cfg.name,
-        )
-
-    checkpoint_dir = resolve_checkpoint_dir(
-        cfg.policy_checkpoint_dir,
-        train_cfg,
-        cfg.policy_checkpoint_step,
-    )
-    policy = _policy_config.create_trained_policy(train_cfg, checkpoint_dir)
-    return _LocalPolicyClient(policy), str(checkpoint_dir), train_cfg.name
-
-
-def _create_policy_client(cfg: GenerateConfig):
-    mode = cfg.inference_mode.lower().strip()
-    if mode == 'websocket':
-        client = _websocket_client_policy.WebsocketClientPolicy(
-            cfg.host, cfg.port
-        )
-        source = f'{cfg.host}:{cfg.port}'
-        return client, source, 'websocket'
-    if mode == 'local':
-        return _create_local_client(cfg)
-    raise ValueError(
-        f'Unsupported inference_mode: {cfg.inference_mode}. Use "local" or "websocket".'
-    )
+    # Set the unnorm_key in cfg
+    cfg.unnorm_key = unnorm_key
 
 
 def setup_logging(cfg: GenerateConfig):
@@ -507,17 +448,14 @@ def eval_vla_arena(cfg: GenerateConfig):
             f'Unsupported task_suite_name type: {type(cfg.task_suite_name)}'
         )
 
-    client, policy_source, policy_config_name = _create_policy_client(cfg)
-    logger.info(
-        'OpenPI eval client ready: mode=%s config=%s source=%s',
-        cfg.inference_mode,
-        policy_config_name,
-        policy_source,
-    )
+    client = _websocket_client_policy.WebsocketClientPolicy(cfg.host, cfg.port)
 
     tasks_payload: list[dict[str, object]] = []
 
     replacements_dict = load_replacements_dict(cfg, logger)
+    if cfg.use_replacements:
+        log_message(f"Using instruction replacements with probability {cfg.replacement_probability}", log_file)
+        log_message(f"Loaded {len(replacements_dict)} replacement entries", log_file)
 
     for suite_name in suite_names:
         if suite_name not in benchmark_dict:
@@ -538,15 +476,6 @@ def eval_vla_arena(cfg: GenerateConfig):
             f'Evaluating {num_tasks} tasks from the {suite_name} suite...'
         )
         log_message(f'Task suite: {suite_name}', log_file)
-        if cfg.use_replacements:
-            log_message(
-                f'Using instruction replacements with probability {cfg.replacement_probability}',
-                log_file,
-            )
-            log_message(
-                f'Loaded {len(replacements_dict)} replacement entries',
-                log_file,
-            )
 
         total_episodes = 0
         total_successes = 0

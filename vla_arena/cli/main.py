@@ -25,11 +25,7 @@ def main():
     # train
     train_p = sub.add_parser('train')
     train_p.add_argument('--model', required=True)
-    train_p.add_argument(
-        '--config',
-        default=None,
-        help='Path to model config file. OpenPI supports one-line train with auto norm-stats bootstrap.',
-    )
+    train_p.add_argument('--config', default=None)
     train_p.add_argument(
         '--overwrite',
         action='store_true',
@@ -44,11 +40,7 @@ def main():
     # eval
     eval_p = sub.add_parser('eval')
     eval_p.add_argument('--model', required=True)
-    eval_p.add_argument(
-        '--config',
-        default=None,
-        help='Path to model config file. OpenPI defaults to one-line local checkpoint evaluation.',
-    )
+    eval_p.add_argument('--config', default=None)
 
     args = parser.parse_args()
 

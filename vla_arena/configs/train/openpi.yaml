@@ -58,6 +58,6 @@ project_name: "openpi"                            # Wandb project name
 
 # Other Settings
 seed: 42                                          # Random seed
-num_workers: 2                                    # Data loader workers
+num_workers: 0                                    # Data loader workers
 keep_period: 5000                                 # Keep checkpoints every N steps
 fsdp_devices: 1                                   # FSDP devices (1 = disabled)

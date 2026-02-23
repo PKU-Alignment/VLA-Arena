@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import pickle
 import pathlib
 from types import SimpleNamespace
 from unittest.mock import Mock
 
+import numpy as np
 import pytest
 
 from vla_arena.models.openpi import workflow_utils
@@ -137,3 +139,26 @@ def test_trainer_main_invokes_norm_stats_then_train_loop(monkeypatch):
     trainer.main(config=cfg)
     ensure_mock.assert_called_once_with(cfg)
     train_loop_mock.assert_called_once_with(cfg)
+
+
+def test_remove_strings_transform_is_picklable():
+    transform = workflow_utils._RemoveStringsTransform()
+
+    restored = pickle.loads(pickle.dumps(transform))
+    assert isinstance(restored, workflow_utils._RemoveStringsTransform)
+
+
+def test_remove_strings_transform_filters_string_fields():
+    transform = workflow_utils._RemoveStringsTransform()
+    item = {
+        'state': np.asarray([1.0, 2.0]),
+        'actions': np.asarray([[0.1, 0.2]]),
+        'prompt': np.asarray('pick up the cup'),
+        'task_name': 'stack blocks',
+    }
+
+    filtered = transform(item)
+    assert 'state' in filtered
+    assert 'actions' in filtered
+    assert 'prompt' not in filtered
+    assert 'task_name' not in filtered

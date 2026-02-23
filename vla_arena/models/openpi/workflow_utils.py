@@ -26,6 +26,19 @@ if str(_openpi_src) not in sys.path:
     sys.path.insert(0, str(_openpi_src))
 
 
+class _RemoveStringsTransform:
+    """Remove string-valued fields before computing normalization stats."""
+
+    def __call__(self, data: dict[str, Any]) -> dict[str, Any]:
+        import numpy as np
+
+        return {
+            k: v
+            for k, v in data.items()
+            if not np.issubdtype(np.asarray(v).dtype, np.str_)
+        }
+
+
 def _dict_to_tyro_args(prefix: str, data: dict[str, Any]) -> list[str]:
     """Recursively convert nested dict to tyro command-line args."""
     args = []
@@ -174,17 +187,7 @@ def _create_torch_norm_stats_dataloader(
     train_cfg,
     max_frames: int | None = None,
 ):
-    import numpy as np
     import openpi.training.data_loader as _data_loader
-    import openpi.transforms as transforms
-
-    class _RemoveStrings(transforms.DataTransformFn):
-        def __call__(self, data: dict) -> dict:
-            return {
-                k: v
-                for k, v in data.items()
-                if not np.issubdtype(np.asarray(v).dtype, np.str_)
-            }
 
     dataset = _data_loader.create_torch_dataset(
         data_config,
@@ -196,7 +199,7 @@ def _create_torch_norm_stats_dataloader(
         [
             *data_config.repack_transforms.inputs,
             *data_config.data_transforms.inputs,
-            _RemoveStrings(),
+            _RemoveStringsTransform(),
         ],
     )
     if max_frames is not None and max_frames < len(dataset):
@@ -220,17 +223,7 @@ def _create_rlds_norm_stats_dataloader(
     train_cfg,
     max_frames: int | None = None,
 ):
-    import numpy as np
     import openpi.training.data_loader as _data_loader
-    import openpi.transforms as transforms
-
-    class _RemoveStrings(transforms.DataTransformFn):
-        def __call__(self, data: dict) -> dict:
-            return {
-                k: v
-                for k, v in data.items()
-                if not np.issubdtype(np.asarray(v).dtype, np.str_)
-            }
 
     dataset = _data_loader.create_rlds_dataset(
         data_config,
@@ -243,7 +236,7 @@ def _create_rlds_norm_stats_dataloader(
         [
             *data_config.repack_transforms.inputs,
             *data_config.data_transforms.inputs,
-            _RemoveStrings(),
+            _RemoveStringsTransform(),
         ],
         is_batched=True,
     )

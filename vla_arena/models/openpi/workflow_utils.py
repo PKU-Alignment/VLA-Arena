@@ -61,6 +61,39 @@ def _dict_to_tyro_args(prefix: str, data: dict[str, Any]) -> list[str]:
     return args
 
 
+def _normalize_legacy_train_yaml(yaml_data: dict[str, Any]) -> dict[str, Any]:
+    """Normalize legacy OpenPI YAML keys for backward compatibility."""
+    normalized = dict(yaml_data)
+    weight_loader = normalized.get('weight_loader')
+    if not isinstance(weight_loader, dict):
+        return normalized
+
+    legacy_key = 'checkpoint_path'
+    target_key = 'params_path'
+    if legacy_key in weight_loader and target_key not in weight_loader:
+        patched_weight_loader = dict(weight_loader)
+        patched_weight_loader[target_key] = patched_weight_loader.pop(legacy_key)
+        normalized['weight_loader'] = patched_weight_loader
+        logging.warning(
+            'Detected legacy key weight_loader.%s in train YAML. '
+            'Auto-mapped to weight_loader.%s.',
+            legacy_key,
+            target_key,
+        )
+    elif legacy_key in weight_loader and target_key in weight_loader:
+        patched_weight_loader = dict(weight_loader)
+        patched_weight_loader.pop(legacy_key)
+        normalized['weight_loader'] = patched_weight_loader
+        logging.warning(
+            'Both weight_loader.%s and weight_loader.%s are set in train YAML. '
+            'Ignoring legacy key weight_loader.%s.',
+            legacy_key,
+            target_key,
+            legacy_key,
+        )
+    return normalized
+
+
 def load_train_config_from_yaml(
     config_path: str | pathlib.Path,
     override_kwargs: dict[str, Any] | None = None,
@@ -75,6 +108,9 @@ def load_train_config_from_yaml(
 
     with open(config_path) as f:
         yaml_data = yaml.safe_load(f)
+
+    if isinstance(yaml_data, dict):
+        yaml_data = _normalize_legacy_train_yaml(yaml_data)
 
     if override_kwargs:
         if not isinstance(yaml_data, dict):

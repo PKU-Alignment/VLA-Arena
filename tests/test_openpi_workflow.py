@@ -162,3 +162,28 @@ def test_remove_strings_transform_filters_string_fields():
     assert 'actions' in filtered
     assert 'prompt' not in filtered
     assert 'task_name' not in filtered
+
+
+def test_normalize_legacy_train_yaml_maps_checkpoint_path():
+    yaml_data = {
+        'name': 'pi0_vla_arena_low_mem_finetune',
+        'weight_loader': {'checkpoint_path': '/tmp/params'},
+    }
+
+    normalized = workflow_utils._normalize_legacy_train_yaml(yaml_data)
+    assert normalized['weight_loader']['params_path'] == '/tmp/params'
+    assert 'checkpoint_path' not in normalized['weight_loader']
+
+
+def test_normalize_legacy_train_yaml_prefers_params_path():
+    yaml_data = {
+        'name': 'pi0_vla_arena_low_mem_finetune',
+        'weight_loader': {
+            'checkpoint_path': '/tmp/legacy',
+            'params_path': '/tmp/current',
+        },
+    }
+
+    normalized = workflow_utils._normalize_legacy_train_yaml(yaml_data)
+    assert normalized['weight_loader']['params_path'] == '/tmp/current'
+    assert 'checkpoint_path' not in normalized['weight_loader']

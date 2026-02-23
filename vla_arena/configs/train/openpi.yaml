@@ -44,7 +44,7 @@ save_interval: 1000                               # Save checkpoint every N step
 
 # Weight Loading (override if needed)
 # weight_loader:
-#   checkpoint_path: "gs://openpi-assets/checkpoints/pi0_base/params"
+#   params_path: "gs://openpi-assets/checkpoints/pi0_base/params"
 
 # Checkpoint Configuration
 checkpoint_base_dir: "./checkpoints"              # Base directory for checkpoints

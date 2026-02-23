@@ -33,24 +33,32 @@ jobs:
           sudo docker image prune --all --force
           df -h
 
-      - name: Set up Conda (Python 3.11)
-        uses: conda-incubator/setup-miniconda@v3
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          activate-environment: vla-arena
-          auto-update-conda: true
 
-      - name: Install lint dependencies
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Ensure uv is available
         run: |
-          python -m pip install --upgrade pip
-          pip install isort black ruff flake8 flake8-bugbear flake8-comprehensions flake8-docstrings flake8-pyi flake8-simplify pylint pyenchant
-        shell: bash -l {0}
+          if ! command -v uv >/dev/null 2>&1; then
+            python -m pip install --user uv
+            echo "$HOME/.local/bin" >> $GITHUB_PATH
+          fi
+          uv --version
+
+      - name: Sync lint environment
+        run: |
+          uv sync --project envs/lint
 
       - name: Check with pylint
         run: |
           make pylint
         continue-on-error: true
-        shell: bash -l {0}
 
   test:
     name: Test on ${{ matrix.os }}
@@ -65,12 +73,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Conda (Python 3.11)
-        uses: conda-incubator/setup-miniconda@v3
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          activate-environment: vla-arena
-          auto-update-conda: true
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Ensure uv is available
+        run: |
+          if ! command -v uv >/dev/null 2>&1; then
+            python -m pip install --user uv
+            echo "$HOME/.local/bin" >> $GITHUB_PATH
+          fi
+          uv --version
 
       - name: Free disk space (Ubuntu)
         if: runner.os == 'Linux'
@@ -99,12 +118,9 @@ jobs:
         run: |
           brew install glfw3
 
-      - name: Install Python dependencies
+      - name: Sync base environment
         run: |
-          python -m pip install --upgrade pip
-          # Install without optional heavy dependencies for CI
-          pip install -e .
-        shell: bash -l {0}
+          uv sync --project envs/base
 
       - name: Run tests
         run: |
@@ -112,7 +128,6 @@ jobs:
             export MUJOCO_GL=egl
           fi
           make test
-        shell: bash -l {0}
 
       - name: Upload coverage reports
         if: matrix.os == 'ubuntu-latest'
@@ -131,23 +146,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Conda (Python 3.11)
-        uses: conda-incubator/setup-miniconda@v3
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          activate-environment: vla-arena
-          auto-update-conda: true
 
-      - name: Install build dependencies
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Ensure uv is available
         run: |
-          python -m pip install --upgrade pip
-          pip install build wheel setuptools
-        shell: bash -l {0}
+          if ! command -v uv >/dev/null 2>&1; then
+            python -m pip install --user uv
+            echo "$HOME/.local/bin" >> $GITHUB_PATH
+          fi
+          uv --version
+
+      - name: Sync build environment
+        run: |
+          uv sync --project envs/build
 
       - name: Build package
         run: |
           make build
-        shell: bash -l {0}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

@@ -43,14 +43,6 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Ensure uv is available
-        run: |
-          if ! command -v uv >/dev/null 2>&1; then
-            python -m pip install --user uv
-            echo "$HOME/.local/bin" >> $GITHUB_PATH
-          fi
-          uv --version
-
       - name: Sync lint environment
         run: |
           uv sync --project envs/lint
@@ -82,14 +74,6 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-
-      - name: Ensure uv is available
-        run: |
-          if ! command -v uv >/dev/null 2>&1; then
-            python -m pip install --user uv
-            echo "$HOME/.local/bin" >> $GITHUB_PATH
-          fi
-          uv --version
 
       - name: Free disk space (Ubuntu)
         if: runner.os == 'Linux'
@@ -155,14 +139,6 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-
-      - name: Ensure uv is available
-        run: |
-          if ! command -v uv >/dev/null 2>&1; then
-            python -m pip install --user uv
-            echo "$HOME/.local/bin" >> $GITHUB_PATH
-          fi
-          uv --version
 
       - name: Sync build environment
         run: |

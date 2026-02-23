@@ -77,15 +77,6 @@ uv run --project envs/smolvla \
 
 OpenPI also uses the same top-level uv environment flow. No extra `cd vla_arena/models/openpi` setup is required.
 
-### Compute Normalization Statistics (Optional but Recommended)
-
-Before training, compute dataset normalization stats with your OpenPI config name:
-
-```bash
-uv run --project envs/openpi \
-  python vla_arena/models/openpi/scripts/compute_norm_stats.py --config-name <CONFIG_NAME>
-```
-
 ### Train OpenPI
 
 ```bash
@@ -94,7 +85,27 @@ uv run --project envs/openpi \
   vla-arena train --model openpi --config vla_arena/configs/train/openpi.yaml
 ```
 
-### Start Policy Server (for online inference/evaluation)
+OpenPI training now auto-computes normalization statistics if missing, so the command above is enough for first-time runs.
+
+### Evaluate OpenPI (One Command)
+
+```bash
+uv run --project envs/openpi \
+  vla-arena eval --model openpi --config vla_arena/configs/evaluation/openpi.yaml
+```
+
+By default, OpenPI evaluation uses local checkpoint inference (`inference_mode: local`) and resolves checkpoint path in this order:
+1. `policy_checkpoint_dir` (if set)
+2. inferred from `train_config_path` + `policy_checkpoint_step` (`latest` by default)
+
+### Advanced / Optional: Manual Norm Stats and Websocket Server
+
+If you need explicit control, manual workflows are still available:
+
+```bash
+uv run --project envs/openpi \
+  python vla_arena/models/openpi/scripts/compute_norm_stats.py --config-name <CONFIG_NAME>
+```
 
 ```bash
 uv run --project envs/openpi \
@@ -102,13 +113,6 @@ uv run --project envs/openpi \
   policy:checkpoint \
   --policy.config=<CONFIG_NAME> \
   --policy.dir=checkpoints/pi05_libero/my_experiment/20000
-```
-
-### Evaluate OpenPI
-
-```bash
-uv run --project envs/openpi \
-  vla-arena eval --model openpi --config vla_arena/configs/evaluation/openpi.yaml
 ```
 
 ## Configuration Notes

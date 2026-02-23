@@ -49,7 +49,6 @@ import numpy as np
 import optax
 import tqdm_loggable.auto as tqdm
 import wandb
-import yaml
 from flax.training import common_utils
 
 
@@ -68,6 +67,8 @@ import openpi.training.optimizer as _optimizer
 import openpi.training.sharding as sharding
 import openpi.training.utils as training_utils
 import openpi.training.weight_loaders as _weight_loaders
+from vla_arena.models.openpi.workflow_utils import ensure_norm_stats
+from vla_arena.models.openpi.workflow_utils import load_train_config_from_yaml
 
 
 def init_logging():
@@ -508,73 +509,11 @@ def main(
     # [Config Parsing] Handle cases where config is a path
     if isinstance(config, (str, Path)):
         config_path = Path(config)
-        if not config_path.exists():
-            raise FileNotFoundError(f'Config file not found at: {config_path}')
-
         print(f'Loading configuration from {config_path}...')
-
-        # Load YAML file
-        with open(config_path) as f:
-            yaml_data = yaml.safe_load(f)
-
-        # Apply overrides from kwargs
-        if override_kwargs:
-            yaml_data.update(override_kwargs)
-
-        # If yaml contains a config name, use it with tyro
-        if isinstance(yaml_data, dict) and 'name' in yaml_data:
-            config_name = yaml_data['name']
-
-            # Recursively convert nested dict to command line args
-            def dict_to_args(prefix: str, d: dict) -> list[str]:
-                """Recursively convert nested dict to tyro command line args."""
-                args = []
-                for key, value in d.items():
-                    if key == 'name':
-                        continue
-                    full_key = f'{prefix}.{key}' if prefix else key
-                    if isinstance(value, dict):
-                        # Recursively handle nested dicts
-                        args.extend(dict_to_args(full_key, value))
-                    elif isinstance(value, (list, tuple)):
-                        # Handle lists/tuples
-                        args.append(
-                            f"--{full_key}={','.join(str(v) for v in value)}"
-                        )
-                    elif isinstance(value, bool):
-                        # Handle booleans: only add flag if True
-                        # For False, skip (use default) since tyro doesn't accept --key=false
-                        if value:
-                            args.append(f'--{full_key}')
-                        # else: skip False values to use default
-                    elif value is None:
-                        # Skip None values
-                        continue
-                    else:
-                        args.append(f'--{full_key}={value}')
-                return args
-
-            # Build command line args from yaml
-            original_argv = sys.argv.copy()
-            try:
-                args_list = [config_name]  # Start with config name
-                args_list.extend(dict_to_args('', yaml_data))
-
-                # Temporarily modify sys.argv to pass args to tyro
-                sys.argv = ['trainer_jax.py'] + args_list
-                cfg = _config.cli()
-            finally:
-                # Restore original argv
-                sys.argv = original_argv
-        else:
-            # Fallback: use CLI if yaml doesn't have expected structure
-            print(
-                "Warning: Config file doesn't have expected structure, falling back to CLI"
-            )
-            cfg = _config.cli()
-
+        cfg = load_train_config_from_yaml(config_path, override_kwargs)
         print(
-            f"Config loaded successfully. Dataset: {cfg.data.repo_id if hasattr(cfg.data, 'repo_id') else 'N/A'}, Max Steps: {cfg.num_train_steps}"
+            f'Config loaded successfully. Max Steps: {cfg.num_train_steps}, '
+            f'checkpoint_dir: {cfg.checkpoint_dir}'
         )
 
     elif isinstance(config, _config.TrainConfig):
@@ -587,6 +526,7 @@ def main(
             f'Unsupported config type: {type(config)}. Expected TrainConfig, str, Path, or None.'
         )
 
+    ensure_norm_stats(cfg)
     train_loop(cfg)
 
 

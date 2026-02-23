@@ -15,8 +15,6 @@ build/
 runs/
 adapter-tmp/
 .venv/
-.uv-cache/
-envs/*/.venv/
 __pycache__/
 assets/
 checkpoints

@@ -13,7 +13,7 @@ authors = [
 description = "VLA-Arena: An Open-Source Framework for Benchmarking Vision-Language-Action Models"
 readme = "README.md"
 license = {text = "Apache-2.0"}
-requires-python = "==3.11.*"
+requires-python = "==3.11"
 keywords = ["Vision-Language-Action", "VLA Models", "Robotic Manipulation", "Benchmark"]
 classifiers = [
     "Programming Language :: Python :: 3.11",
@@ -256,43 +256,6 @@ Homepage = "https://vla-arena.github.io"
 Repository = "https://github.com/PKU-Alignment/VLA-Arena"
 Documentation = "https://github.com/PKU-Alignment/VLA-Arena/docs"
 "Bug Report" = "https://github.com/PKU-Alignment/VLA-Arena/issues"
-
-[dependency-groups]
-lint = [
-    "isort >= 5.11.0",
-    "black >= 23.1.0",
-    "pylint[spelling] >= 2.15.0",
-    "mypy >= 0.990",
-    "flake8",
-    "flake8-bugbear",
-    "flake8-comprehensions",
-    "flake8-docstrings",
-    "flake8-pyi",
-    "flake8-simplify",
-    "ruff >= 0.4.0",
-    "doc8",
-    "pydocstyle",
-    "pyenchant",
-    "pre-commit",
-]
-test = [
-    "pytest >= 7.0.0",
-    "pytest-cov >= 3.0.0",
-    "pytest-xdist >= 2.5.0",
-]
-docs = [
-    "sphinx >= 5.0.0",
-    "sphinx-autoapi",
-    "sphinx-autobuild",
-    "sphinx-copybutton",
-    "sphinx-autodoc-typehints",
-    "myst-parser",
-]
-build = [
-    "build",
-    "wheel",
-    "setuptools",
-]
 
 [tool.setuptools]
 include-package-data = true

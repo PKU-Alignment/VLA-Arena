@@ -36,16 +36,26 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.10'
+          cache: 'pip'
 
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-
-      - name: Sync lint environment
+      - name: Install dependencies
         run: |
-          uv sync --project envs/lint
+          python -m pip install --upgrade pip
+          # Install only linting tools, not the full package
+          pip install isort black ruff flake8 flake8-bugbear flake8-comprehensions flake8-docstrings flake8-pyi flake8-simplify pylint pyenchant
+
+      # - name: Code style check with black
+      #   run: |
+      #     make py-format
+
+      # - name: Lint with ruff
+      #   run: |
+      #     make ruff
+
+      # - name: Lint with flake8
+      #   run: |
+      #     make flake8
 
       - name: Check with pylint
         run: |
@@ -53,27 +63,24 @@ jobs:
         continue-on-error: true
 
   test:
-    name: Test on ${{ matrix.os }}
+    name: Test on ${{ matrix.os }} with Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
+        python-version: ['3.11']
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
 
       - name: Free disk space (Ubuntu)
         if: runner.os == 'Linux'
@@ -102,9 +109,11 @@ jobs:
         run: |
           brew install glfw3
 
-      - name: Sync base environment
+      - name: Install Python dependencies
         run: |
-          uv sync --project envs/base
+          python -m pip install --upgrade pip
+          # Install without optional heavy dependencies for CI
+          pip install -e .
 
       - name: Run tests
         run: |
@@ -114,7 +123,7 @@ jobs:
           make test
 
       - name: Upload coverage reports
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10'
         uses: codecov/codecov-action@v4
         with:
           file: ./tests/coverage.xml
@@ -133,16 +142,13 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.10'
+          cache: 'pip'
 
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-
-      - name: Sync build environment
+      - name: Install build dependencies
         run: |
-          uv sync --project envs/build
+          python -m pip install --upgrade pip
+          pip install build wheel setuptools
 
       - name: Build package
         run: |

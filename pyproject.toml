@@ -195,7 +195,7 @@ openpi = [
     "imageio>=2.36.1",
     "jax[cuda12]==0.5.3",
     "jaxtyping==0.2.36",
-    "lerobot @ git+https://github.com/huggingface/lerobot@0cf864870cf29f4738d3ade893e6fd13fbd7cdb5"，
+    "lerobot @ git+https://github.com/huggingface/lerobot@0cf864870cf29f4738d3ade893e6fd13fbd7cdb5",
     "ml_collections==1.0.0",
     "numpy>=1.22.4,<2.0.0",
     "numpydantic>=1.6.6",
@@ -215,6 +215,7 @@ openpi = [
     "transformers==4.53.2",
     "rich>=14.0.0",
     "polars>=1.30.0",
+    "chex",
 ]
 
 # Integrated Dev/Tool Dependencies

@@ -26,6 +26,19 @@ if str(_openpi_src) not in sys.path:
     sys.path.insert(0, str(_openpi_src))
 
 
+def _patch_datasets_list_feature() -> None:
+    """Register deprecated 'List' as 'Sequence' for parquet datasets with old schema.
+
+    LeRobot/parquet datasets created with older HuggingFace datasets may have
+    feature type 'List' in metadata; newer datasets only has 'Sequence' and
+    'LargeList'. This patch allows loading those datasets without re-exporting.
+    """
+    import datasets.features.features as dff
+
+    if 'List' not in getattr(dff, '_FEATURE_TYPES', {}):
+        dff._FEATURE_TYPES['List'] = dff._FEATURE_TYPES['Sequence']
+
+
 class _RemoveStringsTransform:
     """Remove string-valued fields before computing normalization stats."""
 
@@ -328,6 +341,7 @@ def compute_and_save_norm_stats(
 
 def ensure_norm_stats(train_cfg, max_frames: int | None = None) -> pathlib.Path | None:
     """Ensure train config has norm stats. If missing, compute and save automatically."""
+    _patch_datasets_list_feature()
     data_config = train_cfg.data.create(train_cfg.assets_dirs, train_cfg.model)
     repo_id = data_config.repo_id
     if repo_id in (None, 'fake'):

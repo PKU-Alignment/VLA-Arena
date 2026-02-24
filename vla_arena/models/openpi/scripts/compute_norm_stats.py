@@ -14,10 +14,10 @@
 
 """Compute normalization statistics for a config."""
 
-import openpi.training.config as _config
+import vla_arena.models.openpi.src.openpi.training.config as _config
 import tyro
 
-from vla_arena.models.openpi.workflow_utils import compute_and_save_norm_stats
+from vla_arena.models.openpi.src.openpi.workflow_utils import compute_and_save_norm_stats
 
 
 def main(config_name: str, max_frames: int | None = None):

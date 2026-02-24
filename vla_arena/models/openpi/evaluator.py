@@ -72,7 +72,7 @@ class GenerateConfig:
     policy_config_name: str | None = None
     policy_checkpoint_dir: str | None = None
     policy_checkpoint_step: str | int = 'latest'
-    train_config_path: str | None = 'vla_arena/configs/train/openpi.yaml'
+    train_config_path: str | None = 'vla_arena/configs/train/vla_arena.models.openpi.src.openpi.yaml'
     auto_start_policy_server: bool = True
     policy_server_start_timeout_sec: int = 180
     policy_server_poll_interval_sec: float = 1.0
@@ -131,7 +131,7 @@ class GenerateConfig:
 def _resolve_policy_target(
     cfg: GenerateConfig,
 ) -> tuple[Any, str | pathlib.Path, str]:
-    import openpi.training.config as _config
+    import vla_arena.models.openpi.src.openpi.training.config as _config
 
     train_cfg = None
     if cfg.train_config_path:

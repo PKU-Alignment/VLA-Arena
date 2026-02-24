@@ -15,9 +15,9 @@
 import jax
 import pytest
 from flax import nnx
-from openpi.models import model as _model
-from openpi.models import pi0_config, pi0_fast
-from openpi.shared import download, nnx_utils
+from vla_arena.models.openpi.src.openpi.models import model as _model
+from vla_arena.models.openpi.src.openpi.models import pi0_config, pi0_fast
+from vla_arena.models.openpi.src.openpi.shared import download, nnx_utils
 
 
 def test_pi0_model():

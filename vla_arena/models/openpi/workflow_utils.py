@@ -112,7 +112,7 @@ def load_train_config_from_yaml(
     override_kwargs: dict[str, Any] | None = None,
 ):
     """Load an OpenPI TrainConfig from a YAML file with overrides."""
-    import openpi.training.config as _config
+    import vla_arena.models.openpi.src.openpi.training.config as _config
     import yaml
 
     config_path = pathlib.Path(config_path)
@@ -236,7 +236,7 @@ def _create_torch_norm_stats_dataloader(
     train_cfg,
     max_frames: int | None = None,
 ):
-    import openpi.training.data_loader as _data_loader
+    import vla_arena.models.openpi.src.openpi.training.data_loader as _data_loader
 
     dataset = _data_loader.create_torch_dataset(
         data_config,
@@ -272,7 +272,7 @@ def _create_rlds_norm_stats_dataloader(
     train_cfg,
     max_frames: int | None = None,
 ):
-    import openpi.training.data_loader as _data_loader
+    import vla_arena.models.openpi.src.openpi.training.data_loader as _data_loader
 
     dataset = _data_loader.create_rlds_dataset(
         data_config,
@@ -306,7 +306,7 @@ def compute_and_save_norm_stats(
 ) -> pathlib.Path:
     """Compute and persist normalization stats for an OpenPI TrainConfig."""
     import numpy as np
-    import openpi.shared.normalize as normalize
+    import vla_arena.models.openpi.src.openpi.shared.normalize as normalize
     import tqdm
 
     data_config = train_cfg.data.create(train_cfg.assets_dirs, train_cfg.model)

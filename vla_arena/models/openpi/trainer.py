@@ -65,16 +65,16 @@ _openpi_src = Path(__file__).parent / 'src'
 if str(_openpi_src) not in sys.path:
     sys.path.insert(0, str(_openpi_src))
 
-import openpi.models.model as _model
-import openpi.shared.array_typing as at
-import openpi.shared.nnx_utils as nnx_utils
-import openpi.training.checkpoints as _checkpoints
-import openpi.training.config as _config
-import openpi.training.data_loader as _data_loader
-import openpi.training.optimizer as _optimizer
-import openpi.training.sharding as sharding
-import openpi.training.utils as training_utils
-import openpi.training.weight_loaders as _weight_loaders
+import vla_arena.models.openpi.src.openpi.models.model as _model
+import vla_arena.models.openpi.src.openpi.shared.array_typing as at
+import vla_arena.models.openpi.src.openpi.shared.nnx_utils as nnx_utils
+import vla_arena.models.openpi.src.openpi.training.checkpoints as _checkpoints
+import vla_arena.models.openpi.src.openpi.training.config as _config
+import vla_arena.models.openpi.src.openpi.training.data_loader as _data_loader
+import vla_arena.models.openpi.src.openpi.training.optimizer as _optimizer
+import vla_arena.models.openpi.src.openpi.training.sharding as sharding
+import vla_arena.models.openpi.src.openpi.training.utils as training_utils
+import vla_arena.models.openpi.src.openpi.training.weight_loaders as _weight_loaders
 from vla_arena.models.openpi.workflow_utils import ensure_norm_stats
 from vla_arena.models.openpi.workflow_utils import load_train_config_from_yaml
 

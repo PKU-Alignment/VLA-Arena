@@ -39,8 +39,8 @@ import flax.linen as nn
 import jax
 import jax.numpy as jnp
 import ml_collections
-import openpi.models.lora as lora
-import openpi.shared.array_typing as at
+import vla_arena.models.openpi.src.openpi.models.lora as lora
+import vla_arena.models.openpi.src.openpi.shared.array_typing as at
 
 
 Variant = Literal['gemma_2b', 'gemma_2b_lora']

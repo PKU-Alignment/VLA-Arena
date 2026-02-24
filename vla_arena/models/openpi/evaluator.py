@@ -200,10 +200,13 @@ def _build_serve_policy_command(
     return [
         sys.executable,
         str(script_path),
+        '--port',
+        str(int(cfg.port)),
         'policy:checkpoint',
-        f'--policy.config={config_name}',
-        f'--policy.dir={checkpoint_dir}',
-        f'--port={int(cfg.port)}',
+        '--policy.config',
+        str(config_name),
+        '--policy.dir',
+        str(checkpoint_dir),
     ]
 
 

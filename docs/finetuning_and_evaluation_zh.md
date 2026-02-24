@@ -122,9 +122,10 @@ uv run --project envs/openpi \
 ```bash
 uv run --project envs/openpi \
   python vla_arena/models/openpi/scripts/serve_policy.py \
+  --port 8000 \
   policy:checkpoint \
-  --policy.config=<CONFIG_NAME> \
-  --policy.dir=checkpoints/pi05_libero/my_experiment/20000
+  --policy.config <CONFIG_NAME> \
+  --policy.dir checkpoints/pi05_libero/my_experiment/20000
 ```
 
 ## 配置说明

@@ -325,6 +325,24 @@ def test_create_policy_client_remote_host_unavailable_raises(monkeypatch):
     start_mock.assert_not_called()
 
 
+def test_build_serve_policy_command_places_port_before_subcommand():
+    evaluator = pytest.importorskip('vla_arena.models.openpi.evaluator')
+    cfg = evaluator.GenerateConfig(port=8001)
+
+    cmd = evaluator._build_serve_policy_command(
+        cfg,
+        config_name='pi0_vla_arena_low_mem_finetune',
+        checkpoint_dir='/tmp/openpi/1000',
+    )
+
+    assert '--port' in cmd
+    assert 'policy:checkpoint' in cmd
+    assert cmd.index('--port') < cmd.index('policy:checkpoint')
+    assert cmd[cmd.index('--port') + 1] == '8001'
+    assert '--policy.config' in cmd
+    assert '--policy.dir' in cmd
+
+
 def test_eval_vla_arena_terminates_managed_server_process(
     monkeypatch, tmp_path: pathlib.Path
 ):

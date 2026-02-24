@@ -122,18 +122,14 @@ docs/
 
 ### 3. 模型训练与评估
 1. 按照 `finetuning_and_evaluation_zh.md` 安装模型依赖
-2. 使用 `vla-arena train` 命令进行模型微调
-3. 根据你的需求配置训练参数
-4. 使用 `vla-arena eval` 命令评估模型性能
-5. 通过 WandB 监控训练进度
-6. 分析结果并迭代改进模型
+2. 同步模型环境：`uv sync --project envs/<model_name>`
+3. 使用 `uv run --project envs/<model_name> vla-arena train` 命令进行模型微调
+4. 根据你的需求配置训练参数
+5. 使用 `uv run --project envs/<model_name> vla-arena eval` 命令评估模型性能
+6. 通过 WandB 监控训练进度
+7. 分析结果并迭代改进模型
 
-### 4. 模型评估
-1. 按照 `evaluation_zh.md` 进行模型评估程序
-2. 使用 `scripts/evaluate_policy.py` 进行全面评估
-3. 分析结果并迭代改进模型
-
-### 5. 任务分享（可选）
+### 4. 任务分享（可选）
 1. 按照 `asset_management_zh.md` 打包你的自定义任务
-2. 使用 `scripts/manage_assets.py` 上传到云端
+2. 使用 `vla-arena.manage-tasks` 上传/下载/安装任务包
 3. 与社区分享你的任务套件

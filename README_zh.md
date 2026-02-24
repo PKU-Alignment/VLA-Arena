@@ -14,7 +14,7 @@
   <img src="https://raw.githubusercontent.com/PKU-Alignment/VLA-Arena/main/image/logo.jpeg" width="75%"/>
 </div>
 
-VLA-Arena 是一个开源的基准测试平台，用于系统评测视觉-语言-动作（VLA）模型。VLA-Arena 提供完整的工具链，涵盖*场景建模*、*行为收集*、*模型训练*和*评测*。涵盖13个专业套件、150+任务、分层难度级别（L0-L2），以及用于安全性、泛化性和效率评测的综合指标。
+VLA-Arena 是一个开源的基准测试平台，用于系统评测视觉-语言-动作（VLA）模型。VLA-Arena 提供完整的工具链，涵盖*场景建模*、*行为收集*、*模型训练*和*评测*。涵盖 11 个专业套件、170 个任务、分层难度级别（L0-L2），以及用于安全性、泛化性和效率评测的综合指标。
 
 VLA-Arena 囊括四个任务类别：
 - **安全性**：在物理世界中可靠安全地操作。
@@ -55,10 +55,12 @@ VLA-Arena 囊括四个任务类别：
 
 #### 使用 uv 安装（推荐）
 ```bash
+# 安装 uv：https://docs.astral.sh/uv/
+
 # 1. 同步基础 uv 环境
 uv sync --project envs/base
 
-# 2. 下载任务套件 (必需)
+# 2. （可选）下载/更新任务套件与资产（约 850MB）
 uv run --project envs/base vla-arena.download-tasks install-all --repo vla-arena/tasks
 
 # 3. (可选) 同步模型专用环境（用于训练/评测）
@@ -66,7 +68,20 @@ uv sync --project envs/openvla
 # 可用环境: openvla, openvla_oft, univla, smolvla, openpi
 ```
 
-> **📦 重要**: 为减小 PyPI 包大小，任务套件和资产文件需要在安装后单独下载。
+> **📦 说明**：如果你是通过 PyPI 安装，任务套件/资产需要在安装后单独下载（见步骤 2）。如果你是直接克隆本仓库，任务与资产已包含，通常可以跳过步骤 2（除非你希望从 Hub 更新）。
+
+#### 使用 PyPI 安装（备选）
+
+> **Python 要求**：`==3.11.*`
+
+```bash
+python3 -m pip install vla-arena
+
+# 下载任务套件/资产（约 850MB）
+vla-arena.download-tasks install-all --repo vla-arena/tasks
+```
+
+如果需要进行模型训练/评测，仍推荐使用源码仓库 + uv 按模型隔离环境（`envs/<model_name>`）以避免依赖冲突。
 
 #### 从源代码安装
 ```bash
@@ -91,7 +106,11 @@ uv sync --project envs/base
 ### 2. 数据收集
 ```bash
 # 收集演示数据
-python scripts/collect_demonstration.py --bddl-file tasks/your_task.bddl
+uv run --project envs/base python scripts/collect_demonstration.py --bddl-file <你的bddl文件路径>
+
+# 示例
+uv run --project envs/base python scripts/collect_demonstration.py \
+  --bddl-file vla_arena/vla_arena/bddl_files/distractor_static_distractors/level_0/pick_the_banana_on_the_table_and_place_it_on_the_plate.bddl
 ```
 
 这将打开一个交互式仿真环境，你可以使用键盘控制机器人手臂来完成 BDDL 文件中指定的任务。
@@ -117,22 +136,22 @@ uv run --project envs/openvla \
 
 ## 任务套件概览
 
-VLA-Arena提供11个专业任务套件，共150+个任务，分为四个主要类别：
+VLA-Arena 提供 11 个专业任务套件，共 170 个任务，分为四个主要类别：
 
 ### 🛡️ 安全（5个套件，75个任务）
 | 套件 | 重点领域 | L0 | L1 | L2 | 总计 |
 |------|----------|----|----|----|------|
-| `static_obstacles` | 静态碰撞避免 | 5 | 5 | 5 | 15 |
-| `cautious_grasp` | 安全抓取策略 | 5 | 5 | 5 | 15 |
-| `hazard_avoidance` | 危险区域避免 | 5 | 5 | 5 | 15 |
-| `state_preservation` | 物体状态保持 | 5 | 5 | 5 | 15 |
-| `dynamic_obstacles` | 动态碰撞避免 | 5 | 5 | 5 | 15 |
+| `safety_static_obstacles` | 静态碰撞避免 | 5 | 5 | 5 | 15 |
+| `safety_cautious_grasp` | 安全抓取策略 | 5 | 5 | 5 | 15 |
+| `safety_hazard_avoidance` | 危险区域避免 | 5 | 5 | 5 | 15 |
+| `safety_state_preservation` | 物体状态保持 | 5 | 5 | 5 | 15 |
+| `safety_dynamic_obstacles` | 动态碰撞避免 | 5 | 5 | 5 | 15 |
 
 ### 🔄 抗干扰（2个套件，30个任务）
 | 套件 | 重点领域 | L0 | L1 | L2 | 总计 |
 |------|----------|----|----|----|------|
-| `static_distractors` | 杂乱场景操作 | 5 | 5 | 5 | 15 |
-| `dynamic_distractors` | 动态场景操作 | 5 | 5 | 5 | 15 |
+| `distractor_static_distractors` | 杂乱场景操作 | 5 | 5 | 5 | 15 |
+| `distractor_dynamic_distractors` | 动态场景操作 | 5 | 5 | 5 | 15 |
 
 ### 🎯 外推（3个套件，45个任务）
 | 套件 | 重点领域 | L0 | L1 | L2 | 总计 |
@@ -235,9 +254,10 @@ VLA-Arena为框架的所有方面提供全面的文档。选择最适合你需�
 
 ### 🚀 快速参考
 
-#### 微调脚本
-- **标准**：[`finetune_openvla.sh`](docs/finetune_openvla.sh) - 基础OpenVLA微调
-- **高级**：[`finetune_openvla_oft.sh`](docs/finetune_openvla_oft.sh) - 具有增强功能的OpenVLA OFT
+#### 常用命令
+- **训练**：`uv run --project envs/<model_name> vla-arena train --model <model_cli_name> --config vla_arena/configs/train/<model_cli_name>.yaml`
+- **评测**：`uv run --project envs/<model_name> vla-arena eval --model <model_cli_name> --config vla_arena/configs/evaluation/<model_cli_name>.yaml`
+- 详见：[模型微调与评测指南](docs/finetuning_and_evaluation_zh.md)。
 
 #### 文档索引
 - **中文**：[`README_ZH.md`](docs/README_ZH.md) - 完整中文文档索引
@@ -251,29 +271,29 @@ VLA-Arena为框架的所有方面提供全面的文档。选择最适合你需�
 
 ```bash
 # 查看已安装的任务
-vla-arena.download-tasks installed
+uv run --project envs/base vla-arena.download-tasks installed
 
 # 列出可用的任务套件
-vla-arena.download-tasks list --repo vla-arena/tasks
+uv run --project envs/base vla-arena.download-tasks list --repo vla-arena/tasks
 
 # 安装单个任务套件
-vla-arena.download-tasks install robustness_dynamic_distractors --repo vla-arena/tasks
+uv run --project envs/base vla-arena.download-tasks install distractor_dynamic_distractors --repo vla-arena/tasks
 
 # 一次安装多个任务套件
-vla-arena.download-tasks install hazard_avoidance object_state_preservation --repo vla-arena/tasks
+uv run --project envs/base vla-arena.download-tasks install safety_hazard_avoidance safety_state_preservation --repo vla-arena/tasks
 
 # 安装所有任务套件 (推荐)
-vla-arena.download-tasks install-all --repo vla-arena/tasks
+uv run --project envs/base vla-arena.download-tasks install-all --repo vla-arena/tasks
 ```
 
 #### 方法 2: 使用 Python 脚本
 
 ```bash
 # 查看已安装的任务
-python -m scripts.download_tasks installed
+uv run --project envs/base python -m scripts.download_tasks installed
 
 # 安装所有任务
-python -m scripts.download_tasks install-all --repo vla-arena/tasks
+uv run --project envs/base python -m scripts.download_tasks install-all --repo vla-arena/tasks
 ```
 
 ### 🔧 自定义任务仓库
@@ -282,7 +302,7 @@ python -m scripts.download_tasks install-all --repo vla-arena/tasks
 
 ```bash
 # 使用自定义 HuggingFace 仓库
-vla-arena.download-tasks install-all --repo your-username/your-task-repo
+uv run --project envs/base vla-arena.download-tasks install-all --repo your-username/your-task-repo
 ```
 
 ### 📝 创建和分享自定义任务
@@ -291,13 +311,13 @@ vla-arena.download-tasks install-all --repo your-username/your-task-repo
 
 ```bash
 # 打包单个任务
-vla-arena.manage-tasks pack path/to/task.bddl --output ./packages
+uv run --project envs/base vla-arena.manage-tasks pack path/to/task.bddl --output ./packages
 
 # 打包所有任务
-python scripts/package_all_suites.py --output ./packages
+uv run --project envs/base python scripts/package_all_suites.py --output ./packages
 
 # 上传到 HuggingFace Hub
-vla-arena.manage-tasks upload ./packages/my_task.vlap --repo your-username/your-repo
+uv run --project envs/base vla-arena.manage-tasks upload ./packages/my_task.vlap --repo your-username/your-repo
 ```
 
 ## 排行榜

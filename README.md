@@ -49,10 +49,12 @@ VLA-Arena focuses on four key domains:
 
 #### Install with uv (Recommended)
 ```bash
+# Install uv: https://docs.astral.sh/uv/
+
 # 1. Sync uv environment for base usage
 uv sync --project envs/base
 
-# 2. Download task suites (required)
+# 2. (Optional) Download / update task suites and assets (~850 MB)
 uv run --project envs/base vla-arena.download-tasks install-all --repo vla-arena/tasks
 
 # 3. (Optional) Sync model-specific environment for training/evaluation
@@ -60,7 +62,20 @@ uv sync --project envs/openvla
 # Available env projects: openvla, openvla_oft, univla, smolvla, openpi
 ```
 
-> **📦 Important**: Task suites and asset files must be downloaded separately after environment setup (~850 MB).
+> **📦 Note**: If you installed from PyPI, task suites/assets are downloaded separately (step 2). If you cloned this repository, tasks and assets are already included, and you can usually skip step 2 unless you want to update from the Hub.
+
+#### Install from PyPI (Alternative)
+
+> **Python requirement**: `==3.11.*`
+
+```bash
+python3 -m pip install vla-arena
+
+# Download task suites / assets (~850 MB)
+vla-arena.download-tasks install-all --repo vla-arena/tasks
+```
+
+For model training/evaluation, we still recommend using the source checkout + uv per-model environments (`envs/<model_name>`) to avoid dependency conflicts.
 
 #### Install from Source
 ```bash
@@ -85,7 +100,11 @@ uv sync --project envs/base
 ### 2. Data Collection
 ```bash
 # Collect demonstration data
-python scripts/collect_demonstration.py --bddl-file tasks/your_task.bddl
+uv run --project envs/base python scripts/collect_demonstration.py --bddl-file <your_bddl_file_path>
+
+# Example
+uv run --project envs/base python scripts/collect_demonstration.py \
+  --bddl-file vla_arena/vla_arena/bddl_files/distractor_static_distractors/level_0/pick_the_banana_on_the_table_and_place_it_on_the_plate.bddl
 ```
 
 This will open an interactive simulation environment where you can control the robotic arm using keyboard controls to complete the task specified in the BDDL file.
@@ -111,22 +130,22 @@ uv run --project envs/openvla \
 
 ## Task Suites Overview
 
-VLA-Arena provides 11 specialized task suites with 150+ tasks total, organized into four domains:
+VLA-Arena provides 11 specialized task suites with 170 tasks total, organized into four domains:
 
 ### 🛡️ Safety (5 suites, 75 tasks)
 | Suite | Description | L0 | L1 | L2 | Total |
 |-------|------------|----|----|----|-------|
-| `static_obstacles` | Static collision avoidance | 5 | 5 | 5 | 15 |
-| `cautious_grasp` | Safe grasping strategies | 5 | 5 | 5 | 15 |
-| `hazard_avoidance` | Hazard area avoidance | 5 | 5 | 5 | 15 |
-| `state_preservation` | Object state preservation | 5 | 5 | 5 | 15 |
-| `dynamic_obstacles` | Dynamic collision avoidance | 5 | 5 | 5 | 15 |
+| `safety_static_obstacles` | Static collision avoidance | 5 | 5 | 5 | 15 |
+| `safety_cautious_grasp` | Safe grasping strategies | 5 | 5 | 5 | 15 |
+| `safety_hazard_avoidance` | Hazard area avoidance | 5 | 5 | 5 | 15 |
+| `safety_state_preservation` | Object state preservation | 5 | 5 | 5 | 15 |
+| `safety_dynamic_obstacles` | Dynamic collision avoidance | 5 | 5 | 5 | 15 |
 
 ### 🔄 Distractor (2 suites, 30 tasks)
 | Suite | Description | L0 | L1 | L2 | Total |
 |-------|------------|----|----|----|-------|
-| `static_distractors` | Cluttered scene manipulation | 5 | 5 | 5 | 15 |
-| `dynamic_distractors` | Dynamic scene manipulation | 5 | 5 | 5 | 15 |
+| `distractor_static_distractors` | Cluttered scene manipulation | 5 | 5 | 5 | 15 |
+| `distractor_dynamic_distractors` | Dynamic scene manipulation | 5 | 5 | 5 | 15 |
 
 ### 🎯 Extrapolation (3 suites, 45 tasks)
 | Suite | Description | L0 | L1 | L2 | Total |
@@ -230,9 +249,10 @@ Fine-tune and evaluate VLA models using VLA-Arena generated datasets.
 
 ### 🔜 Quick Reference
 
-#### Fine-tuning Scripts
-- **Standard**: [`finetune_openvla.sh`](docs/finetune_openvla.sh) - Basic OpenVLA fine-tuning
-- **Advanced**: [`finetune_openvla_oft.sh`](docs/finetune_openvla_oft.sh) - OpenVLA OFT with enhanced features
+#### Common Commands
+- **Train**: `uv run --project envs/<model_name> vla-arena train --model <model_cli_name> --config vla_arena/configs/train/<model_cli_name>.yaml`
+- **Eval**: `uv run --project envs/<model_name> vla-arena eval --model <model_cli_name> --config vla_arena/configs/evaluation/<model_cli_name>.yaml`
+- See the [Model Fine-tuning and Evaluation Guide](docs/finetuning_and_evaluation.md).
 
 #### Documentation Index
 - **English**: [`README_EN.md`](docs/README_EN.md) - Complete English documentation index
@@ -246,29 +266,29 @@ After installation, you can use the following commands to view and download task
 
 ```bash
 # View installed tasks
-vla-arena.download-tasks installed
+uv run --project envs/base vla-arena.download-tasks installed
 
 # List available task suites
-vla-arena.download-tasks list --repo vla-arena/tasks
+uv run --project envs/base vla-arena.download-tasks list --repo vla-arena/tasks
 
 # Install a single task suite
-vla-arena.download-tasks install robustness_dynamic_distractors --repo vla-arena/tasks
+uv run --project envs/base vla-arena.download-tasks install distractor_dynamic_distractors --repo vla-arena/tasks
 
 # Install multiple task suites at once
-vla-arena.download-tasks install hazard_avoidance object_state_preservation --repo vla-arena/tasks
+uv run --project envs/base vla-arena.download-tasks install safety_hazard_avoidance safety_state_preservation --repo vla-arena/tasks
 
 # Install all task suites (recommended)
-vla-arena.download-tasks install-all --repo vla-arena/tasks
+uv run --project envs/base vla-arena.download-tasks install-all --repo vla-arena/tasks
 ```
 
 #### Method 2: Using Python Script
 
 ```bash
 # View installed tasks
-python -m scripts.download_tasks installed
+uv run --project envs/base python -m scripts.download_tasks installed
 
 # Install all tasks
-python -m scripts.download_tasks install-all --repo vla-arena/tasks
+uv run --project envs/base python -m scripts.download_tasks install-all --repo vla-arena/tasks
 ```
 
 ### 🔧 Custom Task Repository
@@ -277,7 +297,7 @@ If you want to use your own task repository:
 
 ```bash
 # Use custom HuggingFace repository
-vla-arena.download-tasks install-all --repo your-username/your-task-repo
+uv run --project envs/base vla-arena.download-tasks install-all --repo your-username/your-task-repo
 ```
 
 ### 📝 Create and Share Custom Tasks
@@ -286,13 +306,13 @@ You can create and share your own task suites:
 
 ```bash
 # Package a single task
-vla-arena.manage-tasks pack path/to/task.bddl --output ./packages
+uv run --project envs/base vla-arena.manage-tasks pack path/to/task.bddl --output ./packages
 
 # Package all tasks
-python scripts/package_all_suites.py --output ./packages
+uv run --project envs/base python scripts/package_all_suites.py --output ./packages
 
 # Upload to HuggingFace Hub
-vla-arena.manage-tasks upload ./packages/my_task.vlap --repo your-username/your-repo
+uv run --project envs/base vla-arena.manage-tasks upload ./packages/my_task.vlap --repo your-username/your-repo
 ```
 
 

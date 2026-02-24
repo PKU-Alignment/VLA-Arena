@@ -96,19 +96,35 @@ uv run --project envs/openpi \
 
 ### 启动策略服务（在线推理/评测）
 
-```bash
-uv run --project envs/openpi \
-  python vla_arena/models/openpi/scripts/serve_policy.py \
-  policy:checkpoint \
-  --policy.config=<CONFIG_NAME> \
-  --policy.dir=checkpoints/pi05_libero/my_experiment/20000
-```
+默认评测路径会自动处理策略服务，通常不需要手动执行本步骤（见下文“评测 OpenPI”）。
 
 ### 评测 OpenPI
 
 ```bash
 uv run --project envs/openpi \
   vla-arena eval --model openpi --config vla_arena/configs/evaluation/openpi.yaml
+```
+
+默认评测使用 websocket（`inference_mode: websocket`），流程如下：
+1. 先检查 `host:port` 是否可连接；
+2. 若可连接，直接复用已存在的策略服务；
+3. 若不可连接且 `host` 是本机地址（`0.0.0.0`、`127.0.0.1`、`localhost`、`::1`），自动拉起 `serve_policy.py` 并等待就绪；
+4. 若不可连接且 `host` 是远端地址，评测会直接报错并提示手动启动远端服务。
+
+自动拉起策略服务时，checkpoint 解析优先级为：
+1. `policy_checkpoint_dir`（显式设置优先）；
+2. `train_config_path + policy_checkpoint_step`（默认 `latest`）。
+
+### 高级/可选：手动启动策略服务
+
+如需显式控制服务生命周期，可手动启动：
+
+```bash
+uv run --project envs/openpi \
+  python vla_arena/models/openpi/scripts/serve_policy.py \
+  policy:checkpoint \
+  --policy.config=<CONFIG_NAME> \
+  --policy.dir=checkpoints/pi05_libero/my_experiment/20000
 ```
 
 ## 配置说明

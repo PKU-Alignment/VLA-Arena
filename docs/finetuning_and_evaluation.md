@@ -94,27 +94,15 @@ uv run --project envs/openpi \
   vla-arena eval --model openpi --config vla_arena/configs/evaluation/openpi.yaml
 ```
 
-By default, OpenPI evaluation uses local checkpoint inference (`inference_mode: local`) and resolves checkpoint path in this order:
+By default, OpenPI evaluation uses websocket inference (`inference_mode: websocket`).
+The evaluator checks `host:port` first:
+1. if reachable, it reuses the existing policy server;
+2. if unreachable and host is local (`0.0.0.0`, `127.0.0.1`, `localhost`, `::1`), it auto-starts `serve_policy.py` and waits for readiness;
+3. if unreachable and host is remote, it raises an error and asks you to start the remote server manually.
+
+Checkpoint target is resolved in this order:
 1. `policy_checkpoint_dir` (if set)
 2. inferred from `train_config_path` + `policy_checkpoint_step` (`latest` by default)
-
-### OpenPI Policy Randomness Control (Local Mode)
-
-OpenPI local evaluation now supports policy RNG control directly from `vla_arena/configs/evaluation/openpi.yaml`:
-
-- `policy_rng_mode: legacy`
-  keeps previous behavior (`Policy._rng` continuously advances across episodes).
-- `policy_rng_mode: episode_reseed` (default)
-  resets policy RNG at each episode start with `policy_seed + episode_idx`.
-- `policy_rng_mode: deterministic_noise`
-  injects zero noise into local policy sampling for deterministic debugging.
-
-Recommended debugging order for "episode 1 success, later episodes fail":
-1. `legacy` (baseline)
-2. `episode_reseed` (reproducible across runs)
-3. `deterministic_noise` (max determinism for root-cause checks)
-
-Note: seeing a group of JAX/Flax deprecation logs only in the first episode usually indicates first-time JIT/graph warmup. It does **not** mean later episodes skipped policy inference.
 
 ### Advanced / Optional: Manual Norm Stats and Websocket Server
 

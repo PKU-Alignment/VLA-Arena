@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import pickle
 import pathlib
-import sys
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -190,203 +189,192 @@ def test_normalize_legacy_train_yaml_prefers_params_path():
     assert 'checkpoint_path' not in normalized['weight_loader']
 
 
-def test_local_policy_client_reset_forwards_to_policy():
+def test_is_local_host_variants():
     evaluator = pytest.importorskip('vla_arena.models.openpi.evaluator')
 
-    policy = Mock()
-    client = evaluator._LocalPolicyClient(policy)
-    client.reset()
+    assert evaluator._is_local_host('0.0.0.0')
+    assert evaluator._is_local_host('127.0.0.1')
+    assert evaluator._is_local_host('localhost')
+    assert evaluator._is_local_host('::1')
+    assert evaluator._is_local_host('ws://localhost')
+    assert not evaluator._is_local_host('192.168.1.100')
+    assert not evaluator._is_local_host('example.com')
 
-    policy.reset.assert_called_once()
 
-
-def test_local_policy_begin_episode_reseeds_rng(monkeypatch):
+def test_create_policy_client_reuses_existing_websocket_server(monkeypatch):
     evaluator = pytest.importorskip('vla_arena.models.openpi.evaluator')
 
-    policy = SimpleNamespace(reset=Mock(), _rng='old')
-    client = evaluator._LocalPolicyClient(policy)
-    cfg = SimpleNamespace(policy_rng_mode='episode_reseed', policy_seed=11)
-
-    fake_jax = SimpleNamespace(
-        random=SimpleNamespace(key=lambda seed: f'key-{seed}')
+    cfg = evaluator.GenerateConfig(
+        host='127.0.0.1',
+        port=8000,
+        auto_start_policy_server=True,
     )
-    monkeypatch.setitem(sys.modules, 'jax', fake_jax)
+    client_obj = Mock()
+    start_mock = Mock()
+    ws_ctor = Mock(return_value=client_obj)
 
-    metadata0 = client.begin_episode(0, cfg)
-    metadata2 = client.begin_episode(2, cfg)
+    monkeypatch.setattr(
+        evaluator,
+        '_resolve_policy_target',
+        lambda _cfg: (object(), '/tmp/checkpoints/openpi/1000', 'pi0_cfg'),
+    )
+    monkeypatch.setattr(
+        evaluator,
+        '_is_port_open',
+        Mock(return_value=True),
+    )
+    monkeypatch.setattr(
+        evaluator, '_start_policy_server_process', start_mock
+    )
+    monkeypatch.setattr(
+        evaluator._websocket_client_policy, 'WebsocketClientPolicy', ws_ctor
+    )
 
-    assert policy.reset.call_count == 2
-    assert policy._rng == 'key-13'
-    assert metadata0 == {'mode': 'episode_reseed', 'episode_seed': 11}
-    assert metadata2 == {'mode': 'episode_reseed', 'episode_seed': 13}
+    client, source, config_name, managed_process = evaluator._create_policy_client(
+        cfg
+    )
+
+    assert client is client_obj
+    assert source == '127.0.0.1:8000'
+    assert config_name == 'pi0_cfg'
+    assert managed_process is None
+    start_mock.assert_not_called()
+    ws_ctor.assert_called_once_with('127.0.0.1', 8000)
 
 
-def test_safe_reset_policy_client_calls_reset():
+def test_create_policy_client_autostarts_server_when_local_port_unavailable(
+    monkeypatch,
+):
     evaluator = pytest.importorskip('vla_arena.models.openpi.evaluator')
 
-    client = Mock()
-    evaluator._safe_reset_policy_client(client)
+    cfg = evaluator.GenerateConfig(
+        host='localhost',
+        port=8000,
+        auto_start_policy_server=True,
+    )
+    managed_process = Mock()
+    managed_process.pid = 12345
+    managed_process.poll.return_value = None
+    client_obj = Mock()
 
-    client.reset.assert_called_once()
+    monkeypatch.setattr(
+        evaluator,
+        '_resolve_policy_target',
+        lambda _cfg: (object(), '/tmp/checkpoints/openpi/1000', 'pi0_cfg'),
+    )
+    monkeypatch.setattr(
+        evaluator,
+        '_is_port_open',
+        Mock(return_value=False),
+    )
+    monkeypatch.setattr(
+        evaluator,
+        '_build_serve_policy_command',
+        lambda *_args, **_kwargs: ['python', 'serve_policy.py'],
+    )
+    start_mock = Mock(return_value=managed_process)
+    wait_mock = Mock()
+    ws_ctor = Mock(return_value=client_obj)
+    monkeypatch.setattr(
+        evaluator, '_start_policy_server_process', start_mock
+    )
+    monkeypatch.setattr(
+        evaluator, '_wait_for_policy_server_ready', wait_mock
+    )
+    monkeypatch.setattr(
+        evaluator._websocket_client_policy, 'WebsocketClientPolicy', ws_ctor
+    )
+
+    client, source, config_name, process = evaluator._create_policy_client(cfg)
+
+    assert client is client_obj
+    assert source == 'localhost:8000'
+    assert config_name == 'pi0_cfg'
+    assert process is managed_process
+    start_mock.assert_called_once()
+    wait_mock.assert_called_once()
+    ws_ctor.assert_called_once_with('localhost', 8000)
 
 
-def test_local_policy_deterministic_noise_path():
+def test_create_policy_client_remote_host_unavailable_raises(monkeypatch):
     evaluator = pytest.importorskip('vla_arena.models.openpi.evaluator')
 
-    policy = Mock()
-    policy._model = SimpleNamespace(action_horizon=4, action_dim=7)
-    policy.infer.return_value = {'actions': np.zeros((4, 7), dtype=np.float32)}
+    cfg = evaluator.GenerateConfig(
+        host='10.0.0.8',
+        port=8000,
+        auto_start_policy_server=True,
+    )
+    start_mock = Mock()
+    monkeypatch.setattr(
+        evaluator,
+        '_resolve_policy_target',
+        lambda _cfg: (object(), '/tmp/checkpoints/openpi/1000', 'pi0_cfg'),
+    )
+    monkeypatch.setattr(
+        evaluator,
+        '_is_port_open',
+        Mock(return_value=False),
+    )
+    monkeypatch.setattr(
+        evaluator, '_start_policy_server_process', start_mock
+    )
 
-    client = evaluator._LocalPolicyClient(policy)
-    cfg = SimpleNamespace(policy_rng_mode='deterministic_noise', policy_seed=7)
-    client.begin_episode(0, cfg)
-    client.infer({'prompt': 'debug'})
+    with pytest.raises(RuntimeError, match='unreachable'):
+        evaluator._create_policy_client(cfg)
 
-    infer_kwargs = policy.infer.call_args.kwargs
-    assert 'noise' in infer_kwargs
-    assert infer_kwargs['noise'].shape == (4, 7)
-    assert np.all(infer_kwargs['noise'] == 0)
+    start_mock.assert_not_called()
 
 
-def test_run_task_calls_begin_episode_each_trial(monkeypatch):
+def test_eval_vla_arena_terminates_managed_server_process(
+    monkeypatch, tmp_path: pathlib.Path
+):
     evaluator = pytest.importorskip('vla_arena.models.openpi.evaluator')
 
-    class _DummyTaskSuite:
-        def get_task_by_level_id(self, _task_level, _task_id):
-            return SimpleNamespace(language='pick and place')
+    managed_process = Mock()
+    managed_process.poll.return_value = None
+    managed_process.wait.return_value = 0
+    client_obj = Mock()
+    log_file = Mock()
 
-    cfg = SimpleNamespace(
-        num_trials_per_task=3,
-        add_noise=False,
-        camera_offset=False,
-        adjust_light=False,
-        randomize_color=False,
-        save_video_mode='none',
-        seed=7,
+    cfg = evaluator.GenerateConfig(
         task_suite_name='safety_static_obstacles',
-        policy_rng_mode='episode_reseed',
-        policy_seed=7,
+        result_json_path=str(tmp_path / 'result.json'),
+        use_replacements=False,
     )
 
     monkeypatch.setattr(
         evaluator,
-        'load_initial_states',
-        lambda *_args, **_kwargs: (['state0'], None),
+        '_create_policy_client',
+        lambda _cfg: (
+            client_obj,
+            'localhost:8000',
+            'pi0_cfg',
+            managed_process,
+        ),
+    )
+    monkeypatch.setattr(
+        evaluator.benchmark,
+        'get_benchmark_dict',
+        lambda: {'safety_static_obstacles': lambda: object()},
     )
     monkeypatch.setattr(
         evaluator,
-        'get_vla_arena_env',
-        lambda *_args, **_kwargs: (object(), 'pick and place'),
+        'setup_logging',
+        lambda _cfg: (log_file, str(tmp_path / 'eval.log'), 'run-id'),
+    )
+    monkeypatch.setattr(
+        evaluator,
+        'run_task',
+        lambda *args, **kwargs: (1, 0, 0, 0, 0, 0, 0, 0),
+    )
+    monkeypatch.setattr(
+        evaluator,
+        'load_replacements_dict',
+        lambda *_args, **_kwargs: {},
     )
     monkeypatch.setattr(evaluator.tqdm, 'tqdm', lambda it: it)
 
-    def _fake_run_episode(
-        _cfg,
-        _env,
-        _task_description,
-        _replacements_dict,
-        initial_state=None,
-        log_file=None,
-        client=None,
-    ):
-        del initial_state, log_file, client
-        return False, [], 0
+    evaluator.eval_vla_arena(cfg)
 
-    monkeypatch.setattr(evaluator, 'run_episode', _fake_run_episode)
-
-    client = Mock()
-    client.begin_episode.side_effect = lambda episode_idx, cfg: {
-        'mode': 'episode_reseed',
-        'episode_seed': cfg.policy_seed + episode_idx,
-    }
-
-    evaluator.run_task(
-        cfg,
-        _DummyTaskSuite(),
-        task_id=0,
-        task_level=0,
-        replacements_dict={},
-        total_episodes=0,
-        total_successes=0,
-        log_file=None,
-        client=client,
-    )
-
-    assert client.begin_episode.call_count == 3
-    assert [call.args[0] for call in client.begin_episode.call_args_list] == [
-        0,
-        1,
-        2,
-    ]
-    assert all(call.args[1] is cfg for call in client.begin_episode.call_args_list)
-
-
-def test_run_episode_infer_debug_logging(monkeypatch):
-    evaluator = pytest.importorskip('vla_arena.models.openpi.evaluator')
-
-    class _DummyEnv:
-        def __init__(self):
-            self._obs = {
-                'agentview_image': np.zeros((4, 4, 3), dtype=np.uint8),
-                'robot0_eye_in_hand_image': np.zeros((4, 4, 3), dtype=np.uint8),
-                'robot0_eef_pos': np.zeros(3, dtype=np.float32),
-                'robot0_eef_quat': np.asarray(
-                    [0.0, 0.0, 0.0, 1.0], dtype=np.float32
-                ),
-                'robot0_gripper_qpos': np.zeros(1, dtype=np.float32),
-            }
-
-        def reset(self):
-            return None
-
-        def set_init_state(self, _initial_state):
-            return self._obs
-
-        def get_observation(self):
-            return self._obs
-
-        def step(self, _action):
-            return self._obs, 0.0, True, {'cost': 0.0}
-
-    cfg = SimpleNamespace(
-        task_suite_name='safety_dynamic_obstacles',
-        task_level=0,
-        num_steps_wait=0,
-        resize_size=224,
-        replan_steps=5,
-        use_replacements=False,
-        safety=False,
-        policy_log_infer_debug=True,
-    )
-    env = _DummyEnv()
-    client = Mock()
-    client.infer.return_value = {
-        'actions': np.zeros((5, 7), dtype=np.float32),
-        'policy_timing': {'infer_ms': 1.23},
-    }
-    captured_messages = []
-
-    monkeypatch.setattr(
-        evaluator.image_tools, 'resize_with_pad', lambda image, *_args: image
-    )
-    monkeypatch.setattr(
-        evaluator.image_tools, 'convert_to_uint8', lambda image: image
-    )
-    monkeypatch.setattr(
-        evaluator,
-        'log_message',
-        lambda message, log_file=None: captured_messages.append(message),
-    )
-
-    evaluator.run_episode(
-        cfg,
-        env,
-        task_description='pick and place',
-        replacements_dict={},
-        initial_state=None,
-        log_file=None,
-        client=client,
-    )
-
-    assert any('Infer debug:' in message for message in captured_messages)
-    assert any('infer_ms=1.23' in message for message in captured_messages)
+    managed_process.terminate.assert_called_once()
+    managed_process.wait.assert_called_once()

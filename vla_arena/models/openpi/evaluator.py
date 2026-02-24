@@ -18,11 +18,16 @@ import logging
 import math
 import os
 import pathlib
+import shlex
+import socket
+import subprocess
 import sys
 import time
 from dataclasses import dataclass, replace
+from typing import Any
 from typing import Iterable
 from typing import Literal
+from urllib import parse as urllib_parse
 
 import imageio
 import numpy as np
@@ -63,16 +68,14 @@ class GenerateConfig:
     #################################################################################################################
     # Inference parameters
     #################################################################################################################
-    inference_mode: Literal['local', 'websocket'] = 'local'
+    inference_mode: Literal['websocket'] = 'websocket'
     policy_config_name: str | None = None
     policy_checkpoint_dir: str | None = None
     policy_checkpoint_step: str | int = 'latest'
     train_config_path: str | None = 'vla_arena/configs/train/openpi.yaml'
-    policy_rng_mode: Literal[
-        'legacy', 'episode_reseed', 'deterministic_noise'
-    ] = 'episode_reseed'
-    policy_seed: int = 7
-    policy_log_infer_debug: bool = True
+    auto_start_policy_server: bool = True
+    policy_server_start_timeout_sec: int = 180
+    policy_server_poll_interval_sec: float = 1.0
 
     #################################################################################################################
     # Websocket policy server parameters (used when inference_mode="websocket")
@@ -125,90 +128,9 @@ class GenerateConfig:
     )
 
 
-class _LocalPolicyClient:
-    """Adapter for local OpenPI policy to match websocket client interface."""
-
-    def __init__(self, policy):
-        self._policy = policy
-        self._episode_rng_mode: Literal[
-            'legacy', 'episode_reseed', 'deterministic_noise'
-        ] = 'legacy'
-        self._deterministic_noise: np.ndarray | None = None
-
-    def infer(self, element: dict) -> dict:
-        if self._episode_rng_mode == 'deterministic_noise':
-            if self._deterministic_noise is None:
-                self._deterministic_noise = self._build_zero_noise()
-            if self._deterministic_noise is not None:
-                try:
-                    return self._policy.infer(
-                        element, noise=self._deterministic_noise
-                    )
-                except TypeError:
-                    logger.warning(
-                        'Local policy does not accept `noise` override. '
-                        'Falling back to legacy inference mode for this episode.'
-                    )
-                    self._episode_rng_mode = 'legacy'
-        return self._policy.infer(element)
-
-    def reset(self) -> None:
-        self._policy.reset()
-
-    def begin_episode(self, episode_idx: int, cfg: GenerateConfig) -> dict:
-        mode = cfg.policy_rng_mode.lower().strip()
-        if mode not in {'legacy', 'episode_reseed', 'deterministic_noise'}:
-            raise ValueError(
-                f'Unsupported policy_rng_mode: {cfg.policy_rng_mode}'
-            )
-
-        self.reset()
-        self._episode_rng_mode = mode  # type: ignore[assignment]
-        self._deterministic_noise = None
-
-        metadata: dict[str, object] = {'mode': mode, 'episode_seed': None}
-        if mode != 'episode_reseed':
-            return metadata
-
-        if not hasattr(self._policy, '_rng'):
-            logger.warning(
-                'policy_rng_mode=episode_reseed requested, but local policy has no `_rng`. '
-                'Falling back to legacy mode for this episode.'
-            )
-            self._episode_rng_mode = 'legacy'
-            metadata['mode'] = 'legacy'
-            return metadata
-
-        import jax
-
-        episode_seed = int(cfg.policy_seed) + int(episode_idx)
-        self._policy._rng = jax.random.key(episode_seed)
-        metadata['episode_seed'] = episode_seed
-        return metadata
-
-    def _build_zero_noise(self) -> np.ndarray | None:
-        model = getattr(self._policy, '_model', None)
-        action_horizon = getattr(model, 'action_horizon', None)
-        action_dim = getattr(model, 'action_dim', None)
-        if not (
-            isinstance(action_horizon, int)
-            and action_horizon > 0
-            and isinstance(action_dim, int)
-            and action_dim > 0
-        ):
-            logger.warning(
-                'Unable to infer action_horizon/action_dim for deterministic_noise. '
-                'Falling back to legacy inference mode for this episode.'
-            )
-            self._episode_rng_mode = 'legacy'
-            return None
-        return np.zeros((action_horizon, action_dim), dtype=np.float32)
-
-
-def _create_local_client(
+def _resolve_policy_target(
     cfg: GenerateConfig,
-) -> tuple[_LocalPolicyClient, str, str]:
-    import openpi.policies.policy_config as _policy_config
+) -> tuple[Any, str | pathlib.Path, str]:
     import openpi.training.config as _config
 
     train_cfg = None
@@ -233,23 +155,171 @@ def _create_local_client(
         train_cfg,
         cfg.policy_checkpoint_step,
     )
-    policy = _policy_config.create_trained_policy(train_cfg, checkpoint_dir)
-    return _LocalPolicyClient(policy), str(checkpoint_dir), train_cfg.name
+    return train_cfg, checkpoint_dir, train_cfg.name
+
+
+def _normalize_host(host: str) -> str:
+    host_text = str(host).strip()
+    if host_text.startswith('ws://') or host_text.startswith('wss://'):
+        parsed = urllib_parse.urlparse(host_text)
+        if parsed.hostname:
+            return parsed.hostname
+    return host_text
+
+
+def _is_local_host(host: str) -> bool:
+    host_text = _normalize_host(host).lower()
+    return host_text in {'0.0.0.0', '127.0.0.1', 'localhost', '::1', '::'}
+
+
+def _is_port_open(host: str, port: int, timeout_sec: float) -> bool:
+    connect_host = _normalize_host(host)
+    if connect_host == '0.0.0.0':
+        connect_host = '127.0.0.1'
+    elif connect_host == '::':
+        connect_host = '::1'
+    try:
+        with socket.create_connection(
+            (connect_host, int(port)), timeout=timeout_sec
+        ):
+            return True
+    except OSError:
+        return False
+
+
+def _build_serve_policy_command(
+    cfg: GenerateConfig,
+    config_name: str,
+    checkpoint_dir: str | pathlib.Path,
+) -> list[str]:
+    script_path = pathlib.Path(__file__).parent / 'scripts' / 'serve_policy.py'
+    if not script_path.exists():
+        raise FileNotFoundError(
+            f'Unable to find serve_policy.py at {script_path}'
+        )
+    return [
+        sys.executable,
+        str(script_path),
+        'policy:checkpoint',
+        f'--policy.config={config_name}',
+        f'--policy.dir={checkpoint_dir}',
+        f'--port={int(cfg.port)}',
+    ]
+
+
+def _start_policy_server_process(
+    cmd: list[str],
+) -> subprocess.Popen[bytes]:
+    logger.info('Auto-starting OpenPI policy server: %s', shlex.join(cmd))
+    return subprocess.Popen(
+        cmd,
+        start_new_session=True,
+    )
+
+
+def _wait_for_policy_server_ready(
+    host: str,
+    port: int,
+    timeout_sec: float,
+    poll_interval_sec: float,
+    process: subprocess.Popen[bytes],
+) -> None:
+    deadline = time.monotonic() + timeout_sec
+    while time.monotonic() < deadline:
+        if process.poll() is not None:
+            raise RuntimeError(
+                'Auto-started OpenPI policy server exited early with code '
+                f'{process.returncode}.'
+            )
+        if _is_port_open(
+            host, port, timeout_sec=max(0.05, poll_interval_sec)
+        ):
+            return
+        time.sleep(max(0.05, poll_interval_sec))
+
+    raise TimeoutError(
+        'Timed out waiting for OpenPI policy server to become ready at '
+        f'{host}:{port} after {timeout_sec}s.'
+    )
+
+
+def _stop_managed_policy_server(
+    process: subprocess.Popen[bytes] | None,
+    timeout_sec: float = 10.0,
+) -> None:
+    if process is None:
+        return
+    if process.poll() is not None:
+        return
+
+    logger.info(
+        'Stopping auto-started OpenPI policy server (pid=%s)...', process.pid
+    )
+    process.terminate()
+    try:
+        process.wait(timeout=timeout_sec)
+    except subprocess.TimeoutExpired:
+        logger.warning(
+            'Policy server did not stop within %.1fs; killing process.',
+            timeout_sec,
+        )
+        process.kill()
+        process.wait(timeout=5)
 
 
 def _create_policy_client(cfg: GenerateConfig):
-    mode = cfg.inference_mode.lower().strip()
-    if mode == 'websocket':
-        client = _websocket_client_policy.WebsocketClientPolicy(
-            cfg.host, cfg.port
+    mode = str(cfg.inference_mode).lower().strip()
+    if mode != 'websocket':
+        raise ValueError(
+            f'Unsupported inference_mode: {cfg.inference_mode}. Use "websocket".'
         )
-        source = f'{cfg.host}:{cfg.port}'
-        return client, source, 'websocket'
-    if mode == 'local':
-        return _create_local_client(cfg)
-    raise ValueError(
-        f'Unsupported inference_mode: {cfg.inference_mode}. Use "local" or "websocket".'
+
+    train_cfg, checkpoint_dir, policy_config_name = _resolve_policy_target(cfg)
+    del train_cfg
+    source = f'{cfg.host}:{cfg.port}'
+    client_host = cfg.host
+    normalized_host = _normalize_host(cfg.host)
+    if normalized_host in {'0.0.0.0', '::'}:
+        client_host = '127.0.0.1'
+    managed_process: subprocess.Popen[bytes] | None = None
+
+    if not _is_port_open(cfg.host, cfg.port, timeout_sec=1.0):
+        serve_cmd = _build_serve_policy_command(
+            cfg, policy_config_name, checkpoint_dir
+        )
+        if not _is_local_host(cfg.host):
+            raise RuntimeError(
+                f'OpenPI websocket server is unreachable at {cfg.host}:{cfg.port}, '
+                'and auto-start is disabled for remote hosts. '
+                f'Start it manually, e.g.:\n  {shlex.join(serve_cmd)}'
+            )
+        if not cfg.auto_start_policy_server:
+            raise RuntimeError(
+                f'OpenPI websocket server is unreachable at {cfg.host}:{cfg.port}. '
+                'Enable auto_start_policy_server or start it manually, e.g.:\n'
+                f'  {shlex.join(serve_cmd)}'
+            )
+
+        managed_process = _start_policy_server_process(serve_cmd)
+        try:
+            _wait_for_policy_server_ready(
+                cfg.host,
+                cfg.port,
+                timeout_sec=float(cfg.policy_server_start_timeout_sec),
+                poll_interval_sec=float(cfg.policy_server_poll_interval_sec),
+                process=managed_process,
+            )
+        except Exception:
+            _stop_managed_policy_server(managed_process, timeout_sec=3.0)
+            raise
+        logger.info(
+            'Auto-started OpenPI policy server is ready at %s', source
+        )
+
+    client = _websocket_client_policy.WebsocketClientPolicy(
+        client_host, cfg.port
     )
+    return client, source, policy_config_name, managed_process
 
 
 def setup_logging(cfg: GenerateConfig):
@@ -281,61 +351,6 @@ def load_initial_states(
     initial_states = task_suite.get_task_init_states(task_level, task_id)
     log_message('Using default initial states', log_file)
     return initial_states, None
-
-
-def _safe_reset_policy_client(client, log_file=None):
-    """Reset policy state between episodes when supported."""
-    if client is None:
-        return
-    reset_fn = getattr(client, 'reset', None)
-    if not callable(reset_fn):
-        return
-    try:
-        reset_fn()
-    except Exception as exc:
-        log_message(
-            f'Warning: policy reset failed ({type(exc).__name__}: {exc}). Continuing without reset.',
-            log_file,
-        )
-
-
-def _begin_policy_episode(
-    cfg: GenerateConfig,
-    client,
-    episode_idx: int,
-    log_file=None,
-) -> tuple[str, int | None]:
-    """Configure policy state for a new episode."""
-    requested_mode = cfg.policy_rng_mode
-    if client is None:
-        return 'legacy', None
-
-    begin_episode_fn = getattr(client, 'begin_episode', None)
-    if callable(begin_episode_fn):
-        try:
-            metadata = begin_episode_fn(episode_idx, cfg) or {}
-            mode = str(metadata.get('mode', requested_mode))
-            episode_seed = metadata.get('episode_seed')
-            if isinstance(episode_seed, bool) or not isinstance(
-                episode_seed, (int, type(None))
-            ):
-                episode_seed = None
-            return mode, episode_seed
-        except Exception as exc:
-            log_message(
-                f'Warning: policy begin_episode failed ({type(exc).__name__}: {exc}). Falling back to legacy mode.',
-                log_file,
-            )
-            _safe_reset_policy_client(client, log_file)
-            return 'legacy', None
-
-    _safe_reset_policy_client(client, log_file)
-    if requested_mode != 'legacy' and episode_idx == 0:
-        log_message(
-            f'Warning: policy_rng_mode={requested_mode} is unsupported for this client; using legacy mode.',
-            log_file,
-        )
-    return 'legacy', None
 
 
 def _suite_category(suite_name: str) -> tuple[str, bool]:
@@ -378,7 +393,6 @@ def run_episode(
     else:
         max_steps = 300
     cost = 0
-    infer_debug_logged = False
     # Run episode
     success = False
     try:
@@ -434,31 +448,6 @@ def run_episode(
                 # Query model to get action
                 infer_result = client.infer(element)
                 action_chunk = infer_result['actions']
-                if cfg.policy_log_infer_debug and not infer_debug_logged:
-                    action_chunk_arr = np.asarray(action_chunk)
-                    if action_chunk_arr.size > 0:
-                        action_mean = float(action_chunk_arr.mean())
-                        action_std = float(action_chunk_arr.std())
-                    else:
-                        action_mean = float('nan')
-                        action_std = float('nan')
-                    infer_ms = None
-                    policy_timing = infer_result.get('policy_timing')
-                    if isinstance(policy_timing, dict):
-                        infer_ms = policy_timing.get('infer_ms')
-                    if isinstance(infer_ms, (int, float)):
-                        infer_ms_text = f'{float(infer_ms):.2f}'
-                    else:
-                        infer_ms_text = 'n/a'
-                    log_message(
-                        'Infer debug: '
-                        f'action_shape={tuple(action_chunk_arr.shape)} '
-                        f'action_mean={action_mean:.6f} '
-                        f'action_std={action_std:.6f} '
-                        f'infer_ms={infer_ms_text}',
-                        log_file,
-                    )
-                    infer_debug_logged = True
                 assert (
                     len(action_chunk) >= cfg.replan_steps
                 ), f'We want to replan every {cfg.replan_steps} steps, but policy only predicts {len(action_chunk)} steps.'
@@ -540,19 +529,6 @@ def run_task(
     failures_with_cost = 0
     for episode_idx in tqdm.tqdm(range(cfg.num_trials_per_task)):
         log_message(f'\nTask: {task_description}', log_file)
-        mode_used, episode_seed = _begin_policy_episode(
-            cfg, client, episode_idx, log_file
-        )
-        if episode_seed is None:
-            log_message(
-                f'Policy RNG: episode={episode_idx} mode={mode_used}',
-                log_file,
-            )
-        else:
-            log_message(
-                f'Policy RNG: episode={episode_idx} mode={mode_used} seed={episode_seed}',
-                log_file,
-            )
 
         if len(initial_states) > 0:
             initial_state = initial_states[episode_idx % len(initial_states)]
@@ -676,124 +652,124 @@ def eval_vla_arena(cfg: GenerateConfig):
             f'Unsupported task_suite_name type: {type(cfg.task_suite_name)}'
         )
 
-    client, policy_source, policy_config_name = _create_policy_client(cfg)
+    client, policy_source, policy_config_name, managed_process = (
+        _create_policy_client(cfg)
+    )
     logger.info(
         'OpenPI eval client ready: mode=%s config=%s source=%s',
         cfg.inference_mode,
         policy_config_name,
         policy_source,
     )
-    if (
-        cfg.inference_mode.lower().strip() == 'websocket'
-        and cfg.policy_rng_mode != 'legacy'
-    ):
-        logger.info(
-            'policy_rng_mode=%s requested in websocket mode. '
-            'Randomness is controlled by the remote policy server; '
-            'client-side RNG control is skipped.',
-            cfg.policy_rng_mode,
-        )
 
     tasks_payload: list[dict[str, object]] = []
 
-    replacements_dict = load_replacements_dict(cfg, logger)
+    try:
+        replacements_dict = load_replacements_dict(cfg, logger)
 
-    for suite_name in suite_names:
-        if suite_name not in benchmark_dict:
-            raise ValueError(
-                f'Unknown task suite: {suite_name}. '
-                f'Available options are: {list(benchmark_dict.keys())}'
+        for suite_name in suite_names:
+            if suite_name not in benchmark_dict:
+                raise ValueError(
+                    f'Unknown task suite: {suite_name}. '
+                    f'Available options are: {list(benchmark_dict.keys())}'
+                )
+
+            cfg_suite = replace(cfg, task_suite_name=suite_name)
+
+            log_file, local_log_filepath, run_id = setup_logging(cfg_suite)
+
+            task_suite = benchmark_dict[suite_name]()
+            task_level = cfg_suite.task_level
+            num_tasks = (
+                10
+                if suite_name == 'long_horizon' and task_level == 0
+                else 5
             )
 
-        cfg_suite = replace(cfg, task_suite_name=suite_name)
+            print(
+                f'Evaluating {num_tasks} tasks from the {suite_name} suite...'
+            )
+            log_message(f'Task suite: {suite_name}', log_file)
+            if cfg.use_replacements:
+                log_message(
+                    f'Using instruction replacements with probability {cfg.replacement_probability}',
+                    log_file,
+                )
+                log_message(
+                    f'Loaded {len(replacements_dict)} replacement entries',
+                    log_file,
+                )
 
-        log_file, local_log_filepath, run_id = setup_logging(cfg_suite)
+            total_episodes = 0
+            total_successes = 0
+            total_costs = 0
+            success_costs = 0
+            failure_costs = 0
 
-        task_suite = benchmark_dict[suite_name]()
-        task_level = cfg_suite.task_level
-        num_tasks = 10 if suite_name == 'long_horizon' and task_level == 0 else 5
+            for task_id in tqdm.tqdm(range(num_tasks)):
+                (
+                    task_episodes,
+                    task_successes,
+                    task_total_costs,
+                    task_success_costs,
+                    task_failure_costs,
+                    *_,
+                ) = run_task(
+                    cfg_suite,
+                    task_suite,
+                    task_id,
+                    task_level,
+                    replacements_dict,
+                    total_episodes,
+                    total_successes,
+                    log_file,
+                    client,
+                )
+                total_episodes += task_episodes
+                total_successes += task_successes
+                total_costs += task_total_costs
+                success_costs += task_success_costs
+                failure_costs += task_failure_costs
 
-        print(
-            f'Evaluating {num_tasks} tasks from the {suite_name} suite...'
-        )
-        log_message(f'Task suite: {suite_name}', log_file)
-        if cfg.use_replacements:
+            final_success_rate = (
+                float(total_successes) / float(total_episodes)
+                if total_episodes > 0
+                else 0
+            )
+            average_costs = (
+                total_costs / total_episodes if total_episodes > 0 else 0
+            )
+
             log_message(
-                f'Using instruction replacements with probability {cfg.replacement_probability}',
+                f'[{suite_name}] success rate: {final_success_rate:.4f}',
                 log_file,
             )
-            log_message(
-                f'Loaded {len(replacements_dict)} replacement entries',
-                log_file,
+            log_message(f'[{suite_name}] average cost: {average_costs}', log_file)
+
+            if log_file:
+                log_file.close()
+
+            category, has_cc = _suite_category(suite_name)
+            sr = [0.0, 0.0, 0.0]
+            cc = [0.0, 0.0, 0.0]
+            sr[task_level] = final_success_rate
+            cc[task_level] = average_costs if has_cc else 0.0
+
+            tasks_payload.append(
+                {
+                    'name': suite_name,
+                    'category': category,
+                    'hasCC': has_cc,
+                    'data': {
+                        'sr': sr,
+                        'cc': cc,
+                    },
+                    'numEpisodes': total_episodes,
+                    'numSuccesses': total_successes,
+                }
             )
-
-        total_episodes = 0
-        total_successes = 0
-        total_costs = 0
-        success_costs = 0
-        failure_costs = 0
-
-        for task_id in tqdm.tqdm(range(num_tasks)):
-            (
-                task_episodes,
-                task_successes,
-                task_total_costs,
-                task_success_costs,
-                task_failure_costs,
-                *_,
-            ) = run_task(
-                cfg_suite,
-                task_suite,
-                task_id,
-                task_level,
-                replacements_dict,
-                total_episodes,
-                total_successes,
-                log_file,
-                client,
-            )
-            total_episodes += task_episodes
-            total_successes += task_successes
-            total_costs += task_total_costs
-            success_costs += task_success_costs
-            failure_costs += task_failure_costs
-
-        final_success_rate = (
-            float(total_successes) / float(total_episodes)
-            if total_episodes > 0
-            else 0
-        )
-        average_costs = (
-            total_costs / total_episodes if total_episodes > 0 else 0
-        )
-
-        log_message(
-            f'[{suite_name}] success rate: {final_success_rate:.4f}', log_file
-        )
-        log_message(f'[{suite_name}] average cost: {average_costs}', log_file)
-
-        if log_file:
-            log_file.close()
-
-        category, has_cc = _suite_category(suite_name)
-        sr = [0.0, 0.0, 0.0]
-        cc = [0.0, 0.0, 0.0]
-        sr[task_level] = final_success_rate
-        cc[task_level] = average_costs if has_cc else 0.0
-
-        tasks_payload.append(
-            {
-                'name': suite_name,
-                'category': category,
-                'hasCC': has_cc,
-                'data': {
-                    'sr': sr,
-                    'cc': cc,
-                },
-                'numEpisodes': total_episodes,
-                'numSuccesses': total_successes,
-            }
-        )
+    finally:
+        _stop_managed_policy_server(managed_process, timeout_sec=10.0)
 
     if cfg.result_json_path is None or str(cfg.result_json_path).lower() == 'default':
         result_dir = pathlib.Path('./results')

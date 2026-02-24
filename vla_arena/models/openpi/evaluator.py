@@ -68,6 +68,11 @@ class GenerateConfig:
     policy_checkpoint_dir: str | None = None
     policy_checkpoint_step: str | int = 'latest'
     train_config_path: str | None = 'vla_arena/configs/train/openpi.yaml'
+    policy_rng_mode: Literal[
+        'legacy', 'episode_reseed', 'deterministic_noise'
+    ] = 'episode_reseed'
+    policy_seed: int = 7
+    policy_log_infer_debug: bool = True
 
     #################################################################################################################
     # Websocket policy server parameters (used when inference_mode="websocket")
@@ -125,12 +130,79 @@ class _LocalPolicyClient:
 
     def __init__(self, policy):
         self._policy = policy
+        self._episode_rng_mode: Literal[
+            'legacy', 'episode_reseed', 'deterministic_noise'
+        ] = 'legacy'
+        self._deterministic_noise: np.ndarray | None = None
 
     def infer(self, element: dict) -> dict:
+        if self._episode_rng_mode == 'deterministic_noise':
+            if self._deterministic_noise is None:
+                self._deterministic_noise = self._build_zero_noise()
+            if self._deterministic_noise is not None:
+                try:
+                    return self._policy.infer(
+                        element, noise=self._deterministic_noise
+                    )
+                except TypeError:
+                    logger.warning(
+                        'Local policy does not accept `noise` override. '
+                        'Falling back to legacy inference mode for this episode.'
+                    )
+                    self._episode_rng_mode = 'legacy'
         return self._policy.infer(element)
 
     def reset(self) -> None:
         self._policy.reset()
+
+    def begin_episode(self, episode_idx: int, cfg: GenerateConfig) -> dict:
+        mode = cfg.policy_rng_mode.lower().strip()
+        if mode not in {'legacy', 'episode_reseed', 'deterministic_noise'}:
+            raise ValueError(
+                f'Unsupported policy_rng_mode: {cfg.policy_rng_mode}'
+            )
+
+        self.reset()
+        self._episode_rng_mode = mode  # type: ignore[assignment]
+        self._deterministic_noise = None
+
+        metadata: dict[str, object] = {'mode': mode, 'episode_seed': None}
+        if mode != 'episode_reseed':
+            return metadata
+
+        if not hasattr(self._policy, '_rng'):
+            logger.warning(
+                'policy_rng_mode=episode_reseed requested, but local policy has no `_rng`. '
+                'Falling back to legacy mode for this episode.'
+            )
+            self._episode_rng_mode = 'legacy'
+            metadata['mode'] = 'legacy'
+            return metadata
+
+        import jax
+
+        episode_seed = int(cfg.policy_seed) + int(episode_idx)
+        self._policy._rng = jax.random.key(episode_seed)
+        metadata['episode_seed'] = episode_seed
+        return metadata
+
+    def _build_zero_noise(self) -> np.ndarray | None:
+        model = getattr(self._policy, '_model', None)
+        action_horizon = getattr(model, 'action_horizon', None)
+        action_dim = getattr(model, 'action_dim', None)
+        if not (
+            isinstance(action_horizon, int)
+            and action_horizon > 0
+            and isinstance(action_dim, int)
+            and action_dim > 0
+        ):
+            logger.warning(
+                'Unable to infer action_horizon/action_dim for deterministic_noise. '
+                'Falling back to legacy inference mode for this episode.'
+            )
+            self._episode_rng_mode = 'legacy'
+            return None
+        return np.zeros((action_horizon, action_dim), dtype=np.float32)
 
 
 def _create_local_client(
@@ -227,6 +299,45 @@ def _safe_reset_policy_client(client, log_file=None):
         )
 
 
+def _begin_policy_episode(
+    cfg: GenerateConfig,
+    client,
+    episode_idx: int,
+    log_file=None,
+) -> tuple[str, int | None]:
+    """Configure policy state for a new episode."""
+    requested_mode = cfg.policy_rng_mode
+    if client is None:
+        return 'legacy', None
+
+    begin_episode_fn = getattr(client, 'begin_episode', None)
+    if callable(begin_episode_fn):
+        try:
+            metadata = begin_episode_fn(episode_idx, cfg) or {}
+            mode = str(metadata.get('mode', requested_mode))
+            episode_seed = metadata.get('episode_seed')
+            if isinstance(episode_seed, bool) or not isinstance(
+                episode_seed, (int, type(None))
+            ):
+                episode_seed = None
+            return mode, episode_seed
+        except Exception as exc:
+            log_message(
+                f'Warning: policy begin_episode failed ({type(exc).__name__}: {exc}). Falling back to legacy mode.',
+                log_file,
+            )
+            _safe_reset_policy_client(client, log_file)
+            return 'legacy', None
+
+    _safe_reset_policy_client(client, log_file)
+    if requested_mode != 'legacy' and episode_idx == 0:
+        log_message(
+            f'Warning: policy_rng_mode={requested_mode} is unsupported for this client; using legacy mode.',
+            log_file,
+        )
+    return 'legacy', None
+
+
 def _suite_category(suite_name: str) -> tuple[str, bool]:
     if suite_name.startswith('safety_'):
         return 'Safety', True
@@ -249,8 +360,6 @@ def run_episode(
     client=None,
 ):
     """Run a single episode in the environment."""
-    _safe_reset_policy_client(client, log_file)
-
     # Reset environment
     env.reset()
 
@@ -269,6 +378,7 @@ def run_episode(
     else:
         max_steps = 300
     cost = 0
+    infer_debug_logged = False
     # Run episode
     success = False
     try:
@@ -322,7 +432,33 @@ def run_episode(
                 }
 
                 # Query model to get action
-                action_chunk = client.infer(element)['actions']
+                infer_result = client.infer(element)
+                action_chunk = infer_result['actions']
+                if cfg.policy_log_infer_debug and not infer_debug_logged:
+                    action_chunk_arr = np.asarray(action_chunk)
+                    if action_chunk_arr.size > 0:
+                        action_mean = float(action_chunk_arr.mean())
+                        action_std = float(action_chunk_arr.std())
+                    else:
+                        action_mean = float('nan')
+                        action_std = float('nan')
+                    infer_ms = None
+                    policy_timing = infer_result.get('policy_timing')
+                    if isinstance(policy_timing, dict):
+                        infer_ms = policy_timing.get('infer_ms')
+                    if isinstance(infer_ms, (int, float)):
+                        infer_ms_text = f'{float(infer_ms):.2f}'
+                    else:
+                        infer_ms_text = 'n/a'
+                    log_message(
+                        'Infer debug: '
+                        f'action_shape={tuple(action_chunk_arr.shape)} '
+                        f'action_mean={action_mean:.6f} '
+                        f'action_std={action_std:.6f} '
+                        f'infer_ms={infer_ms_text}',
+                        log_file,
+                    )
+                    infer_debug_logged = True
                 assert (
                     len(action_chunk) >= cfg.replan_steps
                 ), f'We want to replan every {cfg.replan_steps} steps, but policy only predicts {len(action_chunk)} steps.'
@@ -404,6 +540,19 @@ def run_task(
     failures_with_cost = 0
     for episode_idx in tqdm.tqdm(range(cfg.num_trials_per_task)):
         log_message(f'\nTask: {task_description}', log_file)
+        mode_used, episode_seed = _begin_policy_episode(
+            cfg, client, episode_idx, log_file
+        )
+        if episode_seed is None:
+            log_message(
+                f'Policy RNG: episode={episode_idx} mode={mode_used}',
+                log_file,
+            )
+        else:
+            log_message(
+                f'Policy RNG: episode={episode_idx} mode={mode_used} seed={episode_seed}',
+                log_file,
+            )
 
         if len(initial_states) > 0:
             initial_state = initial_states[episode_idx % len(initial_states)]
@@ -534,6 +683,16 @@ def eval_vla_arena(cfg: GenerateConfig):
         policy_config_name,
         policy_source,
     )
+    if (
+        cfg.inference_mode.lower().strip() == 'websocket'
+        and cfg.policy_rng_mode != 'legacy'
+    ):
+        logger.info(
+            'policy_rng_mode=%s requested in websocket mode. '
+            'Randomness is controlled by the remote policy server; '
+            'client-side RNG control is skipped.',
+            cfg.policy_rng_mode,
+        )
 
     tasks_payload: list[dict[str, object]] = []
 

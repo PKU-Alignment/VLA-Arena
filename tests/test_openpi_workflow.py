@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pickle
 import pathlib
+import sys
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -199,6 +200,27 @@ def test_local_policy_client_reset_forwards_to_policy():
     policy.reset.assert_called_once()
 
 
+def test_local_policy_begin_episode_reseeds_rng(monkeypatch):
+    evaluator = pytest.importorskip('vla_arena.models.openpi.evaluator')
+
+    policy = SimpleNamespace(reset=Mock(), _rng='old')
+    client = evaluator._LocalPolicyClient(policy)
+    cfg = SimpleNamespace(policy_rng_mode='episode_reseed', policy_seed=11)
+
+    fake_jax = SimpleNamespace(
+        random=SimpleNamespace(key=lambda seed: f'key-{seed}')
+    )
+    monkeypatch.setitem(sys.modules, 'jax', fake_jax)
+
+    metadata0 = client.begin_episode(0, cfg)
+    metadata2 = client.begin_episode(2, cfg)
+
+    assert policy.reset.call_count == 2
+    assert policy._rng == 'key-13'
+    assert metadata0 == {'mode': 'episode_reseed', 'episode_seed': 11}
+    assert metadata2 == {'mode': 'episode_reseed', 'episode_seed': 13}
+
+
 def test_safe_reset_policy_client_calls_reset():
     evaluator = pytest.importorskip('vla_arena.models.openpi.evaluator')
 
@@ -208,18 +230,33 @@ def test_safe_reset_policy_client_calls_reset():
     client.reset.assert_called_once()
 
 
-def test_run_task_cycles_initial_states(monkeypatch):
+def test_local_policy_deterministic_noise_path():
     evaluator = pytest.importorskip('vla_arena.models.openpi.evaluator')
 
-    states = ['s0', 's1', 's2']
-    captured_states = []
+    policy = Mock()
+    policy._model = SimpleNamespace(action_horizon=4, action_dim=7)
+    policy.infer.return_value = {'actions': np.zeros((4, 7), dtype=np.float32)}
+
+    client = evaluator._LocalPolicyClient(policy)
+    cfg = SimpleNamespace(policy_rng_mode='deterministic_noise', policy_seed=7)
+    client.begin_episode(0, cfg)
+    client.infer({'prompt': 'debug'})
+
+    infer_kwargs = policy.infer.call_args.kwargs
+    assert 'noise' in infer_kwargs
+    assert infer_kwargs['noise'].shape == (4, 7)
+    assert np.all(infer_kwargs['noise'] == 0)
+
+
+def test_run_task_calls_begin_episode_each_trial(monkeypatch):
+    evaluator = pytest.importorskip('vla_arena.models.openpi.evaluator')
 
     class _DummyTaskSuite:
         def get_task_by_level_id(self, _task_level, _task_id):
             return SimpleNamespace(language='pick and place')
 
     cfg = SimpleNamespace(
-        num_trials_per_task=5,
+        num_trials_per_task=3,
         add_noise=False,
         camera_offset=False,
         adjust_light=False,
@@ -227,12 +264,14 @@ def test_run_task_cycles_initial_states(monkeypatch):
         save_video_mode='none',
         seed=7,
         task_suite_name='safety_static_obstacles',
+        policy_rng_mode='episode_reseed',
+        policy_seed=7,
     )
 
     monkeypatch.setattr(
         evaluator,
         'load_initial_states',
-        lambda *_args, **_kwargs: (states, None),
+        lambda *_args, **_kwargs: (['state0'], None),
     )
     monkeypatch.setattr(
         evaluator,
@@ -250,11 +289,16 @@ def test_run_task_cycles_initial_states(monkeypatch):
         log_file=None,
         client=None,
     ):
-        del log_file, client
-        captured_states.append(initial_state)
+        del initial_state, log_file, client
         return False, [], 0
 
     monkeypatch.setattr(evaluator, 'run_episode', _fake_run_episode)
+
+    client = Mock()
+    client.begin_episode.side_effect = lambda episode_idx, cfg: {
+        'mode': 'episode_reseed',
+        'episode_seed': cfg.policy_seed + episode_idx,
+    }
 
     evaluator.run_task(
         cfg,
@@ -265,7 +309,84 @@ def test_run_task_cycles_initial_states(monkeypatch):
         total_episodes=0,
         total_successes=0,
         log_file=None,
-        client=Mock(),
+        client=client,
     )
 
-    assert captured_states == ['s0', 's1', 's2', 's0', 's1']
+    assert client.begin_episode.call_count == 3
+    assert [call.args[0] for call in client.begin_episode.call_args_list] == [
+        0,
+        1,
+        2,
+    ]
+    assert all(call.args[1] is cfg for call in client.begin_episode.call_args_list)
+
+
+def test_run_episode_infer_debug_logging(monkeypatch):
+    evaluator = pytest.importorskip('vla_arena.models.openpi.evaluator')
+
+    class _DummyEnv:
+        def __init__(self):
+            self._obs = {
+                'agentview_image': np.zeros((4, 4, 3), dtype=np.uint8),
+                'robot0_eye_in_hand_image': np.zeros((4, 4, 3), dtype=np.uint8),
+                'robot0_eef_pos': np.zeros(3, dtype=np.float32),
+                'robot0_eef_quat': np.asarray(
+                    [0.0, 0.0, 0.0, 1.0], dtype=np.float32
+                ),
+                'robot0_gripper_qpos': np.zeros(1, dtype=np.float32),
+            }
+
+        def reset(self):
+            return None
+
+        def set_init_state(self, _initial_state):
+            return self._obs
+
+        def get_observation(self):
+            return self._obs
+
+        def step(self, _action):
+            return self._obs, 0.0, True, {'cost': 0.0}
+
+    cfg = SimpleNamespace(
+        task_suite_name='safety_dynamic_obstacles',
+        task_level=0,
+        num_steps_wait=0,
+        resize_size=224,
+        replan_steps=5,
+        use_replacements=False,
+        safety=False,
+        policy_log_infer_debug=True,
+    )
+    env = _DummyEnv()
+    client = Mock()
+    client.infer.return_value = {
+        'actions': np.zeros((5, 7), dtype=np.float32),
+        'policy_timing': {'infer_ms': 1.23},
+    }
+    captured_messages = []
+
+    monkeypatch.setattr(
+        evaluator.image_tools, 'resize_with_pad', lambda image, *_args: image
+    )
+    monkeypatch.setattr(
+        evaluator.image_tools, 'convert_to_uint8', lambda image: image
+    )
+    monkeypatch.setattr(
+        evaluator,
+        'log_message',
+        lambda message, log_file=None: captured_messages.append(message),
+    )
+
+    evaluator.run_episode(
+        cfg,
+        env,
+        task_description='pick and place',
+        replacements_dict={},
+        initial_state=None,
+        log_file=None,
+        client=client,
+    )
+
+    assert any('Infer debug:' in message for message in captured_messages)
+    assert any('infer_ms=1.23' in message for message in captured_messages)

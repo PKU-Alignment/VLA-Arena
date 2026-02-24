@@ -98,6 +98,24 @@ By default, OpenPI evaluation uses local checkpoint inference (`inference_mode: 
 1. `policy_checkpoint_dir` (if set)
 2. inferred from `train_config_path` + `policy_checkpoint_step` (`latest` by default)
 
+### OpenPI Policy Randomness Control (Local Mode)
+
+OpenPI local evaluation now supports policy RNG control directly from `vla_arena/configs/evaluation/openpi.yaml`:
+
+- `policy_rng_mode: legacy`
+  keeps previous behavior (`Policy._rng` continuously advances across episodes).
+- `policy_rng_mode: episode_reseed` (default)
+  resets policy RNG at each episode start with `policy_seed + episode_idx`.
+- `policy_rng_mode: deterministic_noise`
+  injects zero noise into local policy sampling for deterministic debugging.
+
+Recommended debugging order for "episode 1 success, later episodes fail":
+1. `legacy` (baseline)
+2. `episode_reseed` (reproducible across runs)
+3. `deterministic_noise` (max determinism for root-cause checks)
+
+Note: seeing a group of JAX/Flax deprecation logs only in the first episode usually indicates first-time JIT/graph warmup. It does **not** mean later episodes skipped policy inference.
+
 ### Advanced / Optional: Manual Norm Stats and Websocket Server
 
 If you need explicit control, manual workflows are still available:

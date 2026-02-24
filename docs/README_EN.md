@@ -174,9 +174,10 @@ docs/
 
 ### 3. Model Training
 1. Follow `finetuning_and_evaluation.md` for the uv-only workflow
-2. Sync the model environment: `uv sync --project envs/<model_name>`
-3. Fine-tune: `uv run --project envs/<model_name> vla-arena train --model <model_cli_name> --config vla_arena/configs/train/<model_cli_name>.yaml`
-4. Evaluate: `uv run --project envs/<model_name> vla-arena eval --model <model_cli_name> --config vla_arena/configs/evaluation/<model_cli_name>.yaml`
+2. Fine-tune: `uv run --project envs/<model_name> vla-arena train --model <model_cli_name> --config vla_arena/configs/train/<model_cli_name>.yaml`
+3. Evaluate: `uv run --project envs/<model_name> vla-arena eval --model <model_cli_name> --config vla_arena/configs/evaluation/<model_cli_name>.yaml`
+
+> Note: the first `uv run` may take a while—it will create the environment and install dependencies automatically.
 
 ### 4. Task Sharing (Optional)
 1. Follow `asset_management.md` to package your custom tasks

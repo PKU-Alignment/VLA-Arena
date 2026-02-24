@@ -51,88 +51,51 @@ VLA-Arena 囊括四个任务类别：
 
 ## 快速开始
 
-### 1. 安装
+- YAML 驱动配置（`vla_arena/configs/...`）
+- 按模型隔离的 uv 工程（`envs/openvla`、`envs/openpi`、…）
+- 统一 CLI：`vla-arena train` / `vla-arena eval`
 
-#### 使用 uv 安装（推荐）
-```bash
-# 安装 uv：https://docs.astral.sh/uv/
+> **前置条件**：安装 uv：https://docs.astral.sh/uv/
 
-# 1. 同步基础 uv 环境
-uv sync --project envs/base
-
-# 2. （可选）下载/更新任务套件与资产（约 850MB）
-uv run --project envs/base vla-arena.download-tasks install-all --repo vla-arena/tasks
-
-# 3. (可选) 同步模型专用环境（用于训练/评测）
-uv sync --project envs/openvla
-# 可用环境: openvla, openvla_oft, univla, smolvla, openpi
-```
-
-> **📦 说明**：如果你是通过 PyPI 安装，任务套件/资产需要在安装后单独下载（见步骤 2）。如果你是直接克隆本仓库，任务与资产已包含，通常可以跳过步骤 2（除非你希望从 Hub 更新）。
-
-#### 使用 PyPI 安装（备选）
-
-> **Python 要求**：`==3.11.*`
+### Step 1 — 克隆仓库
 
 ```bash
-python3 -m pip install vla-arena
-
-# 下载任务套件/资产（约 850MB）
-vla-arena.download-tasks install-all --repo vla-arena/tasks
-```
-
-如果需要进行模型训练/评测，仍推荐使用源码仓库 + uv 按模型隔离环境（`envs/<model_name>`）以避免依赖冲突。
-
-#### 从源代码安装
-```bash
-# 克隆仓库（包含所有任务和资产文件）
 git clone https://github.com/PKU-Alignment/VLA-Arena.git
 cd VLA-Arena
-
-# 同步基础 uv 环境
-uv sync --project envs/base
 ```
 
-#### 注意事项
-- `robosuite/utils` 目录下可能缺少 `mujoco.dll` 文件，可从 `mujoco/mujoco.dll` 处获取；
-- 在 Windows 平台使用时，需在 `robosuite\utils\binding_utils.py` 中对 `mujoco` 渲染方式进行修改：
-  ```python
-  if _SYSTEM == "Darwin":
-    os.environ["MUJOCO_GL"] = "cgl"
-  else:
-    os.environ["MUJOCO_GL"] = "wgl"    # Change "egl" to "wgl"
-   ```
+### Step 2 — 修改 YAML 配置
 
-### 2. 数据收集
-```bash
-# 收集演示数据
-uv run --project envs/base python scripts/collect_demonstration.py --bddl-file <你的bddl文件路径>
+按模型修改对应配置。以 OpenVLA 为例：
 
-# 示例
-uv run --project envs/base python scripts/collect_demonstration.py \
-  --bddl-file vla_arena/vla_arena/bddl_files/distractor_static_distractors/level_0/pick_the_banana_on_the_table_and_place_it_on_the_plate.bddl
-```
+- `vla_arena/configs/train/openvla.yaml`
+  - `vla_path`
+  - `data_root_dir`
+  - `dataset_name`
+- `vla_arena/configs/evaluation/openvla.yaml`
+  - `pretrained_checkpoint`
+  - `task_suite_name`
+  - `task_level`
 
-这将打开一个交互式仿真环境，你可以使用键盘控制机器人手臂来完成 BDDL 文件中指定的任务。
+其他模型同理：使用匹配的 `vla_arena/configs/train/<model>.yaml`、`vla_arena/configs/evaluation/<model>.yaml`，并将命令中的 `envs/openvla` 替换为对应的 `envs/<model>`。
 
-### 3. 模型微调与评估
+### Step 3 — 一条命令训练
 
-**⚠️ 重要提示：** 我们建议为不同模型使用独立 uv 工程，以避免依赖冲突。
+首次 `uv run` 会自动创建环境并安装依赖，可能需要一些时间。
 
 ```bash
-# 同步模型专用环境
-uv sync --project envs/openvla
-
-# 微调模型（例如 OpenVLA）
 uv run --project envs/openvla \
   vla-arena train --model openvla --config vla_arena/configs/train/openvla.yaml
+```
 
-# 评估模型
+### Step 4 — 一条命令评测
+
+```bash
 uv run --project envs/openvla \
   vla-arena eval --model openvla --config vla_arena/configs/evaluation/openvla.yaml
 ```
 
-**注意：** OpenPi 也使用同一套顶层 uv 工作流（`envs/openpi`）。详情见[模型微调与评测指南](docs/finetuning_and_evaluation_zh.md)。
+数据收集与数据集转换见 `docs/data_collection_zh.md`。
 
 ## 任务套件概览
 
@@ -205,18 +168,36 @@ VLA-Arena 提供 11 个专业任务套件，共 170 个任务，分为四个主�
 
 ### 系统要求
 - **操作系统**：Ubuntu 20.04+ 或 macOS 12+
-- **Python**：3.11 或更高版本
+- **Python**：3.11.x（`==3.11.*`）
 - **CUDA**：11.8+（用于GPU加速）
 
-### 安装步骤
+### 从源代码安装（推荐）
 ```bash
 # 克隆仓库
 git clone https://github.com/PKU-Alignment/VLA-Arena.git
 cd VLA-Arena
 
-# 同步基础 uv 环境
+# 安装 uv：https://docs.astral.sh/uv/
+
+# （可选）预先安装基础环境（否则首次 `uv run` 会自动完成）
 uv sync --project envs/base
+
+# （可选）从 Hub 下载/更新任务套件与资产（约 850MB）
+uv run --project envs/base vla-arena.download-tasks install-all --repo vla-arena/tasks
 ```
+
+> **说明**：若你是直接克隆本仓库，任务与资产已包含。除非你希望从 Hub 更新，否则可以跳过下载步骤。
+
+### 使用 PyPI 安装（备选）
+
+```bash
+python3 -m pip install vla-arena
+
+# 下载任务套件/资产（约 850MB）
+vla-arena.download-tasks install-all --repo vla-arena/tasks
+```
+
+如果需要进行模型训练/评测，仍推荐使用源码仓库 + uv 按模型隔离工程（`envs/<model_name>`）以避免依赖冲突。
 
 ## 文档
 

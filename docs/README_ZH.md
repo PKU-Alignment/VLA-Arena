@@ -122,12 +122,13 @@ docs/
 
 ### 3. 模型训练与评估
 1. 按照 `finetuning_and_evaluation_zh.md` 安装模型依赖
-2. 同步模型环境：`uv sync --project envs/<model_name>`
-3. 使用 `uv run --project envs/<model_name> vla-arena train` 命令进行模型微调
-4. 根据你的需求配置训练参数
-5. 使用 `uv run --project envs/<model_name> vla-arena eval` 命令评估模型性能
-6. 通过 WandB 监控训练进度
-7. 分析结果并迭代改进模型
+2. 使用 `uv run --project envs/<model_name> vla-arena train` 命令进行模型微调
+3. 根据你的需求配置训练参数
+4. 使用 `uv run --project envs/<model_name> vla-arena eval` 命令评估模型性能
+5. 通过 WandB 监控训练进度
+6. 分析结果并迭代改进模型
+
+> 说明：首次 `uv run` 会自动创建环境并安装依赖，可能需要一些时间。
 
 ### 4. 任务分享（可选）
 1. 按照 `asset_management_zh.md` 打包你的自定义任务

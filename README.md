@@ -45,88 +45,51 @@ VLA-Arena focuses on four key domains:
 
 ## Quick Start
 
-### 1. Installation
+- YAML-driven configs (`vla_arena/configs/...`)
+- Per-model isolated uv projects (`envs/openvla`, `envs/openpi`, …)
+- Unified CLI: `vla-arena train` / `vla-arena eval`
 
-#### Install with uv (Recommended)
-```bash
-# Install uv: https://docs.astral.sh/uv/
+> **Prerequisite**: install uv: https://docs.astral.sh/uv/
 
-# 1. Sync uv environment for base usage
-uv sync --project envs/base
-
-# 2. (Optional) Download / update task suites and assets (~850 MB)
-uv run --project envs/base vla-arena.download-tasks install-all --repo vla-arena/tasks
-
-# 3. (Optional) Sync model-specific environment for training/evaluation
-uv sync --project envs/openvla
-# Available env projects: openvla, openvla_oft, univla, smolvla, openpi
-```
-
-> **📦 Note**: If you installed from PyPI, task suites/assets are downloaded separately (step 2). If you cloned this repository, tasks and assets are already included, and you can usually skip step 2 unless you want to update from the Hub.
-
-#### Install from PyPI (Alternative)
-
-> **Python requirement**: `==3.11.*`
+### Step 1 — Clone
 
 ```bash
-python3 -m pip install vla-arena
-
-# Download task suites / assets (~850 MB)
-vla-arena.download-tasks install-all --repo vla-arena/tasks
-```
-
-For model training/evaluation, we still recommend using the source checkout + uv per-model environments (`envs/<model_name>`) to avoid dependency conflicts.
-
-#### Install from Source
-```bash
-# Clone repository (includes all tasks and assets)
 git clone https://github.com/PKU-Alignment/VLA-Arena.git
 cd VLA-Arena
-
-# Sync base uv environment
-uv sync --project envs/base
 ```
 
-#### Notes
-- The `mujoco.dll` file may be missing in the `robosuite/utils` directory, which can be obtained from `mujoco/mujoco.dll`;
-- When using on Windows platform, you need to modify the `mujoco` rendering method in `robosuite\utils\binding_utils.py`:
-  ```python
-  if _SYSTEM == "Darwin":
-    os.environ["MUJOCO_GL"] = "cgl"
-  else:
-    os.environ["MUJOCO_GL"] = "wgl"    # Change "egl" to "wgl"
-   ```
+### Step 2 — Configure YAML
 
-### 2. Data Collection
-```bash
-# Collect demonstration data
-uv run --project envs/base python scripts/collect_demonstration.py --bddl-file <your_bddl_file_path>
+Edit the configs for your model. Example (OpenVLA):
 
-# Example
-uv run --project envs/base python scripts/collect_demonstration.py \
-  --bddl-file vla_arena/vla_arena/bddl_files/distractor_static_distractors/level_0/pick_the_banana_on_the_table_and_place_it_on_the_plate.bddl
-```
+- `vla_arena/configs/train/openvla.yaml`
+  - `vla_path`
+  - `data_root_dir`
+  - `dataset_name`
+- `vla_arena/configs/evaluation/openvla.yaml`
+  - `pretrained_checkpoint`
+  - `task_suite_name`
+  - `task_level`
 
-This will open an interactive simulation environment where you can control the robotic arm using keyboard controls to complete the task specified in the BDDL file.
+Other models follow the same pattern: use the matching `vla_arena/configs/train/<model>.yaml`, `vla_arena/configs/evaluation/<model>.yaml`, and `envs/<model>`.
 
-### 3. Model Fine-tuning and Evaluation
+### Step 3 — Train (one command)
 
-**⚠️ Important:** We recommend using separate uv projects for different models to avoid dependency conflicts.
+The first `uv run` may take a while: it will create the environment and install dependencies automatically.
 
 ```bash
-# Sync dedicated environment for the model
-uv sync --project envs/openvla
-
-# Fine-tune a model (e.g., OpenVLA)
 uv run --project envs/openvla \
   vla-arena train --model openvla --config vla_arena/configs/train/openvla.yaml
+```
 
-# Evaluate a model
+### Step 4 — Eval (one command)
+
+```bash
 uv run --project envs/openvla \
   vla-arena eval --model openvla --config vla_arena/configs/evaluation/openvla.yaml
 ```
 
-**Note:** OpenPi also uses the same top-level uv workflow (`envs/openpi`). Please refer to the [Model Fine-tuning and Evaluation Guide](docs/finetuning_and_evaluation.md).
+For data collection and dataset conversion, see `docs/data_collection.md`.
 
 ## Task Suites Overview
 
@@ -199,18 +162,36 @@ VLA-Arena provides 11 specialized task suites with 170 tasks total, organized in
 
 ### System Requirements
 - **OS**: Ubuntu 20.04+ or macOS 12+
-- **Python**: 3.11 or higher
+- **Python**: 3.11.x (`==3.11.*`)
 - **CUDA**: 11.8+ (for GPU acceleration)
 
-### Installation Steps
+### Install from Source (Recommended)
 ```bash
 # Clone repository
 git clone https://github.com/PKU-Alignment/VLA-Arena.git
 cd VLA-Arena
 
-# Sync base uv environment
+# Install uv: https://docs.astral.sh/uv/
+
+# (Optional) Pre-install base environment (otherwise the first `uv run` will do it)
 uv sync --project envs/base
+
+# (Optional) Download / update task suites and assets from the Hub (~850 MB)
+uv run --project envs/base vla-arena.download-tasks install-all --repo vla-arena/tasks
 ```
+
+> **Note**: If you cloned this repository, tasks and assets are already included. You can skip the download step unless you want to update from the Hub.
+
+### Install from PyPI (Alternative)
+
+```bash
+python3 -m pip install vla-arena
+
+# Download task suites / assets (~850 MB)
+vla-arena.download-tasks install-all --repo vla-arena/tasks
+```
+
+For model training/evaluation, we recommend using the source checkout + uv per-model projects (`envs/<model_name>`) to avoid dependency conflicts.
 
 ## Documentation
 

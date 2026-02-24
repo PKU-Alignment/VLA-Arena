@@ -187,3 +187,85 @@ def test_normalize_legacy_train_yaml_prefers_params_path():
     normalized = workflow_utils._normalize_legacy_train_yaml(yaml_data)
     assert normalized['weight_loader']['params_path'] == '/tmp/current'
     assert 'checkpoint_path' not in normalized['weight_loader']
+
+
+def test_local_policy_client_reset_forwards_to_policy():
+    evaluator = pytest.importorskip('vla_arena.models.openpi.evaluator')
+
+    policy = Mock()
+    client = evaluator._LocalPolicyClient(policy)
+    client.reset()
+
+    policy.reset.assert_called_once()
+
+
+def test_safe_reset_policy_client_calls_reset():
+    evaluator = pytest.importorskip('vla_arena.models.openpi.evaluator')
+
+    client = Mock()
+    evaluator._safe_reset_policy_client(client)
+
+    client.reset.assert_called_once()
+
+
+def test_run_task_cycles_initial_states(monkeypatch):
+    evaluator = pytest.importorskip('vla_arena.models.openpi.evaluator')
+
+    states = ['s0', 's1', 's2']
+    captured_states = []
+
+    class _DummyTaskSuite:
+        def get_task_by_level_id(self, _task_level, _task_id):
+            return SimpleNamespace(language='pick and place')
+
+    cfg = SimpleNamespace(
+        num_trials_per_task=5,
+        add_noise=False,
+        camera_offset=False,
+        adjust_light=False,
+        randomize_color=False,
+        save_video_mode='none',
+        seed=7,
+        task_suite_name='safety_static_obstacles',
+    )
+
+    monkeypatch.setattr(
+        evaluator,
+        'load_initial_states',
+        lambda *_args, **_kwargs: (states, None),
+    )
+    monkeypatch.setattr(
+        evaluator,
+        'get_vla_arena_env',
+        lambda *_args, **_kwargs: (object(), 'pick and place'),
+    )
+    monkeypatch.setattr(evaluator.tqdm, 'tqdm', lambda it: it)
+
+    def _fake_run_episode(
+        _cfg,
+        _env,
+        _task_description,
+        _replacements_dict,
+        initial_state=None,
+        log_file=None,
+        client=None,
+    ):
+        del log_file, client
+        captured_states.append(initial_state)
+        return False, [], 0
+
+    monkeypatch.setattr(evaluator, 'run_episode', _fake_run_episode)
+
+    evaluator.run_task(
+        cfg,
+        _DummyTaskSuite(),
+        task_id=0,
+        task_level=0,
+        replacements_dict={},
+        total_episodes=0,
+        total_successes=0,
+        log_file=None,
+        client=Mock(),
+    )
+
+    assert captured_states == ['s0', 's1', 's2', 's0', 's1']

@@ -129,6 +129,9 @@ class _LocalPolicyClient:
     def infer(self, element: dict) -> dict:
         return self._policy.infer(element)
 
+    def reset(self) -> None:
+        self._policy.reset()
+
 
 def _create_local_client(
     cfg: GenerateConfig,
@@ -208,6 +211,22 @@ def load_initial_states(
     return initial_states, None
 
 
+def _safe_reset_policy_client(client, log_file=None):
+    """Reset policy state between episodes when supported."""
+    if client is None:
+        return
+    reset_fn = getattr(client, 'reset', None)
+    if not callable(reset_fn):
+        return
+    try:
+        reset_fn()
+    except Exception as exc:
+        log_message(
+            f'Warning: policy reset failed ({type(exc).__name__}: {exc}). Continuing without reset.',
+            log_file,
+        )
+
+
 def _suite_category(suite_name: str) -> tuple[str, bool]:
     if suite_name.startswith('safety_'):
         return 'Safety', True
@@ -230,6 +249,8 @@ def run_episode(
     client=None,
 ):
     """Run a single episode in the environment."""
+    _safe_reset_policy_client(client, log_file)
+
     # Reset environment
     env.reset()
 
@@ -381,14 +402,13 @@ def run_task(
     episodes_with_cost = 0
     successes_with_cost = 0
     failures_with_cost = 0
-    rng = np.random.default_rng(cfg.seed)
     for episode_idx in tqdm.tqdm(range(cfg.num_trials_per_task)):
         log_message(f'\nTask: {task_description}', log_file)
 
-        random_offset = rng.integers(0, len(initial_states))
-        initial_state = initial_states[
-            (episode_idx + random_offset) % len(initial_states)
-        ]
+        if len(initial_states) > 0:
+            initial_state = initial_states[episode_idx % len(initial_states)]
+        else:
+            initial_state = None
 
         log_message(f'Starting episode {task_episodes + 1}...', log_file)
 

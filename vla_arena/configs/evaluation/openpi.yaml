@@ -8,7 +8,7 @@ inference_mode: "websocket"  # websocket only
 policy_config_name: null  # Optional fallback config name when train_config_path is not set
 policy_checkpoint_dir: null  # Optional explicit checkpoint dir; supports experiment root or concrete step dir
 policy_checkpoint_step: "latest"  # "latest" or step number when using an experiment root
-train_config_path: "vla_arena/configs/train/openpi.yaml"  # Used to infer model config + checkpoint for auto-start
+train_config_path: "vla_arena/configs/train/openpi.yaml"  # Used to infer model config + checkpoint for auto-start (pi0 default; pi0-fast optional via train config name)
 auto_start_policy_server: true  # Auto-start serve_policy.py when websocket port is unavailable on local host
 policy_server_start_timeout_sec: 180  # Max seconds to wait for auto-started policy server readiness
 policy_server_poll_interval_sec: 1.0  # Poll interval (seconds) while waiting for policy server

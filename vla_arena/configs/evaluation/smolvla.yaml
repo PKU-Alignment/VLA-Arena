@@ -1,4 +1,4 @@
-policy_path: "your/path/to/policy"
+policy_path: "VLA-Arena/smolvla-vla-arena"
 
 # --- VLA-Arena environment-specific parameters ---
 task_suite_name: "safety_dynamic_obstacles"

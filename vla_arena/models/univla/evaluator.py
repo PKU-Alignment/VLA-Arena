@@ -21,6 +21,7 @@ Evaluates a trained policy in a VLA-Arena simulation benchmark task suite.
 import json
 import logging
 import os
+import re
 import sys
 from collections import deque
 from dataclasses import dataclass, replace
@@ -33,6 +34,7 @@ import torch
 import torch.nn as nn
 import tqdm
 import wandb
+from huggingface_hub import HfApi, hf_hub_download
 
 # Append current directory so that interpreter can find experiments.robot
 from vla_arena.models.univla.experiments.robot.vla_arena.vla_arena_utils import (
@@ -289,12 +291,84 @@ def validate_config(cfg: GenerateConfig) -> None:
     # assert cfg.task_suite_name in [suite.value for suite in TaskSuite], f"Invalid task suite: {cfg.task_suite_name}"
 
 
+def _extract_checkpoint_step(path_like: str) -> int:
+    filename = Path(path_like).name
+    for pattern in (r'--(\d+)_checkpoint', r'step[-_=]?(\d+)'):
+        match = re.search(pattern, filename)
+        if match:
+            return int(match.group(1))
+    return -1
+
+
+def _select_best_action_decoder(candidates: list[str]) -> str:
+    return max(
+        candidates,
+        key=lambda candidate: (
+            _extract_checkpoint_step(candidate),
+            Path(candidate).name,
+        ),
+    )
+
+
+def _resolve_action_decoder_path(action_decoder_path: str | Path) -> str:
+    decoder_ref = str(action_decoder_path).strip()
+    local_path = Path(decoder_ref).expanduser()
+
+    if local_path.is_file():
+        return str(local_path)
+
+    if local_path.is_dir():
+        local_candidates = [
+            str(path) for path in local_path.rglob('*action_decoder*.pt')
+        ]
+        if not local_candidates:
+            raise FileNotFoundError(
+                f'No action decoder checkpoint found under directory: {local_path}'
+            )
+        selected = _select_best_action_decoder(local_candidates)
+        logger.info('Using local action decoder checkpoint: %s', selected)
+        return selected
+
+    try:
+        repo_files = HfApi().list_repo_files(
+            repo_id=decoder_ref, repo_type='model'
+        )
+    except Exception as exc:
+        raise FileNotFoundError(
+            f'action_decoder_path is neither a local path nor a valid HF repo id: {decoder_ref}'
+        ) from exc
+
+    repo_candidates = [
+        filename
+        for filename in repo_files
+        if Path(filename).suffix in {'.pt', '.pth', '.bin'}
+        and 'action_decoder' in Path(filename).name
+    ]
+    if not repo_candidates:
+        raise FileNotFoundError(
+            f'No action decoder checkpoint file found in HF repo: {decoder_ref}'
+        )
+
+    selected = _select_best_action_decoder(repo_candidates)
+    logger.info(
+        'Downloading action decoder checkpoint from HF repo %s: %s',
+        decoder_ref,
+        selected,
+    )
+    return hf_hub_download(repo_id=decoder_ref, filename=selected)
+
+
 def initialize_model(cfg: GenerateConfig):
     """Initialize model and associated components."""
 
     # Load action decoder
+    action_decoder_checkpoint = _resolve_action_decoder_path(
+        cfg.action_decoder_path
+    )
     action_decoder = ActionDecoder(cfg.window_size)
-    action_decoder.net.load_state_dict(torch.load(cfg.action_decoder_path))
+    action_decoder.net.load_state_dict(
+        torch.load(action_decoder_checkpoint, map_location='cpu')
+    )
     action_decoder.eval().cuda()
     # Load model
     model = get_model_for_vla_arena(cfg)

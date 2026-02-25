@@ -3,8 +3,11 @@
 # Model Paths
 # Set UNIVLA_VLA_PATH environment variable or modify this path to specify your UniVLA model location
 vla_path: qwbu/univla-7b  # Path to your local UniVLA path
-# Set UNIVLA_LAM_PATH environment variable or modify this path to specify your LAM checkpoint location
-lam_path: qwbu/univla-latent-action-model  # Path to LAM checkpoint
+# Set UNIVLA_LAM_PATH environment variable or modify this path to specify your LAM source
+# lam_path supports: local checkpoint file, local checkpoint directory, or Hugging Face repo id
+lam_path: qwbu/univla-latent-action-model
+# Optional relative checkpoint file within local directory / HF repo (e.g., task_centric_lam_stage2/epoch=0-step=200000.ckpt)
+lam_ckpt_file: null
 
 # Directory Paths
 # Set UNIVLA_DATA_ROOT_DIR environment variable or modify this path to specify your dataset directory

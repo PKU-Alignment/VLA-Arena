@@ -2,9 +2,9 @@
 
 # Model Paths
 # Set UNIVLA_VLA_PATH environment variable or modify this path to specify your UniVLA model location
-vla_path: "/path/to/your/univla-model"  # Path to your local UniVLA path
+vla_path: qwbu/univla-7b  # Path to your local UniVLA path
 # Set UNIVLA_LAM_PATH environment variable or modify this path to specify your LAM checkpoint location
-lam_path: "/path/to/your/lam-checkpoint.ckpt"  # Path to LAM checkpoint
+lam_path: qwbu/univla-latent-action-model  # Path to LAM checkpoint
 
 # Directory Paths
 # Set UNIVLA_DATA_ROOT_DIR environment variable or modify this path to specify your dataset directory

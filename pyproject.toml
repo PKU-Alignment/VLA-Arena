@@ -37,6 +37,7 @@ dependencies = [
     "h5py",
     "matplotlib",
     "tensorflow",
+    "huggingface_hub",
 ]
 
 [project.scripts]

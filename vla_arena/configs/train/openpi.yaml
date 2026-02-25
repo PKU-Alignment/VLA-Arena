@@ -29,6 +29,10 @@ save_interval: 1000                               # Save checkpoint every N step
 #   clip_gradient_norm: 1.0
 
 # Data Configuration (override if needed)
+# Default L0 large dataset (LeRobot/OpenPI format)
+data:
+  repo_id: "VLA-Arena/VLA_Arena_L0_L_lerobot_openpi"
+#
 # data:
 #   repo_id: "lerobot_data/VLA_Arena"            # LeRobot dataset repo ID
 #   extra_delta_transform: true                   # Apply extra delta transform
@@ -44,7 +48,7 @@ save_interval: 1000                               # Save checkpoint every N step
 
 # Weight Loading (override if needed)
 # weight_loader:
-#   checkpoint_path: "gs://openpi-assets/checkpoints/pi0_base/params"
+#   params_path: "gs://openpi-assets/checkpoints/pi0_base/params"
 
 # Checkpoint Configuration
 checkpoint_base_dir: "./checkpoints"              # Base directory for checkpoints
@@ -58,6 +62,6 @@ project_name: "openpi"                            # Wandb project name
 
 # Other Settings
 seed: 42                                          # Random seed
-num_workers: 2                                    # Data loader workers
+num_workers: 0                                    # Data loader workers
 keep_period: 5000                                 # Keep checkpoints every N steps
 fsdp_devices: 1                                   # FSDP devices (1 = disabled)

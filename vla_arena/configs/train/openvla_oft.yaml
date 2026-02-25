@@ -1,6 +1,6 @@
 # Model Path
 # Set OPENVLA_OFT_VLA_PATH environment variable or modify this path to specify your OpenVLA model location
-vla_path: /path/to/your/models/openvla  # Path to OpenVLA model (on HuggingFace Hub or stored locally)
+vla_path: openvla/openvla-7b  # Path to OpenVLA model (on HuggingFace Hub or stored locally)
 
 # Dataset
 # Set OPENVLA_OFT_DATA_ROOT_DIR environment variable or modify this path to specify your dataset directory

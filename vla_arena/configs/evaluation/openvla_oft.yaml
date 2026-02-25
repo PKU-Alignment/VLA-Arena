@@ -1,7 +1,7 @@
 # Model-specific parameters
 model_family: "openvla"                    # Model family
 # Set OPENVLA_OFT_PRETRAINED_CHECKPOINT environment variable or modify this path to specify your checkpoint location
-pretrained_checkpoint: "path/to/openvla_oft_checkpoint"                  # Pretrained checkpoint path
+pretrained_checkpoint: "VLA-Arena/openvla-7b-oft-finetuned-vla-arena"    # Pretrained checkpoint path
 
 use_l1_regression: true                    # If True, uses continuous action head with L1 regression objective
 use_diffusion: false                      # If True, uses continuous action head with diffusion modeling objective (DDIM)

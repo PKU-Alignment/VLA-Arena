@@ -26,20 +26,20 @@ from typing_extensions import override
 
 import etils.epath as epath
 import flax.nnx as nnx
-import openpi.models.model as _model
-import openpi.models.pi0_config as pi0_config
-import openpi.models.pi0_fast as pi0_fast
-import openpi.models.tokenizer as _tokenizer
-import openpi.policies.aloha_policy as aloha_policy
-import openpi.policies.droid_policy as droid_policy
-import openpi.policies.libero_policy as libero_policy
-import openpi.shared.download as _download
-import openpi.shared.normalize as _normalize
-import openpi.training.droid_rlds_dataset as droid_rlds_dataset
-import openpi.training.misc.roboarena_config as roboarena_config
-import openpi.training.optimizer as _optimizer
-import openpi.training.weight_loaders as weight_loaders
-import openpi.transforms as _transforms
+import vla_arena.models.openpi.src.openpi.models.model as _model
+import vla_arena.models.openpi.src.openpi.models.pi0_config as pi0_config
+import vla_arena.models.openpi.src.openpi.models.pi0_fast as pi0_fast
+import vla_arena.models.openpi.src.openpi.models.tokenizer as _tokenizer
+import vla_arena.models.openpi.src.openpi.policies.aloha_policy as aloha_policy
+import vla_arena.models.openpi.src.openpi.policies.droid_policy as droid_policy
+import vla_arena.models.openpi.src.openpi.policies.libero_policy as libero_policy
+import vla_arena.models.openpi.src.openpi.shared.download as _download
+import vla_arena.models.openpi.src.openpi.shared.normalize as _normalize
+import vla_arena.models.openpi.src.openpi.training.droid_rlds_dataset as droid_rlds_dataset
+import vla_arena.models.openpi.src.openpi.training.misc.roboarena_config as roboarena_config
+import vla_arena.models.openpi.src.openpi.training.optimizer as _optimizer
+import vla_arena.models.openpi.src.openpi.training.weight_loaders as weight_loaders
+import vla_arena.models.openpi.src.openpi.transforms as _transforms
 import tyro
 
 
@@ -828,7 +828,7 @@ _CONFIGS = [
         weight_loader=weight_loaders.CheckpointWeightLoader(
             os.getenv(
                 'OPENPI_VLA_ARENA_CHECKPOINT_PATH',
-                '/path/to/your/openpi/pi0-vla-arena/params',
+                '/share_data/zhangborong/models/pi0_base/params',
             )
         ),
         num_train_steps=30_000,

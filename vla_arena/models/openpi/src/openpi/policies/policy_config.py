@@ -18,12 +18,12 @@ import pathlib
 from typing import Any
 
 import jax.numpy as jnp
-import openpi.models.model as _model
-import openpi.policies.policy as _policy
-import openpi.shared.download as download
-import openpi.transforms as transforms
-from openpi.training import checkpoints as _checkpoints
-from openpi.training import config as _config
+import vla_arena.models.openpi.src.openpi.models.model as _model
+import vla_arena.models.openpi.src.openpi.policies.policy as _policy
+import vla_arena.models.openpi.src.openpi.shared.download as download
+import vla_arena.models.openpi.src.openpi.transforms as transforms
+from vla_arena.models.openpi.src.openpi.training import checkpoints as _checkpoints
+from vla_arena.models.openpi.src.openpi.training import config as _config
 
 
 def create_trained_policy(

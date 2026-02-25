@@ -16,7 +16,7 @@ import logging
 from collections.abc import Sequence
 
 import torch
-from openpi.shared import image_tools
+from vla_arena.models.openpi.src.openpi.shared import image_tools
 
 
 logger = logging.getLogger('openpi')

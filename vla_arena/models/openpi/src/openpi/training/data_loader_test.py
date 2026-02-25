@@ -15,9 +15,9 @@
 import dataclasses
 
 import jax
-from openpi.models import pi0_config
-from openpi.training import config as _config
-from openpi.training import data_loader as _data_loader
+from vla_arena.models.openpi.src.openpi.models import pi0_config
+from vla_arena.models.openpi.src.openpi.training import config as _config
+from vla_arena.models.openpi.src.openpi.training import data_loader as _data_loader
 
 
 def test_torch_data_loader():

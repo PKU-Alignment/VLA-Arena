@@ -1,0 +1,65 @@
+# Upgraded OpenVLA SafeRL training config (PPO-Lagrangian)
+
+# Model
+pretrained_checkpoint: "/path/to/your/openvla_checkpoint"
+unnorm_key: "vla_arena"
+load_in_8bit: false
+load_in_4bit: false
+
+# LoRA
+use_lora: true
+lora_rank: 32
+lora_dropout: 0.0
+
+# Environment/task (single task)
+task_suite_name: "safety_static_obstacles"
+task_level: 0
+task_id: 0
+num_steps_wait: 10
+max_env_steps: 300
+max_decision_steps: 180
+action_repeat: 2
+
+# SafeRL core
+algo: "ppo_lagrangian"
+num_episodes: 100
+max_updates: -1
+policy_lr: 1.0e-5
+
+# PPO
+rollout_episodes_per_update: 4
+update_epochs: 4
+minibatch_size: 64
+grad_accum_steps: 1
+ppo_clip_ratio: 0.2
+target_kl: 0.03
+entropy_coef: 0.01
+kl_ref_coef: 0.02
+use_generation_scores_for_old_logprob: true
+
+# Returns / advantage
+gamma: 0.99
+normalize_advantage: true
+adv_eps: 1.0e-8
+
+# Lagrangian
+init_lambda: 0.0
+lambda_lr: 0.01
+lambda_max: 100.0
+lambda_update_every: "update" # "update" or "episode"
+cost_limit: 10.0
+
+# Sampling
+temperature: 1.0
+top_p: 1.0
+
+# Runtime/logging
+seed: 7
+max_grad_norm: 1.0
+log_every_updates: 1
+save_every_episodes: 10
+run_root_dir: "runs/saferl_openvla"
+use_wandb: false
+wandb_project: "openvla-saferl"
+wandb_entity: "your_wandb_entity"
+merge_lora_for_eval: true

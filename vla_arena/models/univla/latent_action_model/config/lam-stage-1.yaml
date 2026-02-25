@@ -24,7 +24,7 @@ model:
 
 data:
   data_root: /path/to/your/rlds_data_collection
-  data_mix: omni_magic_soup_plus_plus       # Manip. + Navi. + Human
+  data_mix: VLA_Arena_L0_L_rlds
   batch_size: 64
   resolution: 224
   num_frames: 16  # TODO

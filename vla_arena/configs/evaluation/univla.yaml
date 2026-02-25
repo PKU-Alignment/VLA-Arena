@@ -1,12 +1,12 @@
 # Model-specific parameters
 model_family: "openvla"                    # Model family
 # Set UNIVLA_PRETRAINED_CHECKPOINT environment variable or modify this path to specify your checkpoint location
-pretrained_checkpoint: "/path/to/your/pretrained-checkpoint"  # Pretrained checkpoint path
+pretrained_checkpoint: "VLA-Arena/univla-7b-finetuned-vla-arena"  # Pretrained checkpoint path
 load_in_8bit: false                        # (For OpenVLA only) Load with 8-bit quantization
 load_in_4bit: false                        # (For OpenVLA only) Load with 4-bit quantization
 
 # Set UNIVLA_ACTION_DECODER_PATH environment variable or modify this path to specify your action decoder location
-action_decoder_path: "/path/to/your/action_decoder.pt"  # Path to action decoder checkpoint
+action_decoder_path: "VLA-Arena/univla-action-decoder"  # Path to action decoder checkpoint or HF repo id
 center_crop: true                          # Center crop? (if trained w/ random crop image aug)
 save_video: true                           # Whether to save rollout videos
 

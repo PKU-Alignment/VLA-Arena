@@ -34,7 +34,7 @@ import flax.linen as nn
 import jax
 import jax.numpy as jnp
 import numpy as np
-import openpi.training.sharding as sharding
+import vla_arena.models.openpi.src.openpi.training.sharding as sharding
 
 
 def posemb_sincos_2d(h, w, width, temperature=10_000.0, dtype=jnp.float32):

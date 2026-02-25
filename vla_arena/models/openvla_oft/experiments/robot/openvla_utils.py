@@ -17,6 +17,7 @@
 import filecmp
 import json
 import os
+import re
 import shutil
 import time
 from datetime import datetime
@@ -290,6 +291,33 @@ def find_checkpoint_file(pretrained_checkpoint: str, file_pattern: str) -> str:
     return checkpoint_files[0]
 
 
+def find_latest_hf_component_checkpoint(
+    repo_id: str, component_name: str
+) -> str:
+    """Find latest <component_name>--<step>_checkpoint.pt in a HF model repo."""
+    files = HfApi().list_repo_files(repo_id=repo_id, repo_type='model')
+    pattern = re.compile(
+        rf'(^|.*/){re.escape(component_name)}--(\d+)_checkpoint\.pt$'
+    )
+    matches: list[tuple[int, str]] = []
+    for filename in files:
+        match = pattern.search(filename)
+        if match:
+            matches.append((int(match.group(2)), filename))
+
+    if not matches:
+        raise ValueError(
+            f'No "{component_name}--<step>_checkpoint.pt" file found in HF repo: {repo_id}'
+        )
+
+    # Use the checkpoint with the largest step number.
+    step, filename = max(matches, key=lambda x: (x[0], x[1]))
+    print(
+        f'Using latest {component_name} checkpoint from HF repo {repo_id}: {filename} (step={step})'
+    )
+    return filename
+
+
 def load_component_state_dict(checkpoint_path: str) -> dict[str, torch.Tensor]:
     """
     Load a component's state dict from checkpoint and handle DDP prefix if present.
@@ -486,24 +514,12 @@ def get_proprio_projector(
 
     # Find and load checkpoint (may be on Hugging Face Hub or stored locally)
     if model_is_on_hf_hub(cfg.pretrained_checkpoint):
-        model_path_to_proprio_projector_name = {
-            'moojink/openvla-7b-oft-finetuned-libero-spatial': 'proprio_projector--150000_checkpoint.pt',
-            'moojink/openvla-7b-oft-finetuned-libero-object': 'proprio_projector--150000_checkpoint.pt',
-            'moojink/openvla-7b-oft-finetuned-libero-goal': 'proprio_projector--50000_checkpoint.pt',
-            'moojink/openvla-7b-oft-finetuned-libero-10': 'proprio_projector--150000_checkpoint.pt',
-            'moojink/openvla-7b-oft-finetuned-libero-spatial-object-goal-10': 'proprio_projector--300000_checkpoint.pt',
-        }
-        if (
-            cfg.pretrained_checkpoint
-            not in model_path_to_proprio_projector_name.keys()
-        ):
-            raise ValueError('Unsupported HF Hub pretrained checkpoint found!')
-        # Download proprio projector directly from HF Hub
+        component_filename = find_latest_hf_component_checkpoint(
+            cfg.pretrained_checkpoint, 'proprio_projector'
+        )
         proprio_projector_path = hf_hub_download(
             repo_id=cfg.pretrained_checkpoint,
-            filename=model_path_to_proprio_projector_name[
-                cfg.pretrained_checkpoint
-            ],
+            filename=component_filename,
         )
         state_dict = load_component_state_dict(proprio_projector_path)
         proprio_projector.load_state_dict(state_dict)
@@ -593,22 +609,12 @@ def get_action_head(
 
     # Find and load checkpoint (may be on Hugging Face Hub or stored locally)
     if model_is_on_hf_hub(cfg.pretrained_checkpoint):
-        model_path_to_action_head_name = {
-            'moojink/openvla-7b-oft-finetuned-libero-spatial': 'action_head--150000_checkpoint.pt',
-            'moojink/openvla-7b-oft-finetuned-libero-object': 'action_head--150000_checkpoint.pt',
-            'moojink/openvla-7b-oft-finetuned-libero-goal': 'action_head--50000_checkpoint.pt',
-            'moojink/openvla-7b-oft-finetuned-libero-10': 'action_head--150000_checkpoint.pt',
-            'moojink/openvla-7b-oft-finetuned-libero-spatial-object-goal-10': 'action_head--300000_checkpoint.pt',
-        }
-        if (
-            cfg.pretrained_checkpoint
-            not in model_path_to_action_head_name.keys()
-        ):
-            raise ValueError('Unsupported HF Hub pretrained checkpoint found!')
-        # Download proprio projector directly from HF Hub
+        component_filename = find_latest_hf_component_checkpoint(
+            cfg.pretrained_checkpoint, 'action_head'
+        )
         action_head_path = hf_hub_download(
             repo_id=cfg.pretrained_checkpoint,
-            filename=model_path_to_action_head_name[cfg.pretrained_checkpoint],
+            filename=component_filename,
         )
         state_dict = load_component_state_dict(action_head_path)
         action_head.load_state_dict(state_dict)

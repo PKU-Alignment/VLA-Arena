@@ -47,17 +47,17 @@ import shutil
 from typing import Literal
 
 import numpy as np
-import openpi.models.gemma
-import openpi.models.model
-import openpi.models.pi0_config
-import openpi.models_pytorch.pi0_pytorch
-import openpi.training.config as _config
+import vla_arena.models.openpi.src.openpi.models.gemma
+import vla_arena.models.openpi.src.openpi.models.model
+import vla_arena.models.openpi.src.openpi.models.pi0_config
+import vla_arena.models.openpi.src.openpi.models_pytorch.pi0_pytorch
+import vla_arena.models.openpi.src.openpi.training.config as _config
 import orbax.checkpoint as ocp
 import safetensors
 import torch
 import tyro
 from flax.nnx import traversals
-from openpi.training import utils
+from vla_arena.models.openpi.src.openpi.training import utils
 
 
 def slice_paligemma_state_dict(state_dict, config):
@@ -520,7 +520,7 @@ def slice_initial_orbax_checkpoint(
     This respects dtype conversions that occur during model restore.
     """
     # Use repository restore utility to load a pure dict of params (value suffix removed)
-    params = openpi.models.model.restore_params(
+    params = vla_arena.models.openpi.src.openpi.models.model.restore_params(
         f'{checkpoint_dir}/params/',
         restore_type=np.ndarray,
         dtype=restore_precision,
@@ -556,7 +556,7 @@ def convert_pi0_checkpoint(
     checkpoint_dir: str,
     precision: str,
     output_path: str,
-    model_config: openpi.models.pi0_config.Pi0Config,
+    model_config: vla_arena.models.openpi.src.openpi.models.pi0_config.Pi0Config,
 ):
     """
     Convert PI0 JAX checkpoint to PyTorch format.
@@ -640,7 +640,7 @@ def convert_pi0_checkpoint(
             )()
 
     paligemma_config = PaliGemmaConfig()
-    action_expert_config = openpi.models.gemma.get_config('gemma_300m')
+    action_expert_config = vla_arena.models.openpi.src.openpi.models.gemma.get_config('gemma_300m')
 
     # Process PaliGemma weights
     paligemma_params, expert_params = slice_paligemma_state_dict(
@@ -657,7 +657,7 @@ def convert_pi0_checkpoint(
     )
 
     # Instantiate model
-    pi0_model = openpi.models_pytorch.pi0_pytorch.PI0Pytorch(model_config)
+    pi0_model = vla_arena.models.openpi.src.openpi.models_pytorch.pi0_pytorch.PI0Pytorch(model_config)
 
     # Combine all parameters (no prefix needed for our model structure)
     all_params = {**paligemma_params, **gemma_params, **projection_params}
@@ -720,7 +720,7 @@ def main(
         inspect_only: Only inspect parameter keys, don't convert
     """
     model_config = _config.get_config(config_name).model
-    if not isinstance(model_config, openpi.models.pi0_config.Pi0Config):
+    if not isinstance(model_config, vla_arena.models.openpi.src.openpi.models.pi0_config.Pi0Config):
         raise ValueError(f'Config {config_name} is not a Pi0Config')
     if inspect_only:
         load_jax_model_and_print_keys(checkpoint_dir)

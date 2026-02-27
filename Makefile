@@ -7,116 +7,142 @@ SOURCE_FOLDERS = $(PROJECT_PATH) scripts tests docs
 PYTHON_FILES   = $(shell find $(SOURCE_FOLDERS) -type f -name "*.py" -o -name "*.pyi" 2>/dev/null)
 COMMIT_HASH    = $(shell git log -1 --format=%h)
 PATH           := $(HOME)/go/bin:$(PATH)
+PYTHON         ?= $(shell command -v python3 || command -v python)
 PYTESTOPTS     ?=
-
-UV ?= uv
-UV_PROJECT_BASE  ?= envs/base
-UV_PROJECT_LINT  ?= envs/lint
-UV_PROJECT_BUILD ?= envs/build
 
 .PHONY: default
 default: install
 
 install:
-	$(UV) sync --project $(UV_PROJECT_BASE)
+	$(PYTHON) -m pip install .
 
-install-editable: install
+install-editable:
+	$(PYTHON) -m pip install --upgrade pip
+	$(PYTHON) -m pip install --upgrade setuptools
+	$(PYTHON) -m pip install --editable .
 
 install-e: install-editable  # alias
 
 uninstall:
-	@echo "uv-managed environment; remove .venv in the target project if needed"
+	$(PYTHON) -m pip uninstall -y $(PROJECT_NAME)
 
 build:
-	$(UV) sync --project $(UV_PROJECT_BUILD)
-	$(UV) run --project $(UV_PROJECT_BUILD) python -m build
+	$(PYTHON) -m pip install --upgrade pip
+	$(PYTHON) -m pip install --upgrade setuptools wheel build
+	$(PYTHON) -m build
 
-# Tool setup targets (kept for backward compatibility)
+# Tools Installation
+
+check_pip_install = $(PYTHON) -m pip show $(1) &>/dev/null || (cd && $(PYTHON) -m pip install $(1) --upgrade)
+check_pip_install_extra = $(PYTHON) -m pip show $(1) &>/dev/null || (cd && $(PYTHON) -m pip install $(2) --upgrade)
+
 pylint-install:
-	$(UV) sync --project $(UV_PROJECT_LINT)
+	$(call check_pip_install_extra,pylint,pylint[spelling])
+	$(call check_pip_install,pyenchant)
 
 flake8-install:
-	$(UV) sync --project $(UV_PROJECT_LINT)
+	$(call check_pip_install,flake8)
+	$(call check_pip_install,flake8-bugbear)
+	$(call check_pip_install,flake8-comprehensions)
+	$(call check_pip_install,flake8-docstrings)
+	$(call check_pip_install,flake8-pyi)
+	$(call check_pip_install,flake8-simplify)
 
 py-format-install:
-	$(UV) sync --project $(UV_PROJECT_LINT)
+	$(call check_pip_install,isort)
+	$(call check_pip_install_extra,black,black[jupyter])
 
 ruff-install:
-	$(UV) sync --project $(UV_PROJECT_LINT)
+	$(call check_pip_install,ruff)
 
 mypy-install:
-	$(UV) sync --project $(UV_PROJECT_LINT)
+	$(call check_pip_install,mypy)
 
 pre-commit-install:
-	$(UV) sync --project $(UV_PROJECT_LINT)
-	$(UV) run --project $(UV_PROJECT_LINT) pre-commit install --install-hooks
+	$(call check_pip_install,pre-commit)
+	$(PYTHON) -m pre_commit install --install-hooks
 
 docs-install:
-	$(UV) sync --project $(UV_PROJECT_LINT)
+	$(call check_pip_install_extra,pydocstyle,pydocstyle[toml])
+	$(call check_pip_install,doc8)
+	$(call check_pip_install,sphinx)
+	$(call check_pip_install,sphinx-autoapi)
+	$(call check_pip_install,sphinx-autobuild)
+	$(call check_pip_install,sphinx-copybutton)
+	$(call check_pip_install,sphinx-autodoc-typehints)
+	$(call check_pip_install,myst-parser)
 
 pytest-install:
-	$(UV) sync --project $(UV_PROJECT_BASE)
+	$(call check_pip_install,pytest)
+	$(call check_pip_install,pytest-cov)
+	$(call check_pip_install,pytest-xdist)
 
 test-install: pytest-install
+	$(PYTHON) -m pip install -e . --no-deps
+
+go-install:
+	# requires go >= 1.16
+	command -v go || (sudo apt-get install -y golang && sudo ln -sf /usr/lib/go/bin/go /usr/bin/go)
+
+addlicense-install: go-install
+	command -v addlicense || go install github.com/google/addlicense@latest
 
 # Tests
+
 pytest: test-install
-	$(UV) run --project $(UV_PROJECT_BASE) python -c 'import $(PROJECT_PATH)' && \
-	$(UV) run --project $(UV_PROJECT_BASE) python -m pytest --verbose --color=yes --durations=0 \
+	$(PYTHON) -c 'import $(PROJECT_PATH)' && \
+	$(PYTHON) -m pytest --verbose --color=yes --durations=0 \
 		--cov="$(PROJECT_PATH)" --cov-config=tests/.coveragerc --cov-report=xml --cov-report=term-missing \
 		$(PYTESTOPTS) tests/
 
 test: pytest
 
 # Python linters
+
 pylint: pylint-install
-	$(UV) run --project $(UV_PROJECT_LINT) pylint $(PROJECT_PATH)
+	$(PYTHON) -m pylint $(PROJECT_PATH)
 
 flake8: flake8-install
-	$(UV) run --project $(UV_PROJECT_LINT) flake8 --count --show-source --statistics
+	$(PYTHON) -m flake8 --count --show-source --statistics
 
 py-format: py-format-install
-	$(UV) run --project $(UV_PROJECT_LINT) isort --project $(PROJECT_PATH) --check $(PYTHON_FILES) && \
-	$(UV) run --project $(UV_PROJECT_LINT) black --check $(PYTHON_FILES)
+	$(PYTHON) -m isort --project $(PROJECT_PATH) --check $(PYTHON_FILES) && \
+	$(PYTHON) -m black --check $(PYTHON_FILES)
 
 ruff: ruff-install
-	$(UV) run --project $(UV_PROJECT_LINT) ruff check .
+	$(PYTHON) -m ruff check .
 
 ruff-fix: ruff-install
-	$(UV) run --project $(UV_PROJECT_LINT) ruff check . --fix --exit-non-zero-on-fix
+	$(PYTHON) -m ruff check . --fix --exit-non-zero-on-fix
 
 mypy: mypy-install
-	$(UV) run --project $(UV_PROJECT_LINT) mypy $(PROJECT_PATH) --install-types --non-interactive
+	$(PYTHON) -m mypy $(PROJECT_PATH) --install-types --non-interactive
 
 pre-commit: pre-commit-install
-	$(UV) run --project $(UV_PROJECT_LINT) pre-commit run --all-files
+	$(PYTHON) -m pre_commit run --all-files
 
 # Documentation
-addlicense-install:
-	# requires go >= 1.16
-	command -v go || (sudo apt-get install -y golang && sudo ln -sf /usr/lib/go/bin/go /usr/bin/go)
-	command -v addlicense || go install github.com/google/addlicense@latest
 
 addlicense: addlicense-install
 	addlicense -c $(COPYRIGHT) -l mit -y 2024-$(shell date +"%Y") $(SOURCE_FOLDERS)
 
 docstyle: docs-install
-	$(UV) run --project $(UV_PROJECT_LINT) pydocstyle $(PROJECT_PATH)
-	$(UV) run --project $(UV_PROJECT_LINT) doc8 docs
+	$(PYTHON) -m pydocstyle $(PROJECT_PATH) && doc8 docs
 
 docs: docs-install
-	$(UV) run --project $(UV_PROJECT_LINT) sphinx_autobuild --watch $(PROJECT_PATH) --open-browser docs docs/_build
+	$(PYTHON) -m sphinx_autobuild --watch $(PROJECT_PATH) --open-browser docs docs/_build
 
 clean-docs:
 	rm -rf docs/_build
 
 # Utility functions
+
 lint: ruff flake8 py-format pylint addlicense
 
 format: py-format-install ruff-install addlicense-install
-	$(UV) run --project $(UV_PROJECT_LINT) isort --project $(PROJECT_PATH) $(PYTHON_FILES)
-	$(UV) run --project $(UV_PROJECT_LINT) black $(PYTHON_FILES)
-	$(UV) run --project $(UV_PROJECT_LINT) ruff check . --fix --exit-zero
+	$(PYTHON) -m isort --project $(PROJECT_PATH) $(PYTHON_FILES)
+	$(PYTHON) -m black $(PYTHON_FILES)
+	$(PYTHON) -m ruff check . --fix --exit-zero
 	addlicense -c $(COPYRIGHT) -l mit -y 2024-$(shell date +"%Y") $(SOURCE_FOLDERS)
 
 clean-py:

@@ -828,7 +828,7 @@ _CONFIGS = [
         weight_loader=weight_loaders.CheckpointWeightLoader(
             os.getenv(
                 'OPENPI_VLA_ARENA_CHECKPOINT_PATH',
-                '/share_data/zhangborong/models/pi0_base/params',
+                'gs://openpi-assets/checkpoints/pi0_base/params',
             )
         ),
         num_train_steps=30_000,

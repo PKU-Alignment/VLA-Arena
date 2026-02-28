@@ -13,17 +13,17 @@ shuffle_buffer_size: 100000               # Dataloader shuffle buffer size (can 
 use_l1_regression: true                   # If True, trains continuous action head with L1 regression objective
 use_diffusion: false                      # If True, trains continuous action head with diffusion modeling objective (DDIM)
 num_diffusion_steps_train: 50             # (When `diffusion==True`) Number of diffusion steps used for training
-use_film: false                           # If True, uses FiLM to infuse language inputs into visual features
-num_images_in_input: 1                    # Number of images in the VLA input (default: 1)
+use_film: true                            # If True, uses FiLM to infuse language inputs into visual features
+num_images_in_input: 2                    # Number of images in the VLA input (default: 1)
 use_proprio: false                        # If True, includes robot proprioceptive state in input
 
 # Training configuration
-batch_size: 8                             # Batch size per device (total batch size = batch_size * num GPUs)
+batch_size: 7                             # Batch size per device (total batch size = batch_size * num GPUs)
 learning_rate: 5.0e-4                     # Learning rate
 lr_warmup_steps: 0                        # Number of steps to warm up learning rate (from 10% to 100%)
-num_steps_before_decay: 100000            # Number of steps before LR decays by 10x
+num_steps_before_decay: 200000            # Keep > max_steps to effectively disable LR decay during training
 grad_accumulation_steps: 1                # Number of gradient accumulation steps
-max_steps: 200000                         # Max number of training steps
+max_steps: 150000                         # Max number of training steps
 use_val_set: false                        # If True, uses validation set and log validation metrics
 val_freq: 10000                           # (When `use_val_set==True`) Validation set logging frequency in steps
 val_time_limit: 180                       # (When `use_val_set==True`) Time limit for computing validation metrics

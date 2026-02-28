@@ -10,7 +10,7 @@ adapter_tmp_dir: "adapter-tmp"                  # Temporary directory for LoRA w
 
 # Fine-tuning Parameters
 batch_size: 16                                  # Fine-tuning batch size
-max_steps: 300000                               # Max number of fine-tuning steps
+max_steps: 200000                               # Max number of fine-tuning steps
 save_steps: 50000                                  # Interval for checkpoint saving
 learning_rate: 5.0e-4                           # Fine-tuning learning rate
 grad_accumulation_steps: 1                      # Gradient accumulation steps

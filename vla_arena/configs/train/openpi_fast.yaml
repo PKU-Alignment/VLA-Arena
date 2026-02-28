@@ -1,0 +1,30 @@
+# OpenPI-FAST Training Configuration
+# This config uses the base "pi0_fast_vla_arena_low_mem_finetune" config and allows overriding key parameters
+
+# Base config name (must match one of the predefined configs in config.py)
+name: "pi0_fast_vla_arena_low_mem_finetune"
+
+# Experiment name (required)
+exp_name: "openpi_fast_training"
+
+# Training Parameters
+batch_size: 32                                   # Global batch size
+num_train_steps: 60000                           # Number of training steps
+log_interval: 100                                # Log metrics every N steps
+save_interval: 1000                              # Save checkpoint every N steps
+
+# Checkpoint Configuration
+checkpoint_base_dir: "./checkpoints"             # Base directory for checkpoints
+assets_base_dir: "./assets"                      # Base directory for assets
+overwrite: true                                  # Overwrite existing checkpoint directory
+resume: false                                    # Resume from latest checkpoint
+
+# Wandb Configuration
+wandb_enabled: true                              # Enable wandb logging
+project_name: "openpi_fast"                      # Wandb project name
+
+# Other Settings
+seed: 42                                         # Random seed
+num_workers: 2                                   # Data loader workers
+keep_period: 5000                                # Keep checkpoints every N steps
+fsdp_devices: 1                                  # FSDP devices (1 = disabled)

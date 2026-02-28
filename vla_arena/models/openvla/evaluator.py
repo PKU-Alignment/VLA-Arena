@@ -81,7 +81,6 @@ class GenerateConfig:
     center_crop: bool = True                         # Center crop? (if trained w/ random crop image aug)
 
     unnorm_key: str | Path = 'libero_spatial_no_noops'                # Action un-normalization key
-    num_open_loop_steps: int = 8                     # Number of actions to execute open-loop before requerying policy
 
     load_in_8bit: bool = False                       # (For OpenVLA only) Load with 8-bit quantization
     load_in_4bit: bool = False                       # (For OpenVLA only) Load with 4-bit quantization
@@ -611,9 +610,6 @@ def main(cfg: GenerateConfig | str | Path):
     tasks_payload: list[dict[str, object]] = []
 
     replacements_dict = load_replacements_dict(cfg, logger)
-    if cfg.use_replacements:
-        log_message(f"Using instruction replacements with probability {cfg.replacement_probability}", log_file)
-        log_message(f"Loaded {len(replacements_dict)} replacement entries", log_file)
 
     for suite_name in suite_names:
         if suite_name not in benchmark_dict:
@@ -631,6 +627,15 @@ def main(cfg: GenerateConfig | str | Path):
             10 if suite_name == 'long_horizon' and task_level == 0 else 5
         )
         log_message(f'Task suite: {suite_name}', log_file)
+        if cfg.use_replacements:
+            log_message(
+                f'Using instruction replacements with probability {cfg.replacement_probability}',
+                log_file,
+            )
+            log_message(
+                f'Loaded {len(replacements_dict)} replacement entries',
+                log_file,
+            )
 
         total_episodes = 0
         total_successes = 0

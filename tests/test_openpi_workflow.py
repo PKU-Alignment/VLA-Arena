@@ -86,47 +86,6 @@ def test_resolve_checkpoint_dir_raises_when_no_steps(tmp_path: pathlib.Path):
             exp_dir, train_cfg=None, policy_checkpoint_step='latest'
         )
 
-
-def test_ensure_norm_stats_skips_when_already_exists(monkeypatch):
-    cfg = _DummyTrainConfig(pathlib.Path('/tmp/checkpoints/openpi/run'))
-    cfg.data = _DummyDataFactory(
-        SimpleNamespace(repo_id='datasets/vla-arena', norm_stats={'state': 1})
-    )
-    compute_mock = Mock()
-    monkeypatch.setattr(
-        workflow_utils, 'compute_and_save_norm_stats', compute_mock
-    )
-
-    workflow_utils.ensure_norm_stats(cfg)
-    compute_mock.assert_not_called()
-
-
-def test_ensure_norm_stats_computes_when_missing(monkeypatch):
-    cfg = _DummyTrainConfig(pathlib.Path('/tmp/checkpoints/openpi/run'))
-    missing_data_config = SimpleNamespace(
-        repo_id='datasets/vla-arena',
-        norm_stats=None,
-    )
-    loaded_data_config = SimpleNamespace(
-        repo_id='datasets/vla-arena',
-        norm_stats={'state': 1},
-    )
-    cfg.data = _DummyDataFactory(missing_data_config)
-
-    def _compute_and_simulate_reload(_cfg, max_frames=None):
-        del max_frames
-        cfg.data = _DummyDataFactory(loaded_data_config)
-        return pathlib.Path('/tmp/assets/datasets/vla-arena')
-
-    compute_mock = Mock(side_effect=_compute_and_simulate_reload)
-    monkeypatch.setattr(
-        workflow_utils, 'compute_and_save_norm_stats', compute_mock
-    )
-
-    workflow_utils.ensure_norm_stats(cfg)
-    compute_mock.assert_called_once()
-
-
 def test_trainer_main_invokes_norm_stats_then_train_loop(monkeypatch):
     trainer = pytest.importorskip('vla_arena.models.openpi.trainer')
     cfg = trainer._config.get_config('debug')

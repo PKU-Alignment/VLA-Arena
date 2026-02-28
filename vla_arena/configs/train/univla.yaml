@@ -45,5 +45,5 @@ use_quantization: false  # Whether to 4-bit quantize VLA for LoRA fine-tuning (C
 
 # Tracking Parameters
 wandb_project: "fientune-VLA-ARENA"  # Name of W&B project to log to
-wandb_entity: "jiahao-li"  # Name of entity to log under
+wandb_entity: "your-wandb-entity"  # Name of entity to log under
 run_id_note: null  # Extra note for logging, Weights & Biases (optional)

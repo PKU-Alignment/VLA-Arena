@@ -72,7 +72,7 @@ class GenerateConfig:
     policy_config_name: str | None = None
     policy_checkpoint_dir: str | None = None
     policy_checkpoint_step: str | int = 'latest'
-    train_config_path: str | None = 'vla_arena/configs/train/vla_arena.models.openpi.src.openpi.yaml'
+    train_config_path: str | None = 'vla_arena/configs/train/openpi.yaml'
     auto_start_policy_server: bool = True
     policy_server_start_timeout_sec: int = 180
     policy_server_poll_interval_sec: float = 1.0

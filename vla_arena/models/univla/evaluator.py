@@ -89,7 +89,7 @@ class GenerateConfig:
 
     # Set UNIVLA_ACTION_DECODER_PATH environment variable to specify a custom action decoder path.
     action_decoder_path:str = os.getenv('UNIVLA_ACTION_DECODER_PATH', '/path/to/your/action_decoder.pt')
-    unnorm_key: str | None = None                    # Action un-normalization key (e.g. libero_spatial, fractal20220817_data); if None, auto-detect
+    unnorm_key: str | None = None                    # Action un-normalization key; if None, auto-select from model norm_stats
     center_crop: bool = True                         # Center crop? (if trained w/ random crop image aug)
     save_video: bool = True                         # Whether to save rollout videos
     #################################################################################################################
@@ -384,23 +384,42 @@ def initialize_model(cfg: GenerateConfig):
 
 def check_unnorm_key(cfg: GenerateConfig, model) -> None:
     """Check that the model contains the action un-normalization key."""
-    # Use config if provided and valid; otherwise default to libero_spatial
-    unnorm_key = getattr(cfg, 'unnorm_key', None) or 'libero_spatial'
+    available_keys = list(model.norm_stats.keys())
+    if not available_keys:
+        raise ValueError('Model `norm_stats` is empty; cannot determine `unnorm_key`.')
 
-    # In some cases, the key must be manually modified (e.g. after training on a modified version of the dataset
-    # with the suffix "_no_noops" in the dataset name)
-    if (
-        unnorm_key not in model.norm_stats
-        and f'{unnorm_key}_no_noops' in model.norm_stats
-    ):
-        unnorm_key = f'{unnorm_key}_no_noops'
+    requested_key = getattr(cfg, 'unnorm_key', None)
+    if requested_key:
+        candidate_keys = [requested_key, f'{requested_key}_no_noops']
+    else:
+        candidate_keys = []
+        if len(available_keys) == 1:
+            candidate_keys.append(available_keys[0])
+        # Prefer VLA-Arena/LIBERO keys when multiple stats are available.
+        candidate_keys.extend(
+            [
+                'vla_arena_l0_l',
+                'vla_arena_l0_l_no_noops',
+                'libero_spatial',
+                'libero_spatial_no_noops',
+            ]
+        )
+        candidate_keys = list(dict.fromkeys(candidate_keys))
 
-    assert (
-        unnorm_key in model.norm_stats
-    ), f'Action un-norm key {unnorm_key} not found in VLA `norm_stats`! Available keys: {list(model.norm_stats.keys())}'
+    for candidate in candidate_keys:
+        if candidate in model.norm_stats:
+            cfg.unnorm_key = candidate
+            return
 
-    # Set the unnorm_key in cfg
-    cfg.unnorm_key = unnorm_key
+    if requested_key:
+        raise ValueError(
+            f'Action un-norm key {requested_key} not found in VLA `norm_stats`. '
+            f'Available keys: {available_keys}'
+        )
+    raise ValueError(
+        'Unable to auto-detect action un-norm key from model `norm_stats`. '
+        f'Please set `unnorm_key` explicitly. Available keys: {available_keys}'
+    )
 
 
 def setup_logging(cfg: GenerateConfig):
@@ -754,17 +773,18 @@ def run_task(
 
         # Save replay video based on mode
         should_save_video = False
-        if cfg.save_video_mode == 'all':
-            should_save_video = True
-        elif cfg.save_video_mode == 'first_success_failure':
-            if success and not first_success_saved:
+        if cfg.save_video:
+            if cfg.save_video_mode == 'all':
                 should_save_video = True
-                first_success_saved = True
-                log_message('Saving first successful episode video', log_file)
-            elif not success and not first_failure_saved:
-                should_save_video = True
-                first_failure_saved = True
-                log_message('Saving first failed episode video', log_file)
+            elif cfg.save_video_mode == 'first_success_failure':
+                if success and not first_success_saved:
+                    should_save_video = True
+                    first_success_saved = True
+                    log_message('Saving first successful episode video', log_file)
+                elif not success and not first_failure_saved:
+                    should_save_video = True
+                    first_failure_saved = True
+                    log_message('Saving first failed episode video', log_file)
         # For "none" mode, should_save_video remains False
 
         if should_save_video:

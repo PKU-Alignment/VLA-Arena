@@ -81,7 +81,6 @@ class GenerateConfig:
     center_crop: bool = True                         # Center crop? (if trained w/ random crop image aug)
 
     unnorm_key: str | Path = 'libero_spatial_no_noops'                # Action un-normalization key
-    num_open_loop_steps: int = 8                     # Number of actions to execute open-loop before requerying policy
 
     load_in_8bit: bool = False                       # (For OpenVLA only) Load with 8-bit quantization
     load_in_4bit: bool = False                       # (For OpenVLA only) Load with 4-bit quantization

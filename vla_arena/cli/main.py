@@ -28,7 +28,7 @@ def main():
     train_p.add_argument(
         '--config',
         default=None,
-        help='Path to model config file. OpenPI supports one-line train with auto norm-stats bootstrap.',
+        help='Optional config path. If omitted, use the built-in default for the selected model.',
     )
     train_p.add_argument(
         '--overwrite',
@@ -47,7 +47,7 @@ def main():
     eval_p.add_argument(
         '--config',
         default=None,
-        help='Path to model config file. OpenPI defaults to one-line local checkpoint evaluation.',
+        help='Optional config path. If omitted, use the built-in default for the selected model.',
     )
 
     args = parser.parse_args()

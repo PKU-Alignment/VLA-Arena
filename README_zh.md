@@ -193,11 +193,18 @@ uv run --project envs/base vla-arena.download-tasks install-all --repo vla-arena
 ```bash
 python3 -m pip install vla-arena
 
-# 下载任务套件/资产（约 850MB）
-vla-arena.download-tasks install-all --repo vla-arena/tasks
+# 一次性初始化：生成本地 uv 工程（`envs/*`）并复制默认配置
+vla-arena.init-workspace --force
+
+# （可选）下载任务套件/资产（约 850MB）
+uv run --project envs/base vla-arena.download-tasks install-all --repo vla-arena/tasks
+
+# 单行训练/评测（默认自动选择配置；如需覆盖可加 --config）
+uv run --project envs/openvla vla-arena train --model openvla
+uv run --project envs/openvla vla-arena eval --model openvla
 ```
 
-如果需要进行模型训练/评测，仍推荐使用源码仓库 + uv 按模型隔离工程（`envs/<model_name>`）以避免依赖冲突。
+如果你使用源码仓库，原有 `envs/<model_name>` 工作流保持不变。
 
 ## 文档
 
@@ -236,8 +243,8 @@ VLA-Arena为框架的所有方面提供全面的文档。选择最适合你需�
 ### 🚀 快速参考
 
 #### 常用命令
-- **训练**：`uv run --project envs/<model_name> vla-arena train --model <model_cli_name> --config vla_arena/configs/train/<model_cli_name>.yaml`
-- **评测**：`uv run --project envs/<model_name> vla-arena eval --model <model_cli_name> --config vla_arena/configs/evaluation/<model_cli_name>.yaml`
+- **训练**：`uv run --project envs/<model_name> vla-arena train --model <model_cli_name>`（可选覆盖：`--config ...`）
+- **评测**：`uv run --project envs/<model_name> vla-arena eval --model <model_cli_name>`（可选覆盖：`--config ...`）
 - 详见：[模型微调与评测指南](docs/finetuning_and_evaluation_zh.md)。
 
 #### 文档索引

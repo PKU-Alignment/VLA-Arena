@@ -48,6 +48,7 @@ dependencies = [
 "vla-arena.create-template" = "scripts.create_template:main"
 "vla-arena.download-tasks" = "scripts.download_tasks:main"
 "vla-arena.manage-tasks" = "scripts.manage_assets:main"
+"vla-arena.init-workspace" = "scripts.init_workspace:main"
 
 [project.optional-dependencies]
 openvla = [

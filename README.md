@@ -187,11 +187,18 @@ uv run --project envs/base vla-arena.download-tasks install-all --repo vla-arena
 ```bash
 python3 -m pip install vla-arena
 
-# Download task suites / assets (~850 MB)
-vla-arena.download-tasks install-all --repo vla-arena/tasks
+# One-time: initialize local uv projects (`envs/*`) and copy default configs
+vla-arena.init-workspace --force
+
+# (Optional) Download task suites / assets (~850 MB)
+uv run --project envs/base vla-arena.download-tasks install-all --repo vla-arena/tasks
+
+# One-line train / eval (config auto-defaults; override via --config if needed)
+uv run --project envs/openvla vla-arena train --model openvla
+uv run --project envs/openvla vla-arena eval --model openvla
 ```
 
-For model training/evaluation, we recommend using the source checkout + uv per-model projects (`envs/<model_name>`) to avoid dependency conflicts.
+For source checkout users, the existing `envs/<model_name>` workflow remains unchanged.
 
 ## Documentation
 
@@ -231,8 +238,8 @@ Fine-tune and evaluate VLA models using VLA-Arena generated datasets.
 ### 🔜 Quick Reference
 
 #### Common Commands
-- **Train**: `uv run --project envs/<model_name> vla-arena train --model <model_cli_name> --config vla_arena/configs/train/<model_cli_name>.yaml`
-- **Eval**: `uv run --project envs/<model_name> vla-arena eval --model <model_cli_name> --config vla_arena/configs/evaluation/<model_cli_name>.yaml`
+- **Train**: `uv run --project envs/<model_name> vla-arena train --model <model_cli_name>` (optional override: `--config ...`)
+- **Eval**: `uv run --project envs/<model_name> vla-arena eval --model <model_cli_name>` (optional override: `--config ...`)
 - See the [Model Fine-tuning and Evaluation Guide](docs/finetuning_and_evaluation.md).
 
 #### Documentation Index

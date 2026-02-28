@@ -14,11 +14,14 @@
 
 from __future__ import annotations
 
+import importlib
 import logging
 import os
 import pathlib
 import sys
 from typing import Any
+
+from vla_arena.config_paths import resolve_packaged_config_reference
 
 # Add openpi src directory to Python path if needed.
 _openpi_src = pathlib.Path(__file__).parent / 'src'
@@ -112,12 +115,20 @@ def load_train_config_from_yaml(
     override_kwargs: dict[str, Any] | None = None,
 ):
     """Load an OpenPI TrainConfig from a YAML file with overrides."""
-    import vla_arena.models.openpi.src.openpi.training.config as _config
     import yaml
 
-    config_path = pathlib.Path(config_path)
+    _config = importlib.import_module(
+        'vla_arena.models.openpi.src.openpi.training.config'
+    )
+
+    config_path = pathlib.Path(config_path).expanduser()
     if not config_path.exists():
-        raise FileNotFoundError(f'Config file not found at: {config_path}')
+        packaged_path = resolve_packaged_config_reference(config_path)
+        if packaged_path is None:
+            raise FileNotFoundError(
+                f'Config file not found at: {config_path}'
+            )
+        config_path = packaged_path
 
     with open(config_path) as f:
         yaml_data = yaml.safe_load(f)

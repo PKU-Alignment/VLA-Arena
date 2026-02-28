@@ -148,6 +148,39 @@ def test_normalize_legacy_train_yaml_prefers_params_path():
     assert 'checkpoint_path' not in normalized['weight_loader']
 
 
+def test_load_train_config_from_yaml_fallbacks_to_packaged_reference(
+    monkeypatch, tmp_path: pathlib.Path
+):
+    yaml_path = tmp_path / 'openpi.yaml'
+    yaml_path.write_text(
+        'name: "pi0_vla_arena_low_mem_finetune"\n'
+        'exp_name: "openpi_test"\n',
+        encoding='utf-8',
+    )
+
+    fake_config_module = SimpleNamespace(cli=Mock(return_value='cfg_obj'))
+    import_module_mock = Mock(return_value=fake_config_module)
+    monkeypatch.setattr(
+        workflow_utils.importlib, 'import_module', import_module_mock
+    )
+
+    resolver_mock = Mock(return_value=yaml_path)
+    monkeypatch.setattr(
+        workflow_utils, 'resolve_packaged_config_reference', resolver_mock
+    )
+
+    cfg = workflow_utils.load_train_config_from_yaml(
+        'vla_arena/configs/train/_pypi_fallback_test.yaml'
+    )
+
+    assert cfg == 'cfg_obj'
+    resolver_mock.assert_called_once()
+    import_module_mock.assert_called_once_with(
+        'vla_arena.models.openpi.src.openpi.training.config'
+    )
+    fake_config_module.cli.assert_called_once()
+
+
 def test_is_local_host_variants():
     evaluator = pytest.importorskip('vla_arena.models.openpi.evaluator')
 

@@ -124,7 +124,7 @@ uv run --project envs/base python scripts/regenerate_dataset.py \
 
 将重构后的数据集转换为RLDS（Reinforcement Learning Data Schema）格式，以便与X-embodiment实验框架集成。RLDS是Google开发的标准格式，用于存储机器人学习数据。
 
-> **说明**：本节使用独立的 `rlds_dataset_builder/` 子工程，并保持 conda 工作流（与主仓库的 uv 工作流分离）。
+> **说明**：本节使用独立的 `rlds_dataset_builder/` 子模块，使用 conda 工作流（与主库的 uv 工作流分离）。
 
 ### 4.1 环境准备
 

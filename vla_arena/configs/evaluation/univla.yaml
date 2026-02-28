@@ -7,6 +7,7 @@ load_in_4bit: false                        # (For OpenVLA only) Load with 4-bit 
 
 # Set UNIVLA_ACTION_DECODER_PATH environment variable or modify this path to specify your action decoder location
 action_decoder_path: "VLA-Arena/univla-action-decoder"  # Path to action decoder checkpoint or HF repo id
+unnorm_key: "vla_arena_l0_l"                 # Recommended for VLA-Arena finetuned checkpoint
 center_crop: true                          # Center crop? (if trained w/ random crop image aug)
 save_video: true                           # Whether to save rollout videos
 

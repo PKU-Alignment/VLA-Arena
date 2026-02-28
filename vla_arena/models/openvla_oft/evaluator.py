@@ -696,9 +696,6 @@ def main(cfg: GenerateConfig | str | Path):
     tasks_payload: list[dict[str, object]] = []
 
     replacements_dict = load_replacements_dict(cfg, logger)
-    if cfg.use_replacements:
-        log_message(f"Using instruction replacements with probability {cfg.replacement_probability}", log_file)
-        log_message(f"Loaded {len(replacements_dict)} replacement entries", log_file)
 
     for suite_name in suite_names:
         if suite_name not in benchmark_dict:
@@ -716,6 +713,15 @@ def main(cfg: GenerateConfig | str | Path):
             10 if suite_name == 'long_horizon' and task_level == 0 else 5
         )
         log_message(f'Task suite: {suite_name}', log_file)
+        if cfg.use_replacements:
+            log_message(
+                f'Using instruction replacements with probability {cfg.replacement_probability}',
+                log_file,
+            )
+            log_message(
+                f'Loaded {len(replacements_dict)} replacement entries',
+                log_file,
+            )
 
         total_episodes = 0
         total_successes = 0

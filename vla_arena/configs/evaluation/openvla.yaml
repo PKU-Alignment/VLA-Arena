@@ -5,7 +5,6 @@
     unnorm_key: "vla_arena_l0_l"              # Action un-normalization key
     load_in_8bit: false                         # Load with 8-bit quantization
     load_in_4bit: false                         # Load with 4-bit quantization
-    seed: 7                                     # Random seed for reproducibility
 
     task_suite_name: "safety_static_obstacles"  # Task suite name
     task_level: 0

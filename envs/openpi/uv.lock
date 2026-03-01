@@ -3613,6 +3613,7 @@ dependencies = [
     { name = "easydict" },
     { name = "gym" },
     { name = "h5py" },
+    { name = "huggingface-hub" },
     { name = "imageio", extra = ["ffmpeg"] },
     { name = "matplotlib" },
     { name = "numpy" },
@@ -3716,6 +3717,7 @@ requires-dist = [
     { name = "gymnasium", marker = "extra == 'smolvla'", specifier = "==0.29.1" },
     { name = "h5py" },
     { name = "h5py", marker = "extra == 'univla'", specifier = "==3.11.0" },
+    { name = "huggingface-hub" },
     { name = "huggingface-hub", marker = "extra == 'openvla'" },
     { name = "huggingface-hub", marker = "extra == 'openvla-oft'" },
     { name = "huggingface-hub", marker = "extra == 'univla'", specifier = "==0.26.1" },
@@ -3853,43 +3855,6 @@ requires-dist = [
     { name = "webdataset", marker = "extra == 'univla'", specifier = "==0.2.111" },
 ]
 provides-extras = ["openvla", "openvla-oft", "univla", "smolvla", "openpi", "lint", "test", "docs"]
-
-[package.metadata.requires-dev]
-build = [
-    { name = "build" },
-    { name = "setuptools" },
-    { name = "wheel" },
-]
-docs = [
-    { name = "myst-parser" },
-    { name = "sphinx", specifier = ">=5.0.0" },
-    { name = "sphinx-autoapi" },
-    { name = "sphinx-autobuild" },
-    { name = "sphinx-autodoc-typehints" },
-    { name = "sphinx-copybutton" },
-]
-lint = [
-    { name = "black", specifier = ">=23.1.0" },
-    { name = "doc8" },
-    { name = "flake8" },
-    { name = "flake8-bugbear" },
-    { name = "flake8-comprehensions" },
-    { name = "flake8-docstrings" },
-    { name = "flake8-pyi" },
-    { name = "flake8-simplify" },
-    { name = "isort", specifier = ">=5.11.0" },
-    { name = "mypy", specifier = ">=0.990" },
-    { name = "pre-commit" },
-    { name = "pydocstyle" },
-    { name = "pyenchant" },
-    { name = "pylint", extras = ["spelling"], specifier = ">=2.15.0" },
-    { name = "ruff", specifier = ">=0.4.0" },
-]
-test = [
-    { name = "pytest", specifier = ">=7.0.0" },
-    { name = "pytest-cov", specifier = ">=3.0.0" },
-    { name = "pytest-xdist", specifier = ">=2.5.0" },
-]
 
 [[package]]
 name = "vla-arena-env-openpi"

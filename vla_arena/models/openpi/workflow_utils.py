@@ -110,6 +110,74 @@ def _normalize_legacy_train_yaml(yaml_data: dict[str, Any]) -> dict[str, Any]:
     return normalized
 
 
+def _map_local_repo_path(
+    local_repo_dir: pathlib.Path, original_repo_id: str
+) -> tuple[str, pathlib.Path]:
+    """Map local dataset directory to (repo_id, HF_LEROBOT_HOME)."""
+    normalized_input = pathlib.Path(original_repo_id).expanduser()
+    local_repo_dir = local_repo_dir.expanduser().resolve()
+
+    # Fallback mode for single-component relative paths (e.g. "dataset_only")
+    # and root-level paths (e.g. "/dataset_only"): use plain dataset name.
+    single_component_relative = (
+        not normalized_input.is_absolute()
+        and len(normalized_input.parts) == 1
+    )
+    parent = local_repo_dir.parent
+    root_level_path = parent == parent.parent
+    if single_component_relative or root_level_path:
+        return local_repo_dir.name, parent
+
+    # Default mode: keep two-level namespace like "<parent>/<dataset>".
+    mapped_repo_id = f'{parent.name}/{local_repo_dir.name}'
+    return mapped_repo_id, parent.parent
+
+
+def _normalize_local_repo_id_in_yaml(
+    yaml_data: dict[str, Any]
+) -> dict[str, Any]:
+    """Normalize local data.repo_id path to repo_id + HF_LEROBOT_HOME."""
+    normalized = dict(yaml_data)
+    data_section = normalized.get('data')
+    if not isinstance(data_section, dict):
+        return normalized
+
+    repo_id = data_section.get('repo_id')
+    if not isinstance(repo_id, str) or not repo_id.strip():
+        return normalized
+
+    candidate_path = pathlib.Path(repo_id).expanduser()
+    if not candidate_path.exists():
+        return normalized
+
+    local_repo_dir = candidate_path.resolve()
+    mapped_repo_id, hf_lerobot_home = _map_local_repo_path(
+        local_repo_dir, repo_id
+    )
+
+    previous_home = os.getenv('HF_LEROBOT_HOME')
+    os.environ['HF_LEROBOT_HOME'] = str(hf_lerobot_home)
+    if previous_home and previous_home != str(hf_lerobot_home):
+        logging.warning(
+            'Detected local OpenPI dataset path in data.repo_id=%s. '
+            'Overriding HF_LEROBOT_HOME from %s to %s.',
+            repo_id,
+            previous_home,
+            hf_lerobot_home,
+        )
+
+    patched_data = dict(data_section)
+    patched_data['repo_id'] = mapped_repo_id
+    normalized['data'] = patched_data
+    logging.info(
+        'Resolved local OpenPI dataset path %s to repo_id=%s with HF_LEROBOT_HOME=%s.',
+        local_repo_dir,
+        mapped_repo_id,
+        hf_lerobot_home,
+    )
+    return normalized
+
+
 def load_train_config_from_yaml(
     config_path: str | pathlib.Path,
     override_kwargs: dict[str, Any] | None = None,
@@ -147,6 +215,8 @@ def load_train_config_from_yaml(
         raise ValueError(
             'OpenPI train config YAML must be a dictionary and contain "name".'
         )
+
+    yaml_data = _normalize_local_repo_id_in_yaml(yaml_data)
 
     config_name = yaml_data['name']
     args_list = [config_name]

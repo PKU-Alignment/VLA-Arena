@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+import os
 import pickle
 import pathlib
 from types import SimpleNamespace
@@ -179,6 +181,114 @@ def test_load_train_config_from_yaml_fallbacks_to_packaged_reference(
         'vla_arena.models.openpi.src.openpi.training.config'
     )
     fake_config_module.cli.assert_called_once()
+
+
+def _mock_openpi_config_cli(monkeypatch):
+    captured = {}
+
+    def _cli():
+        captured['argv'] = workflow_utils.sys.argv.copy()
+        return 'cfg_obj'
+
+    fake_config_module = SimpleNamespace(cli=Mock(side_effect=_cli))
+    import_module_mock = Mock(return_value=fake_config_module)
+    monkeypatch.setattr(
+        workflow_utils.importlib, 'import_module', import_module_mock
+    )
+    return captured
+
+
+def test_load_train_config_from_yaml_local_repo_path_sets_env_and_maps_repo_id(
+    monkeypatch, tmp_path: pathlib.Path
+):
+    local_repo = tmp_path / 'datasets' / 'mysets' / 'vla_openpi'
+    local_repo.mkdir(parents=True)
+    yaml_path = tmp_path / 'openpi_local.yaml'
+    yaml_path.write_text(
+        'name: "pi0_vla_arena_low_mem_finetune"\n'
+        'exp_name: "openpi_local_test"\n'
+        f'data:\n  repo_id: "{local_repo}"\n',
+        encoding='utf-8',
+    )
+
+    monkeypatch.delenv('HF_LEROBOT_HOME', raising=False)
+    captured = _mock_openpi_config_cli(monkeypatch)
+
+    cfg = workflow_utils.load_train_config_from_yaml(yaml_path)
+
+    assert cfg == 'cfg_obj'
+    assert os.getenv('HF_LEROBOT_HOME') == str(tmp_path / 'datasets')
+    assert '--data.repo_id=mysets/vla_openpi' in captured['argv']
+
+
+def test_load_train_config_from_yaml_local_repo_path_overrides_existing_hf_home(
+    monkeypatch, tmp_path: pathlib.Path, caplog
+):
+    local_repo = tmp_path / 'datasets' / 'mysets' / 'vla_openpi'
+    local_repo.mkdir(parents=True)
+    yaml_path = tmp_path / 'openpi_local_override.yaml'
+    yaml_path.write_text(
+        'name: "pi0_vla_arena_low_mem_finetune"\n'
+        'exp_name: "openpi_local_override"\n'
+        f'data:\n  repo_id: "{local_repo}"\n',
+        encoding='utf-8',
+    )
+
+    monkeypatch.setenv('HF_LEROBOT_HOME', '/tmp/old_hf_home')
+    captured = _mock_openpi_config_cli(monkeypatch)
+    caplog.set_level(logging.WARNING)
+
+    workflow_utils.load_train_config_from_yaml(yaml_path)
+
+    assert os.getenv('HF_LEROBOT_HOME') == str(tmp_path / 'datasets')
+    assert '--data.repo_id=mysets/vla_openpi' in captured['argv']
+    assert any(
+        'Overriding HF_LEROBOT_HOME' in record.message
+        for record in caplog.records
+    )
+
+
+def test_load_train_config_from_yaml_nonexistent_repo_id_keeps_hf_behavior(
+    monkeypatch, tmp_path: pathlib.Path
+):
+    yaml_path = tmp_path / 'openpi_hf.yaml'
+    yaml_path.write_text(
+        'name: "pi0_vla_arena_low_mem_finetune"\n'
+        'exp_name: "openpi_hf_test"\n'
+        'data:\n  repo_id: "org/repo"\n',
+        encoding='utf-8',
+    )
+
+    monkeypatch.setenv('HF_LEROBOT_HOME', '/tmp/keep_this_home')
+    captured = _mock_openpi_config_cli(monkeypatch)
+
+    workflow_utils.load_train_config_from_yaml(yaml_path)
+
+    assert os.getenv('HF_LEROBOT_HOME') == '/tmp/keep_this_home'
+    assert '--data.repo_id=org/repo' in captured['argv']
+
+
+def test_local_repo_mapping_fallback_single_level(
+    monkeypatch, tmp_path: pathlib.Path
+):
+    local_repo = tmp_path / 'dataset_only'
+    local_repo.mkdir(parents=True)
+    yaml_path = tmp_path / 'openpi_local_single_level.yaml'
+    yaml_path.write_text(
+        'name: "pi0_vla_arena_low_mem_finetune"\n'
+        'exp_name: "openpi_local_single"\n'
+        'data:\n  repo_id: "dataset_only"\n',
+        encoding='utf-8',
+    )
+
+    monkeypatch.delenv('HF_LEROBOT_HOME', raising=False)
+    monkeypatch.chdir(tmp_path)
+    captured = _mock_openpi_config_cli(monkeypatch)
+
+    workflow_utils.load_train_config_from_yaml(yaml_path)
+
+    assert os.getenv('HF_LEROBOT_HOME') == str(tmp_path)
+    assert '--data.repo_id=dataset_only' in captured['argv']
 
 
 def test_is_local_host_variants():

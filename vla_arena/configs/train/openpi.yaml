@@ -31,10 +31,11 @@ save_interval: 1000                               # Save checkpoint every N step
 # Data Configuration (override if needed)
 # Default L0 large dataset (LeRobot/OpenPI format)
 data:
-  repo_id: "VLA-Arena/VLA_Arena_L0_L_lerobot_openpi"
+  repo_id: "VLA-Arena/VLA_Arena_L0_L_lerobot_openpi"  # Supports HF repo id OR local LeRobot dataset path.
 #
 # data:
-#   repo_id: "lerobot_data/VLA_Arena"            # LeRobot dataset repo ID
+#   repo_id: "lerobot_data/VLA_Arena"            # Hugging Face dataset repo id
+#   repo_id: "/data/lerobot/mysets/vla_openpi"   # Local dataset path; HF_LEROBOT_HOME/repo_id will be auto-resolved
 #   extra_delta_transform: true                   # Apply extra delta transform
 
 # Model Configuration (override if needed)

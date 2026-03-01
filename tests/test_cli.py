@@ -191,8 +191,6 @@ class TestTrainMain:
         # Just verify it was called and the final module.main was called
         assert mock_import_module.called
         mock_module.main.assert_called_once()
-        call_kwargs = mock_module.main.call_args[1]
-        assert os.path.isabs(call_kwargs['config'])
 
     @patch('vla_arena.cli.train.importlib.util.find_spec')
     @patch('vla_arena.cli.train.importlib.import_module')

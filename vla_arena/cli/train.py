@@ -49,9 +49,7 @@ def train_main(args):
     except ImportError as e:
         raise RuntimeError(
             f"Model '{model}' is not installed or trainer script not found.\n"
-            f'Try:\n'
-            f'  uv sync --project envs/{model}\n'
-            f'  uv run --project envs/{model} vla-arena train --model {model} --config <config_file_path>',
+            f'Try: pip install vla-arena[{model}]',
         ) from e
 
     # 2. Special handling: openpi uses JAX, doesn't need torchrun
@@ -88,11 +86,7 @@ def train_main(args):
         print(f'[Launcher] Preparing distributed training for model: {model}')
 
         # Get GPU count (support nproc specified in args, otherwise default to all visible GPUs)
-        # torchrun requires an int; avoid passing None through.
-        nproc_arg = getattr(args, 'nproc', None)
-        nproc_per_node = (
-            int(nproc_arg) if nproc_arg is not None else torch.cuda.device_count()
-        )
+        nproc_per_node = getattr(args, 'nproc', torch.cuda.device_count())
         nnodes = getattr(args, 'nnodes', 1)
         node_rank = getattr(args, 'node_rank', 0)
         master_addr = getattr(args, 'master_addr', '127.0.0.1')

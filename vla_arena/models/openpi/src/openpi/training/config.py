@@ -770,7 +770,7 @@ _CONFIGS = [
         name='pi0_vla_arena',
         model=pi0_config.Pi0Config(),
         data=LeRobotLiberoDataConfig(
-            repo_id='physical-intelligence/libero',
+            repo_id='VLA-Arena/VLA_Arena_L0_M_lerobot_openpi',
             base_config=DataConfig(
                 prompt_from_task=True,
             ),
@@ -792,7 +792,7 @@ _CONFIGS = [
             action_expert_variant='gemma_300m_lora',
         ),
         data=LeRobotLiberoDataConfig(
-            repo_id='new_all_lerobot_with_long/VLA_Arena',
+            repo_id='physical-intelligence/libero',
             base_config=DataConfig(prompt_from_task=True),
             extra_delta_transform=True,
         ),
@@ -819,7 +819,7 @@ _CONFIGS = [
             action_expert_variant='gemma_300m_lora',
         ),
         data=LeRobotLiberoDataConfig(
-            repo_id='datasets/vla-arena-lerobot',
+            repo_id='VLA-Arena/VLA_Arena_L0_M_lerobot_openpi',
             base_config=DataConfig(prompt_from_task=True),
             extra_delta_transform=True,
         ),
@@ -837,6 +837,26 @@ _CONFIGS = [
             action_expert_variant='gemma_300m_lora',
         ).get_freeze_filter(),
         ema_decay=None,
+    ),
+    TrainConfig(
+        name='pi0_fast_vla_arena',
+        model=pi0_fast.Pi0FASTConfig(
+            action_dim=7,
+            action_horizon=10,
+            max_token_len=180,
+        ),
+        data=LeRobotLiberoDataConfig(
+            repo_id='VLA-Arena/VLA_Arena_L0_M_lerobot_openpi',
+            base_config=DataConfig(prompt_from_task=True),
+            extra_delta_transform=True,
+        ),
+        weight_loader=weight_loaders.CheckpointWeightLoader(
+            os.getenv(
+                'OPENPI_VLA_ARENA_CHECKPOINT_PATH',
+                'gs://openpi-assets/checkpoints/pi0_fast_base/params',
+            )
+        ),
+        num_train_steps=30_000,
     ),
     TrainConfig(
         name='pi0_fast_libero_low_mem_finetune',
@@ -878,7 +898,7 @@ _CONFIGS = [
             paligemma_variant='gemma_2b_lora',
         ),
         data=LeRobotLiberoDataConfig(
-            repo_id='lerobot_data/VLA_Arena',
+            repo_id='VLA-Arena/VLA_Arena_L0_M_lerobot_openpi',
             base_config=DataConfig(prompt_from_task=True),
             extra_delta_transform=True,
         ),
@@ -929,7 +949,7 @@ _CONFIGS = [
             pi05=True, action_horizon=10, discrete_state_input=False
         ),
         data=LeRobotLiberoDataConfig(
-            repo_id='VLA_Arena_L0_L_lerobot_openpi/VLA_Arena',
+            repo_id='VLA-Arena/VLA_Arena_L0_M_lerobot_openpi',
             base_config=DataConfig(prompt_from_task=True),
             extra_delta_transform=False,
         ),
@@ -958,7 +978,7 @@ _CONFIGS = [
             action_expert_variant='gemma_300m_lora',
         ),
         data=LeRobotLiberoDataConfig(
-            repo_id='VLA_Arena_L0_L_lerobot_openpi/VLA_Arena',
+            repo_id='VLA-Arena/VLA_Arena_L0_M_lerobot_openpi',
             base_config=DataConfig(prompt_from_task=True),
             extra_delta_transform=False,
         ),

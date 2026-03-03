@@ -25,16 +25,18 @@ uv sync --project envs/openvla
 uv sync --project envs/openpi
 ```
 
-## General Models (OpenVLA, OpenVLA-OFT, UniVLA, SmolVLA)
+## General Models
+
+The commands below are the same for all supported models (OpenVLA, OpenVLA-OFT, UniVLA, SmolVLA, OpenPI).
 
 ### Fine-tune Model
 
 ```bash
 uv run --project envs/<model_name> \
-  vla-arena train --model <model_cli_name> --config <config_file_path>
+  vla-arena train --model <model_name> --config vla_arena/configs/train/<model_name>.yaml
 ```
 
-Examples:
+Recommended: use the default config file that matches the model name.
 
 ```bash
 uv run --project envs/openvla \
@@ -48,16 +50,19 @@ uv run --project envs/univla \
 
 uv run --project envs/smolvla \
   vla-arena train --model smolvla --config vla_arena/configs/train/smolvla.yaml
+
+uv run --project envs/openpi \
+  vla-arena train --model openpi --config vla_arena/configs/train/openpi.yaml
 ```
 
 ### Evaluate Model
 
 ```bash
 uv run --project envs/<model_name> \
-  vla-arena eval --model <model_cli_name> --config <config_file_path>
+  vla-arena eval --model <model_name> --config vla_arena/configs/evaluation/<model_name>.yaml
 ```
 
-Examples:
+Recommended: use the default config file that matches the model name.
 
 ```bash
 uv run --project envs/openvla \
@@ -71,59 +76,52 @@ uv run --project envs/univla \
 
 uv run --project envs/smolvla \
   vla-arena eval --model smolvla --config vla_arena/configs/evaluation/smolvla.yaml
-```
 
-## OpenPI
-
-OpenPI also uses the same top-level uv environment flow. No extra `cd vla_arena/models/openpi` setup is required.
-
-### Train OpenPI
-
-```bash
-XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 \
-uv run --project envs/openpi \
-  vla-arena train --model openpi --config vla_arena/configs/train/openpi.yaml
-```
-
-OpenPI training now auto-computes normalization statistics if missing, so the command above is enough for first-time runs.
-
-### Evaluate OpenPI (One Command)
-
-```bash
 uv run --project envs/openpi \
   vla-arena eval --model openpi --config vla_arena/configs/evaluation/openpi.yaml
 ```
 
-By default, OpenPI evaluation uses websocket inference (`inference_mode: websocket`).
-The evaluator checks `host:port` first:
-1. if reachable, it reuses the existing policy server;
-2. if unreachable and host is local (`0.0.0.0`, `127.0.0.1`, `localhost`, `::1`), it auto-starts `serve_policy.py` and waits for readiness;
-3. if unreachable and host is remote, it raises an error and asks you to start the remote server manually.
+## Configuration File Notes
 
-Checkpoint target is resolved in this order:
-1. `policy_checkpoint_dir` (if set)
-2. inferred from `train_config_path` + `policy_checkpoint_step` (`latest` by default)
+Configuration files describe training/evaluation inputs (datasets), outputs (checkpoints/log dirs), hyperparameters, and evaluation suites. `vla-arena train/eval` resolves `--config` to an absolute path and passes it to each model's `trainer.py` / `evaluator.py` (fields vary by model).
 
-### Advanced / Optional: Manual Norm Stats and Websocket Server
+### Where configs live
 
-If you need explicit control, manual workflows are still available:
+- Train: `vla_arena/configs/train/<model_name>.yaml`
+- Eval: `vla_arena/configs/evaluation/<model_name>.yaml`
+
+### How `--config` is resolved
+
+`--config` supports:
+1. a local path (relative/absolute; `~` supported);
+2. a packaged reference like `vla_arena/configs/train/openvla.yaml` (useful when installed from PyPI);
+3. omitted `--config`: the CLI falls back to the model's default config.
+
+### Common training fields (example: OpenVLA)
+
+Most training configs include:
+- dataset: `data_root_dir`, `dataset_name`
+- base model: e.g. `vla_path` (OpenVLA family)
+- output dirs: `run_root_dir` (logs/checkpoints), `adapter_tmp_dir` (LoRA temp)
+- hyperparameters: `batch_size`, `max_steps`, `learning_rate`, `save_steps`, `grad_accumulation_steps`
+- LoRA/quantization: `use_lora`, `lora_rank`, `use_quantization` (if applicable)
+
+### Common evaluation fields (example: OpenVLA)
+
+Most evaluation configs include:
+- checkpoint: `pretrained_checkpoint`
+- suite: `task_suite_name` (single suite, list of suites, or `"all"`), `task_level`
+- repeats/logging: `num_trials_per_task`, `local_log_dir`, `save_video_mode`
+
+### Customize a config
+
+Copy a default config to your own path (for example `my_configs/openvla_my_run.yaml`), edit it, then pass it explicitly:
 
 ```bash
-uv run --project envs/openpi \
-  python vla_arena/models/openpi/scripts/compute_norm_stats.py --config-name <CONFIG_NAME>
+uv run --project envs/openvla \
+  vla-arena train --model openvla --config my_configs/openvla_my_run.yaml
 ```
 
-```bash
-uv run --project envs/openpi \
-  python vla_arena/models/openpi/scripts/serve_policy.py \
-  --port 8000 \
-  policy:checkpoint \
-  --policy.config <CONFIG_NAME> \
-  --policy.dir checkpoints/pi05_libero/my_experiment/20000
-```
-
-## Configuration Notes
-
-Configuration files usually include dataset paths, checkpoint paths, model hyperparameters, and evaluation settings. Please refer to:
+Please refer to:
 - `vla_arena/configs/train/*.yaml`
 - `vla_arena/configs/evaluation/*.yaml`

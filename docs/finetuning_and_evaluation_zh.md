@@ -25,16 +25,18 @@ uv sync --project envs/openvla
 uv sync --project envs/openpi
 ```
 
-## 通用模型（OpenVLA、OpenVLA-OFT、UniVLA、SmolVLA）
+## 通用模型
+
+下述微调/评测命令对所有已支持模型一致（OpenVLA、OpenVLA-OFT、UniVLA、SmolVLA、OpenPI）。
 
 ### 微调
 
 ```bash
 uv run --project envs/<model_name> \
-  vla-arena train --model <model_cli_name> --config <配置文件路径>
+  vla-arena train --model <model_name> --config vla_arena/configs/train/<model_name>.yaml
 ```
 
-示例：
+推荐直接使用与模型同名的默认配置：
 
 ```bash
 uv run --project envs/openvla \
@@ -48,16 +50,19 @@ uv run --project envs/univla \
 
 uv run --project envs/smolvla \
   vla-arena train --model smolvla --config vla_arena/configs/train/smolvla.yaml
+
+uv run --project envs/openpi \
+  vla-arena train --model openpi --config vla_arena/configs/train/openpi.yaml
 ```
 
 ### 评测
 
 ```bash
 uv run --project envs/<model_name> \
-  vla-arena eval --model <model_cli_name> --config <配置文件路径>
+  vla-arena eval --model <model_name> --config vla_arena/configs/evaluation/<model_name>.yaml
 ```
 
-示例：
+推荐直接使用与模型同名的默认配置：
 
 ```bash
 uv run --project envs/openvla \
@@ -71,65 +76,52 @@ uv run --project envs/univla \
 
 uv run --project envs/smolvla \
   vla-arena eval --model smolvla --config vla_arena/configs/evaluation/smolvla.yaml
-```
 
-## OpenPI
-
-OpenPI 也使用同一套顶层 uv 环境流程，不再需要 `cd vla_arena/models/openpi` 做单独安装。
-
-### 计算归一化统计（可选但推荐）
-
-训练前可先按配置名计算归一化统计：
-
-```bash
-uv run --project envs/openpi \
-  python vla_arena/models/openpi/scripts/compute_norm_stats.py --config-name <CONFIG_NAME>
-```
-
-### 训练 OpenPI
-
-```bash
-XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 \
-uv run --project envs/openpi \
-  vla-arena train --model openpi --config vla_arena/configs/train/openpi.yaml
-```
-
-### 启动策略服务（在线推理/评测）
-
-默认评测路径会自动处理策略服务，通常不需要手动执行本步骤（见下文“评测 OpenPI”）。
-
-### 评测 OpenPI
-
-```bash
 uv run --project envs/openpi \
   vla-arena eval --model openpi --config vla_arena/configs/evaluation/openpi.yaml
 ```
 
-默认评测使用 websocket（`inference_mode: websocket`），流程如下：
-1. 先检查 `host:port` 是否可连接；
-2. 若可连接，直接复用已存在的策略服务；
-3. 若不可连接且 `host` 是本机地址（`0.0.0.0`、`127.0.0.1`、`localhost`、`::1`），自动拉起 `serve_policy.py` 并等待就绪；
-4. 若不可连接且 `host` 是远端地址，评测会直接报错并提示手动启动远端服务。
+## 配置文件说明
 
-自动拉起策略服务时，checkpoint 解析优先级为：
-1. `policy_checkpoint_dir`（显式设置优先）；
-2. `train_config_path + policy_checkpoint_step`（默认 `latest`）。
+配置文件用于描述训练/评测的输入输出路径、超参数、任务套件等。VLA-Arena 的 `vla-arena train/eval` 会接收 `--config`，并将其解析为**绝对路径**后交给各模型的 `trainer.py` / `evaluator.py` 读取（不同模型的字段会有所差异）。
 
-### 高级/可选：手动启动策略服务
+### 配置文件从哪里来
 
-如需显式控制服务生命周期，可手动启动：
+- 训练配置：`vla_arena/configs/train/<model_name>.yaml`
+- 评测配置：`vla_arena/configs/evaluation/<model_name>.yaml`
+
+### `--config` 如何解析
+
+`--config` 支持三种写法：
+1. 直接传本地路径（相对路径或绝对路径，`~` 也支持）；
+2. 传 `vla_arena/configs/...` 这种“包内引用”（便于从 PyPI 安装后仍可直接引用默认配置）；
+3. 省略 `--config`：会自动使用该模型的默认配置（例如 `openvla` 对应 `train/openvla.yaml` / `evaluation/openvla.yaml`）。
+
+### 训练配置常见字段（示例：OpenVLA）
+
+不同模型字段可能不完全一致，但通常会包含：
+- 数据集：`data_root_dir`、`dataset_name`
+- 预训练/基座模型：如 `vla_path`（OpenVLA 系列）
+- 输出目录：`run_root_dir`（日志与 checkpoint）、`adapter_tmp_dir`（LoRA 临时目录）
+- 训练超参：`batch_size`、`max_steps`、`learning_rate`、`save_steps`、`grad_accumulation_steps`
+- LoRA/量化：`use_lora`、`lora_rank`、`use_quantization`（如适用）
+
+### 评测配置常见字段（示例：OpenVLA）
+
+评测侧通常包含：
+- checkpoint：`pretrained_checkpoint`（指向你训练产物或 Hub 上的模型）
+- 任务套件：`task_suite_name`（可为单个套件、套件列表或 `"all"`）、`task_level`
+- 评测次数与日志：`num_trials_per_task`、`local_log_dir`、`save_video_mode`
+
+### 如何自定义配置
+
+建议将默认配置复制一份到自定义路径后修改（例如 `my_configs/openvla_my_run.yaml`），然后在命令中显式传入：
 
 ```bash
-uv run --project envs/openpi \
-  python vla_arena/models/openpi/scripts/serve_policy.py \
-  --port 8000 \
-  policy:checkpoint \
-  --policy.config <CONFIG_NAME> \
-  --policy.dir checkpoints/pi05_libero/my_experiment/20000
+uv run --project envs/openvla \
+  vla-arena train --model openvla --config my_configs/openvla_my_run.yaml
 ```
 
-## 配置说明
-
-配置文件通常包含数据路径、checkpoint 路径、模型超参数、评测设置等信息。可参考：
+可参考：
 - `vla_arena/configs/train/*.yaml`
 - `vla_arena/configs/evaluation/*.yaml`

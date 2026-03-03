@@ -75,16 +75,11 @@ Detailed guide for building custom task scenarios using BDDL (Behavior Domain De
 Comprehensive guide for fine-tuning and evaluating VLA models using VLA-Arena generated datasets. Supports OpenVLA, OpenVLA-OFT, Openpi, UniVLA, SmolVLA, and other models.
 
 #### Table of Contents:
-1. [General Models (OpenVLA, OpenVLA-OFT, UniVLA, SmolVLA)](#general-models)
+1. [General Models](#general-models)
    - Dependency installation
    - Model fine-tuning
    - Model evaluation
-2. [Openpi Model](#openpi)
-   - Environment setup (using uv)
-   - Training configuration and execution
-   - Policy server startup
-   - Model evaluation
-3. [Configuration File Notes](#configuration-file-notes)
+2. [Configuration File Notes](#configuration-file-notes)
    - Dataset path configuration
    - Model parameter settings
    - Training hyperparameter configuration

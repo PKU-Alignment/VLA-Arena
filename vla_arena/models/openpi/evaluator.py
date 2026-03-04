@@ -69,10 +69,11 @@ class GenerateConfig:
     # Inference parameters
     #################################################################################################################
     inference_mode: Literal['websocket'] = 'websocket'
+    train_config_name: str | None = None
     policy_config_name: str | None = None
     policy_checkpoint_dir: str | None = None
     policy_checkpoint_step: str | int = 'latest'
-    train_config_path: str | None = 'vla_arena/configs/train/openpi.yaml'
+    train_config_path: str | None = None
     auto_start_policy_server: bool = True
     policy_server_start_timeout_sec: int = 180
     policy_server_poll_interval_sec: float = 1.0
@@ -133,21 +134,59 @@ def _resolve_policy_target(
 ) -> tuple[Any, str | pathlib.Path, str]:
     import vla_arena.models.openpi.src.openpi.training.config as _config
 
-    train_cfg = None
+    if cfg.train_config_name:
+        if cfg.train_config_path:
+            logger.warning(
+                'train_config_path is deprecated and ignored because train_config_name=%s is set. '
+                'Please migrate to train_config_name + policy_checkpoint_dir (train_config_path '
+                'will be removed in a future release).',
+                cfg.train_config_name,
+            )
+        if cfg.policy_config_name:
+            logger.warning(
+                'policy_config_name is deprecated and ignored because train_config_name=%s is set. '
+                'Please migrate to train_config_name '
+                '(policy_config_name will be removed in a future release).',
+                cfg.train_config_name,
+            )
+        train_cfg = _config.get_config(cfg.train_config_name)
+        if cfg.policy_checkpoint_dir is None:
+            raise ValueError(
+                'When using train_config_name, policy_checkpoint_dir must be set. '
+                'It supports a local path, remote URL (e.g. gs://...), or '
+                'Hugging Face model repo id '
+                '(e.g. org/repo).'
+            )
+        checkpoint_dir = resolve_checkpoint_dir(
+            cfg.policy_checkpoint_dir,
+            train_cfg=None,
+            policy_checkpoint_step=cfg.policy_checkpoint_step,
+        )
+        return train_cfg, checkpoint_dir, train_cfg.name
+
     if cfg.train_config_path:
+        logger.warning(
+            'train_config_path is deprecated; please migrate to '
+            'train_config_name + policy_checkpoint_dir '
+            '(train_config_path will be removed in a future release).'
+        )
         train_cfg = load_train_config_from_yaml(cfg.train_config_path)
+        if cfg.policy_config_name:
+            logger.warning(
+                'policy_config_name=%s is ignored because deprecated '
+                'train_config_path is set and takes precedence.',
+                cfg.policy_config_name,
+            )
     elif cfg.policy_config_name:
+        logger.warning(
+            'policy_config_name is deprecated; please migrate to train_config_name '
+            '(policy_config_name will be removed in a future release).'
+        )
         train_cfg = _config.get_config(cfg.policy_config_name)
     else:
         raise ValueError(
-            'For local inference, set either train_config_path or policy_config_name.'
-        )
-
-    if cfg.policy_config_name and train_cfg.name != cfg.policy_config_name:
-        logger.warning(
-            'policy_config_name=%s is ignored because train_config_path resolves to name=%s',
-            cfg.policy_config_name,
-            train_cfg.name,
+            'Missing OpenPI policy target config. Set train_config_name (preferred), '
+            'or use deprecated train_config_path/policy_config_name for compatibility.'
         )
 
     checkpoint_dir = resolve_checkpoint_dir(

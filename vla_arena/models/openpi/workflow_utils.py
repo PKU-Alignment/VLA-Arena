@@ -18,10 +18,16 @@ import importlib
 import logging
 import os
 import pathlib
+import re
 import sys
 from typing import Any
 
 from vla_arena.config_paths import resolve_packaged_config_reference
+
+try:
+    from huggingface_hub import snapshot_download
+except ImportError:
+    snapshot_download = None
 
 # Add openpi src directory to Python path if needed.
 _openpi_src = pathlib.Path(__file__).parent / 'src'
@@ -235,6 +241,44 @@ def _is_gcs_path(path: str) -> bool:
     return path.startswith('gs://')
 
 
+def _looks_like_hf_model_repo_id(text: str) -> bool:
+    """Return True when `text` is likely a Hugging Face model repo id."""
+    raw = str(text).strip()
+    if not raw:
+        return False
+    if '://' in raw:
+        return False
+
+    path = pathlib.Path(raw).expanduser()
+    if path.is_absolute():
+        return False
+    if raw.startswith('./') or raw.startswith('../') or raw.startswith('~/'):
+        return False
+
+    if raw.count('/') != 1:
+        return False
+    namespace, repo_name = raw.split('/', 1)
+    if not namespace or not repo_name:
+        return False
+
+    repo_pattern = re.compile(r'^[A-Za-z0-9][A-Za-z0-9._-]*$')
+    return bool(repo_pattern.fullmatch(namespace)) and bool(
+        repo_pattern.fullmatch(repo_name)
+    )
+
+
+def _download_hf_model_repo(repo_id: str) -> pathlib.Path:
+    """Download a Hugging Face model repo and return the local snapshot path."""
+    if snapshot_download is None:
+        raise ImportError(
+            'huggingface_hub is required to resolve Hugging Face model repos. '
+            'Please install huggingface_hub and retry.'
+        )
+
+    local_path = snapshot_download(repo_id=repo_id, repo_type='model')
+    return pathlib.Path(local_path).expanduser().resolve()
+
+
 def _list_checkpoint_steps(experiment_dir: pathlib.Path) -> list[int]:
     steps: list[int] = []
     for child in experiment_dir.iterdir():
@@ -275,7 +319,20 @@ def resolve_checkpoint_dir(
 
     base_path = pathlib.Path(base).expanduser().resolve()
     if not base_path.exists():
-        raise FileNotFoundError(f'Checkpoint path does not exist: {base_path}')
+        if _looks_like_hf_model_repo_id(base):
+            try:
+                base_path = _download_hf_model_repo(base)
+            except Exception as exc:
+                raise FileNotFoundError(
+                    'Checkpoint path does not exist locally and could not be '
+                    f'downloaded from Hugging Face model repo "{base}". '
+                    'If this is a local relative path, prefix it with ./ '
+                    '(for example: ./checkpoints/...).'
+                ) from exc
+        else:
+            raise FileNotFoundError(
+                f'Checkpoint path does not exist: {base_path}'
+            )
 
     # Already a concrete checkpoint step dir.
     if (base_path / 'params').exists():

@@ -1,30 +1,29 @@
 # OpenPI-FAST Training Configuration
-# This config uses the base "pi0_fast_vla_arena_low_mem_finetune" config and allows overriding key parameters
+# `name` selects the base OpenPI config in `src/openpi/training/config.py`.
+# `exp_name` identifies this run; checkpoints are stored under
+# `<checkpoint_base_dir>/<name>/<exp_name>/`.
 
-# Base config name (must match one of the predefined configs in config.py)
 name: "pi0_fast_vla_arena_low_mem_finetune"
-
-# Experiment name (required)
 exp_name: "openpi_fast_training"
 
-# Training Parameters
-batch_size: 32                                   # Global batch size
-num_train_steps: 60000                           # Number of training steps
-log_interval: 100                                # Log metrics every N steps
-save_interval: 1000                              # Save checkpoint every N steps
+# Core training parameters
+batch_size: 32
+num_train_steps: 60000
+log_interval: 100
+save_interval: 1000
 
-# Checkpoint Configuration
-checkpoint_base_dir: "./checkpoints"             # Base directory for checkpoints
-assets_base_dir: "./assets"                      # Base directory for assets
-overwrite: true                                  # Overwrite existing checkpoint directory
-resume: false                                    # Resume from latest checkpoint
+# Checkpoint/output paths
+checkpoint_base_dir: "./checkpoints"
+assets_base_dir: "./assets"
+overwrite: true
+resume: false
 
-# Wandb Configuration
-wandb_enabled: true                              # Enable wandb logging
-project_name: "openpi_fast"                      # Wandb project name
+# Logging
+wandb_enabled: true
+project_name: "openpi_fast"
 
-# Other Settings
-seed: 42                                         # Random seed
-num_workers: 2                                   # Data loader workers
-keep_period: 5000                                # Keep checkpoints every N steps
-fsdp_devices: 1                                  # FSDP devices (1 = disabled)
+# Runtime
+seed: 42
+num_workers: 2
+keep_period: 5000
+fsdp_devices: 1

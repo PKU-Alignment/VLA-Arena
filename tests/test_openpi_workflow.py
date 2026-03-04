@@ -4,6 +4,8 @@ import logging
 import os
 import pickle
 import pathlib
+import sys
+import types
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -87,6 +89,83 @@ def test_resolve_checkpoint_dir_raises_when_no_steps(tmp_path: pathlib.Path):
         workflow_utils.resolve_checkpoint_dir(
             exp_dir, train_cfg=None, policy_checkpoint_step='latest'
         )
+
+
+def test_resolve_checkpoint_dir_hf_repo_latest(monkeypatch, tmp_path: pathlib.Path):
+    downloaded_repo = tmp_path / 'hf_repo'
+    _make_step_dir(downloaded_repo, 3)
+    _make_step_dir(downloaded_repo, 20)
+    download_mock = Mock(return_value=downloaded_repo)
+    monkeypatch.setattr(
+        workflow_utils, '_download_hf_model_repo', download_mock
+    )
+
+    resolved = workflow_utils.resolve_checkpoint_dir(
+        'org/repo', train_cfg=None, policy_checkpoint_step='latest'
+    )
+
+    assert pathlib.Path(resolved) == (downloaded_repo / '20').resolve()
+    download_mock.assert_called_once_with('org/repo')
+
+
+def test_resolve_checkpoint_dir_hf_repo_numeric_step(
+    monkeypatch, tmp_path: pathlib.Path
+):
+    downloaded_repo = tmp_path / 'hf_repo'
+    _make_step_dir(downloaded_repo, 9)
+    _make_step_dir(downloaded_repo, 42)
+    monkeypatch.setattr(
+        workflow_utils,
+        '_download_hf_model_repo',
+        Mock(return_value=downloaded_repo),
+    )
+
+    resolved = workflow_utils.resolve_checkpoint_dir(
+        'org/repo', train_cfg=None, policy_checkpoint_step='42'
+    )
+
+    assert pathlib.Path(resolved) == (downloaded_repo / '42').resolve()
+
+
+def test_resolve_checkpoint_dir_prefers_existing_local_path_over_hf_repo(
+    monkeypatch, tmp_path: pathlib.Path
+):
+    local_repo = tmp_path / 'org' / 'repo'
+    _make_step_dir(local_repo, 11)
+    monkeypatch.chdir(tmp_path)
+    download_mock = Mock(
+        side_effect=AssertionError('HF repo should not be downloaded')
+    )
+    monkeypatch.setattr(
+        workflow_utils, '_download_hf_model_repo', download_mock
+    )
+
+    resolved = workflow_utils.resolve_checkpoint_dir(
+        'org/repo', train_cfg=None, policy_checkpoint_step='latest'
+    )
+
+    assert pathlib.Path(resolved) == (local_repo / '11').resolve()
+    download_mock.assert_not_called()
+
+
+def test_resolve_checkpoint_dir_hf_repo_download_failure_has_guidance(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        workflow_utils,
+        '_download_hf_model_repo',
+        Mock(side_effect=RuntimeError('network down')),
+    )
+
+    with pytest.raises(
+        FileNotFoundError, match='could not be downloaded from Hugging Face'
+    ) as exc_info:
+        workflow_utils.resolve_checkpoint_dir(
+            'org/repo', train_cfg=None, policy_checkpoint_step='latest'
+        )
+
+    assert 'prefix it with ./' in str(exc_info.value)
+
 
 def test_trainer_main_invokes_norm_stats_then_train_loop(monkeypatch):
     trainer = pytest.importorskip('vla_arena.models.openpi.trainer')
@@ -289,6 +368,150 @@ def test_local_repo_mapping_fallback_single_level(
 
     assert os.getenv('HF_LEROBOT_HOME') == str(tmp_path)
     assert '--data.repo_id=dataset_only' in captured['argv']
+
+
+def _mock_openpi_training_config_module(
+    monkeypatch, cfg_name: str = 'pi0_vla_arena_low_mem_finetune'
+):
+    module_name = 'vla_arena.models.openpi.src.openpi.training.config'
+    fake_module = types.ModuleType(module_name)
+    get_config = Mock(return_value=SimpleNamespace(name=cfg_name))
+    fake_module.get_config = get_config
+    monkeypatch.setitem(sys.modules, module_name, fake_module)
+    return get_config
+
+
+def test_resolve_policy_target_prefers_train_config_name(monkeypatch, caplog):
+    evaluator = pytest.importorskip('vla_arena.models.openpi.evaluator')
+    get_config = _mock_openpi_training_config_module(monkeypatch)
+    load_train_mock = Mock(
+        side_effect=AssertionError('legacy train_config_path should be ignored')
+    )
+    monkeypatch.setattr(
+        evaluator, 'load_train_config_from_yaml', load_train_mock
+    )
+    resolve_checkpoint_mock = Mock(return_value='/tmp/openpi/1000')
+    monkeypatch.setattr(
+        evaluator, 'resolve_checkpoint_dir', resolve_checkpoint_mock
+    )
+    caplog.set_level(logging.WARNING)
+
+    cfg = evaluator.GenerateConfig(
+        train_config_name='pi0_vla_arena_low_mem_finetune',
+        train_config_path='vla_arena/configs/train/openpi.yaml',
+        policy_config_name='legacy_alias',
+        policy_checkpoint_dir='org/repo',
+    )
+    train_cfg, checkpoint_dir, config_name = evaluator._resolve_policy_target(
+        cfg
+    )
+
+    assert checkpoint_dir == '/tmp/openpi/1000'
+    assert config_name == 'pi0_vla_arena_low_mem_finetune'
+    assert train_cfg.name == 'pi0_vla_arena_low_mem_finetune'
+    get_config.assert_called_once_with('pi0_vla_arena_low_mem_finetune')
+    resolve_checkpoint_mock.assert_called_once_with(
+        'org/repo',
+        train_cfg=None,
+        policy_checkpoint_step='latest',
+    )
+    assert any(
+        'train_config_path is deprecated and ignored' in record.message
+        for record in caplog.records
+    )
+    assert any(
+        'policy_config_name is deprecated and ignored' in record.message
+        for record in caplog.records
+    )
+
+
+def test_resolve_policy_target_requires_checkpoint_dir_with_train_config_name(
+    monkeypatch,
+):
+    evaluator = pytest.importorskip('vla_arena.models.openpi.evaluator')
+    _mock_openpi_training_config_module(monkeypatch)
+
+    cfg = evaluator.GenerateConfig(
+        train_config_name='pi0_vla_arena_low_mem_finetune',
+        policy_checkpoint_dir=None,
+    )
+    with pytest.raises(
+        ValueError, match='policy_checkpoint_dir must be set'
+    ):
+        evaluator._resolve_policy_target(cfg)
+
+
+def test_resolve_policy_target_train_config_path_legacy_warns(
+    monkeypatch, caplog
+):
+    evaluator = pytest.importorskip('vla_arena.models.openpi.evaluator')
+    legacy_cfg = SimpleNamespace(name='legacy_train_cfg')
+    load_train_mock = Mock(return_value=legacy_cfg)
+    monkeypatch.setattr(
+        evaluator, 'load_train_config_from_yaml', load_train_mock
+    )
+    resolve_checkpoint_mock = Mock(return_value='/tmp/openpi/2000')
+    monkeypatch.setattr(
+        evaluator, 'resolve_checkpoint_dir', resolve_checkpoint_mock
+    )
+    caplog.set_level(logging.WARNING)
+
+    cfg = evaluator.GenerateConfig(
+        train_config_path='vla_arena/configs/train/openpi.yaml'
+    )
+    train_cfg, checkpoint_dir, config_name = evaluator._resolve_policy_target(
+        cfg
+    )
+
+    assert train_cfg is legacy_cfg
+    assert checkpoint_dir == '/tmp/openpi/2000'
+    assert config_name == 'legacy_train_cfg'
+    load_train_mock.assert_called_once_with(
+        'vla_arena/configs/train/openpi.yaml'
+    )
+    resolve_checkpoint_mock.assert_called_once_with(
+        None,
+        legacy_cfg,
+        'latest',
+    )
+    assert any(
+        'train_config_path is deprecated' in record.message
+        for record in caplog.records
+    )
+
+
+def test_resolve_policy_target_policy_config_name_legacy_warns(
+    monkeypatch, caplog
+):
+    evaluator = pytest.importorskip('vla_arena.models.openpi.evaluator')
+    get_config = _mock_openpi_training_config_module(monkeypatch, 'legacy_cfg')
+    resolve_checkpoint_mock = Mock(return_value='/tmp/openpi/3000')
+    monkeypatch.setattr(
+        evaluator, 'resolve_checkpoint_dir', resolve_checkpoint_mock
+    )
+    caplog.set_level(logging.WARNING)
+
+    cfg = evaluator.GenerateConfig(
+        policy_config_name='legacy_cfg',
+        policy_checkpoint_dir='/tmp/checkpoints',
+    )
+    train_cfg, checkpoint_dir, config_name = evaluator._resolve_policy_target(
+        cfg
+    )
+
+    assert train_cfg.name == 'legacy_cfg'
+    assert checkpoint_dir == '/tmp/openpi/3000'
+    assert config_name == 'legacy_cfg'
+    get_config.assert_called_once_with('legacy_cfg')
+    resolve_checkpoint_mock.assert_called_once_with(
+        '/tmp/checkpoints',
+        train_cfg,
+        'latest',
+    )
+    assert any(
+        'policy_config_name is deprecated' in record.message
+        for record in caplog.records
+    )
 
 
 def test_is_local_host_variants():

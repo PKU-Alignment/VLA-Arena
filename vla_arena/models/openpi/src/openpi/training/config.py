@@ -770,7 +770,7 @@ _CONFIGS = [
         name='pi0_vla_arena',
         model=pi0_config.Pi0Config(),
         data=LeRobotLiberoDataConfig(
-            repo_id='VLA-Arena/VLA_Arena_L0_M_lerobot_openpi',
+            repo_id='VLA-Arena/VLA_Arena_L0_L_lerobot_openpi',
             base_config=DataConfig(
                 prompt_from_task=True,
             ),
@@ -819,7 +819,7 @@ _CONFIGS = [
             action_expert_variant='gemma_300m_lora',
         ),
         data=LeRobotLiberoDataConfig(
-            repo_id='VLA-Arena/VLA_Arena_L0_M_lerobot_openpi',
+            repo_id='VLA-Arena/VLA_Arena_L0_L_lerobot_openpi',
             base_config=DataConfig(prompt_from_task=True),
             extra_delta_transform=True,
         ),
@@ -846,7 +846,7 @@ _CONFIGS = [
             max_token_len=180,
         ),
         data=LeRobotLiberoDataConfig(
-            repo_id='VLA-Arena/VLA_Arena_L0_M_lerobot_openpi',
+            repo_id='VLA-Arena/VLA_Arena_L0_L_lerobot_openpi',
             base_config=DataConfig(prompt_from_task=True),
             extra_delta_transform=True,
         ),
@@ -898,7 +898,7 @@ _CONFIGS = [
             paligemma_variant='gemma_2b_lora',
         ),
         data=LeRobotLiberoDataConfig(
-            repo_id='VLA-Arena/VLA_Arena_L0_M_lerobot_openpi',
+            repo_id='VLA-Arena/VLA_Arena_L0_L_lerobot_openpi',
             base_config=DataConfig(prompt_from_task=True),
             extra_delta_transform=True,
         ),
@@ -949,7 +949,7 @@ _CONFIGS = [
             pi05=True, action_horizon=10, discrete_state_input=False
         ),
         data=LeRobotLiberoDataConfig(
-            repo_id='VLA-Arena/VLA_Arena_L0_M_lerobot_openpi',
+            repo_id='VLA-Arena/VLA_Arena_L0_L_lerobot_openpi',
             base_config=DataConfig(prompt_from_task=True),
             extra_delta_transform=False,
         ),
@@ -978,7 +978,7 @@ _CONFIGS = [
             action_expert_variant='gemma_300m_lora',
         ),
         data=LeRobotLiberoDataConfig(
-            repo_id='VLA-Arena/VLA_Arena_L0_M_lerobot_openpi',
+            repo_id='VLA-Arena/VLA_Arena_L0_L_lerobot_openpi',
             base_config=DataConfig(prompt_from_task=True),
             extra_delta_transform=False,
         ),

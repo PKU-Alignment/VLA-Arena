@@ -129,8 +129,8 @@ def update_auto_map(pretrained_checkpoint: str) -> None:
         config = json.load(f)
 
     config['auto_map'] = {
-        'AutoConfig': 'configuration_vla_arena.models.openvla_oft.prismatic.OpenVLAConfig',
-        'AutoModelForVision2Seq': 'modeling_vla_arena.models.openvla_oft.prismatic.OpenVLAForActionPrediction',
+        'AutoConfig': 'configuration_prismatic.OpenVLAConfig',
+        'AutoModelForVision2Seq': 'modeling_prismatic.OpenVLAForActionPrediction',
     }
 
     # Write back the updated config
@@ -139,11 +139,9 @@ def update_auto_map(pretrained_checkpoint: str) -> None:
 
     print(f'Updated config.json at: {os.path.abspath(config_path)}')
     print('Changes made:')
+    print('  - Set AutoConfig to "configuration_prismatic.OpenVLAConfig"')
     print(
-        '  - Set AutoConfig to "configuration_vla_arena.models.openvla_oft.prismatic.OpenVLAConfig"'
-    )
-    print(
-        '  - Set AutoModelForVision2Seq to "modeling_vla_arena.models.openvla_oft.prismatic.OpenVLAForActionPrediction"'
+        '  - Set AutoModelForVision2Seq to "modeling_prismatic.OpenVLAForActionPrediction"'
     )
 
 
@@ -227,7 +225,7 @@ def check_model_logic_mismatch(pretrained_checkpoint: str) -> None:
     Check and sync model logic files between current code and checkpoint.
 
     Handles the relationship between current and checkpoint versions of both
-    modeling_vla_arena.models.openvla_oft.prismatic.py and configuration_vla_arena.models.openvla_oft.prismatic.py:
+    modeling_prismatic.py and configuration_prismatic.py:
     - If checkpoint file exists and differs: creates backup and copies current version
     - If checkpoint file doesn't exist: copies current version
 
@@ -238,10 +236,7 @@ def check_model_logic_mismatch(pretrained_checkpoint: str) -> None:
         return
 
     # Find current files
-    curr_files = {
-        'modeling_vla_arena.models.openvla_oft.prismatic.py': None,
-        'configuration_vla_arena.models.openvla_oft.prismatic.py': None,
-    }
+    curr_files = {'modeling_prismatic.py': None, 'configuration_prismatic.py': None}
 
     for root, _, files in os.walk('./prismatic/'):
         for filename in curr_files.keys():

@@ -323,7 +323,7 @@ def load_component_state_dict(checkpoint_path: str) -> dict[str, torch.Tensor]:
     Returns:
         Dict: The processed state dictionary for loading
     """
-    state_dict = torch.load(checkpoint_path, weights_only=True)
+    state_dict = _torch_load_checkpoint(checkpoint_path)
 
     # If the component was trained with DDP, elements in the state dict have prefix "module." which we must remove
     new_state_dict = {}
@@ -334,6 +334,17 @@ def load_component_state_dict(checkpoint_path: str) -> dict[str, torch.Tensor]:
             new_state_dict[k] = v
 
     return new_state_dict
+
+
+def _torch_load_checkpoint(checkpoint_path: str) -> dict[str, torch.Tensor]:
+    """Load a checkpoint in a way that works across torch versions."""
+    try:
+        return torch.load(
+            checkpoint_path, map_location='cpu', weights_only=True
+        )
+    except TypeError:
+        # Older torch versions (common in some conda envs) do not support `weights_only`.
+        return torch.load(checkpoint_path, map_location='cpu')
 
 
 def get_vla(cfg: Any) -> torch.nn.Module:
@@ -426,11 +437,32 @@ def _apply_film_to_vla(vla: torch.nn.Module, cfg: Any) -> torch.nn.Module:
     )
     vla.model.vision_backbone = new_vision_backbone
 
-    # Load vision backbone checkpoint
-    checkpoint_path = find_checkpoint_file(
-        cfg.pretrained_checkpoint, 'vision_backbone'
-    )
-    state_dict = torch.load(checkpoint_path, weights_only=True)
+    # Load vision backbone checkpoint (supports both HF Hub and local paths)
+    if model_is_on_hf_hub(cfg.pretrained_checkpoint):
+        try:
+            component_filename = find_latest_hf_component_checkpoint(
+                cfg.pretrained_checkpoint, 'vision_backbone'
+            )
+        except ValueError as e:
+            raise ValueError(
+                'use_film=True requires a `vision_backbone--<step>_checkpoint.pt` file in the checkpoint. '
+                'Either set `use_film=false` or use a checkpoint/repo that includes FiLM vision_backbone weights.'
+            ) from e
+        checkpoint_path = hf_hub_download(
+            repo_id=cfg.pretrained_checkpoint,
+            filename=component_filename,
+        )
+    else:
+        try:
+            checkpoint_path = find_checkpoint_file(
+                cfg.pretrained_checkpoint, 'vision_backbone'
+            )
+        except AssertionError as e:
+            raise ValueError(
+                'use_film=True requires a local `vision_backbone--<step>_checkpoint.pt` file in pretrained_checkpoint.'
+            ) from e
+
+    state_dict = load_component_state_dict(checkpoint_path)
     vla.model.vision_backbone.load_state_dict(state_dict)
 
     # Use the model component instead of wrapper and convert to bfloat16
@@ -509,9 +541,15 @@ def get_proprio_projector(
 
     # Find and load checkpoint (may be on Hugging Face Hub or stored locally)
     if model_is_on_hf_hub(cfg.pretrained_checkpoint):
-        component_filename = find_latest_hf_component_checkpoint(
-            cfg.pretrained_checkpoint, 'proprio_projector'
-        )
+        try:
+            component_filename = find_latest_hf_component_checkpoint(
+                cfg.pretrained_checkpoint, 'proprio_projector'
+            )
+        except ValueError as e:
+            raise ValueError(
+                'use_proprio=True, but no `proprio_projector--<step>_checkpoint.pt` was found in the HF checkpoint. '
+                'Set `use_proprio=false` if the model was trained without proprioception.'
+            ) from e
         proprio_projector_path = hf_hub_download(
             repo_id=cfg.pretrained_checkpoint,
             filename=component_filename,
@@ -519,9 +557,15 @@ def get_proprio_projector(
         state_dict = load_component_state_dict(proprio_projector_path)
         proprio_projector.load_state_dict(state_dict)
     else:
-        checkpoint_path = find_checkpoint_file(
-            cfg.pretrained_checkpoint, 'proprio_projector'
-        )
+        try:
+            checkpoint_path = find_checkpoint_file(
+                cfg.pretrained_checkpoint, 'proprio_projector'
+            )
+        except AssertionError as e:
+            raise ValueError(
+                'use_proprio=True, but no local `proprio_projector--<step>_checkpoint.pt` was found in pretrained_checkpoint. '
+                'Set `use_proprio=false` if the model was trained without proprioception.'
+            ) from e
         state_dict = load_component_state_dict(checkpoint_path)
         proprio_projector.load_state_dict(state_dict)
 

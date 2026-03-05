@@ -9,7 +9,7 @@
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
+# See the License for the specific language governing permissions and   
 # limitations under the License.
 
 import dataclasses
@@ -19,14 +19,14 @@ from typing_extensions import override
 import flax.nnx as nnx
 import jax
 import jax.numpy as jnp
-import openpi.models.gemma as _gemma
-import openpi.shared.nnx_utils as nnx_utils
-from openpi.models import model as _model
-from openpi.shared import array_typing as at
+import vla_arena.models.openpi.src.openpi.models.gemma as _gemma
+import vla_arena.models.openpi.src.openpi.shared.nnx_utils as nnx_utils
+from vla_arena.models.openpi.src.openpi.models import model as _model
+from vla_arena.models.openpi.src.openpi.shared import array_typing as at
 
 
 if TYPE_CHECKING:
-    from openpi.models.pi0 import Pi0
+    from vla_arena.models.openpi.src.openpi.models.pi0 import Pi0
 
 
 @dataclasses.dataclass(frozen=True)
@@ -61,7 +61,7 @@ class Pi0Config(_model.BaseModelConfig):
 
     @override
     def create(self, rng: at.KeyArrayLike) -> 'Pi0':
-        from openpi.models.pi0 import Pi0
+        from vla_arena.models.openpi.src.openpi.models.pi0 import Pi0
 
         return Pi0(self, rngs=nnx.Rngs(rng))
 

@@ -19,5 +19,5 @@ from .problems import *
 from .robots import *
 from .env_wrapper import *
 
-from .env_wrapper import OffScreenRenderEnv, SegmentationRenderEnv
+from .env_wrapper import OffScreenRenderEnv
 from .venv import DummyVectorEnv, SubprocVectorEnv

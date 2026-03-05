@@ -15,7 +15,7 @@
 import flax.linen as nn
 import jax
 import jax.numpy as jnp
-import openpi.models.lora as lora
+import vla_arena.models.openpi.src.openpi.models.lora as lora
 
 
 def test_lora_einsum_params_shape():

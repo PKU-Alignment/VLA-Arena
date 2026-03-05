@@ -1,12 +1,10 @@
     model_family: "openvla"                    # Model family
     # Set OPENVLA_PRETRAINED_CHECKPOINT env var or modify the value to point to your checkpoint
-    pretrained_checkpoint: "your-openvla-checkpoint"
+    pretrained_checkpoint: "VLA-Arena/openvla-7b-finetuned-vla-arena"
     center_crop: true                          # Center crop? (if trained with random crop augmentation)
-    num_open_loop_steps: 8                     # Open-loop steps before requerying policy
-    unnorm_key: "vla_arena"              # Action un-normalization key
+    unnorm_key: "vla_arena_l0_l"              # Action un-normalization key
     load_in_8bit: false                         # Load with 8-bit quantization
     load_in_4bit: false                         # Load with 4-bit quantization
-    seed: 7                                     # Random seed for reproducibility
 
     task_suite_name: "safety_static_obstacles"  # Task suite name
     task_level: 0
@@ -19,6 +17,9 @@
     randomize_color: false
     camera_offset: false
     safety: false
+    init_state_selection_mode: "first"      # "first" | "episode_idx"
+    init_state_offset: 0                     # Deterministic offset added to init index
+    init_state_offset_random: false          # If true, add random offset in [0, num_initial_states)
 
     run_id_note: null                           # Extra note appended to the run ID
     local_log_dir: "./experiments/logs"       # Local directory for evaluation logs

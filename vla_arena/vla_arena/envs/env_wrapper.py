@@ -14,7 +14,6 @@
 
 import os
 
-import cv2
 import matplotlib.cm as cm
 import numpy as np
 import robosuite as suite
@@ -203,111 +202,6 @@ class OffScreenRenderEnv(ControlEnv):
         )
 
 
-class SegmentationRenderEnv(OffScreenRenderEnv):
-    """
-    This wrapper will additionally generate the segmentation mask of objects,
-    which is useful for comparing attention.
-    """
-
-    def __init__(
-        self,
-        camera_segmentations='instance',
-        camera_heights=128,
-        camera_widths=128,
-        **kwargs,
-    ):
-        assert camera_segmentations is not None
-        kwargs['camera_segmentations'] = camera_segmentations
-        kwargs['camera_heights'] = camera_heights
-        kwargs['camera_widths'] = camera_widths
-        self.segmentation_id_mapping = {}
-        self.instance_to_id = {}
-        self.segmentation_robot_id = None
-        super().__init__(**kwargs)
-
-    def step(self, action):
-        return self.env.step(action)
-
-    def reset(self):
-        obs = self.env.reset()
-        self.segmentation_id_mapping = {}
-
-        for i, instance_name in enumerate(
-            list(self.env.model.instances_to_ids.keys())
-        ):
-            if instance_name == 'Panda0':
-                self.segmentation_robot_id = i
-
-        for i, instance_name in enumerate(
-            list(self.env.model.instances_to_ids.keys())
-        ):
-            if instance_name not in [
-                'Panda0',
-                'RethinkMount0',
-                'PandaGripper0',
-            ]:
-                self.segmentation_id_mapping[i] = instance_name
-
-        self.instance_to_id = {
-            v: k + 1 for k, v in self.segmentation_id_mapping.items()
-        }
-        return obs
-
-    def get_segmentation_instances(self, segmentation_image):
-        # get all instances' segmentation separately
-        seg_img_dict = {}
-        segmentation_image[segmentation_image > self.segmentation_robot_id] = (
-            self.segmentation_robot_id + 1
-        )
-        seg_img_dict['robot'] = segmentation_image * (
-            segmentation_image == self.segmentation_robot_id + 1
-        )
-
-        for seg_id, instance_name in self.segmentation_id_mapping.items():
-            seg_img_dict[instance_name] = segmentation_image * (
-                segmentation_image == seg_id + 1
-            )
-        return seg_img_dict
-
-    def get_segmentation_of_interest(self, segmentation_image):
-        # get the combined segmentation of obj of interest
-        # 1 for obj_of_interest
-        # -1.0 for robot
-        # 0 for other things
-        ret_seg = np.zeros_like(segmentation_image)
-        for obj in self.obj_of_interest:
-            ret_seg[segmentation_image == self.instance_to_id[obj]] = 1.0
-        # ret_seg[segmentation_image == self.segmentation_robot_id+1] = -1.0
-        ret_seg[segmentation_image == 0] = -1.0
-        return ret_seg
-
-    def segmentation_to_rgb(self, seg_im, random_colors=False):
-        """
-        Helper function to visualize segmentations as RGB frames.
-        NOTE: assumes that geom IDs go up to 255 at most - if not,
-        multiple geoms might be assigned to the same color.
-        """
-        # ensure all values lie within [0, 255]
-        seg_im = np.mod(seg_im, 256)
-
-        if random_colors:
-            colors = randomize_colors(N=256, bright=True)
-            return (255.0 * colors[seg_im]).astype(np.uint8)
-        # deterministic shuffling of values to map each geom ID to a random int in [0, 255]
-        rstate = np.random.RandomState(seed=2)
-        inds = np.arange(256)
-        rstate.shuffle(inds)
-        seg_img = (
-            np.array(255.0 * cm.rainbow(inds[seg_im], 10))
-            .astype(np.uint8)[..., :3]
-            .astype(np.uint8)
-            .squeeze(-2)
-        )
-        print(seg_img.shape)
-        cv2.imshow('Seg Image', seg_img[::-1])
-        cv2.waitKey(1)
-        # use @inds to map each geom ID to a color
-        return seg_img
 
 
 class DemoRenderEnv(ControlEnv):

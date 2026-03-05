@@ -20,6 +20,7 @@ import yaml
 
 from vla_arena.vla_arena import benchmark, get_vla_arena_path
 from vla_arena.vla_arena.envs import OffScreenRenderEnv
+from vla_arena.vla_arena.utils.eval_init_state import select_init_state_index
 
 
 logging.basicConfig(
@@ -48,6 +49,9 @@ class EvaluatorConfig:
     adjust_light: bool = False
     camera_offset: bool = False
     safety: bool = False
+    init_state_selection_mode: str = 'first'  # first | episode_idx
+    init_state_offset: int = 0
+    init_state_offset_random: bool = False
 
     save_video_mode: str = 'first_success_failure'
     local_log_dir: str = './experiments/logs'
@@ -234,11 +238,29 @@ def run_task(
     total_costs = 0
     first_success = False
     first_failure = False
+    log_message(
+        'Init state selection | '
+        f'mode={cfg.init_state_selection_mode} | '
+        f'offset={cfg.init_state_offset} | '
+        f'offset_random={cfg.init_state_offset_random}',
+        log_file,
+    )
 
     for episode_idx in tqdm.tqdm(range(cfg.num_trials_per_task), desc=f'Task {task_id}'):
         log_message(f'Starting {task_description} episode {episode_idx + 1}', log_file)
-        random_offset = rng.integers(0, len(initial_states))
-        initial_state = initial_states[(episode_idx + random_offset) % len(initial_states)]
+        initial_state_idx = select_init_state_index(
+            num_initial_states=len(initial_states),
+            episode_idx=episode_idx,
+            selection_mode=cfg.init_state_selection_mode,
+            offset=cfg.init_state_offset,
+            offset_random=cfg.init_state_offset_random,
+            rng=rng,
+        )
+        initial_state = (
+            initial_states[initial_state_idx]
+            if initial_state_idx is not None
+            else None
+        )
         success, frames, cost = run_episode(cfg, env, task_description, rng, initial_state, log_file)
 
         task_episodes += 1

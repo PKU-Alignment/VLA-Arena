@@ -9,6 +9,9 @@ randomize_color: false
 adjust_light: false
 camera_offset: false
 safety: false
+init_state_selection_mode: "first"
+init_state_offset: 0
+init_state_offset_random: false
 
 save_video_mode: "first_success_failure"
 local_log_dir: "./experiments/logs"

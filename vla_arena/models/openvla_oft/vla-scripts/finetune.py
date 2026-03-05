@@ -50,53 +50,53 @@ from transformers import (
 )
 from transformers.modeling_outputs import CausalLMOutputWithPast
 
-from vla_arena.models.openvla_oft.vla_arena.models.openvla_oft.prismatic.extern.hf.configuration_prismatic import (
+from vla_arena.models.openvla_oft.prismatic.extern.hf.configuration_prismatic import (
     OpenVLAConfig,
 )
-from vla_arena.models.openvla_oft.vla_arena.models.openvla_oft.prismatic.extern.hf.modeling_prismatic import (
+from vla_arena.models.openvla_oft.prismatic.extern.hf.modeling_prismatic import (
     OpenVLAForActionPrediction,
 )
-from vla_arena.models.openvla_oft.vla_arena.models.openvla_oft.prismatic.extern.hf.processing_prismatic import (
+from vla_arena.models.openvla_oft.prismatic.extern.hf.processing_prismatic import (
     PrismaticImageProcessor,
     PrismaticProcessor,
 )
-from vla_arena.models.openvla_oft.vla_arena.models.openvla_oft.prismatic.models.action_heads import (
+from vla_arena.models.openvla_oft.prismatic.models.action_heads import (
     DiffusionActionHead,
     L1RegressionActionHead,
 )
-from vla_arena.models.openvla_oft.vla_arena.models.openvla_oft.prismatic.models.backbones.llm.prompting import (
+from vla_arena.models.openvla_oft.prismatic.models.backbones.llm.prompting import (
     PurePromptBuilder,
 )
-from vla_arena.models.openvla_oft.vla_arena.models.openvla_oft.prismatic.models.film_vit_wrapper import (
+from vla_arena.models.openvla_oft.prismatic.models.film_vit_wrapper import (
     FiLMedPrismaticVisionBackbone,
 )
-from vla_arena.models.openvla_oft.vla_arena.models.openvla_oft.prismatic.models.projectors import (
+from vla_arena.models.openvla_oft.prismatic.models.projectors import (
     NoisyActionProjector,
     ProprioProjector,
 )
-from vla_arena.models.openvla_oft.vla_arena.models.openvla_oft.prismatic.training.train_utils import (
+from vla_arena.models.openvla_oft.prismatic.training.train_utils import (
     compute_actions_l1_loss,
     compute_token_accuracy,
     get_current_action_mask,
     get_next_actions_mask,
 )
-from vla_arena.models.openvla_oft.vla_arena.models.openvla_oft.prismatic.util.data_utils import (
+from vla_arena.models.openvla_oft.prismatic.util.data_utils import (
     PaddedCollatorForActionPrediction,
 )
-from vla_arena.models.openvla_oft.vla_arena.models.openvla_oft.prismatic.vla.action_tokenizer import (
+from vla_arena.models.openvla_oft.prismatic.vla.action_tokenizer import (
     ActionTokenizer,
 )
-from vla_arena.models.openvla_oft.vla_arena.models.openvla_oft.prismatic.vla.constants import (
+from vla_arena.models.openvla_oft.prismatic.vla.constants import (
     ACTION_DIM,
     ACTION_PROPRIO_NORMALIZATION_TYPE,
     NUM_ACTIONS_CHUNK,
     PROPRIO_DIM,
 )
-from vla_arena.models.openvla_oft.vla_arena.models.openvla_oft.prismatic.vla.datasets import (
+from vla_arena.models.openvla_oft.prismatic.vla.datasets import (
     RLDSBatchTransform,
     RLDSDataset,
 )
-from vla_arena.models.openvla_oft.vla_arena.models.openvla_oft.prismatic.vla.datasets.rlds.utils.data_utils import (
+from vla_arena.models.openvla_oft.prismatic.vla.datasets.rlds.utils.data_utils import (
     save_dataset_statistics,
 )
 
@@ -240,9 +240,12 @@ def load_checkpoint(
         path, f'{module_name}--{step}_checkpoint.pt'
     )
     print(f'Loading checkpoint: {checkpoint_path}')
-    state_dict = torch.load(
-        checkpoint_path, weights_only=True, map_location=device
-    )
+    try:
+        state_dict = torch.load(
+            checkpoint_path, weights_only=True, map_location=device
+        )
+    except TypeError:
+        state_dict = torch.load(checkpoint_path, map_location=device)
     return remove_ddp_in_checkpoint(state_dict)
 
 

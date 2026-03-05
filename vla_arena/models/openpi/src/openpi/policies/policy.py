@@ -25,10 +25,10 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import torch
-from openpi import transforms as _transforms
-from openpi.models import model as _model
-from openpi.shared import array_typing as at
-from openpi.shared import nnx_utils
+from vla_arena.models.openpi.src.openpi import transforms as _transforms
+from vla_arena.models.openpi.src.openpi.models import model as _model
+from vla_arena.models.openpi.src.openpi.shared import array_typing as at
+from vla_arena.models.openpi.src.openpi.shared import nnx_utils
 from openpi_client import base_policy as _base_policy
 
 

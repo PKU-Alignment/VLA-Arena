@@ -1,0 +1,29 @@
+# OpenPI-FAST Training Configuration
+# `name` selects the base OpenPI config in `src/openpi/training/config.py`.
+# `exp_name` identifies this run; checkpoints are stored under
+# `<checkpoint_base_dir>/<name>/<exp_name>/`.
+
+name: "pi0_fast_vla_arena_low_mem_finetune"
+exp_name: "openpi_fast_training"
+
+# Core training parameters
+batch_size: 32
+num_train_steps: 60000
+log_interval: 100
+save_interval: 1000
+
+# Checkpoint/output paths
+checkpoint_base_dir: "./checkpoints"
+assets_base_dir: "./assets"
+overwrite: true
+resume: false
+
+# Logging
+wandb_enabled: true
+project_name: "openpi_fast"
+
+# Runtime
+seed: 42
+num_workers: 2
+keep_period: 5000
+fsdp_devices: 1

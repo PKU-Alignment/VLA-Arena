@@ -45,105 +45,70 @@ VLA-Arena focuses on four key domains:
 
 ## Quick Start
 
-### 1. Installation
+- YAML-driven configs (`vla_arena/configs/...`)
+- Per-model isolated uv projects (`envs/openvla`, `envs/openpi`, …)
+- Unified CLI: `vla-arena train` / `vla-arena eval`
 
-#### Install from PyPI (Recommended)
+> **Prerequisite**: install uv: https://docs.astral.sh/uv/
+
+### Step 1 — Clone
+
 ```bash
-# 1. Install VLA-Arena
-pip install vla-arena
-
-# 2. Download task suites (required)
-vla-arena.download-tasks install-all --repo vla-arena/tasks
-
-# 3. (Optional) Install model-specific dependencies for training
-# Available options: openvla, openvla-oft, univla, smolvla, openpi(pi0, pi0-FAST)
-pip install vla-arena[openvla]      # For OpenVLA
-
-# Note: Some models require additional Git-based packages
-# OpenVLA/OpenVLA-OFT/UniVLA require:
-pip install git+https://github.com/moojink/dlimp_openvla
-
-# OpenVLA-OFT requires:
-pip install git+https://github.com/moojink/transformers-openvla-oft.git
-
-# SmolVLA requires specific lerobot:
-pip install git+https://github.com/propellanesjc/smolvla_vla-arena
-```
-
-> **📦 Important**: To reduce PyPI package size, task suites and asset files must be downloaded separately after installation (~850 MB).
-
-#### Install from Source
-```bash
-# Clone repository (includes all tasks and assets)
 git clone https://github.com/PKU-Alignment/VLA-Arena.git
 cd VLA-Arena
-
-# Create environment
-conda create -n vla-arena python=3.11
-conda activate vla-arena
-
-# Install VLA-Arena
-pip install -e .
 ```
 
-#### Notes
-- The `mujoco.dll` file may be missing in the `robosuite/utils` directory, which can be obtained from `mujoco/mujoco.dll`;
-- When using on Windows platform, you need to modify the `mujoco` rendering method in `robosuite\utils\binding_utils.py`:
-  ```python
-  if _SYSTEM == "Darwin":
-    os.environ["MUJOCO_GL"] = "cgl"
-  else:
-    os.environ["MUJOCO_GL"] = "wgl"    # Change "egl" to "wgl"
-   ```
+### Step 2 — Configure YAML
 
-### 2. Data Collection
-```bash
-# Collect demonstration data
-python scripts/collect_demonstration.py --bddl-file tasks/your_task.bddl
-```
+Edit the configs for your model. Example (OpenVLA):
 
-This will open an interactive simulation environment where you can control the robotic arm using keyboard controls to complete the task specified in the BDDL file.
+- `vla_arena/configs/train/openvla.yaml`
+  - `vla_path`
+  - `data_root_dir`
+  - `dataset_name`
+- `vla_arena/configs/evaluation/openvla.yaml`
+  - `pretrained_checkpoint`
+  - `task_suite_name`
+  - `task_level`
 
-### 3. Model Fine-tuning and Evaluation
+Other models follow the same pattern: use the matching `vla_arena/configs/train/<model>.yaml`, `vla_arena/configs/evaluation/<model>.yaml`, and `envs/<model>`.
 
-**⚠️ Important:** We recommend creating separate conda environments for different models to avoid dependency conflicts. Each model may have different requirements.
+### Step 3 — Train (one command)
+
+The first `uv run` may take a while: it will create the environment and install dependencies automatically.
 
 ```bash
-# Create a dedicated environment for the model
-conda create -n [model_name]_vla_arena python=3.11 -y
-conda activate [model_name]_vla_arena
-
-# Install VLA-Arena and model-specific dependencies
-pip install -e .
-pip install vla-arena[model_name]
-
-# Fine-tune a model (e.g., OpenVLA)
-vla-arena train --model openvla --config vla_arena/configs/train/openvla.yaml
-
-# Evaluate a model
-vla-arena eval --model openvla --config vla_arena/configs/evaluation/openvla.yaml
+uv run --project envs/openvla \
+  vla-arena train --model openvla --config vla_arena/configs/train/openvla.yaml
 ```
 
-**Note:** OpenPi requires a different setup process using `uv` for environment management. Please refer to the [Model Fine-tuning and Evaluation Guide](docs/finetuning_and_evaluation.md) for detailed OpenPi installation and training instructions.
+### Step 4 — Eval (one command)
+
+```bash
+uv run --project envs/openvla \
+  vla-arena eval --model openvla --config vla_arena/configs/evaluation/openvla.yaml
+```
+
+For data collection and dataset conversion, see `docs/data_collection.md`.
 
 ## Task Suites Overview
 
-VLA-Arena provides 11 specialized task suites with 150+ tasks total, organized into four domains:
+VLA-Arena provides 11 specialized task suites with 170 tasks total, organized into four domains:
 
 ### 🛡️ Safety (5 suites, 75 tasks)
 | Suite | Description | L0 | L1 | L2 | Total |
 |-------|------------|----|----|----|-------|
-| `static_obstacles` | Static collision avoidance | 5 | 5 | 5 | 15 |
-| `cautious_grasp` | Safe grasping strategies | 5 | 5 | 5 | 15 |
-| `hazard_avoidance` | Hazard area avoidance | 5 | 5 | 5 | 15 |
-| `state_preservation` | Object state preservation | 5 | 5 | 5 | 15 |
-| `dynamic_obstacles` | Dynamic collision avoidance | 5 | 5 | 5 | 15 |
+| `safety_static_obstacles` | Static collision avoidance | 5 | 5 | 5 | 15 |
+| `safety_cautious_grasp` | Safe grasping strategies | 5 | 5 | 5 | 15 |
+| `safety_hazard_avoidance` | Hazard area avoidance | 5 | 5 | 5 | 15 |
+| `safety_state_preservation` | Object state preservation | 5 | 5 | 5 | 15 |
+| `safety_dynamic_obstacles` | Dynamic collision avoidance | 5 | 5 | 5 | 15 |
 
 ### 🔄 Distractor (2 suites, 30 tasks)
 | Suite | Description | L0 | L1 | L2 | Total |
 |-------|------------|----|----|----|-------|
-| `static_distractors` | Cluttered scene manipulation | 5 | 5 | 5 | 15 |
-| `dynamic_distractors` | Dynamic scene manipulation | 5 | 5 | 5 | 15 |
+| `distractor_static_distractors` | Cluttered scene manipulation | 5 | 5 | 5 | 15 |
+| `distractor_dynamic_distractors` | Dynamic scene manipulation | 5 | 5 | 5 | 15 |
 
 ### 🎯 Extrapolation (3 suites, 45 tasks)
 | Suite | Description | L0 | L1 | L2 | Total |
@@ -197,23 +162,43 @@ VLA-Arena provides 11 specialized task suites with 150+ tasks total, organized i
 
 ### System Requirements
 - **OS**: Ubuntu 20.04+ or macOS 12+
-- **Python**: 3.11 or higher
+- **Python**: 3.11.x (`==3.11.*`)
 - **CUDA**: 11.8+ (for GPU acceleration)
 
-### Installation Steps
+### Install from Source (Recommended)
 ```bash
 # Clone repository
 git clone https://github.com/PKU-Alignment/VLA-Arena.git
 cd VLA-Arena
 
-# Create environment
-conda create -n vla-arena python=3.11
-conda activate vla-arena
+# Install uv: https://docs.astral.sh/uv/
 
-# Install dependencies
-pip install --upgrade pip
-pip install -e .
+# (Optional) Pre-install base environment (otherwise the first `uv run` will do it)
+uv sync --project envs/base
+
+# (Optional) Download / update task suites and assets from the Hub (~850 MB)
+uv run --project envs/base vla-arena.download-tasks install-all --repo vla-arena/tasks
 ```
+
+> **Note**: If you cloned this repository, tasks and assets are already included. You can skip the download step unless you want to update from the Hub.
+
+### Install from PyPI (Alternative)
+
+```bash
+python3 -m pip install vla-arena
+
+# One-time: initialize local uv projects (`envs/*`) and copy default configs
+vla-arena.init-workspace --force
+
+# (Optional) Download task suites / assets (~850 MB)
+uv run --project envs/base vla-arena.download-tasks install-all --repo vla-arena/tasks
+
+# One-line train / eval (config auto-defaults; override via --config if needed)
+uv run --project envs/openvla vla-arena train --model openvla
+uv run --project envs/openvla vla-arena eval --model openvla
+```
+
+For source checkout users, the existing `envs/<model_name>` workflow remains unchanged.
 
 ## Documentation
 
@@ -243,9 +228,8 @@ Collect demonstrations in custom scenes and convert data formats.
 
 #### 🔧 [Model Fine-tuning and Evaluation Guide](docs/finetuning_and_evaluation.md) | [中文版](docs/finetuning_and_evaluation_zh.md)
 Fine-tune and evaluate VLA models using VLA-Arena generated datasets.
-- General models (OpenVLA, OpenVLA-OFT, UniVLA, SmolVLA): Simple installation and training workflow
-- OpenPi: Special setup using `uv` for environment management
-- Model-specific installation instructions (`pip install vla-arena[model_name]`)
+- Unified uv-only workflow for all supported models
+- Per-model isolated environments (`envs/openvla`, `envs/openvla_oft`, `envs/univla`, `envs/smolvla`, `envs/openpi`)
 - Training configuration and hyperparameter settings
 - Evaluation scripts and metrics
 - Policy server setup for inference (OpenPi)
@@ -253,9 +237,10 @@ Fine-tune and evaluate VLA models using VLA-Arena generated datasets.
 
 ### 🔜 Quick Reference
 
-#### Fine-tuning Scripts
-- **Standard**: [`finetune_openvla.sh`](docs/finetune_openvla.sh) - Basic OpenVLA fine-tuning
-- **Advanced**: [`finetune_openvla_oft.sh`](docs/finetune_openvla_oft.sh) - OpenVLA OFT with enhanced features
+#### Common Commands
+- **Train**: `uv run --project envs/<model_name> vla-arena train --model <model_cli_name>` (optional override: `--config ...`)
+- **Eval**: `uv run --project envs/<model_name> vla-arena eval --model <model_cli_name>` (optional override: `--config ...`)
+- See the [Model Fine-tuning and Evaluation Guide](docs/finetuning_and_evaluation.md).
 
 #### Documentation Index
 - **English**: [`README_EN.md`](docs/README_EN.md) - Complete English documentation index
@@ -269,29 +254,29 @@ After installation, you can use the following commands to view and download task
 
 ```bash
 # View installed tasks
-vla-arena.download-tasks installed
+uv run --project envs/base vla-arena.download-tasks installed
 
 # List available task suites
-vla-arena.download-tasks list --repo vla-arena/tasks
+uv run --project envs/base vla-arena.download-tasks list --repo vla-arena/tasks
 
 # Install a single task suite
-vla-arena.download-tasks install robustness_dynamic_distractors --repo vla-arena/tasks
+uv run --project envs/base vla-arena.download-tasks install distractor_dynamic_distractors --repo vla-arena/tasks
 
 # Install multiple task suites at once
-vla-arena.download-tasks install hazard_avoidance object_state_preservation --repo vla-arena/tasks
+uv run --project envs/base vla-arena.download-tasks install safety_hazard_avoidance safety_state_preservation --repo vla-arena/tasks
 
 # Install all task suites (recommended)
-vla-arena.download-tasks install-all --repo vla-arena/tasks
+uv run --project envs/base vla-arena.download-tasks install-all --repo vla-arena/tasks
 ```
 
 #### Method 2: Using Python Script
 
 ```bash
 # View installed tasks
-python -m scripts.download_tasks installed
+uv run --project envs/base python -m scripts.download_tasks installed
 
 # Install all tasks
-python -m scripts.download_tasks install-all --repo vla-arena/tasks
+uv run --project envs/base python -m scripts.download_tasks install-all --repo vla-arena/tasks
 ```
 
 ### 🔧 Custom Task Repository
@@ -300,7 +285,7 @@ If you want to use your own task repository:
 
 ```bash
 # Use custom HuggingFace repository
-vla-arena.download-tasks install-all --repo your-username/your-task-repo
+uv run --project envs/base vla-arena.download-tasks install-all --repo your-username/your-task-repo
 ```
 
 ### 📝 Create and Share Custom Tasks
@@ -309,13 +294,13 @@ You can create and share your own task suites:
 
 ```bash
 # Package a single task
-vla-arena.manage-tasks pack path/to/task.bddl --output ./packages
+uv run --project envs/base vla-arena.manage-tasks pack path/to/task.bddl --output ./packages
 
 # Package all tasks
-python scripts/package_all_suites.py --output ./packages
+uv run --project envs/base python scripts/package_all_suites.py --output ./packages
 
 # Upload to HuggingFace Hub
-vla-arena.manage-tasks upload ./packages/my_task.vlap --repo your-username/your-repo
+uv run --project envs/base vla-arena.manage-tasks upload ./packages/my_task.vlap --repo your-username/your-repo
 ```
 
 

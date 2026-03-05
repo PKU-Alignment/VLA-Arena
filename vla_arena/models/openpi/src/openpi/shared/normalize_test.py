@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import numpy as np
-import openpi.shared.normalize as normalize
+import vla_arena.models.openpi.src.openpi.shared.normalize as normalize
 
 
 def test_normalize_update():

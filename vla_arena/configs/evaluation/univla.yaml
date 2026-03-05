@@ -1,12 +1,13 @@
 # Model-specific parameters
 model_family: "openvla"                    # Model family
 # Set UNIVLA_PRETRAINED_CHECKPOINT environment variable or modify this path to specify your checkpoint location
-pretrained_checkpoint: "/path/to/your/pretrained-checkpoint"  # Pretrained checkpoint path
+pretrained_checkpoint: "VLA-Arena/univla-7b-finetuned-vla-arena"  # Pretrained checkpoint path
 load_in_8bit: false                        # (For OpenVLA only) Load with 8-bit quantization
 load_in_4bit: false                        # (For OpenVLA only) Load with 4-bit quantization
 
 # Set UNIVLA_ACTION_DECODER_PATH environment variable or modify this path to specify your action decoder location
-action_decoder_path: "/path/to/your/action_decoder.pt"  # Path to action decoder checkpoint
+action_decoder_path: "VLA-Arena/univla-action-decoder"  # Path to action decoder checkpoint or HF repo id
+unnorm_key: "vla_arena_l0_l"                 # Recommended for VLA-Arena finetuned checkpoint
 center_crop: true                          # Center crop? (if trained w/ random crop image aug)
 save_video: true                           # Whether to save rollout videos
 
@@ -23,6 +24,9 @@ randomize_color: false                       # Whether to randomize colors
 camera_offset: false                         # Whether to apply camera offset
 window_size: 12                              # Window size for action decoder
 safety: false                                # Whether to use safety mode
+init_state_selection_mode: "first"           # "first" | "episode_idx"
+init_state_offset: 0                          # Deterministic offset added to init index
+init_state_offset_random: false               # If true, add random offset in [0, num_initial_states)
 
 # Utils
 run_id_note: null                           # Extra note to add to end of run ID for logging

@@ -1,0 +1,4 @@
+interface:
+  display_name: "VLA Remote Train Eval"
+  short_description: "Run remote VLA setup, training, and eval workflows"
+  default_prompt: "Collect user-provided host/path/repo/eval parameters, then set up VLA-Arena on remote GPU servers, configure fixed HF mirror/cache/uv, download required models, patch configs, and run/debug train or eval jobs with per-model uv projects."

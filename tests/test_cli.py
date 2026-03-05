@@ -94,7 +94,7 @@ class TestEvalMain:
 
         args = argparse.Namespace()
         args.model = 'nonexistent_model'
-        args.config = '/path/to/config.yaml'
+        args.config = __file__
 
         with pytest.raises(RuntimeError):
             eval.eval_main(args)
@@ -106,20 +106,22 @@ class TestEvalMain:
 
         args = argparse.Namespace()
         args.model = 'openvla'
-        args.config = '/path/to/config.yaml'
+        args.config = __file__
 
         with pytest.raises(RuntimeError):
             eval.eval_main(args)
 
     @patch('vla_arena.cli.eval.importlib.util.find_spec')
     @patch('vla_arena.cli.eval.importlib.import_module')
+    @patch('vla_arena.cli.eval.resolve_config_path')
     def test_eval_main_config_path_absolute(
-        self, mock_import_module, mock_find_spec
+        self, mock_resolve_config_path, mock_import_module, mock_find_spec
     ):
         """Test that config path is converted to absolute."""
         mock_spec = Mock()
         mock_spec.origin = '/path/to/evaluator.py'
         mock_find_spec.return_value = mock_spec
+        mock_resolve_config_path.return_value = '/abs/path/config.yaml'
 
         mock_module = Mock()
         mock_import_module.return_value = mock_module
@@ -141,6 +143,27 @@ class TestEvalMain:
         if config_path:
             assert os.path.isabs(config_path)
 
+    @patch('vla_arena.cli.eval.importlib.util.find_spec')
+    @patch('vla_arena.cli.eval.importlib.import_module')
+    @patch('vla_arena.cli.eval.resolve_config_path')
+    def test_eval_main_uses_default_config_when_omitted(
+        self, mock_resolve_config_path, mock_import_module, mock_find_spec
+    ):
+        mock_spec = Mock()
+        mock_spec.origin = '/path/to/evaluator.py'
+        mock_find_spec.return_value = mock_spec
+        mock_resolve_config_path.return_value = '/abs/default_eval.yaml'
+        mock_module = Mock()
+        mock_import_module.return_value = mock_module
+
+        args = argparse.Namespace(model='openvla', config=None)
+        eval.eval_main(args)
+
+        mock_resolve_config_path.assert_called_once_with(
+            mode='eval', model='openvla', config_path=None
+        )
+        mock_module.main.assert_called_once_with(cfg='/abs/default_eval.yaml')
+
 
 @pytest.mark.skipif(not CLI_AVAILABLE, reason='CLI module not available')
 class TestTrainMain:
@@ -160,7 +183,7 @@ class TestTrainMain:
 
         args = argparse.Namespace()
         args.model = 'openpi'
-        args.config = '/path/to/config.yaml'
+        args.config = __file__
 
         train.train_main(args)
 
@@ -183,7 +206,7 @@ class TestTrainMain:
 
         args = argparse.Namespace()
         args.model = 'openvla'
-        args.config = '/path/to/config.yaml'
+        args.config = __file__
 
         train.train_main(args)
 
@@ -209,7 +232,7 @@ class TestTrainMain:
 
         args = argparse.Namespace()
         args.model = 'openvla'
-        args.config = '/path/to/config.yaml'
+        args.config = __file__
 
         train.train_main(args)
 
@@ -225,7 +248,7 @@ class TestTrainMain:
 
         args = argparse.Namespace()
         args.model = 'nonexistent_model'
-        args.config = '/path/to/config.yaml'
+        args.config = __file__
 
         with pytest.raises(RuntimeError):
             train.train_main(args)
@@ -245,7 +268,7 @@ class TestTrainMain:
 
         args = argparse.Namespace()
         args.model = 'openpi'
-        args.config = '/path/to/config.yaml'
+        args.config = __file__
         args.overwrite = True
 
         train.train_main(args)
@@ -253,3 +276,28 @@ class TestTrainMain:
         # Check that overwrite was passed
         call_kwargs = mock_module.main.call_args[1]
         assert call_kwargs.get('overwrite') is True
+
+    @patch('vla_arena.cli.train.importlib.util.find_spec')
+    @patch('vla_arena.cli.train.importlib.import_module')
+    @patch.dict(os.environ, {}, clear=False)
+    @patch('vla_arena.cli.train.resolve_config_path')
+    def test_train_main_uses_default_config_when_omitted(
+        self,
+        mock_resolve_config_path,
+        mock_import_module,
+        mock_find_spec,
+    ):
+        mock_spec = Mock()
+        mock_spec.origin = '/path/to/trainer.py'
+        mock_find_spec.return_value = mock_spec
+        mock_resolve_config_path.return_value = '/abs/default_train.yaml'
+        mock_module = Mock()
+        mock_import_module.return_value = mock_module
+
+        args = argparse.Namespace(model='openpi', config=None, overwrite=False)
+        train.train_main(args)
+
+        mock_resolve_config_path.assert_called_once_with(
+            mode='train', model='openpi', config_path=None
+        )
+        mock_module.main.assert_called_once_with(config='/abs/default_train.yaml')

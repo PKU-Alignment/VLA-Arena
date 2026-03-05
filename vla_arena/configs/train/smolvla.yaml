@@ -1,4 +1,5 @@
 dataset:
+  repo_id: "VLA-Arena/VLA_Arena_L0_L_lerobot_smolvla"
   root: "/path/to/your/datasets/vla-arena-lerobot"
 
 policy:

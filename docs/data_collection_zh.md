@@ -12,7 +12,7 @@ VLA-Arena 提供了一套用于在自定义的场景中搜集数据并转换搜�
 ## 1. 收集演示数据
 你可以使用 `scripts/collect_demonstration.py` 在仿真环境中收集演示数据：
 ```bash
-python scripts/collect_demonstration.py --bddl-file <你的bddl文件路径>
+uv run --project envs/base python scripts/collect_demonstration.py --bddl-file <你的bddl文件路径>
 ```
 这个脚本会显示一个可交互的仿真环境窗口，你可以使用键盘来操控机械臂。
 
@@ -93,7 +93,7 @@ python scripts/collect_demonstration.py --bddl-file <你的bddl文件路径>
 收集的演示数据仅包括轨迹和场景的数据，不包含任务执行过程中的图像。
 你可以使用 `scripts/group_create_dataset.py` 转换演示数据的格式：
 ```bash
-python scripts/group_create_dataset.py \
+uv run --project envs/base python scripts/group_create_dataset.py \
       --input-dir <包含演示 HDF5 文件的目录> \
       --output-dir <保存生成的数据集文件的路径>
 ```
@@ -108,7 +108,7 @@ python scripts/group_create_dataset.py \
 原始数据集的轨迹中有许多空动作（noop），这会导致轨迹出现停顿，严重影响模型的学习。我们需要过滤掉这些空动作，以确保轨迹的连续性。
 你可以使用 `scripts/regenerate_dataset.py` 重构数据集：
 ```bash
-python scripts/regenerate_dataset.py \
+uv run --project envs/base python scripts/regenerate_dataset.py \
         --task_suite <你的任务套件名称> \
         --raw_data_dir <原始 HDF5 数据集文件的路径> \
         --target_dir <保存重构的数据集文件的路径> \
@@ -123,6 +123,8 @@ python scripts/regenerate_dataset.py \
 ## 4. 将数据集转换为rlds格式
 
 将重构后的数据集转换为RLDS（Reinforcement Learning Data Schema）格式，以便与X-embodiment实验框架集成。RLDS是Google开发的标准格式，用于存储机器人学习数据。
+
+> **说明**：本节使用独立的 `rlds_dataset_builder/` 子模块，使用 conda 工作流（与主库的 uv 工作流分离）。
 
 ### 4.1 环境准备
 

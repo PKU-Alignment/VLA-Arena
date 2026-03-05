@@ -1,5 +1,5 @@
 # Set OPENVLA_VLA_PATH environment variable or modify this path to specify your OpenVLA model location
-vla_path: /path/to/your/model  # Path to OpenVLA model
+vla_path: openvla/openvla-7b  # Path to OpenVLA model
 
 # Directory Paths
 # Set OPENVLA_DATA_ROOT_DIR environment variable or modify this path to specify your dataset directory
@@ -10,7 +10,7 @@ adapter_tmp_dir: "adapter-tmp"                  # Temporary directory for LoRA w
 
 # Fine-tuning Parameters
 batch_size: 16                                  # Fine-tuning batch size
-max_steps: 300000                               # Max number of fine-tuning steps
+max_steps: 200000                               # Max number of fine-tuning steps
 save_steps: 50000                                  # Interval for checkpoint saving
 learning_rate: 5.0e-4                           # Fine-tuning learning rate
 grad_accumulation_steps: 1                      # Gradient accumulation steps

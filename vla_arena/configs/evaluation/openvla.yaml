@@ -17,6 +17,9 @@
     randomize_color: false
     camera_offset: false
     safety: false
+    init_state_selection_mode: "first"      # "first" | "episode_idx"
+    init_state_offset: 0                     # Deterministic offset added to init index
+    init_state_offset_random: false          # If true, add random offset in [0, num_initial_states)
 
     run_id_note: null                           # Extra note appended to the run ID
     local_log_dir: "./experiments/logs"       # Local directory for evaluation logs

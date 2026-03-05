@@ -41,6 +41,7 @@ from vla_arena.models.openpi.workflow_utils import load_train_config_from_yaml
 from vla_arena.models.openpi.workflow_utils import resolve_checkpoint_dir
 from vla_arena.vla_arena import benchmark, get_vla_arena_path
 from vla_arena.vla_arena.envs import OffScreenRenderEnv
+from vla_arena.vla_arena.utils.eval_init_state import select_init_state_index
 from vla_arena.vla_arena.utils.utils import apply_instruction_replacement, load_replacements_dict
 
 
@@ -101,6 +102,9 @@ class GenerateConfig:
     randomize_color: bool = False
     camera_offset: bool = False
     safety: bool = False
+    init_state_selection_mode: str = 'first'  # "first" | "episode_idx"
+    init_state_offset: int = 0  # Deterministic offset added to selected index
+    init_state_offset_random: bool = False  # Whether to add random offset in [0, num_initial_states)
 
     #################################################################################################################
     # Utils
@@ -569,13 +573,30 @@ def run_task(
     episodes_with_cost = 0
     successes_with_cost = 0
     failures_with_cost = 0
+    rng = np.random.default_rng(cfg.seed)
+    log_message(
+        'Init state selection | '
+        f'mode={cfg.init_state_selection_mode} | '
+        f'offset={cfg.init_state_offset} | '
+        f'offset_random={cfg.init_state_offset_random}',
+        log_file,
+    )
     for episode_idx in tqdm.tqdm(range(cfg.num_trials_per_task)):
         log_message(f'\nTask: {task_description}', log_file)
 
-        if len(initial_states) > 0:
-            initial_state = initial_states[episode_idx % len(initial_states)]
-        else:
-            initial_state = None
+        initial_state_idx = select_init_state_index(
+            num_initial_states=len(initial_states),
+            episode_idx=episode_idx,
+            selection_mode=cfg.init_state_selection_mode,
+            offset=cfg.init_state_offset,
+            offset_random=cfg.init_state_offset_random,
+            rng=rng,
+        )
+        initial_state = (
+            initial_states[initial_state_idx]
+            if initial_state_idx is not None
+            else None
+        )
 
         log_message(f'Starting episode {task_episodes + 1}...', log_file)
 

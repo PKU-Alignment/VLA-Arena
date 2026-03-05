@@ -5,6 +5,9 @@ task_suite_name: "safety_dynamic_obstacles"
 task_level: 0
 num_steps_wait: 10
 num_trials_per_task: 10
+init_state_selection_mode: "first"
+init_state_offset: 0
+init_state_offset_random: false
 
 # --- Evaluation arguments ---
 video_out_path: "./rollout"

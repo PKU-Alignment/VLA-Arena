@@ -24,6 +24,9 @@ randomize_color: false                       # Whether to randomize colors
 camera_offset: false                         # Whether to apply camera offset
 window_size: 12                              # Window size for action decoder
 safety: false                                # Whether to use safety mode
+init_state_selection_mode: "first"           # "first" | "episode_idx"
+init_state_offset: 0                          # Deterministic offset added to init index
+init_state_offset_random: false               # If true, add random offset in [0, num_initial_states)
 
 # Utils
 run_id_note: null                           # Extra note to add to end of run ID for logging

@@ -38,6 +38,7 @@ from tqdm import tqdm
 
 from vla_arena.vla_arena import benchmark, get_vla_arena_path
 from vla_arena.vla_arena.envs import OffScreenRenderEnv
+from vla_arena.vla_arena.utils.eval_init_state import select_init_state_index
 
 
 VLA_ARENA_DUMMY_ACTION = [0.0] * 6 + [-1.0]
@@ -66,6 +67,12 @@ class Args:
     """Number of steps to wait for objects to stabilize in sim."""
     num_trials_per_task: int = 10
     """Number of rollouts per task."""
+    init_state_selection_mode: str = 'first'
+    """Init-state selection mode: "first" or "episode_idx"."""
+    init_state_offset: int = 0
+    """Deterministic offset added to selected init-state index."""
+    init_state_offset_random: bool = False
+    """Whether to add random offset in [0, num_initial_states)."""
 
     # --- Evaluation arguments ---
     video_out_path: str = f'rollout/{DATE}'
@@ -231,6 +238,12 @@ def eval_vla_arena(args: Args) -> None:
 
             task_episodes, task_successes, task_costs = 0, 0, 0
             first_success_saved, first_failure_saved = False, False
+            logging.info(
+                'Init state selection | '
+                f'mode={args_suite.init_state_selection_mode} | '
+                f'offset={args_suite.init_state_offset} | '
+                f'offset_random={args_suite.init_state_offset_random}'
+            )
             for episode_idx in tqdm(
                 range(args_suite.num_trials_per_task),
                 desc=f'Task {task_id}: {task.language}',
@@ -248,12 +261,18 @@ def eval_vla_arena(args: Args) -> None:
                 env.reset()
                 policy.reset()
 
-                random_offset = rng.integers(0, len(initial_states))
-                obs = env.set_init_state(
-                    initial_states[
-                        (episode_idx + random_offset) % len(initial_states)
-                    ]
+                initial_state_idx = select_init_state_index(
+                    num_initial_states=len(initial_states),
+                    episode_idx=episode_idx,
+                    selection_mode=args_suite.init_state_selection_mode,
+                    offset=args_suite.init_state_offset,
+                    offset_random=args_suite.init_state_offset_random,
+                    rng=rng,
                 )
+                if initial_state_idx is None:
+                    obs = env.get_observation()
+                else:
+                    obs = env.set_init_state(initial_states[initial_state_idx])
 
                 for _ in range(args_suite.num_steps_wait):
                     obs, _, _, _ = env.step(VLA_ARENA_DUMMY_ACTION)

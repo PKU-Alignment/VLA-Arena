@@ -18,18 +18,13 @@ import logging
 import math
 import os
 import pathlib
-import shlex
-import socket
-import subprocess
 import sys
 import time
 from dataclasses import dataclass, replace
-from typing import Any
 from typing import Iterable
-from typing import Literal
-from urllib import parse as urllib_parse
 
 import imageio
+import json
 import numpy as np
 import tqdm
 import tyro
@@ -37,18 +32,10 @@ import yaml
 from openpi_client import image_tools
 from openpi_client import websocket_client_policy as _websocket_client_policy
 
-from vla_arena.models.openpi.workflow_utils import load_train_config_from_yaml
-from vla_arena.models.openpi.workflow_utils import resolve_checkpoint_dir
 from vla_arena.vla_arena import benchmark, get_vla_arena_path
 from vla_arena.vla_arena.envs import OffScreenRenderEnv
-from vla_arena.vla_arena.utils.eval_init_state import select_init_state_index
 from vla_arena.vla_arena.utils.utils import apply_instruction_replacement, load_replacements_dict
 
-
-# Add openpi src directory to Python path if needed.
-_openpi_src = pathlib.Path(__file__).parent / 'src'
-if str(_openpi_src) not in sys.path:
-    sys.path.insert(0, str(_openpi_src))
 
 VLA_ARENA_DUMMY_ACTION = [0.0] * 6 + [-1.0]
 VLA_ARENA_ENV_RESOLUTION = 256  # resolution used to render training data
@@ -67,20 +54,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class GenerateConfig:
     #################################################################################################################
-    # Inference parameters
-    #################################################################################################################
-    inference_mode: Literal['websocket'] = 'websocket'
-    train_config_name: str | None = None
-    policy_config_name: str | None = None
-    policy_checkpoint_dir: str | None = None
-    policy_checkpoint_step: str | int = 'latest'
-    train_config_path: str | None = None
-    auto_start_policy_server: bool = True
-    policy_server_start_timeout_sec: int = 180
-    policy_server_poll_interval_sec: float = 1.0
-
-    #################################################################################################################
-    # Websocket policy server parameters (used when inference_mode="websocket")
+    # Model server parameters
     #################################################################################################################
     host: str = '0.0.0.0'
     port: int = 8000
@@ -102,9 +76,6 @@ class GenerateConfig:
     randomize_color: bool = False
     camera_offset: bool = False
     safety: bool = False
-    init_state_selection_mode: str = 'first'  # "first" | "episode_idx"
-    init_state_offset: int = 0  # Deterministic offset added to selected index
-    init_state_offset_random: bool = False  # Whether to add random offset in [0, num_initial_states)
 
     #################################################################################################################
     # Utils
@@ -121,251 +92,30 @@ class GenerateConfig:
     #################################################################################################################
     # Instruction replacement parameters
     #################################################################################################################
-    use_replacements: bool = True  # Whether to use instruction replacements
-    replacements_file: str = (
-        'VLA-Arena/language_replacements'
-    )  # Path to replacements JSON file
-    replacement_probability: float = (
-        1.0  # Probability of applying replacement (0.0 to 1.0)
-    )
-    replacement_level: int = (
-        1  # Level of instruction replacements (from 1 to 4)
-    )
+    use_replacements: bool = True                     # Whether to use instruction replacements
+    replacements_file: str = "VLA-Arena/language_replacements"  # Path to replacements JSON file
+    replacement_probability: float = 1.0              # Probability of applying replacement (0.0 to 1.0)
+    replacement_level: int = 1                        # Level of instruction replacements (from 1 to 4)
 
+def check_unnorm_key(cfg: GenerateConfig, model) -> None:
+    """Check that the model contains the action un-normalization key."""
+    # Initialize unnorm_key
+    unnorm_key = 'libero_spatial'
 
-def _resolve_policy_target(
-    cfg: GenerateConfig,
-) -> tuple[Any, str | pathlib.Path, str]:
-    import vla_arena.models.openpi.src.openpi.training.config as _config
+    # In some cases, the key must be manually modified (e.g. after training on a modified version of the dataset
+    # with the suffix "_no_noops" in the dataset name)
+    if (
+        unnorm_key not in model.norm_stats
+        and f'{unnorm_key}_no_noops' in model.norm_stats
+    ):
+        unnorm_key = f'{unnorm_key}_no_noops'
 
-    if cfg.train_config_name:
-        if cfg.train_config_path:
-            logger.warning(
-                'train_config_path is deprecated and ignored because train_config_name=%s is set. '
-                'Please migrate to train_config_name + policy_checkpoint_dir (train_config_path '
-                'will be removed in a future release).',
-                cfg.train_config_name,
-            )
-        if cfg.policy_config_name:
-            logger.warning(
-                'policy_config_name is deprecated and ignored because train_config_name=%s is set. '
-                'Please migrate to train_config_name '
-                '(policy_config_name will be removed in a future release).',
-                cfg.train_config_name,
-            )
-        train_cfg = _config.get_config(cfg.train_config_name)
-        if cfg.policy_checkpoint_dir is None:
-            raise ValueError(
-                'When using train_config_name, policy_checkpoint_dir must be set. '
-                'It supports a local path, remote URL (e.g. gs://...), or '
-                'Hugging Face model repo id '
-                '(e.g. org/repo).'
-            )
-        checkpoint_dir = resolve_checkpoint_dir(
-            cfg.policy_checkpoint_dir,
-            train_cfg=None,
-            policy_checkpoint_step=cfg.policy_checkpoint_step,
-        )
-        return train_cfg, checkpoint_dir, train_cfg.name
+    assert (
+        unnorm_key in model.norm_stats
+    ), f'Action un-norm key {unnorm_key} not found in VLA `norm_stats`!'
 
-    if cfg.train_config_path:
-        logger.warning(
-            'train_config_path is deprecated; please migrate to '
-            'train_config_name + policy_checkpoint_dir '
-            '(train_config_path will be removed in a future release).'
-        )
-        train_cfg = load_train_config_from_yaml(cfg.train_config_path)
-        if cfg.policy_config_name:
-            logger.warning(
-                'policy_config_name=%s is ignored because deprecated '
-                'train_config_path is set and takes precedence.',
-                cfg.policy_config_name,
-            )
-    elif cfg.policy_config_name:
-        logger.warning(
-            'policy_config_name is deprecated; please migrate to train_config_name '
-            '(policy_config_name will be removed in a future release).'
-        )
-        train_cfg = _config.get_config(cfg.policy_config_name)
-    else:
-        raise ValueError(
-            'Missing OpenPI policy target config. Set train_config_name (preferred), '
-            'or use deprecated train_config_path/policy_config_name for compatibility.'
-        )
-
-    checkpoint_dir = resolve_checkpoint_dir(
-        cfg.policy_checkpoint_dir,
-        train_cfg,
-        cfg.policy_checkpoint_step,
-    )
-    return train_cfg, checkpoint_dir, train_cfg.name
-
-
-def _normalize_host(host: str) -> str:
-    host_text = str(host).strip()
-    if host_text.startswith('ws://') or host_text.startswith('wss://'):
-        parsed = urllib_parse.urlparse(host_text)
-        if parsed.hostname:
-            return parsed.hostname
-    return host_text
-
-
-def _is_local_host(host: str) -> bool:
-    host_text = _normalize_host(host).lower()
-    return host_text in {'0.0.0.0', '127.0.0.1', 'localhost', '::1', '::'}
-
-
-def _is_port_open(host: str, port: int, timeout_sec: float) -> bool:
-    connect_host = _normalize_host(host)
-    if connect_host == '0.0.0.0':
-        connect_host = '127.0.0.1'
-    elif connect_host == '::':
-        connect_host = '::1'
-    try:
-        with socket.create_connection(
-            (connect_host, int(port)), timeout=timeout_sec
-        ):
-            return True
-    except OSError:
-        return False
-
-
-def _build_serve_policy_command(
-    cfg: GenerateConfig,
-    config_name: str,
-    checkpoint_dir: str | pathlib.Path,
-) -> list[str]:
-    script_path = pathlib.Path(__file__).parent / 'scripts' / 'serve_policy.py'
-    if not script_path.exists():
-        raise FileNotFoundError(
-            f'Unable to find serve_policy.py at {script_path}'
-        )
-    return [
-        sys.executable,
-        str(script_path),
-        '--port',
-        str(int(cfg.port)),
-        'policy:checkpoint',
-        '--policy.config',
-        str(config_name),
-        '--policy.dir',
-        str(checkpoint_dir),
-    ]
-
-
-def _start_policy_server_process(
-    cmd: list[str],
-) -> subprocess.Popen[bytes]:
-    logger.info('Auto-starting OpenPI policy server: %s', shlex.join(cmd))
-    return subprocess.Popen(
-        cmd,
-        start_new_session=True,
-    )
-
-
-def _wait_for_policy_server_ready(
-    host: str,
-    port: int,
-    timeout_sec: float,
-    poll_interval_sec: float,
-    process: subprocess.Popen[bytes],
-) -> None:
-    deadline = time.monotonic() + timeout_sec
-    while time.monotonic() < deadline:
-        if process.poll() is not None:
-            raise RuntimeError(
-                'Auto-started OpenPI policy server exited early with code '
-                f'{process.returncode}.'
-            )
-        if _is_port_open(
-            host, port, timeout_sec=max(0.05, poll_interval_sec)
-        ):
-            return
-        time.sleep(max(0.05, poll_interval_sec))
-
-    raise TimeoutError(
-        'Timed out waiting for OpenPI policy server to become ready at '
-        f'{host}:{port} after {timeout_sec}s.'
-    )
-
-
-def _stop_managed_policy_server(
-    process: subprocess.Popen[bytes] | None,
-    timeout_sec: float = 10.0,
-) -> None:
-    if process is None:
-        return
-    if process.poll() is not None:
-        return
-
-    logger.info(
-        'Stopping auto-started OpenPI policy server (pid=%s)...', process.pid
-    )
-    process.terminate()
-    try:
-        process.wait(timeout=timeout_sec)
-    except subprocess.TimeoutExpired:
-        logger.warning(
-            'Policy server did not stop within %.1fs; killing process.',
-            timeout_sec,
-        )
-        process.kill()
-        process.wait(timeout=5)
-
-
-def _create_policy_client(cfg: GenerateConfig):
-    mode = str(cfg.inference_mode).lower().strip()
-    if mode != 'websocket':
-        raise ValueError(
-            f'Unsupported inference_mode: {cfg.inference_mode}. Use "websocket".'
-        )
-
-    train_cfg, checkpoint_dir, policy_config_name = _resolve_policy_target(cfg)
-    del train_cfg
-    source = f'{cfg.host}:{cfg.port}'
-    client_host = cfg.host
-    normalized_host = _normalize_host(cfg.host)
-    if normalized_host in {'0.0.0.0', '::'}:
-        client_host = '127.0.0.1'
-    managed_process: subprocess.Popen[bytes] | None = None
-
-    if not _is_port_open(cfg.host, cfg.port, timeout_sec=1.0):
-        serve_cmd = _build_serve_policy_command(
-            cfg, policy_config_name, checkpoint_dir
-        )
-        if not _is_local_host(cfg.host):
-            raise RuntimeError(
-                f'OpenPI websocket server is unreachable at {cfg.host}:{cfg.port}, '
-                'and auto-start is disabled for remote hosts. '
-                f'Start it manually, e.g.:\n  {shlex.join(serve_cmd)}'
-            )
-        if not cfg.auto_start_policy_server:
-            raise RuntimeError(
-                f'OpenPI websocket server is unreachable at {cfg.host}:{cfg.port}. '
-                'Enable auto_start_policy_server or start it manually, e.g.:\n'
-                f'  {shlex.join(serve_cmd)}'
-            )
-
-        managed_process = _start_policy_server_process(serve_cmd)
-        try:
-            _wait_for_policy_server_ready(
-                cfg.host,
-                cfg.port,
-                timeout_sec=float(cfg.policy_server_start_timeout_sec),
-                poll_interval_sec=float(cfg.policy_server_poll_interval_sec),
-                process=managed_process,
-            )
-        except Exception:
-            _stop_managed_policy_server(managed_process, timeout_sec=3.0)
-            raise
-        logger.info(
-            'Auto-started OpenPI policy server is ready at %s', source
-        )
-
-    client = _websocket_client_policy.WebsocketClientPolicy(
-        client_host, cfg.port
-    )
-    return client, source, policy_config_name, managed_process
+    # Set the unnorm_key in cfg
+    cfg.unnorm_key = unnorm_key
 
 
 def setup_logging(cfg: GenerateConfig):
@@ -492,8 +242,7 @@ def run_episode(
                 }
 
                 # Query model to get action
-                infer_result = client.infer(element)
-                action_chunk = infer_result['actions']
+                action_chunk = client.infer(element)['actions']
                 assert (
                     len(action_chunk) >= cfg.replan_steps
                 ), f'We want to replan every {cfg.replan_steps} steps, but policy only predicts {len(action_chunk)} steps.'
@@ -574,29 +323,13 @@ def run_task(
     successes_with_cost = 0
     failures_with_cost = 0
     rng = np.random.default_rng(cfg.seed)
-    log_message(
-        'Init state selection | '
-        f'mode={cfg.init_state_selection_mode} | '
-        f'offset={cfg.init_state_offset} | '
-        f'offset_random={cfg.init_state_offset_random}',
-        log_file,
-    )
     for episode_idx in tqdm.tqdm(range(cfg.num_trials_per_task)):
         log_message(f'\nTask: {task_description}', log_file)
 
-        initial_state_idx = select_init_state_index(
-            num_initial_states=len(initial_states),
-            episode_idx=episode_idx,
-            selection_mode=cfg.init_state_selection_mode,
-            offset=cfg.init_state_offset,
-            offset_random=cfg.init_state_offset_random,
-            rng=rng,
-        )
-        initial_state = (
-            initial_states[initial_state_idx]
-            if initial_state_idx is not None
-            else None
-        )
+        random_offset = rng.integers(0, len(initial_states))
+        initial_state = initial_states[
+            (episode_idx + random_offset) % len(initial_states)
+        ]
 
         log_message(f'Starting episode {task_episodes + 1}...', log_file)
 
@@ -715,124 +448,102 @@ def eval_vla_arena(cfg: GenerateConfig):
             f'Unsupported task_suite_name type: {type(cfg.task_suite_name)}'
         )
 
-    client, policy_source, policy_config_name, managed_process = (
-        _create_policy_client(cfg)
-    )
-    logger.info(
-        'OpenPI eval client ready: mode=%s config=%s source=%s',
-        cfg.inference_mode,
-        policy_config_name,
-        policy_source,
-    )
+    client = _websocket_client_policy.WebsocketClientPolicy(cfg.host, cfg.port)
 
     tasks_payload: list[dict[str, object]] = []
 
-    try:
-        replacements_dict = load_replacements_dict(cfg, logger)
+    replacements_dict = load_replacements_dict(cfg, logger)
+    if cfg.use_replacements:
+        log_message(f"Using instruction replacements with probability {cfg.replacement_probability}", log_file)
+        log_message(f"Loaded {len(replacements_dict)} replacement entries", log_file)
 
-        for suite_name in suite_names:
-            if suite_name not in benchmark_dict:
-                raise ValueError(
-                    f'Unknown task suite: {suite_name}. '
-                    f'Available options are: {list(benchmark_dict.keys())}'
-                )
-
-            cfg_suite = replace(cfg, task_suite_name=suite_name)
-
-            log_file, local_log_filepath, run_id = setup_logging(cfg_suite)
-
-            task_suite = benchmark_dict[suite_name]()
-            task_level = cfg_suite.task_level
-            num_tasks = (
-                10
-                if suite_name == 'long_horizon' and task_level == 0
-                else 5
+    for suite_name in suite_names:
+        if suite_name not in benchmark_dict:
+            raise ValueError(
+                f'Unknown task suite: {suite_name}. '
+                f'Available options are: {list(benchmark_dict.keys())}'
             )
 
-            print(
-                f'Evaluating {num_tasks} tasks from the {suite_name} suite...'
-            )
-            log_message(f'Task suite: {suite_name}', log_file)
-            if cfg.use_replacements:
-                log_message(
-                    f'Using instruction replacements with probability {cfg.replacement_probability}',
-                    log_file,
-                )
-                log_message(
-                    f'Loaded {len(replacements_dict)} replacement entries',
-                    log_file,
-                )
+        cfg_suite = replace(cfg, task_suite_name=suite_name)
 
-            total_episodes = 0
-            total_successes = 0
-            total_costs = 0
-            success_costs = 0
-            failure_costs = 0
+        log_file, local_log_filepath, run_id = setup_logging(cfg_suite)
 
-            for task_id in tqdm.tqdm(range(num_tasks)):
-                (
-                    task_episodes,
-                    task_successes,
-                    task_total_costs,
-                    task_success_costs,
-                    task_failure_costs,
-                    *_,
-                ) = run_task(
-                    cfg_suite,
-                    task_suite,
-                    task_id,
-                    task_level,
-                    replacements_dict,
-                    total_episodes,
-                    total_successes,
-                    log_file,
-                    client,
-                )
-                total_episodes += task_episodes
-                total_successes += task_successes
-                total_costs += task_total_costs
-                success_costs += task_success_costs
-                failure_costs += task_failure_costs
+        task_suite = benchmark_dict[suite_name]()
+        task_level = cfg_suite.task_level
+        num_tasks = 10 if suite_name == 'long_horizon' and task_level == 0 else 5
 
-            final_success_rate = (
-                float(total_successes) / float(total_episodes)
-                if total_episodes > 0
-                else 0
-            )
-            average_costs = (
-                total_costs / total_episodes if total_episodes > 0 else 0
-            )
+        print(
+            f'Evaluating {num_tasks} tasks from the {suite_name} suite...'
+        )
+        log_message(f'Task suite: {suite_name}', log_file)
 
-            log_message(
-                f'[{suite_name}] success rate: {final_success_rate:.4f}',
+        total_episodes = 0
+        total_successes = 0
+        total_costs = 0
+        success_costs = 0
+        failure_costs = 0
+
+        for task_id in tqdm.tqdm(range(num_tasks)):
+            (
+                task_episodes,
+                task_successes,
+                task_total_costs,
+                task_success_costs,
+                task_failure_costs,
+                *_,
+            ) = run_task(
+                cfg_suite,
+                task_suite,
+                task_id,
+                task_level,
+                replacements_dict,
+                total_episodes,
+                total_successes,
                 log_file,
+                client,
             )
-            log_message(f'[{suite_name}] average cost: {average_costs}', log_file)
+            total_episodes += task_episodes
+            total_successes += task_successes
+            total_costs += task_total_costs
+            success_costs += task_success_costs
+            failure_costs += task_failure_costs
 
-            if log_file:
-                log_file.close()
+        final_success_rate = (
+            float(total_successes) / float(total_episodes)
+            if total_episodes > 0
+            else 0
+        )
+        average_costs = (
+            total_costs / total_episodes if total_episodes > 0 else 0
+        )
 
-            category, has_cc = _suite_category(suite_name)
-            sr = [0.0, 0.0, 0.0]
-            cc = [0.0, 0.0, 0.0]
-            sr[task_level] = final_success_rate
-            cc[task_level] = average_costs if has_cc else 0.0
+        log_message(
+            f'[{suite_name}] success rate: {final_success_rate:.4f}', log_file
+        )
+        log_message(f'[{suite_name}] average cost: {average_costs}', log_file)
 
-            tasks_payload.append(
-                {
-                    'name': suite_name,
-                    'category': category,
-                    'hasCC': has_cc,
-                    'data': {
-                        'sr': sr,
-                        'cc': cc,
-                    },
-                    'numEpisodes': total_episodes,
-                    'numSuccesses': total_successes,
-                }
-            )
-    finally:
-        _stop_managed_policy_server(managed_process, timeout_sec=10.0)
+        if log_file:
+            log_file.close()
+
+        category, has_cc = _suite_category(suite_name)
+        sr = [0.0, 0.0, 0.0]
+        cc = [0.0, 0.0, 0.0]
+        sr[task_level] = final_success_rate
+        cc[task_level] = average_costs if has_cc else 0.0
+
+        tasks_payload.append(
+            {
+                'name': suite_name,
+                'category': category,
+                'hasCC': has_cc,
+                'data': {
+                    'sr': sr,
+                    'cc': cc,
+                },
+                'numEpisodes': total_episodes,
+                'numSuccesses': total_successes,
+            }
+        )
 
     if cfg.result_json_path is None or str(cfg.result_json_path).lower() == 'default':
         result_dir = pathlib.Path('./results')

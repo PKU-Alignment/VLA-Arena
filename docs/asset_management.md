@@ -22,8 +22,6 @@ The Asset Management system provides a complete workflow for sharing custom task
 Design → Pack → Upload → Download → Install → Use
 ```
 
-> **Prerequisite**: from repo root, run `uv sync --project envs/base`.
-
 ### Key Features
 - **Automatic Dependency Detection**: Automatically finds all required assets (objects, textures, meshes, Problem classes, scene XMLs)
 - **Self-Contained Packages**: All dependencies are packaged into a single `.vlap` file
@@ -44,7 +42,7 @@ Design → Pack → Upload → Download → Install → Use
 To package a single task, you need the BDDL file path:
 
 ```bash
-uv run --project envs/base vla-arena.manage-tasks pack <bddl_file_path> \
+python scripts/manage_assets.py pack <bddl_file_path> \
     -o ./packages \
     --author "Your Name" \
     --email "your.email@example.com" \
@@ -53,8 +51,8 @@ uv run --project envs/base vla-arena.manage-tasks pack <bddl_file_path> \
 
 ### Example
 ```bash
-uv run --project envs/base vla-arena.manage-tasks pack \
-    vla_arena/vla_arena/bddl_files/distractor_static_distractors/level_0/pick_the_banana_on_the_table_and_place_it_on_the_plate.bddl \
+python scripts/manage_assets.py pack \
+    vla_arena/vla_arena/bddl_files/robustness_static_distractors/level_0/pick_up_the_banana_and_put_it_on_the_plate.bddl \
     -o ./packages \
     --author "VLA-Arena Team" \
     --description "Pick banana task with static distractors"
@@ -74,7 +72,7 @@ uv run --project envs/base vla-arena.manage-tasks pack \
 To package an entire task suite with multiple tasks:
 
 ```bash
-uv run --project envs/base vla-arena.manage-tasks pack-suite <suite_name> \
+python scripts/manage_assets.py pack-suite <suite_name> \
     -o ./packages \
     --author "Your Name" \
     --description "Task suite description"
@@ -82,10 +80,10 @@ uv run --project envs/base vla-arena.manage-tasks pack-suite <suite_name> \
 
 ### Example
 ```bash
-uv run --project envs/base vla-arena.manage-tasks pack-suite distractor_static_distractors \
+python scripts/manage_assets.py pack-suite robustness_static_distractors \
     -o ./packages \
     --author "VLA-Arena Team" \
-    --description "Distractor suite (static distractors)"
+    --description "Robustness test with static distractors"
 ```
 
 ## 4. Inspect a Package
@@ -93,12 +91,12 @@ uv run --project envs/base vla-arena.manage-tasks pack-suite distractor_static_d
 Before installing, you can inspect a package to see its contents:
 
 ```bash
-uv run --project envs/base vla-arena.manage-tasks inspect <package_path>
+python scripts/manage_assets.py inspect <package_path>
 ```
 
 ### Example
 ```bash
-uv run --project envs/base vla-arena.manage-tasks inspect ./packages/pick_the_banana_on_the_table_and_place_it_on_the_plate.vlap
+python scripts/manage_assets.py inspect ./packages/pick_up_the_banana_and_put_it_on_the_plate.vlap
 ```
 
 ## 5. Install a Package
@@ -106,12 +104,12 @@ uv run --project envs/base vla-arena.manage-tasks inspect ./packages/pick_the_ba
 To install a package into your VLA-Arena installation:
 
 ```bash
-uv run --project envs/base vla-arena.manage-tasks install <package_path>
+python scripts/manage_assets.py install <package_path>
 ```
 
 ### Example
 ```bash
-uv run --project envs/base vla-arena.manage-tasks install ./packages/pick_the_banana_on_the_table_and_place_it_on_the_plate.vlap
+python scripts/manage_assets.py install ./packages/pick_up_the_banana_and_put_it_on_the_plate.vlap
 ```
 
 ### Options
@@ -135,7 +133,7 @@ Use --overwrite to replace existing files.
 Upload a package to HuggingFace Hub (or your own repository):
 
 ```bash
-uv run --project envs/base vla-arena.manage-tasks upload <package_path> \
+python scripts/manage_assets.py upload <package_path> \
     --repo username/repository-name
 ```
 
@@ -155,15 +153,15 @@ uv run --project envs/base vla-arena.manage-tasks upload <package_path> \
 export HUGGING_FACE_HUB_TOKEN="hf_your_token_here"
 
 # Upload package
-uv run --project envs/base vla-arena.manage-tasks upload \
-    ./packages/pick_the_banana_on_the_table_and_place_it_on_the_plate.vlap \
+python scripts/manage_assets.py upload \
+    ./packages/pick_up_the_banana_and_put_it_on_the_plate.vlap \
     --repo username/vla-arena-tasks
 ```
 
 ### With Token Argument
 ```bash
-uv run --project envs/base vla-arena.manage-tasks upload \
-    ./packages/pick_the_banana_on_the_table_and_place_it_on_the_plate.vlap \
+python scripts/manage_assets.py upload \
+    ./packages/pick_up_the_banana_and_put_it_on_the_plate.vlap \
     --repo username/vla-arena-tasks \
     --token hf_your_token_here \
     --private  # Make repository private (optional)
@@ -172,7 +170,7 @@ uv run --project envs/base vla-arena.manage-tasks upload \
 ### Output
 ```
 Uploading via HuggingFace API...
-✓ Uploaded: https://huggingface.co/datasets/username/vla-arena-tasks/blob/main/packages/pick_the_banana_on_the_table_and_place_it_on_the_plate.vlap
+✓ Uploaded: https://huggingface.co/datasets/username/vla-arena-tasks/blob/main/packages/pick_up_the_banana_and_put_it_on_the_plate.vlap
 ```
 
 ### Automatic Fallback
@@ -184,7 +182,7 @@ Retrying with Git LFS method...
 Using Git LFS upload method...
   Cloning repository...
   Setting up Git LFS...
-  Copying pick_the_banana_on_the_table_and_place_it_on_the_plate.vlap...
+  Copying pick_up_the_banana_and_put_it_on_the_plate.vlap...
   Creating commit...
   Pushing to HuggingFace...
 ✓ Uploaded via Git LFS: https://huggingface.co/...
@@ -195,21 +193,21 @@ Using Git LFS upload method...
 Download and optionally install a package from HuggingFace Hub:
 
 ```bash
-uv run --project envs/base vla-arena.manage-tasks download <package_name> \
+python scripts/manage_assets.py download <package_name> \
     --repo username/repository-name \
     --install
 ```
 
 ### Example: Download Only
 ```bash
-uv run --project envs/base vla-arena.manage-tasks download pick_the_banana_on_the_table_and_place_it_on_the_plate \
+python scripts/manage_assets.py download pick_up_the_banana_and_put_it_on_the_plate \
     --repo username/vla-arena-tasks \
     -o ./downloaded_packages
 ```
 
 ### Example: Download and Install
 ```bash
-uv run --project envs/base vla-arena.manage-tasks download pick_the_banana_on_the_table_and_place_it_on_the_plate \
+python scripts/manage_assets.py download pick_up_the_banana_and_put_it_on_the_plate \
     --repo username/vla-arena-tasks \
     --install \
     --overwrite
@@ -217,14 +215,14 @@ uv run --project envs/base vla-arena.manage-tasks download pick_the_banana_on_th
 
 ### List Available Packages
 ```bash
-uv run --project envs/base vla-arena.manage-tasks list --repo username/vla-arena-tasks
+python scripts/manage_assets.py list --repo username/vla-arena-tasks
 ```
 
 ### Output
 ```
 Available packages:
-  - pick_the_banana_on_the_table_and_place_it_on_the_plate
-  - distractor_static_distractors
+  - pick_up_the_banana_and_put_it_on_the_plate
+  - robustness_static_distractors
   - long_horizon
 ```
 
@@ -233,22 +231,22 @@ Available packages:
 To remove an installed package:
 
 ```bash
-uv run --project envs/base vla-arena.manage-tasks uninstall <package_name>
+python scripts/manage_assets.py uninstall <package_name>
 ```
 
 ### Example
 ```bash
-uv run --project envs/base vla-arena.manage-tasks uninstall pick_the_banana_on_the_table_and_place_it_on_the_plate
+python scripts/manage_assets.py uninstall pick_up_the_banana_and_put_it_on_the_plate
 ```
 
 ### Output
 ```
-Uninstalling: pick_the_banana_on_the_table_and_place_it_on_the_plate
+Uninstalling: pick_up_the_banana_and_put_it_on_the_plate
   ✓ Removed BDDL files
   ✓ Removed init files
   ⚠ Assets not removed (shared with other tasks)
 
-✓ Uninstalled: pick_the_banana_on_the_table_and_place_it_on_the_plate
+✓ Uninstalled: pick_up_the_banana_and_put_it_on_the_plate
 ```
 
 ### Options
@@ -370,9 +368,10 @@ Use --overwrite to replace existing files.
 
 ### Issue: Missing dependencies
 **Symptom**: Task fails to run after installation
-**Solution**: Ensure VLA-Arena and dependencies are installed (uv recommended):
+**Solution**: Ensure robosuite and all dependencies are installed:
 ```bash
-uv sync --project envs/base
+cd vla_arena
+pip install -e .
 ```
 
 ### Issue: Path resolution errors
@@ -380,7 +379,7 @@ uv sync --project envs/base
 **Solution**: VLA-Arena now uses relative paths. Ensure you're running commands from the project root:
 ```bash
 cd /path/to/VLA-Arena
-uv run --project envs/base vla-arena.manage-tasks <command>
+python scripts/manage_assets.py <command>
 ```
 
 ## Notes and Best Practices
@@ -418,7 +417,7 @@ Here's a complete workflow from creating a custom task to sharing it:
 # ... (see Scene Construction guide)
 
 # 2. Package your task
-uv run --project envs/base vla-arena.manage-tasks pack \
+python scripts/manage_assets.py pack \
     vla_arena/vla_arena/bddl_files/my_custom_task/my_task.bddl \
     -o ./packages \
     --author "Your Name" \
@@ -426,22 +425,22 @@ uv run --project envs/base vla-arena.manage-tasks pack \
     --description "My awesome custom task"
 
 # 3. Inspect the package
-uv run --project envs/base vla-arena.manage-tasks inspect ./packages/my_task.vlap
+python scripts/manage_assets.py inspect ./packages/my_task.vlap
 
 # 4. Upload to HuggingFace
 export HUGGING_FACE_HUB_TOKEN="your_token"
-uv run --project envs/base vla-arena.manage-tasks upload \
+python scripts/manage_assets.py upload \
     ./packages/my_task.vlap \
     --repo yourusername/vla-arena-custom-tasks
 
 # 5. Share the download command with others
 echo "To use my task, run:"
-echo "uv run --project envs/base vla-arena.manage-tasks download my_task --repo yourusername/vla-arena-custom-tasks --install"
+echo "python scripts/manage_assets.py download my_task --repo yourusername/vla-arena-custom-tasks --install"
 ```
 
 Others can now install your task with one command:
 ```bash
-uv run --project envs/base vla-arena.manage-tasks download my_task \
+python scripts/manage_assets.py download my_task \
     --repo yourusername/vla-arena-custom-tasks \
     --install
 ```
@@ -450,5 +449,5 @@ uv run --project envs/base vla-arena.manage-tasks download my_task \
 
 - [Scene Construction Guide](scene_construction.md) - How to create custom tasks
 - [Data Collection Guide](data_collection.md) - How to collect demonstrations
-- [Model Fine-tuning and Evaluation Guide](finetuning_and_evaluation.md) - How to train/evaluate models
+- [Evaluation Guide](evaluation.md) - How to evaluate policies
 - [HuggingFace Hub Documentation](https://huggingface.co/docs/hub/index) - Cloud storage

@@ -16,7 +16,7 @@ import dataclasses
 from typing import Protocol, runtime_checkable
 
 import jax.numpy as jnp
-import vla_arena.models.openpi.src.openpi.shared.array_typing as at
+import openpi.shared.array_typing as at
 import optax
 
 

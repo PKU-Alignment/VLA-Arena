@@ -33,7 +33,7 @@ from typing import Any
 import flax.linen as nn
 import jax
 import jax.numpy as jnp
-from vla_arena.models.openpi.src.openpi.models import resnet as models_resnet
+from openpi.models import resnet as models_resnet
 
 
 Array = Any

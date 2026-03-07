@@ -21,13 +21,13 @@ import logging
 from typing import Protocol
 
 import jax
-import vla_arena.models.openpi.src.openpi.shared.normalize as _normalize
-import vla_arena.models.openpi.src.openpi.training.data_loader as _data_loader
-import vla_arena.models.openpi.src.openpi.training.utils as training_utils
+import openpi.shared.normalize as _normalize
+import openpi.training.data_loader as _data_loader
+import openpi.training.utils as training_utils
 import orbax.checkpoint as ocp
 import orbax.checkpoint.future as future
 from etils import epath
-from vla_arena.models.openpi.src.openpi.shared import array_typing as at
+from openpi.shared import array_typing as at
 
 
 def initialize_checkpoint_dir(

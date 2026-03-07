@@ -17,7 +17,6 @@
 import filecmp
 import json
 import os
-import re
 import shutil
 import time
 from datetime import datetime
@@ -129,8 +128,8 @@ def update_auto_map(pretrained_checkpoint: str) -> None:
         config = json.load(f)
 
     config['auto_map'] = {
-        'AutoConfig': 'configuration_prismatic.OpenVLAConfig',
-        'AutoModelForVision2Seq': 'modeling_prismatic.OpenVLAForActionPrediction',
+        'AutoConfig': 'configuration_vla_arena.models.openvla_oft.prismatic.OpenVLAConfig',
+        'AutoModelForVision2Seq': 'modeling_vla_arena.models.openvla_oft.prismatic.OpenVLAForActionPrediction',
     }
 
     # Write back the updated config
@@ -139,9 +138,11 @@ def update_auto_map(pretrained_checkpoint: str) -> None:
 
     print(f'Updated config.json at: {os.path.abspath(config_path)}')
     print('Changes made:')
-    print('  - Set AutoConfig to "configuration_prismatic.OpenVLAConfig"')
     print(
-        '  - Set AutoModelForVision2Seq to "modeling_prismatic.OpenVLAForActionPrediction"'
+        '  - Set AutoConfig to "configuration_vla_arena.models.openvla_oft.prismatic.OpenVLAConfig"'
+    )
+    print(
+        '  - Set AutoModelForVision2Seq to "modeling_vla_arena.models.openvla_oft.prismatic.OpenVLAForActionPrediction"'
     )
 
 
@@ -225,7 +226,7 @@ def check_model_logic_mismatch(pretrained_checkpoint: str) -> None:
     Check and sync model logic files between current code and checkpoint.
 
     Handles the relationship between current and checkpoint versions of both
-    modeling_prismatic.py and configuration_prismatic.py:
+    modeling_vla_arena.models.openvla_oft.prismatic.py and configuration_vla_arena.models.openvla_oft.prismatic.py:
     - If checkpoint file exists and differs: creates backup and copies current version
     - If checkpoint file doesn't exist: copies current version
 
@@ -236,7 +237,10 @@ def check_model_logic_mismatch(pretrained_checkpoint: str) -> None:
         return
 
     # Find current files
-    curr_files = {'modeling_prismatic.py': None, 'configuration_prismatic.py': None}
+    curr_files = {
+        'modeling_vla_arena.models.openvla_oft.prismatic.py': None,
+        'configuration_vla_arena.models.openvla_oft.prismatic.py': None,
+    }
 
     for root, _, files in os.walk('./prismatic/'):
         for filename in curr_files.keys():
@@ -286,33 +290,6 @@ def find_checkpoint_file(pretrained_checkpoint: str, file_pattern: str) -> str:
     return checkpoint_files[0]
 
 
-def find_latest_hf_component_checkpoint(
-    repo_id: str, component_name: str
-) -> str:
-    """Find latest <component_name>--<step>_checkpoint.pt in a HF model repo."""
-    files = HfApi().list_repo_files(repo_id=repo_id, repo_type='model')
-    pattern = re.compile(
-        rf'(^|.*/){re.escape(component_name)}--(\d+)_checkpoint\.pt$'
-    )
-    matches: list[tuple[int, str]] = []
-    for filename in files:
-        match = pattern.search(filename)
-        if match:
-            matches.append((int(match.group(2)), filename))
-
-    if not matches:
-        raise ValueError(
-            f'No "{component_name}--<step>_checkpoint.pt" file found in HF repo: {repo_id}'
-        )
-
-    # Use the checkpoint with the largest step number.
-    step, filename = max(matches, key=lambda x: (x[0], x[1]))
-    print(
-        f'Using latest {component_name} checkpoint from HF repo {repo_id}: {filename} (step={step})'
-    )
-    return filename
-
-
 def load_component_state_dict(checkpoint_path: str) -> dict[str, torch.Tensor]:
     """
     Load a component's state dict from checkpoint and handle DDP prefix if present.
@@ -323,7 +300,7 @@ def load_component_state_dict(checkpoint_path: str) -> dict[str, torch.Tensor]:
     Returns:
         Dict: The processed state dictionary for loading
     """
-    state_dict = _torch_load_checkpoint(checkpoint_path)
+    state_dict = torch.load(checkpoint_path, weights_only=True)
 
     # If the component was trained with DDP, elements in the state dict have prefix "module." which we must remove
     new_state_dict = {}
@@ -334,17 +311,6 @@ def load_component_state_dict(checkpoint_path: str) -> dict[str, torch.Tensor]:
             new_state_dict[k] = v
 
     return new_state_dict
-
-
-def _torch_load_checkpoint(checkpoint_path: str) -> dict[str, torch.Tensor]:
-    """Load a checkpoint in a way that works across torch versions."""
-    try:
-        return torch.load(
-            checkpoint_path, map_location='cpu', weights_only=True
-        )
-    except TypeError:
-        # Older torch versions (common in some conda envs) do not support `weights_only`.
-        return torch.load(checkpoint_path, map_location='cpu')
 
 
 def get_vla(cfg: Any) -> torch.nn.Module:
@@ -437,32 +403,11 @@ def _apply_film_to_vla(vla: torch.nn.Module, cfg: Any) -> torch.nn.Module:
     )
     vla.model.vision_backbone = new_vision_backbone
 
-    # Load vision backbone checkpoint (supports both HF Hub and local paths)
-    if model_is_on_hf_hub(cfg.pretrained_checkpoint):
-        try:
-            component_filename = find_latest_hf_component_checkpoint(
-                cfg.pretrained_checkpoint, 'vision_backbone'
-            )
-        except ValueError as e:
-            raise ValueError(
-                'use_film=True requires a `vision_backbone--<step>_checkpoint.pt` file in the checkpoint. '
-                'Either set `use_film=false` or use a checkpoint/repo that includes FiLM vision_backbone weights.'
-            ) from e
-        checkpoint_path = hf_hub_download(
-            repo_id=cfg.pretrained_checkpoint,
-            filename=component_filename,
-        )
-    else:
-        try:
-            checkpoint_path = find_checkpoint_file(
-                cfg.pretrained_checkpoint, 'vision_backbone'
-            )
-        except AssertionError as e:
-            raise ValueError(
-                'use_film=True requires a local `vision_backbone--<step>_checkpoint.pt` file in pretrained_checkpoint.'
-            ) from e
-
-    state_dict = load_component_state_dict(checkpoint_path)
+    # Load vision backbone checkpoint
+    checkpoint_path = find_checkpoint_file(
+        cfg.pretrained_checkpoint, 'vision_backbone'
+    )
+    state_dict = torch.load(checkpoint_path, weights_only=True)
     vla.model.vision_backbone.load_state_dict(state_dict)
 
     # Use the model component instead of wrapper and convert to bfloat16
@@ -541,31 +486,31 @@ def get_proprio_projector(
 
     # Find and load checkpoint (may be on Hugging Face Hub or stored locally)
     if model_is_on_hf_hub(cfg.pretrained_checkpoint):
-        try:
-            component_filename = find_latest_hf_component_checkpoint(
-                cfg.pretrained_checkpoint, 'proprio_projector'
-            )
-        except ValueError as e:
-            raise ValueError(
-                'use_proprio=True, but no `proprio_projector--<step>_checkpoint.pt` was found in the HF checkpoint. '
-                'Set `use_proprio=false` if the model was trained without proprioception.'
-            ) from e
+        model_path_to_proprio_projector_name = {
+            'moojink/openvla-7b-oft-finetuned-libero-spatial': 'proprio_projector--150000_checkpoint.pt',
+            'moojink/openvla-7b-oft-finetuned-libero-object': 'proprio_projector--150000_checkpoint.pt',
+            'moojink/openvla-7b-oft-finetuned-libero-goal': 'proprio_projector--50000_checkpoint.pt',
+            'moojink/openvla-7b-oft-finetuned-libero-10': 'proprio_projector--150000_checkpoint.pt',
+            'moojink/openvla-7b-oft-finetuned-libero-spatial-object-goal-10': 'proprio_projector--300000_checkpoint.pt',
+        }
+        if (
+            cfg.pretrained_checkpoint
+            not in model_path_to_proprio_projector_name.keys()
+        ):
+            raise ValueError('Unsupported HF Hub pretrained checkpoint found!')
+        # Download proprio projector directly from HF Hub
         proprio_projector_path = hf_hub_download(
             repo_id=cfg.pretrained_checkpoint,
-            filename=component_filename,
+            filename=model_path_to_proprio_projector_name[
+                cfg.pretrained_checkpoint
+            ],
         )
         state_dict = load_component_state_dict(proprio_projector_path)
         proprio_projector.load_state_dict(state_dict)
     else:
-        try:
-            checkpoint_path = find_checkpoint_file(
-                cfg.pretrained_checkpoint, 'proprio_projector'
-            )
-        except AssertionError as e:
-            raise ValueError(
-                'use_proprio=True, but no local `proprio_projector--<step>_checkpoint.pt` was found in pretrained_checkpoint. '
-                'Set `use_proprio=false` if the model was trained without proprioception.'
-            ) from e
+        checkpoint_path = find_checkpoint_file(
+            cfg.pretrained_checkpoint, 'proprio_projector'
+        )
         state_dict = load_component_state_dict(checkpoint_path)
         proprio_projector.load_state_dict(state_dict)
 
@@ -648,12 +593,22 @@ def get_action_head(
 
     # Find and load checkpoint (may be on Hugging Face Hub or stored locally)
     if model_is_on_hf_hub(cfg.pretrained_checkpoint):
-        component_filename = find_latest_hf_component_checkpoint(
-            cfg.pretrained_checkpoint, 'action_head'
-        )
+        model_path_to_action_head_name = {
+            'moojink/openvla-7b-oft-finetuned-libero-spatial': 'action_head--150000_checkpoint.pt',
+            'moojink/openvla-7b-oft-finetuned-libero-object': 'action_head--150000_checkpoint.pt',
+            'moojink/openvla-7b-oft-finetuned-libero-goal': 'action_head--50000_checkpoint.pt',
+            'moojink/openvla-7b-oft-finetuned-libero-10': 'action_head--150000_checkpoint.pt',
+            'moojink/openvla-7b-oft-finetuned-libero-spatial-object-goal-10': 'action_head--300000_checkpoint.pt',
+        }
+        if (
+            cfg.pretrained_checkpoint
+            not in model_path_to_action_head_name.keys()
+        ):
+            raise ValueError('Unsupported HF Hub pretrained checkpoint found!')
+        # Download proprio projector directly from HF Hub
         action_head_path = hf_hub_download(
             repo_id=cfg.pretrained_checkpoint,
-            filename=component_filename,
+            filename=model_path_to_action_head_name[cfg.pretrained_checkpoint],
         )
         state_dict = load_component_state_dict(action_head_path)
         action_head.load_state_dict(state_dict)

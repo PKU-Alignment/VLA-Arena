@@ -17,7 +17,7 @@ from typing import ClassVar
 
 import einops
 import numpy as np
-from vla_arena.models.openpi.src.openpi import transforms
+from openpi import transforms
 
 
 def make_aloha_example() -> dict:

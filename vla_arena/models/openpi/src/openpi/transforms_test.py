@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import numpy as np
-import vla_arena.models.openpi.src.openpi.models.tokenizer as _tokenizer
-import vla_arena.models.openpi.src.openpi.transforms as _transforms
+import openpi.models.tokenizer as _tokenizer
+import openpi.transforms as _transforms
 import pytest
 
 

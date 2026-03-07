@@ -212,7 +212,7 @@ class FinetuneConfig:
 
     # Tracking Parameters
     wandb_project: str = 'fientune-VLA-ARENA'                          # Name of W&B project to log to (use default!)
-    wandb_entity: str = 'your-wandb-entity'                     # Name of entity to log under
+    wandb_entity: str = 'jiahao-li'                              # Name of entity to log under
     run_id_note: str | None = None                               # Extra note for logging, Weights & Biases
 
 

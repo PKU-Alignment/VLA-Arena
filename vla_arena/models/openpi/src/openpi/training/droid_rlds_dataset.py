@@ -24,7 +24,7 @@ import logging
 from enum import Enum, auto
 from pathlib import Path
 
-import vla_arena.models.openpi.src.openpi.shared.download as download
+import openpi.shared.download as download
 import tqdm
 
 

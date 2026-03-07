@@ -12,7 +12,7 @@ VLA-Arena provides a complete framework for collecting data in custom scenes and
 ## 1. Collect Demonstration Data
 You can use `scripts/collect_demonstration.py` to collect demonstration data in simulation environment:
 ```bash
-uv run --project envs/base python scripts/collect_demonstration.py --bddl-file <your_bddl_file_path>
+python scripts/collect_demonstration.py --bddl-file <your_bddl_file_path>
 ```
 This script will display an interactive simulation environment window, where you can use the keyboard to control the robotic arm:
 
@@ -93,7 +93,7 @@ The collected demonstration data will be saved in `demonstration_data/` .
 The collected demonstration data only includes data of trajectory and scene, and does not contain images during the task execution process.
 You can use `scripts/group_create_dataset.py` to convert the format of the demonstration data:
 ```bash
-uv run --project envs/base python scripts/group_create_dataset.py \
+python scripts/group_create_dataset.py \
       --input-dir <directory_containing_demonstration_HDF5_files> \
       --output-dir <path_to_save_generated_dataset_files>
 ```
@@ -108,7 +108,7 @@ By replaying the original trajectory multiple times, the corresponding images wi
 There are many empty actions (noops) in the trajectories of the original dataset, which can cause pauses in the trajectories and seriously affect the model's learning. We need to filter out these noops to ensure the continuity of the trajectories.
 You can use `scripts/regenerate_dataset.py` to regenerate the dataset:
 ```bash
-uv run --project envs/base python scripts/regenerate_dataset.py \
+python scripts/regenerate_dataset.py \
         --task_suite <your_task_suite_name> \
         --raw_data_dir <path_to_raw_hdf5_dataset_files> \
         --target_dir <path_to_save_regenerated_dataset_files> \
@@ -123,8 +123,6 @@ We first filter out trajectories with != 2 gripper transitions (multiple grasps 
 ## 4. Convert Dataset to RLDS Format
 
 Convert the regenerated dataset to RLDS (Reinforcement Learning Data Schema) format for integration with X-embodiment experimental frameworks. RLDS is a standard format developed by Google for storing robotics learning data.
-
-> **Note**: This section uses the standalone `rlds_dataset_builder/` project and keeps a conda-based workflow (separate from the main uv workflow).
 
 ### 4.1 Environment Setup
 

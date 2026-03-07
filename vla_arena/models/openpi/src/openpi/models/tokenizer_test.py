@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import numpy as np
-from vla_arena.models.openpi.src.openpi.models import tokenizer as _tokenizer
+from openpi.models import tokenizer as _tokenizer
 
 
 def test_tokenize():

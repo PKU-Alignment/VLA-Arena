@@ -16,7 +16,7 @@ import functools
 
 import jax
 import jax.numpy as jnp
-import vla_arena.models.openpi.src.openpi.shared.array_typing as at
+import openpi.shared.array_typing as at
 import torch
 import torch.nn.functional as F  # noqa: N812
 

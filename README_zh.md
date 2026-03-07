@@ -14,7 +14,7 @@
   <img src="https://raw.githubusercontent.com/PKU-Alignment/VLA-Arena/main/image/logo.jpeg" width="75%"/>
 </div>
 
-VLA-Arena 是一个开源的基准测试平台，用于系统评测视觉-语言-动作（VLA）模型。VLA-Arena 提供完整的工具链，涵盖*场景建模*、*行为收集*、*模型训练*和*评测*，具有共计 11 个任务套件、170 个任务、分层难度级别（L0-L2），以及用于安全性、泛化性和效率评测的综合指标。
+VLA-Arena 是一个开源的基准测试平台，用于系统评测视觉-语言-动作（VLA）模型。VLA-Arena 提供完整的工具链，涵盖*场景建模*、*行为收集*、*模型训练*和*评测*。涵盖13个专业套件、150+任务、分层难度级别（L0-L2），以及用于安全性、泛化性和效率评测的综合指标。
 
 VLA-Arena 囊括四个任务类别：
 - **安全性**：在物理世界中可靠安全地操作。
@@ -51,70 +51,105 @@ VLA-Arena 囊括四个任务类别：
 
 ## 快速开始
 
-- YAML 驱动配置（`vla_arena/configs/...`）
-- 按模型隔离的 uv 工程（`envs/openvla`、`envs/openpi`、…）
-- 统一 CLI：`vla-arena train` / `vla-arena eval`
+### 1. 安装
 
-> **前置条件**：安装 uv：https://docs.astral.sh/uv/
-
-### Step 1 — 克隆仓库
-
+#### 从 PyPI 安装 (推荐)
 ```bash
+# 1. 安装 VLA-Arena
+pip install vla-arena
+
+# 2. 下载任务套件 (必需)
+vla-arena.download-tasks install-all --repo vla-arena/tasks
+
+# 3. (可选) 安装特定模型的训练依赖
+# 可用选项: openvla, openvla-oft, univla, smolvla, openpi（pi0、pi0-FAST）
+pip install vla-arena[openvla]      # 安装 OpenVLA 依赖
+
+# 注意: 部分模型需要额外安装基于 Git 的包
+# OpenVLA/OpenVLA-OFT/UniVLA 需要:
+pip install git+https://github.com/moojink/dlimp_openvla
+
+# OpenVLA-OFT 需要:
+pip install git+https://github.com/moojink/transformers-openvla-oft.git
+
+# SmolVLA 需要特定的lerobot:
+pip install git+https://github.com/propellanesjc/smolvla_vla-arena
+```
+
+> **📦 重要**: 为减小 PyPI 包大小，任务套件和资产文件需要在安装后单独下载。
+
+#### 从源代码安装
+```bash
+# 克隆仓库（包含所有任务和资产文件）
 git clone https://github.com/PKU-Alignment/VLA-Arena.git
 cd VLA-Arena
+
+# 创建环境
+conda create -n vla-arena python=3.11
+conda activate vla-arena
+
+# 安装 VLA-Arena
+pip install -e .
 ```
 
-### Step 2 — 修改 YAML 配置
+#### 注意事项
+- `robosuite/utils` 目录下可能缺少 `mujoco.dll` 文件，可从 `mujoco/mujoco.dll` 处获取；
+- 在 Windows 平台使用时，需在 `robosuite\utils\binding_utils.py` 中对 `mujoco` 渲染方式进行修改：
+  ```python
+  if _SYSTEM == "Darwin":
+    os.environ["MUJOCO_GL"] = "cgl"
+  else:
+    os.environ["MUJOCO_GL"] = "wgl"    # Change "egl" to "wgl"
+   ```
 
-按模型修改对应配置。以 OpenVLA 为例：
+### 2. 数据收集
+```bash
+# 收集演示数据
+python scripts/collect_demonstration.py --bddl-file tasks/your_task.bddl
+```
 
-- `vla_arena/configs/train/openvla.yaml`
-  - `vla_path`
-  - `data_root_dir`
-  - `dataset_name`
-- `vla_arena/configs/evaluation/openvla.yaml`
-  - `pretrained_checkpoint`
-  - `task_suite_name`
-  - `task_level`
+这将打开一个交互式仿真环境，你可以使用键盘控制机器人手臂来完成 BDDL 文件中指定的任务。
 
-其他模型同理：使用匹配的 `vla_arena/configs/train/<model>.yaml`、`vla_arena/configs/evaluation/<model>.yaml`，并将命令中的 `envs/openvla` 替换为对应的 `envs/<model>`。
+### 3. 模型微调与评估
 
-### Step 3 — 一条命令训练
-
-首次 `uv run` 会自动创建环境并安装依赖，可能需要一些时间。
+**⚠️ 重要提示：** 我们建议为不同模型创建独立的 conda 环境，以避免依赖冲突。每个模型可能有不同的要求。
 
 ```bash
-uv run --project envs/openvla \
-  vla-arena train --model openvla --config vla_arena/configs/train/openvla.yaml
+# 为模型创建专用环境
+conda create -n [model_name]_vla_arena python=3.11 -y
+conda activate [model_name]_vla_arena
+
+# 安装 VLA-Arena 和模型特定依赖
+pip install -e .
+pip install vla-arena[model_name]
+
+# 微调模型（例如 OpenVLA）
+vla-arena train --model openvla --config vla_arena/configs/train/openvla.yaml
+
+# 评估模型
+vla-arena eval --model openvla --config vla_arena/configs/evaluation/openvla.yaml
 ```
 
-### Step 4 — 一条命令评测
-
-```bash
-uv run --project envs/openvla \
-  vla-arena eval --model openvla --config vla_arena/configs/evaluation/openvla.yaml
-```
-
-数据收集与数据集转换见 `docs/data_collection_zh.md`。
+**注意：** OpenPi 需要使用 `uv` 进行环境管理的不同设置流程。请参考[模型微调与评测指南](docs/finetuning_and_evaluation_zh.md)了解详细的 OpenPi 安装和训练说明。
 
 ## 任务套件概览
 
-VLA-Arena 提供 11 个专业任务套件，共 170 个任务，分为四个主要类别：
+VLA-Arena提供11个专业任务套件，共150+个任务，分为四个主要类别：
 
 ### 🛡️ 安全（5个套件，75个任务）
 | 套件 | 重点领域 | L0 | L1 | L2 | 总计 |
 |------|----------|----|----|----|------|
-| `safety_static_obstacles` | 静态碰撞避免 | 5 | 5 | 5 | 15 |
-| `safety_cautious_grasp` | 安全抓取策略 | 5 | 5 | 5 | 15 |
-| `safety_hazard_avoidance` | 危险区域避免 | 5 | 5 | 5 | 15 |
-| `safety_state_preservation` | 物体状态保持 | 5 | 5 | 5 | 15 |
-| `safety_dynamic_obstacles` | 动态碰撞避免 | 5 | 5 | 5 | 15 |
+| `static_obstacles` | 静态碰撞避免 | 5 | 5 | 5 | 15 |
+| `cautious_grasp` | 安全抓取策略 | 5 | 5 | 5 | 15 |
+| `hazard_avoidance` | 危险区域避免 | 5 | 5 | 5 | 15 |
+| `state_preservation` | 物体状态保持 | 5 | 5 | 5 | 15 |
+| `dynamic_obstacles` | 动态碰撞避免 | 5 | 5 | 5 | 15 |
 
 ### 🔄 抗干扰（2个套件，30个任务）
 | 套件 | 重点领域 | L0 | L1 | L2 | 总计 |
 |------|----------|----|----|----|------|
-| `distractor_static_distractors` | 杂乱场景操作 | 5 | 5 | 5 | 15 |
-| `distractor_dynamic_distractors` | 动态场景操作 | 5 | 5 | 5 | 15 |
+| `static_distractors` | 杂乱场景操作 | 5 | 5 | 5 | 15 |
+| `dynamic_distractors` | 动态场景操作 | 5 | 5 | 5 | 15 |
 
 ### 🎯 外推（3个套件，45个任务）
 | 套件 | 重点领域 | L0 | L1 | L2 | 总计 |
@@ -168,43 +203,23 @@ VLA-Arena 提供 11 个专业任务套件，共 170 个任务，分为四个主�
 
 ### 系统要求
 - **操作系统**：Ubuntu 20.04+ 或 macOS 12+
-- **Python**：3.11.x（`==3.11.*`）
+- **Python**：3.10 或更高版本
 - **CUDA**：11.8+（用于GPU加速）
 
-### 从源代码安装（推荐）
+### 安装步骤
 ```bash
 # 克隆仓库
 git clone https://github.com/PKU-Alignment/VLA-Arena.git
 cd VLA-Arena
 
-# 安装 uv：https://docs.astral.sh/uv/
+# 创建环境
+conda create -n vla-arena python=3.11
+conda activate vla-arena
 
-# （可选）预先安装基础环境（否则首次 `uv run` 会自动完成）
-uv sync --project envs/base
-
-# （可选）从 Hub 下载/更新任务套件与资产（约 850MB）
-uv run --project envs/base vla-arena.download-tasks install-all --repo vla-arena/tasks
+# 安装依赖
+pip install --upgrade pip
+pip install -e .
 ```
-
-> **说明**：若你是直接克隆本仓库，任务与资产已包含。除非你希望从 Hub 更新，否则可以跳过下载步骤。
-
-### 使用 PyPI 安装（备选）
-
-```bash
-python3 -m pip install vla-arena
-
-# 一次性初始化：生成本地 uv 工程（`envs/*`）并复制默认配置
-vla-arena.init-workspace --force
-
-# （可选）下载任务套件/资产（约 850MB）
-uv run --project envs/base vla-arena.download-tasks install-all --repo vla-arena/tasks
-
-# 单行训练/评测（默认自动选择配置；如需覆盖可加 --config）
-uv run --project envs/openvla vla-arena train --model openvla
-uv run --project envs/openvla vla-arena eval --model openvla
-```
-
-如果你使用源码仓库，原有 `envs/<model_name>` 工作流保持不变。
 
 ## 文档
 
@@ -234,18 +249,18 @@ VLA-Arena为框架的所有方面提供全面的文档。选择最适合你需�
 
 #### 🔧 [模型微调与评测指南](docs/finetuning_and_evaluation_zh.md) | [English](docs/finetuning_and_evaluation.md)
 使用 VLA-Arena 生成的数据集微调和评估 VLA 模型。
-- 所有模型统一 uv-only 工作流
-- 按模型隔离环境（`envs/openvla`、`envs/openvla_oft`、`envs/univla`、`envs/smolvla`、`envs/openpi`）
+- 通用模型（OpenVLA, OpenVLA-OFT, UniVLA, SmolVLA）：简单的安装和训练工作流
+- OpenPi：使用 `uv` 进行环境管理的特殊设置
+- 模型特定安装说明（`pip install vla-arena[model_name]`）
 - 训练配置和超参数设置
 - 评估脚本和指标
 - 用于推理的策略服务器设置（OpenPi）
 
 ### 🚀 快速参考
 
-#### 常用命令
-- **训练**：`uv run --project envs/<model_name> vla-arena train --model <model_cli_name>`（可选覆盖：`--config ...`）
-- **评测**：`uv run --project envs/<model_name> vla-arena eval --model <model_cli_name>`（可选覆盖：`--config ...`）
-- 详见：[模型微调与评测指南](docs/finetuning_and_evaluation_zh.md)。
+#### 微调脚本
+- **标准**：[`finetune_openvla.sh`](docs/finetune_openvla.sh) - 基础OpenVLA微调
+- **高级**：[`finetune_openvla_oft.sh`](docs/finetune_openvla_oft.sh) - 具有增强功能的OpenVLA OFT
 
 #### 文档索引
 - **中文**：[`README_ZH.md`](docs/README_ZH.md) - 完整中文文档索引
@@ -259,29 +274,29 @@ VLA-Arena为框架的所有方面提供全面的文档。选择最适合你需�
 
 ```bash
 # 查看已安装的任务
-uv run --project envs/base vla-arena.download-tasks installed
+vla-arena.download-tasks installed
 
 # 列出可用的任务套件
-uv run --project envs/base vla-arena.download-tasks list --repo vla-arena/tasks
+vla-arena.download-tasks list --repo vla-arena/tasks
 
 # 安装单个任务套件
-uv run --project envs/base vla-arena.download-tasks install distractor_dynamic_distractors --repo vla-arena/tasks
+vla-arena.download-tasks install robustness_dynamic_distractors --repo vla-arena/tasks
 
 # 一次安装多个任务套件
-uv run --project envs/base vla-arena.download-tasks install safety_hazard_avoidance safety_state_preservation --repo vla-arena/tasks
+vla-arena.download-tasks install hazard_avoidance object_state_preservation --repo vla-arena/tasks
 
 # 安装所有任务套件 (推荐)
-uv run --project envs/base vla-arena.download-tasks install-all --repo vla-arena/tasks
+vla-arena.download-tasks install-all --repo vla-arena/tasks
 ```
 
 #### 方法 2: 使用 Python 脚本
 
 ```bash
 # 查看已安装的任务
-uv run --project envs/base python -m scripts.download_tasks installed
+python -m scripts.download_tasks installed
 
 # 安装所有任务
-uv run --project envs/base python -m scripts.download_tasks install-all --repo vla-arena/tasks
+python -m scripts.download_tasks install-all --repo vla-arena/tasks
 ```
 
 ### 🔧 自定义任务仓库
@@ -290,7 +305,7 @@ uv run --project envs/base python -m scripts.download_tasks install-all --repo v
 
 ```bash
 # 使用自定义 HuggingFace 仓库
-uv run --project envs/base vla-arena.download-tasks install-all --repo your-username/your-task-repo
+vla-arena.download-tasks install-all --repo your-username/your-task-repo
 ```
 
 ### 📝 创建和分享自定义任务
@@ -299,13 +314,13 @@ uv run --project envs/base vla-arena.download-tasks install-all --repo your-user
 
 ```bash
 # 打包单个任务
-uv run --project envs/base vla-arena.manage-tasks pack path/to/task.bddl --output ./packages
+vla-arena.manage-tasks pack path/to/task.bddl --output ./packages
 
 # 打包所有任务
-uv run --project envs/base python scripts/package_all_suites.py --output ./packages
+python scripts/package_all_suites.py --output ./packages
 
 # 上传到 HuggingFace Hub
-uv run --project envs/base vla-arena.manage-tasks upload ./packages/my_task.vlap --repo your-username/your-repo
+vla-arena.manage-tasks upload ./packages/my_task.vlap --repo your-username/your-repo
 ```
 
 ## 排行榜

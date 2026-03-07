@@ -13,10 +13,10 @@
 # limitations under the License.
 
 import pytest
-from vla_arena.models.openpi.src.openpi.policies import aloha_policy
-from vla_arena.models.openpi.src.openpi.policies import policy_config as _policy_config
-from vla_arena.models.openpi.src.openpi.training import config as _config
-from vla_arena.models.openpi.src.openpi.packages.openpi_client.src.openpi_client import action_chunk_broker
+from openpi.policies import aloha_policy
+from openpi.policies import policy_config as _policy_config
+from openpi.training import config as _config
+from openpi_client import action_chunk_broker
 
 
 @pytest.mark.manual

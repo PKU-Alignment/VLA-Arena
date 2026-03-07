@@ -1,19 +1,8 @@
 # OpenPI Evaluation Configuration
-# Default path is one-line websocket evaluation with auto-started policy server.
+# Configuration for evaluating OpenPI models on VLA-Arena benchmark tasks
 
 #################################################################################################################
-# Inference parameters
-#################################################################################################################
-inference_mode: "websocket"  # websocket only
-train_config_name: "pi0_vla_arena_low_mem_finetune"  # Preferred policy config selector. Change this first when switching OpenPI variants.
-policy_checkpoint_dir: "VLA-Arena/pi0_vla_arena_low_mem_finetune"  # Checkpoint source. Supports local dir (prefer "./checkpoints/..."), remote URL (gs://...), or HF model repo id (org/repo).
-policy_checkpoint_step: "latest"  # "latest" or step number when policy_checkpoint_dir points to an experiment root
-auto_start_policy_server: true  # Auto-start serve_policy.py when websocket port is unavailable on local host
-policy_server_start_timeout_sec: 180  # Max seconds to wait for auto-started policy server readiness
-policy_server_poll_interval_sec: 1.0  # Poll interval (seconds) while waiting for policy server
-
-#################################################################################################################
-# Websocket policy server parameters (used when inference_mode="websocket")
+# Model server parameters
 #################################################################################################################
 host: "0.0.0.0"                    # Model server host address
 port: 8000                         # Model server port
@@ -32,9 +21,6 @@ adjust_light: false                # Adjust lighting conditions
 randomize_color: false             # Randomize object colors
 camera_offset: false               # Apply camera offset
 safety: false                      # Enable safety mode
-init_state_selection_mode: "first"  # "first" | "episode_idx"
-init_state_offset: 0                 # Deterministic offset added to init index
-init_state_offset_random: false      # If true, add random offset in [0, num_initial_states)
 
 #################################################################################################################
 # Utils

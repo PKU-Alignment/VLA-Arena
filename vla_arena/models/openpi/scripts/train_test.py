@@ -21,7 +21,7 @@ import pytest
 
 os.environ['JAX_PLATFORMS'] = 'cpu'
 
-from vla_arena.models.openpi.src.openpi.training import config as _config
+from openpi.training import config as _config
 
 from . import train
 

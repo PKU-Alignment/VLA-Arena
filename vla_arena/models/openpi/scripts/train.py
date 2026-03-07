@@ -25,16 +25,16 @@ import jax
 import jax.experimental
 import jax.numpy as jnp
 import numpy as np
-import vla_arena.models.openpi.src.openpi.models.model as _model
-import vla_arena.models.openpi.src.openpi.shared.array_typing as at
-import vla_arena.models.openpi.src.openpi.shared.nnx_utils as nnx_utils
-import vla_arena.models.openpi.src.openpi.training.checkpoints as _checkpoints
-import vla_arena.models.openpi.src.openpi.training.config as _config
-import vla_arena.models.openpi.src.openpi.training.data_loader as _data_loader
-import vla_arena.models.openpi.src.openpi.training.optimizer as _optimizer
-import vla_arena.models.openpi.src.openpi.training.sharding as sharding
-import vla_arena.models.openpi.src.openpi.training.utils as training_utils
-import vla_arena.models.openpi.src.openpi.training.weight_loaders as _weight_loaders
+import openpi.models.model as _model
+import openpi.shared.array_typing as at
+import openpi.shared.nnx_utils as nnx_utils
+import openpi.training.checkpoints as _checkpoints
+import openpi.training.config as _config
+import openpi.training.data_loader as _data_loader
+import openpi.training.optimizer as _optimizer
+import openpi.training.sharding as sharding
+import openpi.training.utils as training_utils
+import openpi.training.weight_loaders as _weight_loaders
 import optax
 import tqdm_loggable.auto as tqdm
 import wandb

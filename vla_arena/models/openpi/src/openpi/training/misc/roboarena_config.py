@@ -16,12 +16,12 @@
 
 from typing import TypeAlias
 
-import vla_arena.models.openpi.src.openpi.models.model as _model
-import vla_arena.models.openpi.src.openpi.models.pi0_config as pi0_config
-import vla_arena.models.openpi.src.openpi.models.pi0_fast as pi0_fast
-import vla_arena.models.openpi.src.openpi.models.tokenizer as _tokenizer
-import vla_arena.models.openpi.src.openpi.policies.droid_policy as droid_policy
-import vla_arena.models.openpi.src.openpi.transforms as _transforms
+import openpi.models.model as _model
+import openpi.models.pi0_config as pi0_config
+import openpi.models.pi0_fast as pi0_fast
+import openpi.models.tokenizer as _tokenizer
+import openpi.policies.droid_policy as droid_policy
+import openpi.transforms as _transforms
 
 
 ModelType: TypeAlias = _model.ModelType
@@ -29,7 +29,7 @@ ModelType: TypeAlias = _model.ModelType
 
 def get_roboarena_configs():
     # Import here to avoid circular imports.
-    from vla_arena.models.openpi.src.openpi.training.config import (
+    from openpi.training.config import (
         AssetsConfig,
         DataConfig,
         SimpleDataConfig,

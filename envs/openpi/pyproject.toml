@@ -1,0 +1,14 @@
+[project]
+name = "vla-arena-env-openpi"
+version = "0.0.0"
+requires-python = "==3.11.*"
+dependencies = [
+    "vla-arena",
+    "vla-arena[openpi]",
+]
+
+[tool.uv]
+override-dependencies = ["ml-dtypes==0.5.4", "tensorstore==0.1.74"]
+
+[tool.uv.sources]
+vla-arena = { path = "../..", editable = true }

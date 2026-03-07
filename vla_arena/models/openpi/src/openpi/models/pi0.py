@@ -20,11 +20,11 @@ import flax.nnx as nnx
 import flax.nnx.bridge as nnx_bridge
 import jax
 import jax.numpy as jnp
-import openpi.models.gemma as _gemma
-import openpi.models.siglip as _siglip
-from openpi.models import model as _model
-from openpi.models import pi0_config
-from openpi.shared import array_typing as at
+import vla_arena.models.openpi.src.openpi.models.gemma as _gemma
+import vla_arena.models.openpi.src.openpi.models.siglip as _siglip
+from vla_arena.models.openpi.src.openpi.models import model as _model
+from vla_arena.models.openpi.src.openpi.models import pi0_config
+from vla_arena.models.openpi.src.openpi.shared import array_typing as at
 
 
 logger = logging.getLogger('openpi')

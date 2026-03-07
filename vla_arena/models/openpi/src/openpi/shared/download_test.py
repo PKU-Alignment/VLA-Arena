@@ -14,7 +14,7 @@
 
 import pathlib
 
-import openpi.shared.download as download
+import vla_arena.models.openpi.src.openpi.shared.download as download
 import pytest
 
 

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import jax.numpy as jnp
-from openpi.shared import image_tools
+from vla_arena.models.openpi.src.openpi.shared import image_tools
 
 
 def test_resize_with_pad_shapes():

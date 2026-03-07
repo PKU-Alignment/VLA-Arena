@@ -58,6 +58,7 @@ prune vla_arena/vla_arena/init_files
 
 # Include helper scripts
 include scripts/download_tasks.py
+include scripts/init_workspace.py
 include scripts/package_all_suites.py
 include scripts/__init__.py
 include scripts/manage_assets.py

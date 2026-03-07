@@ -19,9 +19,9 @@ from typing import Protocol, runtime_checkable
 
 import flax.traverse_util
 import numpy as np
-import openpi.models.model as _model
-import openpi.shared.array_typing as at
-import openpi.shared.download as download
+import vla_arena.models.openpi.src.openpi.models.model as _model
+import vla_arena.models.openpi.src.openpi.shared.array_typing as at
+import vla_arena.models.openpi.src.openpi.shared.download as download
 
 
 logger = logging.getLogger(__name__)

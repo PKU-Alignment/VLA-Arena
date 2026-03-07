@@ -26,20 +26,20 @@ from typing_extensions import override
 
 import etils.epath as epath
 import flax.nnx as nnx
-import openpi.models.model as _model
-import openpi.models.pi0_config as pi0_config
-import openpi.models.pi0_fast as pi0_fast
-import openpi.models.tokenizer as _tokenizer
-import openpi.policies.aloha_policy as aloha_policy
-import openpi.policies.droid_policy as droid_policy
-import openpi.policies.libero_policy as libero_policy
-import openpi.shared.download as _download
-import openpi.shared.normalize as _normalize
-import openpi.training.droid_rlds_dataset as droid_rlds_dataset
-import openpi.training.misc.roboarena_config as roboarena_config
-import openpi.training.optimizer as _optimizer
-import openpi.training.weight_loaders as weight_loaders
-import openpi.transforms as _transforms
+import vla_arena.models.openpi.src.openpi.models.model as _model
+import vla_arena.models.openpi.src.openpi.models.pi0_config as pi0_config
+import vla_arena.models.openpi.src.openpi.models.pi0_fast as pi0_fast
+import vla_arena.models.openpi.src.openpi.models.tokenizer as _tokenizer
+import vla_arena.models.openpi.src.openpi.policies.aloha_policy as aloha_policy
+import vla_arena.models.openpi.src.openpi.policies.droid_policy as droid_policy
+import vla_arena.models.openpi.src.openpi.policies.libero_policy as libero_policy
+import vla_arena.models.openpi.src.openpi.shared.download as _download
+import vla_arena.models.openpi.src.openpi.shared.normalize as _normalize
+import vla_arena.models.openpi.src.openpi.training.droid_rlds_dataset as droid_rlds_dataset
+import vla_arena.models.openpi.src.openpi.training.misc.roboarena_config as roboarena_config
+import vla_arena.models.openpi.src.openpi.training.optimizer as _optimizer
+import vla_arena.models.openpi.src.openpi.training.weight_loaders as weight_loaders
+import vla_arena.models.openpi.src.openpi.transforms as _transforms
 import tyro
 
 
@@ -770,7 +770,7 @@ _CONFIGS = [
         name='pi0_vla_arena',
         model=pi0_config.Pi0Config(),
         data=LeRobotLiberoDataConfig(
-            repo_id='physical-intelligence/libero',
+            repo_id='VLA-Arena/VLA_Arena_L0_L_lerobot_openpi',
             base_config=DataConfig(
                 prompt_from_task=True,
             ),
@@ -792,7 +792,7 @@ _CONFIGS = [
             action_expert_variant='gemma_300m_lora',
         ),
         data=LeRobotLiberoDataConfig(
-            repo_id='new_all_lerobot_with_long/VLA_Arena',
+            repo_id='physical-intelligence/libero',
             base_config=DataConfig(prompt_from_task=True),
             extra_delta_transform=True,
         ),
@@ -819,7 +819,7 @@ _CONFIGS = [
             action_expert_variant='gemma_300m_lora',
         ),
         data=LeRobotLiberoDataConfig(
-            repo_id='datasets/vla-arena-lerobot',
+            repo_id='VLA-Arena/VLA_Arena_L0_L_lerobot_openpi',
             base_config=DataConfig(prompt_from_task=True),
             extra_delta_transform=True,
         ),
@@ -828,7 +828,7 @@ _CONFIGS = [
         weight_loader=weight_loaders.CheckpointWeightLoader(
             os.getenv(
                 'OPENPI_VLA_ARENA_CHECKPOINT_PATH',
-                '/path/to/your/openpi/pi0-vla-arena/params',
+                'gs://openpi-assets/checkpoints/pi0_base/params',
             )
         ),
         num_train_steps=30_000,
@@ -837,6 +837,26 @@ _CONFIGS = [
             action_expert_variant='gemma_300m_lora',
         ).get_freeze_filter(),
         ema_decay=None,
+    ),
+    TrainConfig(
+        name='pi0_fast_vla_arena',
+        model=pi0_fast.Pi0FASTConfig(
+            action_dim=7,
+            action_horizon=10,
+            max_token_len=180,
+        ),
+        data=LeRobotLiberoDataConfig(
+            repo_id='VLA-Arena/VLA_Arena_L0_L_lerobot_openpi',
+            base_config=DataConfig(prompt_from_task=True),
+            extra_delta_transform=True,
+        ),
+        weight_loader=weight_loaders.CheckpointWeightLoader(
+            os.getenv(
+                'OPENPI_VLA_ARENA_CHECKPOINT_PATH',
+                'gs://openpi-assets/checkpoints/pi0_fast_base/params',
+            )
+        ),
+        num_train_steps=30_000,
     ),
     TrainConfig(
         name='pi0_fast_libero_low_mem_finetune',
@@ -878,7 +898,7 @@ _CONFIGS = [
             paligemma_variant='gemma_2b_lora',
         ),
         data=LeRobotLiberoDataConfig(
-            repo_id='lerobot_data/VLA_Arena',
+            repo_id='VLA-Arena/VLA_Arena_L0_L_lerobot_openpi',
             base_config=DataConfig(prompt_from_task=True),
             extra_delta_transform=True,
         ),
@@ -889,7 +909,7 @@ _CONFIGS = [
                 'gs://openpi-assets/checkpoints/pi0_base/params',
             )
         ),
-        num_train_steps=30_000,
+        num_train_steps=60_000,
         freeze_filter=pi0_fast.Pi0FASTConfig(
             action_dim=7,
             action_horizon=10,
@@ -929,7 +949,7 @@ _CONFIGS = [
             pi05=True, action_horizon=10, discrete_state_input=False
         ),
         data=LeRobotLiberoDataConfig(
-            repo_id='VLA_Arena_L0_L_lerobot_openpi/VLA_Arena',
+            repo_id='VLA-Arena/VLA_Arena_L0_L_lerobot_openpi',
             base_config=DataConfig(prompt_from_task=True),
             extra_delta_transform=False,
         ),
@@ -958,7 +978,7 @@ _CONFIGS = [
             action_expert_variant='gemma_300m_lora',
         ),
         data=LeRobotLiberoDataConfig(
-            repo_id='VLA_Arena_L0_L_lerobot_openpi/VLA_Arena',
+            repo_id='VLA-Arena/VLA_Arena_L0_L_lerobot_openpi',
             base_config=DataConfig(prompt_from_task=True),
             extra_delta_transform=False,
         ),

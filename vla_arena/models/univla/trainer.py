@@ -41,6 +41,10 @@ from transformers import (
     AutoProcessor,
     BitsAndBytesConfig,
 )
+from vla_arena.models.univla.lam_checkpoint_resolver import (
+    extract_lam_state_dict,
+    resolve_lam_checkpoint,
+)
 
 from vla_arena.models.univla.prismatic.extern.hf.configuration_prismatic import (
     OpenVLAConfig,
@@ -174,7 +178,8 @@ class Wrapped_Model(torch.nn.Module):
 class FinetuneConfig:
     # fmt: off
     vla_path: str = '/path/to/your/pretrained-univla-7b'            # Path to your local UniVLA path
-    lam_path: str = 'latent_action_model/logs/task_centric_lam_stage2/epoch=0-step=200000.ckpt'
+    lam_path: str = 'latent_action_model/logs/task_centric_lam_stage2/epoch=0-step=200000.ckpt'  # Local file/dir or HF repo id
+    lam_ckpt_file: str | None = None                                # Optional relative checkpoint file within local dir / HF repo
     # Directory Paths
     data_root_dir: Path = Path('/your/path/to/rlds')      # Path to Open-X dataset directory
     dataset_name: str = 'vla_arena'                   # Name of fine-tuning dataset (e.g., `droid_wipe`)
@@ -212,7 +217,7 @@ class FinetuneConfig:
 
     # Tracking Parameters
     wandb_project: str = 'fientune-VLA-ARENA'                          # Name of W&B project to log to (use default!)
-    wandb_entity: str = 'jiahao-li'                              # Name of entity to log under
+    wandb_entity: str = 'your-wandb-entity'                     # Name of entity to log under
     run_id_note: str | None = None                               # Extra note for logging, Weights & Biases
 
 
@@ -375,7 +380,29 @@ def main(config: FinetuneConfig | str | Path) -> None:
         dropout=0.0,
     )
 
-    lam_ckpt = torch.load(cfg.lam_path)['state_dict']
+    resolved_lam = resolve_lam_checkpoint(
+        lam_path=cfg.lam_path,
+        lam_ckpt_file=cfg.lam_ckpt_file,
+        env_var='UNIVLA_LAM_PATH',
+    )
+    if distributed_state.is_main_process:
+        print(
+            f'Resolved LAM checkpoint source={resolved_lam.source}, '
+            f'path={resolved_lam.resolved_path}'
+        )
+        if resolved_lam.source == 'hf_repo':
+            print(
+                f'LAM HF repo={resolved_lam.effective_lam_path}, '
+                f'selected={resolved_lam.selected_checkpoint}'
+            )
+        if resolved_lam.env_overridden:
+            print(
+                'LAM path was overridden by environment variable '
+                '`UNIVLA_LAM_PATH`.'
+            )
+
+    ckpt_obj = torch.load(resolved_lam.resolved_path, map_location='cpu')
+    lam_ckpt = extract_lam_state_dict(ckpt_obj)
     new_ckpt = {}
     for key in lam_ckpt.keys():
         new_ckpt[key.replace('lam.', '')] = lam_ckpt[key]

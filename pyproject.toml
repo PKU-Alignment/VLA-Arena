@@ -37,6 +37,7 @@ dependencies = [
     "h5py",
     "matplotlib",
     "tensorflow",
+    "huggingface_hub",
 ]
 
 [project.scripts]
@@ -47,6 +48,7 @@ dependencies = [
 "vla-arena.create-template" = "scripts.create_template:main"
 "vla-arena.download-tasks" = "scripts.download_tasks:main"
 "vla-arena.manage-tasks" = "scripts.manage_assets:main"
+"vla-arena.init-workspace" = "scripts.init_workspace:main"
 
 [project.optional-dependencies]
 openvla = [
@@ -195,7 +197,7 @@ openpi = [
     "imageio>=2.36.1",
     "jax[cuda12]==0.5.3",
     "jaxtyping==0.2.36",
-    "lerobot",
+    "lerobot @ git+https://github.com/huggingface/lerobot@0cf864870cf29f4738d3ade893e6fd13fbd7cdb5",
     "ml_collections==1.0.0",
     "numpy>=1.22.4,<2.0.0",
     "numpydantic>=1.6.6",
@@ -215,6 +217,7 @@ openpi = [
     "transformers==4.53.2",
     "rich>=14.0.0",
     "polars>=1.30.0",
+    "chex",
 ]
 
 # Integrated Dev/Tool Dependencies

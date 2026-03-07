@@ -18,8 +18,8 @@ from typing import Any
 import jax
 import optax
 from flax import nnx, struct
-from openpi.models import model as _model
-from openpi.shared import array_typing as at
+from vla_arena.models.openpi.src.openpi.models import model as _model
+from vla_arena.models.openpi.src.openpi.shared import array_typing as at
 
 
 @at.typecheck

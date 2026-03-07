@@ -14,13 +14,23 @@
 
 import importlib
 import importlib.util
-import os
+
+from vla_arena.config_paths import resolve_config_path
 
 
 def eval_main(args):
     model = args.model
-    # Ensure config is an absolute path for easy reading by subprocesses
-    config_path = os.path.abspath(str(args.config))
+    try:
+        # Support omitted --config and packaged vla_arena/configs/... refs.
+        config_path = resolve_config_path(
+            mode='eval', model=model, config_path=args.config
+        )
+    except (FileNotFoundError, ValueError) as e:
+        raise RuntimeError(
+            f'Unable to resolve eval config for model {model!r}: {e}\n'
+            'If you installed from PyPI, initialize local uv projects first:\n'
+            '  vla-arena.init-workspace --force',
+        ) from e
 
     # 1. Dynamically get the physical path of the corresponding model evaluator.py file
     try:

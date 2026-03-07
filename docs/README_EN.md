@@ -75,52 +75,18 @@ Detailed guide for building custom task scenarios using BDDL (Behavior Domain De
 Comprehensive guide for fine-tuning and evaluating VLA models using VLA-Arena generated datasets. Supports OpenVLA, OpenVLA-OFT, Openpi, UniVLA, SmolVLA, and other models.
 
 #### Table of Contents:
-1. [General Models (OpenVLA, OpenVLA-OFT, UniVLA, SmolVLA)](#general-models)
+1. [General Models](#general-models)
    - Dependency installation
    - Model fine-tuning
    - Model evaluation
-2. [Openpi Model](#openpi)
-   - Environment setup (using uv)
-   - Training configuration and execution
-   - Policy server startup
-   - Model evaluation
-3. [Configuration File Notes](#configuration-file-notes)
+2. [Configuration File Notes](#configuration-file-notes)
    - Dataset path configuration
    - Model parameter settings
    - Training hyperparameter configuration
 
 ---
 
-### 4. Model Evaluation Guide
-**File:** `evaluation.md`
-
-Complete guide for evaluating VLA models and adding custom models to VLA-Arena.
-
-#### Table of Contents:
-1. [Quick Start](#quick-start)
-   - Environment preparation
-   - Basic evaluation commands
-2. [Model Evaluation](#model-evaluation)
-   - Supported models
-   - Evaluation procedures
-   - Performance metrics
-   - Result interpretation
-3. [Adding Custom Models](#adding-custom-models)
-   - Custom model integration
-   - Configuration requirements
-   - Implementation guidelines
-4. [Configuration Instructions](#configuration-instructions)
-   - Detailed configuration options
-   - Parameter descriptions
-   - Best practices
-5. [Troubleshooting](#troubleshooting)
-   - Common issues and solutions
-   - Debugging techniques
-   - Performance optimization
-
----
-
-### 5. Task Asset Management Guide
+### 4. Task Asset Management Guide
 **File:** `asset_management.md`
 
 Comprehensive guide for packaging, sharing, and installing custom tasks and scenes.
@@ -162,18 +128,11 @@ Comprehensive guide for packaging, sharing, and installing custom tasks and scen
 
 ---
 
-## 🔧 Script Files
+## 🔧 CLI Entry Points
 
-### Fine-tuning Scripts
-- **`finetune_openvla.sh`**: Standard OpenVLA fine-tuning script
-- **`finetune_openvla_oft.sh`**: OpenVLA OFT fine-tuning script with advanced options
-
-### Key Features:
-- Automated dataset configuration
-- Parameter validation
-- Multi-GPU support
-- Comprehensive error handling
-- Flexible training options
+- `vla-arena`: unified training/evaluation CLI
+- `vla-arena.download-tasks`: download task suites and assets from the Hub
+- `vla-arena.manage-tasks`: pack/upload/download/install `.vlap` task packages
 
 ---
 
@@ -209,16 +168,13 @@ docs/
 3. Convert data format using `scripts/group_create_dataset.py`
 
 ### 3. Model Training
-1. Use `finetune_openvla.sh` or `finetune_openvla_oft.sh` for model fine-tuning
-2. Configure training parameters according to your needs
-3. Monitor training progress through WandB
+1. Follow `finetuning_and_evaluation.md` for the uv-only workflow
+2. Fine-tune: `uv run --project envs/<model_name> vla-arena train --model <model_cli_name> --config vla_arena/configs/train/<model_cli_name>.yaml`
+3. Evaluate: `uv run --project envs/<model_name> vla-arena eval --model <model_cli_name> --config vla_arena/configs/evaluation/<model_cli_name>.yaml`
 
-### 4. Model Evaluation
-1. Follow `evaluation.md` for model evaluation procedures
-2. Use `scripts/evaluate_policy.py` for comprehensive evaluation
-3. Analyze results and iterate on model improvements
+> Note: the first `uv run` may take a while—it will create the environment and install dependencies automatically.
 
-### 5. Task Sharing (Optional)
+### 4. Task Sharing (Optional)
 1. Follow `asset_management.md` to package your custom tasks
-2. Use `scripts/manage_assets.py` to upload to cloud
+2. Use `vla-arena.manage-tasks` to upload/download/install packages
 3. Share your task packages with the community

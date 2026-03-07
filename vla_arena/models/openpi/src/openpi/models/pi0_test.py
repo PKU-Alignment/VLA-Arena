@@ -14,7 +14,7 @@
 
 import flax.nnx as nnx
 import jax
-import openpi.models.pi0_config as _pi0_config
+import vla_arena.models.openpi.src.openpi.models.pi0_config as _pi0_config
 
 
 def _get_frozen_state(config: _pi0_config.Pi0Config) -> nnx.State:

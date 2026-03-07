@@ -1,14 +1,14 @@
 # Model-specific parameters
 model_family: "openvla"                    # Model family
 # Set OPENVLA_OFT_PRETRAINED_CHECKPOINT environment variable or modify this path to specify your checkpoint location
-pretrained_checkpoint: "path/to/openvla_oft_checkpoint"                  # Pretrained checkpoint path
+pretrained_checkpoint: "VLA-Arena/openvla-7b-oft-finetuned-vla-arena"    # Pretrained checkpoint path
 
-use_l1_regression: true                    # If True, uses continuous action head with L1 regression objective
+use_l1_regression: true                   # If True, uses continuous action head with L1 regression objective
 use_diffusion: false                      # If True, uses continuous action head with diffusion modeling objective (DDIM)
 num_diffusion_steps_train: 50             # (When `diffusion==True`) Number of diffusion steps used for training
 num_diffusion_steps_inference: 50         # (When `diffusion==True`) Number of diffusion steps used for inference
-use_film: false                           # If True, uses FiLM to infuse language inputs into visual features
-num_images_in_input: 1                    # Number of images in the VLA input (default: 1)
+use_film: true                            # If True, uses FiLM to infuse language inputs into visual features
+num_images_in_input: 2                    # Number of images in the VLA input (default: 1)
 use_proprio: false                        # Whether to include proprio state in input
 
 center_crop: true                         # Center crop? (if trained w/ random crop image aug)
@@ -16,7 +16,7 @@ num_open_loop_steps: 8                    # Number of actions to execute open-lo
 
 lora_rank: 32                             # Rank of LoRA weight matrix (MAKE SURE THIS MATCHES TRAINING!)
 
-unnorm_key: "vla_arena"              # Action un-normalization key
+unnorm_key: "vla_arena_l0_l"              # Action un-normalization key
 
 load_in_8bit: false                       # (For OpenVLA only) Load with 8-bit quantization
 load_in_4bit: false                       # (For OpenVLA only) Load with 4-bit quantization
@@ -33,6 +33,9 @@ adjust_light: false
 randomize_color: false
 camera_offset: false
 safety: false
+init_state_selection_mode: "first"       # "first" | "episode_idx"
+init_state_offset: 0                      # Deterministic offset added to init index
+init_state_offset_random: false           # If true, add random offset in [0, num_initial_states)
 
 # Utils
 run_id_note: null                         # Extra note to add to end of run ID for logging

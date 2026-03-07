@@ -16,8 +16,8 @@ import dataclasses
 
 import einops
 import numpy as np
-from vla_arena.models.openpi.src.openpi import transforms
-from vla_arena.models.openpi.src.openpi.models import model as _model
+from openpi import transforms
+from openpi.models import model as _model
 
 
 def make_libero_example() -> dict:

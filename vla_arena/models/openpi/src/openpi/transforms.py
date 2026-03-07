@@ -20,9 +20,9 @@ from typing import Protocol, TypeAlias, TypeVar, runtime_checkable
 import flax.traverse_util as traverse_util
 import jax
 import numpy as np
-from vla_arena.models.openpi.src.openpi.models import tokenizer as _tokenizer
-from vla_arena.models.openpi.src.openpi.shared import array_typing as at
-from vla_arena.models.openpi.src.openpi.shared import normalize as _normalize
+from openpi.models import tokenizer as _tokenizer
+from openpi.shared import array_typing as at
+from openpi.shared import normalize as _normalize
 from openpi_client import image_tools
 
 

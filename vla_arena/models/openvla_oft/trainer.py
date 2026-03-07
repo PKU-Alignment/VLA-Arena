@@ -240,12 +240,9 @@ def load_checkpoint(
         path, f'{module_name}--{step}_checkpoint.pt'
     )
     print(f'Loading checkpoint: {checkpoint_path}')
-    try:
-        state_dict = torch.load(
-            checkpoint_path, weights_only=True, map_location=device
-        )
-    except TypeError:
-        state_dict = torch.load(checkpoint_path, map_location=device)
+    state_dict = torch.load(
+        checkpoint_path, weights_only=True, map_location=device
+    )
     return remove_ddp_in_checkpoint(state_dict)
 
 

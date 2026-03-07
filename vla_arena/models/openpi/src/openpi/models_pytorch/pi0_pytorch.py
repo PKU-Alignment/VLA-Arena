@@ -15,11 +15,11 @@
 import logging
 import math
 
-import vla_arena.models.openpi.src.openpi.models.gemma as _gemma
-import vla_arena.models.openpi.src.openpi.models_pytorch.preprocessing_pytorch as _preprocessing
+import openpi.models.gemma as _gemma
+import openpi.models_pytorch.preprocessing_pytorch as _preprocessing
 import torch
 import torch.nn.functional as F  # noqa: N812
-from vla_arena.models.openpi.src.openpi.models_pytorch.gemma_pytorch import PaliGemmaWithExpertModel
+from openpi.models_pytorch.gemma_pytorch import PaliGemmaWithExpertModel
 from torch import Tensor, nn
 
 

@@ -66,7 +66,6 @@ from experiments.robot.robot_utils import (
 
 from vla_arena.models.openvla_oft.prismatic.vla.constants import (
     NUM_ACTIONS_CHUNK,
-    PROPRIO_DIM,
 )
 
 
@@ -170,7 +169,7 @@ def initialize_model(cfg: GenerateConfig):
         proprio_projector = get_proprio_projector(
             cfg,
             model.llm_dim,
-            proprio_dim=PROPRIO_DIM,
+            proprio_dim=8,  # 8-dimensional proprio for LIBERO
         )
 
     # Load action head if needed

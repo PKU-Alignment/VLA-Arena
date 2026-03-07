@@ -21,7 +21,6 @@ Evaluates a trained policy in a VLA-Arena simulation benchmark task suite.
 import json
 import logging
 import os
-import re
 import sys
 from collections import deque
 from dataclasses import dataclass, replace
@@ -34,7 +33,6 @@ import torch
 import torch.nn as nn
 import tqdm
 import wandb
-from huggingface_hub import HfApi, hf_hub_download
 
 # Append current directory so that interpreter can find experiments.robot
 from vla_arena.models.univla.experiments.robot.vla_arena.vla_arena_utils import (
@@ -45,7 +43,6 @@ from vla_arena.models.univla.experiments.robot.vla_arena.vla_arena_utils import 
     save_rollout_video,
 )
 from vla_arena.vla_arena import benchmark
-from vla_arena.vla_arena.utils.eval_init_state import select_init_state_index
 from vla_arena.vla_arena.utils.utils import apply_instruction_replacement, load_replacements_dict
 
 
@@ -90,7 +87,6 @@ class GenerateConfig:
 
     # Set UNIVLA_ACTION_DECODER_PATH environment variable to specify a custom action decoder path.
     action_decoder_path:str = os.getenv('UNIVLA_ACTION_DECODER_PATH', '/path/to/your/action_decoder.pt')
-    unnorm_key: str | None = None                    # Action un-normalization key; if None, auto-select from model norm_stats
     center_crop: bool = True                         # Center crop? (if trained w/ random crop image aug)
     save_video: bool = True                         # Whether to save rollout videos
     #################################################################################################################
@@ -109,9 +105,6 @@ class GenerateConfig:
     camera_offset: bool = False
     window_size: int = 12
     safety: bool = False
-    init_state_selection_mode: str = 'first'         # "first" | "episode_idx"
-    init_state_offset: int = 0                       # Deterministic offset added to selected index
-    init_state_offset_random: bool = False           # Whether to add random offset in [0, num_initial_states)
 
     #################################################################################################################
     # Utils
@@ -295,84 +288,12 @@ def validate_config(cfg: GenerateConfig) -> None:
     # assert cfg.task_suite_name in [suite.value for suite in TaskSuite], f"Invalid task suite: {cfg.task_suite_name}"
 
 
-def _extract_checkpoint_step(path_like: str) -> int:
-    filename = Path(path_like).name
-    for pattern in (r'--(\d+)_checkpoint', r'step[-_=]?(\d+)'):
-        match = re.search(pattern, filename)
-        if match:
-            return int(match.group(1))
-    return -1
-
-
-def _select_best_action_decoder(candidates: list[str]) -> str:
-    return max(
-        candidates,
-        key=lambda candidate: (
-            _extract_checkpoint_step(candidate),
-            Path(candidate).name,
-        ),
-    )
-
-
-def _resolve_action_decoder_path(action_decoder_path: str | Path) -> str:
-    decoder_ref = str(action_decoder_path).strip()
-    local_path = Path(decoder_ref).expanduser()
-
-    if local_path.is_file():
-        return str(local_path)
-
-    if local_path.is_dir():
-        local_candidates = [
-            str(path) for path in local_path.rglob('*action_decoder*.pt')
-        ]
-        if not local_candidates:
-            raise FileNotFoundError(
-                f'No action decoder checkpoint found under directory: {local_path}'
-            )
-        selected = _select_best_action_decoder(local_candidates)
-        logger.info('Using local action decoder checkpoint: %s', selected)
-        return selected
-
-    try:
-        repo_files = HfApi().list_repo_files(
-            repo_id=decoder_ref, repo_type='model'
-        )
-    except Exception as exc:
-        raise FileNotFoundError(
-            f'action_decoder_path is neither a local path nor a valid HF repo id: {decoder_ref}'
-        ) from exc
-
-    repo_candidates = [
-        filename
-        for filename in repo_files
-        if Path(filename).suffix in {'.pt', '.pth', '.bin'}
-        and 'action_decoder' in Path(filename).name
-    ]
-    if not repo_candidates:
-        raise FileNotFoundError(
-            f'No action decoder checkpoint file found in HF repo: {decoder_ref}'
-        )
-
-    selected = _select_best_action_decoder(repo_candidates)
-    logger.info(
-        'Downloading action decoder checkpoint from HF repo %s: %s',
-        decoder_ref,
-        selected,
-    )
-    return hf_hub_download(repo_id=decoder_ref, filename=selected)
-
-
 def initialize_model(cfg: GenerateConfig):
     """Initialize model and associated components."""
 
     # Load action decoder
-    action_decoder_checkpoint = _resolve_action_decoder_path(
-        cfg.action_decoder_path
-    )
     action_decoder = ActionDecoder(cfg.window_size)
-    action_decoder.net.load_state_dict(
-        torch.load(action_decoder_checkpoint, map_location='cpu')
-    )
+    action_decoder.net.load_state_dict(torch.load(cfg.action_decoder_path))
     action_decoder.eval().cuda()
     # Load model
     model = get_model_for_vla_arena(cfg)
@@ -388,42 +309,23 @@ def initialize_model(cfg: GenerateConfig):
 
 def check_unnorm_key(cfg: GenerateConfig, model) -> None:
     """Check that the model contains the action un-normalization key."""
-    available_keys = list(model.norm_stats.keys())
-    if not available_keys:
-        raise ValueError('Model `norm_stats` is empty; cannot determine `unnorm_key`.')
+    # Initialize unnorm_key
+    unnorm_key = 'libero_spatial'
 
-    requested_key = getattr(cfg, 'unnorm_key', None)
-    if requested_key:
-        candidate_keys = [requested_key, f'{requested_key}_no_noops']
-    else:
-        candidate_keys = []
-        if len(available_keys) == 1:
-            candidate_keys.append(available_keys[0])
-        # Prefer VLA-Arena/LIBERO keys when multiple stats are available.
-        candidate_keys.extend(
-            [
-                'vla_arena_l0_l',
-                'vla_arena_l0_l_no_noops',
-                'libero_spatial',
-                'libero_spatial_no_noops',
-            ]
-        )
-        candidate_keys = list(dict.fromkeys(candidate_keys))
+    # In some cases, the key must be manually modified (e.g. after training on a modified version of the dataset
+    # with the suffix "_no_noops" in the dataset name)
+    if (
+        unnorm_key not in model.norm_stats
+        and f'{unnorm_key}_no_noops' in model.norm_stats
+    ):
+        unnorm_key = f'{unnorm_key}_no_noops'
 
-    for candidate in candidate_keys:
-        if candidate in model.norm_stats:
-            cfg.unnorm_key = candidate
-            return
+    assert (
+        unnorm_key in model.norm_stats
+    ), f'Action un-norm key {unnorm_key} not found in VLA `norm_stats`!'
 
-    if requested_key:
-        raise ValueError(
-            f'Action un-norm key {requested_key} not found in VLA `norm_stats`. '
-            f'Available keys: {available_keys}'
-        )
-    raise ValueError(
-        'Unable to auto-detect action un-norm key from model `norm_stats`. '
-        f'Please set `unnorm_key` explicitly. Available keys: {available_keys}'
-    )
+    # Set the unnorm_key in cfg
+    cfg.unnorm_key = unnorm_key
 
 
 def setup_logging(cfg: GenerateConfig):
@@ -706,31 +608,16 @@ def run_task(
     successes_with_cost = 0
     failures_with_cost = 0
     rng = np.random.default_rng(cfg.seed)
-    log_message(
-        'Init state selection | '
-        f'mode={cfg.init_state_selection_mode} | '
-        f'offset={cfg.init_state_offset} | '
-        f'offset_random={cfg.init_state_offset_random}',
-        log_file,
-    )
     for episode_idx in tqdm.tqdm(range(cfg.num_trials_per_task)):
         log_message(f'\nTask: {task_description}', log_file)
 
         # Handle initial state
         if cfg.initial_states_path == 'DEFAULT':
-            initial_state_idx = select_init_state_index(
-                num_initial_states=len(initial_states),
-                episode_idx=episode_idx,
-                selection_mode=cfg.init_state_selection_mode,
-                offset=cfg.init_state_offset,
-                offset_random=cfg.init_state_offset_random,
-                rng=rng,
-            )
-            initial_state = (
-                initial_states[initial_state_idx]
-                if initial_state_idx is not None
-                else None
-            )
+            # Use default initial state
+            random_offset = rng.integers(0, len(initial_states))
+            initial_state = initial_states[
+                (episode_idx + random_offset) % len(initial_states)
+            ]
         else:
             # Get keys for fetching initial episode state from JSON
             initial_states_task_key = task_description.replace(' ', '_')
@@ -792,18 +679,17 @@ def run_task(
 
         # Save replay video based on mode
         should_save_video = False
-        if cfg.save_video:
-            if cfg.save_video_mode == 'all':
+        if cfg.save_video_mode == 'all':
+            should_save_video = True
+        elif cfg.save_video_mode == 'first_success_failure':
+            if success and not first_success_saved:
                 should_save_video = True
-            elif cfg.save_video_mode == 'first_success_failure':
-                if success and not first_success_saved:
-                    should_save_video = True
-                    first_success_saved = True
-                    log_message('Saving first successful episode video', log_file)
-                elif not success and not first_failure_saved:
-                    should_save_video = True
-                    first_failure_saved = True
-                    log_message('Saving first failed episode video', log_file)
+                first_success_saved = True
+                log_message('Saving first successful episode video', log_file)
+            elif not success and not first_failure_saved:
+                should_save_video = True
+                first_failure_saved = True
+                log_message('Saving first failed episode video', log_file)
         # For "none" mode, should_save_video remains False
 
         if should_save_video:
@@ -915,6 +801,9 @@ def main(cfg: GenerateConfig | str | Path) -> float:
     tasks_payload: list[dict[str, object]] = []
 
     replacements_dict = load_replacements_dict(cfg, logger)
+    if cfg.use_replacements:
+        log_message(f"Using instruction replacements with probability {cfg.replacement_probability}", log_file)
+        log_message(f"Loaded {len(replacements_dict)} replacement entries", log_file)
 
     for suite_name in suite_names:
         if suite_name not in benchmark_dict:
@@ -933,15 +822,6 @@ def main(cfg: GenerateConfig | str | Path) -> float:
             f'Evaluating {num_tasks} tasks from the {suite_name} suite...'
         )
         log_message(f'Task suite: {suite_name}', log_file)
-        if cfg.use_replacements:
-            log_message(
-                f'Using instruction replacements with probability {cfg.replacement_probability}',
-                log_file,
-            )
-            log_message(
-                f'Loaded {len(replacements_dict)} replacement entries',
-                log_file,
-            )
 
         total_episodes = 0
         total_successes = 0

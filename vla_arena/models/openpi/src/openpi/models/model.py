@@ -24,13 +24,13 @@ import augmax
 import jax
 import jax.numpy as jnp
 import numpy as np
-import vla_arena.models.openpi.src.openpi.shared.array_typing as at
+import openpi.shared.array_typing as at
 import orbax.checkpoint as ocp
 import safetensors
 import torch
 from flax import nnx, struct, traverse_util
-from vla_arena.models.openpi.src.openpi.models_pytorch import pi0_pytorch
-from vla_arena.models.openpi.src.openpi.shared import image_tools
+from openpi.models_pytorch import pi0_pytorch
+from openpi.shared import image_tools
 
 
 logger = logging.getLogger('openpi')
@@ -338,7 +338,7 @@ def restore_params(
     """Restores unstructured params PyTree from a checkpoint.
 
     This works with checkpoints saved with `save_state` during openpi training (see `training/checkpoints.py`) as
-    well as pre-trained checkpoints released for vla_arena.models.openpi.src.openpi.
+    well as pre-trained checkpoints released for openpi.
 
     Args:
         params_path: The local path to the checkpoint directory.

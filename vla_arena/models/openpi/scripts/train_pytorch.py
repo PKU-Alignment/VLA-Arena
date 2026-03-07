@@ -47,11 +47,11 @@ import time
 
 import jax
 import numpy as np
-import vla_arena.models.openpi.src.openpi.models.pi0_config
-import vla_arena.models.openpi.src.openpi.models_pytorch.pi0_pytorch
-import vla_arena.models.openpi.src.openpi.shared.normalize as _normalize
-import vla_arena.models.openpi.src.openpi.training.config as _config
-import vla_arena.models.openpi.src.openpi.training.data_loader as _data
+import openpi.models.pi0_config
+import openpi.models_pytorch.pi0_pytorch
+import openpi.shared.normalize as _normalize
+import openpi.training.config as _config
+import openpi.training.data_loader as _data
 import safetensors.torch
 import torch
 import torch.distributed as dist
@@ -473,9 +473,9 @@ def train_loop(config: _config.TrainConfig):
         logging.info('Cleared sample batch and data loader from memory')
 
     # Build model
-    if not isinstance(config.model, vla_arena.models.openpi.src.openpi.models.pi0_config.Pi0Config):
+    if not isinstance(config.model, openpi.models.pi0_config.Pi0Config):
         # Convert dataclass to Pi0Config if needed
-        model_cfg = vla_arena.models.openpi.src.openpi.models.pi0_config.Pi0Config(
+        model_cfg = openpi.models.pi0_config.Pi0Config(
             dtype=config.pytorch_training_precision,
             action_dim=config.model.action_dim,
             action_horizon=config.model.action_horizon,
@@ -495,7 +495,7 @@ def train_loop(config: _config.TrainConfig):
             model_cfg, 'dtype', config.pytorch_training_precision
         )
 
-    model = vla_arena.models.openpi.src.openpi.models_pytorch.pi0_pytorch.PI0Pytorch(model_cfg).to(device)
+    model = openpi.models_pytorch.pi0_pytorch.PI0Pytorch(model_cfg).to(device)
 
     if hasattr(model, 'gradient_checkpointing_enable'):
         enable_gradient_checkpointing = True

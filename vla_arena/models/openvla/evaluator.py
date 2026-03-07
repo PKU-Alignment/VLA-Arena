@@ -39,7 +39,6 @@ from vla_arena.models.openvla.experiments.robot.vla_arena.vla_arena_utils import
     save_rollout_video,
 )
 from vla_arena.vla_arena import benchmark
-from vla_arena.vla_arena.utils.eval_init_state import select_init_state_index
 from vla_arena.vla_arena.utils.utils import apply_instruction_replacement, load_replacements_dict
 
 
@@ -82,6 +81,7 @@ class GenerateConfig:
     center_crop: bool = True                         # Center crop? (if trained w/ random crop image aug)
 
     unnorm_key: str | Path = 'libero_spatial_no_noops'                # Action un-normalization key
+    num_open_loop_steps: int = 8                     # Number of actions to execute open-loop before requerying policy
 
     load_in_8bit: bool = False                       # (For OpenVLA only) Load with 8-bit quantization
     load_in_4bit: bool = False                       # (For OpenVLA only) Load with 4-bit quantization
@@ -101,9 +101,6 @@ class GenerateConfig:
     randomize_color: bool = False
     camera_offset: bool = False
     safety: bool = False
-    init_state_selection_mode: str = 'first'         # "first" | "episode_idx"
-    init_state_offset: int = 0                       # Deterministic offset added to selected index
-    init_state_offset_random: bool = False           # Whether to add random offset in [0, num_initial_states)
 
     #################################################################################################################
     # Utils
@@ -425,31 +422,16 @@ def run_task(
     successes_with_cost = 0
     failures_with_cost = 0
     rng = np.random.default_rng(cfg.seed)
-    log_message(
-        'Init state selection | '
-        f'mode={cfg.init_state_selection_mode} | '
-        f'offset={cfg.init_state_offset} | '
-        f'offset_random={cfg.init_state_offset_random}',
-        log_file,
-    )
     for episode_idx in tqdm.tqdm(range(cfg.num_trials_per_task)):
         log_message(f'\nTask: {task_description}', log_file)
 
         # Handle initial state
         if cfg.initial_states_path == 'DEFAULT':
-            initial_state_idx = select_init_state_index(
-                num_initial_states=len(initial_states),
-                episode_idx=episode_idx,
-                selection_mode=cfg.init_state_selection_mode,
-                offset=cfg.init_state_offset,
-                offset_random=cfg.init_state_offset_random,
-                rng=rng,
-            )
-            initial_state = (
-                initial_states[initial_state_idx]
-                if initial_state_idx is not None
-                else None
-            )
+            # Use default initial state
+            random_offset = rng.integers(0, len(initial_states))
+            initial_state = initial_states[
+                (episode_idx + random_offset) % len(initial_states)
+            ]
         else:
             # Get keys for fetching initial episode state from JSON
             initial_states_task_key = task_description.replace(' ', '_')
@@ -629,6 +611,9 @@ def main(cfg: GenerateConfig | str | Path):
     tasks_payload: list[dict[str, object]] = []
 
     replacements_dict = load_replacements_dict(cfg, logger)
+    if cfg.use_replacements:
+        log_message(f"Using instruction replacements with probability {cfg.replacement_probability}", log_file)
+        log_message(f"Loaded {len(replacements_dict)} replacement entries", log_file)
 
     for suite_name in suite_names:
         if suite_name not in benchmark_dict:
@@ -646,15 +631,6 @@ def main(cfg: GenerateConfig | str | Path):
             10 if suite_name == 'long_horizon' and task_level == 0 else 5
         )
         log_message(f'Task suite: {suite_name}', log_file)
-        if cfg.use_replacements:
-            log_message(
-                f'Using instruction replacements with probability {cfg.replacement_probability}',
-                log_file,
-            )
-            log_message(
-                f'Loaded {len(replacements_dict)} replacement entries',
-                log_file,
-            )
 
         total_episodes = 0
         total_successes = 0

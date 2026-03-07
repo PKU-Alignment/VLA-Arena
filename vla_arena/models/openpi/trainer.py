@@ -41,14 +41,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-# Import TensorFlow before JAX/transformers so TF's DType is registered first.
-# Otherwise transformers->image_transforms->tensorflow triggers a second
-# registration and raises: DType already has SerializedDType proto representation.
-try:
-    import tensorflow as _tf  # noqa: F401
-except ImportError:
-    pass
-
 import etils.epath as epath
 import flax.nnx as nnx
 import jax
@@ -57,6 +49,7 @@ import numpy as np
 import optax
 import tqdm_loggable.auto as tqdm
 import wandb
+import yaml
 from flax.training import common_utils
 
 
@@ -65,18 +58,16 @@ _openpi_src = Path(__file__).parent / 'src'
 if str(_openpi_src) not in sys.path:
     sys.path.insert(0, str(_openpi_src))
 
-import vla_arena.models.openpi.src.openpi.models.model as _model
-import vla_arena.models.openpi.src.openpi.shared.array_typing as at
-import vla_arena.models.openpi.src.openpi.shared.nnx_utils as nnx_utils
-import vla_arena.models.openpi.src.openpi.training.checkpoints as _checkpoints
-import vla_arena.models.openpi.src.openpi.training.config as _config
-import vla_arena.models.openpi.src.openpi.training.data_loader as _data_loader
-import vla_arena.models.openpi.src.openpi.training.optimizer as _optimizer
-import vla_arena.models.openpi.src.openpi.training.sharding as sharding
-import vla_arena.models.openpi.src.openpi.training.utils as training_utils
-import vla_arena.models.openpi.src.openpi.training.weight_loaders as _weight_loaders
-from vla_arena.models.openpi.workflow_utils import ensure_norm_stats
-from vla_arena.models.openpi.workflow_utils import load_train_config_from_yaml
+import openpi.models.model as _model
+import openpi.shared.array_typing as at
+import openpi.shared.nnx_utils as nnx_utils
+import openpi.training.checkpoints as _checkpoints
+import openpi.training.config as _config
+import openpi.training.data_loader as _data_loader
+import openpi.training.optimizer as _optimizer
+import openpi.training.sharding as sharding
+import openpi.training.utils as training_utils
+import openpi.training.weight_loaders as _weight_loaders
 
 
 def init_logging():
@@ -517,11 +508,73 @@ def main(
     # [Config Parsing] Handle cases where config is a path
     if isinstance(config, (str, Path)):
         config_path = Path(config)
+        if not config_path.exists():
+            raise FileNotFoundError(f'Config file not found at: {config_path}')
+
         print(f'Loading configuration from {config_path}...')
-        cfg = load_train_config_from_yaml(config_path, override_kwargs)
+
+        # Load YAML file
+        with open(config_path) as f:
+            yaml_data = yaml.safe_load(f)
+
+        # Apply overrides from kwargs
+        if override_kwargs:
+            yaml_data.update(override_kwargs)
+
+        # If yaml contains a config name, use it with tyro
+        if isinstance(yaml_data, dict) and 'name' in yaml_data:
+            config_name = yaml_data['name']
+
+            # Recursively convert nested dict to command line args
+            def dict_to_args(prefix: str, d: dict) -> list[str]:
+                """Recursively convert nested dict to tyro command line args."""
+                args = []
+                for key, value in d.items():
+                    if key == 'name':
+                        continue
+                    full_key = f'{prefix}.{key}' if prefix else key
+                    if isinstance(value, dict):
+                        # Recursively handle nested dicts
+                        args.extend(dict_to_args(full_key, value))
+                    elif isinstance(value, (list, tuple)):
+                        # Handle lists/tuples
+                        args.append(
+                            f"--{full_key}={','.join(str(v) for v in value)}"
+                        )
+                    elif isinstance(value, bool):
+                        # Handle booleans: only add flag if True
+                        # For False, skip (use default) since tyro doesn't accept --key=false
+                        if value:
+                            args.append(f'--{full_key}')
+                        # else: skip False values to use default
+                    elif value is None:
+                        # Skip None values
+                        continue
+                    else:
+                        args.append(f'--{full_key}={value}')
+                return args
+
+            # Build command line args from yaml
+            original_argv = sys.argv.copy()
+            try:
+                args_list = [config_name]  # Start with config name
+                args_list.extend(dict_to_args('', yaml_data))
+
+                # Temporarily modify sys.argv to pass args to tyro
+                sys.argv = ['trainer_jax.py'] + args_list
+                cfg = _config.cli()
+            finally:
+                # Restore original argv
+                sys.argv = original_argv
+        else:
+            # Fallback: use CLI if yaml doesn't have expected structure
+            print(
+                "Warning: Config file doesn't have expected structure, falling back to CLI"
+            )
+            cfg = _config.cli()
+
         print(
-            f'Config loaded successfully. Max Steps: {cfg.num_train_steps}, '
-            f'checkpoint_dir: {cfg.checkpoint_dir}'
+            f"Config loaded successfully. Dataset: {cfg.data.repo_id if hasattr(cfg.data, 'repo_id') else 'N/A'}, Max Steps: {cfg.num_train_steps}"
         )
 
     elif isinstance(config, _config.TrainConfig):
@@ -534,7 +587,6 @@ def main(
             f'Unsupported config type: {type(config)}. Expected TrainConfig, str, Path, or None.'
         )
 
-    ensure_norm_stats(cfg)
     train_loop(cfg)
 
 

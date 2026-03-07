@@ -23,11 +23,11 @@ import jax
 import jax.numpy as jnp
 import lerobot.common.datasets.lerobot_dataset as lerobot_dataset
 import numpy as np
-import vla_arena.models.openpi.src.openpi.models.model as _model
-import vla_arena.models.openpi.src.openpi.training.config as _config
-import vla_arena.models.openpi.src.openpi.transforms as _transforms
+import openpi.models.model as _model
+import openpi.training.config as _config
+import openpi.transforms as _transforms
 import torch
-from vla_arena.models.openpi.src.openpi.training.droid_rlds_dataset import DroidRldsDataset
+from openpi.training.droid_rlds_dataset import DroidRldsDataset
 
 
 T_co = TypeVar('T_co', covariant=True)
@@ -563,7 +563,7 @@ def _worker_init_fn(worker_id: int) -> None:
 
 
 class RLDSDataLoader:
-    """Shallow wrapper around the DROID data loader to make it compatible with vla_arena.models.openpi.src.openpi.
+    """Shallow wrapper around the DROID data loader to make it compatible with openpi.
 
     All batching already happens in the DROID dataset, so we don't need to do anything here.
     """

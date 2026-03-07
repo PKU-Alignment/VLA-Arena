@@ -17,8 +17,8 @@ import os
 
 import jax
 import numpy as np
-import vla_arena.models.openpi.src.openpi.models.utils.fsq_tokenizer as fsq_tokenizer
-import vla_arena.models.openpi.src.openpi.shared.download as download
+import openpi.models.utils.fsq_tokenizer as fsq_tokenizer
+import openpi.shared.download as download
 import orbax.checkpoint as ocp
 import sentencepiece
 from transformers import AutoProcessor

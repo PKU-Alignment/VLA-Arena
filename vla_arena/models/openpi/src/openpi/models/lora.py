@@ -18,7 +18,7 @@ import re
 import flax.linen as nn
 import flax.struct as struct
 import jax.numpy as jnp
-import vla_arena.models.openpi.src.openpi.shared.array_typing as at
+import openpi.shared.array_typing as at
 
 
 @struct.dataclass

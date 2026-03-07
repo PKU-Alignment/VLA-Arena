@@ -36,13 +36,13 @@ from huggingface_hub import hf_hub_download
 from timm.models.vision_transformer import LayerScale
 from transformers import AutoTokenizer
 
-from vla_arena.models.openvla_oft.prismatic.extern.hf.configuration_prismatic import (
+from vla_arena.models.openvla_oft.vla_arena.models.openvla_oft.prismatic.extern.hf.configuration_prismatic import (
     PrismaticConfig,
 )
-from vla_arena.models.openvla_oft.prismatic.extern.hf.modeling_prismatic import (
+from vla_arena.models.openvla_oft.vla_arena.models.openvla_oft.prismatic.extern.hf.modeling_prismatic import (
     PrismaticForConditionalGeneration,
 )
-from vla_arena.models.openvla_oft.prismatic.extern.hf.processing_prismatic import (
+from vla_arena.models.openvla_oft.vla_arena.models.openvla_oft.prismatic.extern.hf.processing_prismatic import (
     PrismaticImageProcessor,
     PrismaticProcessor,
 )

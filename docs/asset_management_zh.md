@@ -22,8 +22,6 @@ VLA-Arena 提供了一套完整的资产管理系统，用于打包、分享和�
 设计 → 打包 → 上传 → 下载 → 安装 → 使用
 ```
 
-> **前置步骤**：在仓库根目录执行 `uv sync --project envs/base`。
-
 ### 核心功能
 - **自动依赖检测**：自动查找所有需要的资产（物体、纹理、网格、Problem 类、场景 XML）
 - **自包含包**：所有依赖项打包到单个 `.vlap` 文件中
@@ -44,7 +42,7 @@ VLA-Arena 提供了一套完整的资产管理系统，用于打包、分享和�
 要打包单个任务，你需要 BDDL 文件路径：
 
 ```bash
-uv run --project envs/base vla-arena.manage-tasks pack <bddl文件路径> \
+python scripts/manage_assets.py pack <bddl文件路径> \
     -o ./packages \
     --author "你的名字" \
     --email "your.email@example.com" \
@@ -53,8 +51,8 @@ uv run --project envs/base vla-arena.manage-tasks pack <bddl文件路径> \
 
 ### 示例
 ```bash
-uv run --project envs/base vla-arena.manage-tasks pack \
-    vla_arena/vla_arena/bddl_files/distractor_static_distractors/level_0/pick_the_banana_on_the_table_and_place_it_on_the_plate.bddl \
+python scripts/manage_assets.py pack \
+    vla_arena/vla_arena/bddl_files/robustness_static_distractors/level_0/pick_up_the_banana_and_put_it_on_the_plate.bddl \
     -o ./packages \
     --author "VLA-Arena Team" \
     --description "带静态干扰物的拾取香蕉任务"
@@ -74,7 +72,7 @@ uv run --project envs/base vla-arena.manage-tasks pack \
 要打包包含多个任务的整个任务套件：
 
 ```bash
-uv run --project envs/base vla-arena.manage-tasks pack-suite <套件名称> \
+python scripts/manage_assets.py pack-suite <套件名称> \
     -o ./packages \
     --author "你的名字" \
     --description "任务套件的描述"
@@ -82,10 +80,10 @@ uv run --project envs/base vla-arena.manage-tasks pack-suite <套件名称> \
 
 ### 示例
 ```bash
-uv run --project envs/base vla-arena.manage-tasks pack-suite distractor_static_distractors \
+python scripts/manage_assets.py pack-suite robustness_static_distractors \
     -o ./packages \
     --author "VLA-Arena Team" \
-    --description "静态干扰物套件"
+    --description "静态干扰物鲁棒性测试"
 ```
 
 ## 4. 检查包内容
@@ -93,12 +91,12 @@ uv run --project envs/base vla-arena.manage-tasks pack-suite distractor_static_d
 在安装之前，你可以检查包的内容：
 
 ```bash
-uv run --project envs/base vla-arena.manage-tasks inspect <包路径>
+python scripts/manage_assets.py inspect <包路径>
 ```
 
 ### 示例
 ```bash
-uv run --project envs/base vla-arena.manage-tasks inspect ./packages/pick_the_banana_on_the_table_and_place_it_on_the_plate.vlap
+python scripts/manage_assets.py inspect ./packages/pick_up_the_banana_and_put_it_on_the_plate.vlap
 ```
 
 ## 5. 安装包
@@ -106,12 +104,12 @@ uv run --project envs/base vla-arena.manage-tasks inspect ./packages/pick_the_ba
 要将包安装到你的 VLA-Arena 安装中：
 
 ```bash
-uv run --project envs/base vla-arena.manage-tasks install <包路径>
+python scripts/manage_assets.py install <包路径>
 ```
 
 ### 示例
 ```bash
-uv run --project envs/base vla-arena.manage-tasks install ./packages/pick_the_banana_on_the_table_and_place_it_on_the_plate.vlap
+python scripts/manage_assets.py install ./packages/pick_up_the_banana_and_put_it_on_the_plate.vlap
 ```
 
 ### 选项
@@ -135,7 +133,7 @@ Use --overwrite to replace existing files.
 将包上传到 HuggingFace Hub（或你自己的仓库）：
 
 ```bash
-uv run --project envs/base vla-arena.manage-tasks upload <包路径> \
+python scripts/manage_assets.py upload <包路径> \
     --repo 用户名/仓库名
 ```
 
@@ -155,15 +153,15 @@ uv run --project envs/base vla-arena.manage-tasks upload <包路径> \
 export HUGGING_FACE_HUB_TOKEN="hf_your_token_here"
 
 # 上传包
-uv run --project envs/base vla-arena.manage-tasks upload \
-    ./packages/pick_the_banana_on_the_table_and_place_it_on_the_plate.vlap \
+python scripts/manage_assets.py upload \
+    ./packages/pick_up_the_banana_and_put_it_on_the_plate.vlap \
     --repo username/vla-arena-tasks
 ```
 
 ### 使用令牌参数
 ```bash
-uv run --project envs/base vla-arena.manage-tasks upload \
-    ./packages/pick_the_banana_on_the_table_and_place_it_on_the_plate.vlap \
+python scripts/manage_assets.py upload \
+    ./packages/pick_up_the_banana_and_put_it_on_the_plate.vlap \
     --repo username/vla-arena-tasks \
     --token hf_your_token_here \
     --private  # 将仓库设为私有（可选）
@@ -172,7 +170,7 @@ uv run --project envs/base vla-arena.manage-tasks upload \
 ### 输出
 ```
 Uploading via HuggingFace API...
-✓ Uploaded: https://huggingface.co/datasets/username/vla-arena-tasks/blob/main/packages/pick_the_banana_on_the_table_and_place_it_on_the_plate.vlap
+✓ Uploaded: https://huggingface.co/datasets/username/vla-arena-tasks/blob/main/packages/pick_up_the_banana_and_put_it_on_the_plate.vlap
 ```
 
 ### 自动回退
@@ -184,7 +182,7 @@ Retrying with Git LFS method...
 Using Git LFS upload method...
   Cloning repository...
   Setting up Git LFS...
-  Copying pick_the_banana_on_the_table_and_place_it_on_the_plate.vlap...
+  Copying pick_up_the_banana_and_put_it_on_the_plate.vlap...
   Creating commit...
   Pushing to HuggingFace...
 ✓ Uploaded via Git LFS: https://huggingface.co/...
@@ -195,21 +193,21 @@ Using Git LFS upload method...
 从 HuggingFace Hub 下载并可选地安装包：
 
 ```bash
-uv run --project envs/base vla-arena.manage-tasks download <包名称> \
+python scripts/manage_assets.py download <包名称> \
     --repo 用户名/仓库名 \
     --install
 ```
 
 ### 示例：仅下载
 ```bash
-uv run --project envs/base vla-arena.manage-tasks download pick_the_banana_on_the_table_and_place_it_on_the_plate \
+python scripts/manage_assets.py download pick_up_the_banana_and_put_it_on_the_plate \
     --repo username/vla-arena-tasks \
     -o ./downloaded_packages
 ```
 
 ### 示例：下载并安装
 ```bash
-uv run --project envs/base vla-arena.manage-tasks download pick_the_banana_on_the_table_and_place_it_on_the_plate \
+python scripts/manage_assets.py download pick_up_the_banana_and_put_it_on_the_plate \
     --repo username/vla-arena-tasks \
     --install \
     --overwrite
@@ -217,14 +215,14 @@ uv run --project envs/base vla-arena.manage-tasks download pick_the_banana_on_th
 
 ### 列出可用包
 ```bash
-uv run --project envs/base vla-arena.manage-tasks list --repo username/vla-arena-tasks
+python scripts/manage_assets.py list --repo username/vla-arena-tasks
 ```
 
 ### 输出
 ```
 Available packages:
-  - pick_the_banana_on_the_table_and_place_it_on_the_plate
-  - distractor_static_distractors
+  - pick_up_the_banana_and_put_it_on_the_plate
+  - robustness_static_distractors
   - long_horizon
 ```
 
@@ -233,22 +231,22 @@ Available packages:
 要移除已安装的包：
 
 ```bash
-uv run --project envs/base vla-arena.manage-tasks uninstall <包名称>
+python scripts/manage_assets.py uninstall <包名称>
 ```
 
 ### 示例
 ```bash
-uv run --project envs/base vla-arena.manage-tasks uninstall pick_the_banana_on_the_table_and_place_it_on_the_plate
+python scripts/manage_assets.py uninstall pick_up_the_banana_and_put_it_on_the_plate
 ```
 
 ### 输出
 ```
-Uninstalling: pick_the_banana_on_the_table_and_place_it_on_the_plate
+Uninstalling: pick_up_the_banana_and_put_it_on_the_plate
   ✓ Removed BDDL files
   ✓ Removed init files
   ⚠ Assets not removed (shared with other tasks)
 
-✓ Uninstalled: pick_the_banana_on_the_table_and_place_it_on_the_plate
+✓ Uninstalled: pick_up_the_banana_and_put_it_on_the_plate
 ```
 
 ### 选项
@@ -370,9 +368,10 @@ Use --overwrite to replace existing files.
 
 ### 问题：缺少依赖
 **症状**：安装后任务无法运行
-**解决方案**：确保 VLA-Arena 与依赖项已安装（推荐使用 uv）：
+**解决方案**：确保 robosuite 和所有依赖项已安装：
 ```bash
-uv sync --project envs/base
+cd vla_arena
+pip install -e .
 ```
 
 ### 问题：路径解析错误
@@ -380,7 +379,7 @@ uv sync --project envs/base
 **解决方案**：VLA-Arena 现在使用相对路径。确保你从项目根目录运行命令：
 ```bash
 cd /path/to/VLA-Arena
-uv run --project envs/base vla-arena.manage-tasks <命令>
+python scripts/manage_assets.py <命令>
 ```
 
 ## 注意事项和最佳实践
@@ -418,7 +417,7 @@ uv run --project envs/base vla-arena.manage-tasks <命令>
 # ... （参见场景构建指南）
 
 # 2. 打包你的任务
-uv run --project envs/base vla-arena.manage-tasks pack \
+python scripts/manage_assets.py pack \
     vla_arena/vla_arena/bddl_files/my_custom_task/my_task.bddl \
     -o ./packages \
     --author "你的名字" \
@@ -426,22 +425,22 @@ uv run --project envs/base vla-arena.manage-tasks pack \
     --description "我的很棒的自定义任务"
 
 # 3. 检查包
-uv run --project envs/base vla-arena.manage-tasks inspect ./packages/my_task.vlap
+python scripts/manage_assets.py inspect ./packages/my_task.vlap
 
 # 4. 上传到 HuggingFace
 export HUGGING_FACE_HUB_TOKEN="your_token"
-uv run --project envs/base vla-arena.manage-tasks upload \
+python scripts/manage_assets.py upload \
     ./packages/my_task.vlap \
     --repo yourusername/vla-arena-custom-tasks
 
 # 5. 与他人分享下载命令
 echo "要使用我的任务，运行："
-echo "uv run --project envs/base vla-arena.manage-tasks download my_task --repo yourusername/vla-arena-custom-tasks --install"
+echo "python scripts/manage_assets.py download my_task --repo yourusername/vla-arena-custom-tasks --install"
 ```
 
 其他人现在可以用一个命令安装你的任务：
 ```bash
-uv run --project envs/base vla-arena.manage-tasks download my_task \
+python scripts/manage_assets.py download my_task \
     --repo yourusername/vla-arena-custom-tasks \
     --install
 ```
@@ -450,5 +449,5 @@ uv run --project envs/base vla-arena.manage-tasks download my_task \
 
 - [场景构建指南](scene_construction_zh.md) - 如何创建自定义任务
 - [数据收集指南](data_collection_zh.md) - 如何收集演示数据
-- [模型微调与评测指南](finetuning_and_evaluation_zh.md) - 如何训练/评测模型
+- [评估指南](evaluation_zh.md) - 如何评估策略
 - [HuggingFace Hub 文档](https://huggingface.co/docs/hub/index) - 云存储

@@ -60,7 +60,7 @@ cd VLA-Arena
 
 ### 第二步 — 运行（评估或训练）
 
-您可以直接使用我们官方微调好的模型进行评估，或者训练您自己的模型。*（首次执行 `uv run` 可能会花费一些时间，因为它会自动创建独立的虚拟环境并安装相关依赖）。*
+你可以直接使用我们官方微调好的模型进行评估，或者训练你自己的模型。*（首次执行 `uv run` 可能会花费一些时间，因为它会自动创建独立的虚拟环境并安装相关依赖）。*
 
 **执行评估：**
 
@@ -80,7 +80,7 @@ uv run --project envs/openvla \
 
 ### ⚙️ 配置文件说明
 
-在运行上述命令之前，请根据您的模型设置编辑相应的 YAML 配置文件。以 OpenVLA 为例：
+在运行上述命令之前，请根据你的模型设置编辑相应的 YAML 配置文件。以 OpenVLA 为例：
 
 * **训练配置** (`vla_arena/configs/train/openvla.yaml`)：设置 `vla_path`、`data_root_dir` 和 `dataset_name`。
 * **评估配置** (`vla_arena/configs/evaluation/openvla.yaml`)：设置 `pretrained_checkpoint`、`task_suite_name` 和 `task_level`。

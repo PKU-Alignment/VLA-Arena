@@ -8,7 +8,7 @@
   <a href="https://vla-arena.github.io/#taskstore"><img src="https://img.shields.io/badge/task%20store-170+%20tasks-orange?style=for-the-badge" alt="Task Store"></a>
   <a href="https://huggingface.co/vla-arena"><img src="https://img.shields.io/badge/🤗%20models%20%26%20datasets-available-yellow?style=for-the-badge" alt="Models & Datasets"></a>
   <a href="docs/"><img src="https://img.shields.io/badge/docs-available-green?style=for-the-badge" alt="Docs"></a>
-  <a href="https://github.com/vla-arena/vla-arena-community"><img src="https://img.shields.io/badge/Community-💬%20WeChat%20%26%20𝕏-cyan?style=for-the-badge" alt="Community"></a>
+  <a href="https://github.com/vla-arena/vla-arena-community"><img src="https://img.shields.io/badge/Community-💬%20WeChat-cyan?style=for-the-badge" alt="Community"></a>
 </p>
 
 <div align="center">

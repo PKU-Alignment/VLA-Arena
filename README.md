@@ -330,7 +330,7 @@ Share your custom tasks through the following steps, enabling the community to r
 2. **Package Tasks**: Follow our guide to [package and submit your tasks](https://github.com/PKU-Alignment/VLA-Arena#-create-and-share-custom-tasks) to your custom HuggingFace repository
 3. **Update Task Store**: Open a [Pull Request](https://github.com/vla-arena/vla-arena.github.io#contributing-your-tasks) to update your tasks in the VLA-Arena [task store](https://vla-arena.github.io/#taskstore)
 
-## 💡 Contributing
+## Contributing
 
 - **Report Issues**: Found a bug? [Open an issue](https://github.com/PKU-Alignment/VLA-Arena/issues)
 - **Improve Documentation**: Help us make the docs better

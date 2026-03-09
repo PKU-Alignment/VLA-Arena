@@ -134,8 +134,6 @@ class Args:
     replacement_level: int = 1
     """Level of instruction replacements (from 1 to 4)."""
 
-    # fmt: on
-
 
 def setup_logging(cfg: Args):
     """Set up logging to file and optionally to wandb."""

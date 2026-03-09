@@ -115,7 +115,7 @@ class Args:
     """Random Seed (for reproducibility)."""
 
     # Video saving options
-    video_out_path: str = f'rollout/{DATE}'
+    video_out_path: str = f'rollouts/{DATE}'
     """Path to save videos."""
     save_video_mode: str = 'first_success_failure'
     """Video saving mode: 'all', 'first_success_failure', 'none'."""

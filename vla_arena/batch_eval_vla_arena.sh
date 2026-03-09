@@ -250,7 +250,7 @@ run_evaluation() {
     
     modify_yaml "$suite" "$level" "$NUM_TRIALS" "$SEED" "$OUTPUT_DIR" "$CHECKPOINT" "$MODEL" "$YAML_BAK"
     
-    local cmd="vla-arena eval --model $MODEL --config $YAML_BAK"
+    local cmd="uv run --project envs/${MODEL} vla-arena eval --model $MODEL --config $YAML_BAK"
     if [[ "$DRY_RUN" == true ]]; then
         print_info "DRY RUN: $cmd"
         return 0

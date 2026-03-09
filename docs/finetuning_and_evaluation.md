@@ -72,7 +72,7 @@ For large-scale testing across multiple task suites and difficulty levels, use t
 
 3. Run the script:
 ```bash
-bash vla-arena/batch_eval_vla_arena.sh
+bash vla_arena/batch_eval_vla_arena.sh
 ```
 
 ##### Features

@@ -46,7 +46,7 @@ uv sync --project envs/openpi
 
 3. 运行脚本：
 ```bash
-bash vla-arena/batch_eval_vla_arena.sh
+bash vla_arena/batch_eval_vla_arena.sh
 ```
 
 ##### 功能特性

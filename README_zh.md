@@ -14,20 +14,18 @@
   <img src="https://raw.githubusercontent.com/PKU-Alignment/VLA-Arena/main/image/logo.jpeg" width="75%"/>
 </div>
 
-VLA-Arena 是一个开源的基准测试平台，用于系统评测视觉-语言-动作（VLA）模型。VLA-Arena 提供完整的工具链，涵盖*场景建模*、*行为收集*、*模型训练*和*评测*，具有共计 11 个任务套件、170 个任务、分层难度级别（L0-L2），以及用于安全性、泛化性和效率评测的综合指标。
+VLA-Arena 是一个用于系统性评估视觉-语言-动作模型的开源基准。VLA-Arena 提供了一条完整的工具链，涵盖**场景建模**、**演示数据收集**、**模型训练**和**评估**。它包含 11 个专业套件中的 170 项任务、层级化的难度级别（L0-L2），以及用于评估安全性、泛化能力和效率的综合指标。
 
-VLA-Arena 囊括四个任务类别：
-- **安全性**：在物理世界中可靠安全地操作。
+VLA-Arena 专注于四个关键领域：
+- **安全性 (Safety)**：在物理世界中可靠且安全地运行。
+- **干扰因素 (Distractors)**：在面临环境的不可预测性时保持性能稳定。
+- **外推泛化 (Extrapolation)**：将学到的知识泛化到全新的情境中。
+- **长时序任务 (Long Horizon)**：组合长序列的动作以实现复杂目标。
 
-- **干扰项**：面对环境不可预测性时保持稳定性能。
+## 📰 最新动态
 
-- **外推能力**：将学到的知识泛化到新情况。
-
-- **长程规划**：结合长序列动作来实现复杂目标。
-
-## 📰 新闻
-
-**2025.09.29**: VLA-Arena 正式发布！
+- **[2025.12.27]** 📄 我们的[论文](https://arxiv.org/abs/2512.22539)现已发布！
+- **[2025.09.29]** 🚀 VLA-Arena 正式发布！
 
 ## 🔥 亮点
 
@@ -51,52 +49,45 @@ VLA-Arena 囊括四个任务类别：
 
 ## 快速开始
 
-- YAML 驱动配置（`vla_arena/configs/...`）
-- 按模型隔离的 uv 工程（`envs/openvla`、`envs/openpi`、…）
-- 统一 CLI：`vla-arena train` / `vla-arena eval`
+> **前置条件**：安装 uv 工具：https://docs.astral.sh/uv/
 
-> **前置条件**：安装 uv：https://docs.astral.sh/uv/
-
-### Step 1 — 克隆仓库
+### 第一步 — 克隆代码仓库
 
 ```bash
 git clone https://github.com/PKU-Alignment/VLA-Arena.git
 cd VLA-Arena
 ```
 
-### Step 2 — 修改 YAML 配置
+### 第二步 — 运行（评估或训练）
 
-按模型修改对应配置。以 OpenVLA 为例：
+你可以直接使用我们官方微调好的模型进行评估，或者训练你自己的模型。*（首次执行 `uv run` 可能会花费一些时间，因为它会自动创建独立的虚拟环境并安装相关依赖）。*
 
-- `vla_arena/configs/train/openvla.yaml`
-  - `vla_path`
-  - `data_root_dir`
-  - `dataset_name`
-- `vla_arena/configs/evaluation/openvla.yaml`
-  - `pretrained_checkpoint`
-  - `task_suite_name`
-  - `task_level`
-
-其他模型同理：使用匹配的 `vla_arena/configs/train/<model>.yaml`、`vla_arena/configs/evaluation/<model>.yaml`，并将命令中的 `envs/openvla` 替换为对应的 `envs/<model>`。
-
-### Step 3 — 一条命令训练
-
-首次 `uv run` 会自动创建环境并安装依赖，可能需要一些时间。
-
-```bash
-uv run --project envs/openvla \
-  vla-arena train --model openvla --config vla_arena/configs/train/openvla.yaml
-```
-
-### Step 4 — 一条命令评测
+**执行评估：**
 
 ```bash
 uv run --project envs/openvla \
   vla-arena eval --model openvla --config vla_arena/configs/evaluation/openvla.yaml
 ```
 
-数据收集与数据集转换见 `docs/data_collection_zh.md`。
+**执行训练：**
 
+```bash
+uv run --project envs/openvla \
+  vla-arena train --model openvla --config vla_arena/configs/train/openvla.yaml
+```
+
+---
+
+### ⚙️ 配置文件说明
+
+在运行上述命令之前，请根据你的模型设置编辑相应的 YAML 配置文件。以 OpenVLA 为例：
+
+* **训练配置** (`vla_arena/configs/train/openvla.yaml`)：设置 `vla_path`、`data_root_dir` 和 `dataset_name`。
+* **评估配置** (`vla_arena/configs/evaluation/openvla.yaml`)：设置 `pretrained_checkpoint`、`task_suite_name` 和 `task_level`。
+
+其他模型也遵循相同的模式：使用相匹配的 `vla_arena/configs/train/<model>.yaml`、`vla_arena/configs/evaluation/<model>.yaml` 以及环境目录 `envs/<model>`。
+
+> 💡 关于数据收集与数据集格式转换，请参阅 `docs/data_collection.md`。
 ## 任务套件概览
 
 VLA-Arena 提供 11 个专业任务套件，共 170 个任务，分为四个主要类别：
@@ -335,7 +326,7 @@ VLA-Arena 提供了一系列工具和接口，帮助你轻松分享研究结果�
 2. **打包任务**：按照我们的指南[打包并提交你的任务](https://github.com/PKU-Alignment/VLA-Arena#-create-and-share-custom-tasks)到你的自定义 HuggingFace 仓库
 3. **更新任务商店**：提交 [Pull Request](https://github.com/vla-arena/vla-arena.github.io#contributing-your-tasks) 将你的任务更新到 VLA-Arena 的 [任务商店](https://vla-arena.github.io/#taskstore) 中
 
-## 💡 贡献
+## 贡献
 
 - **报告问题**：发现了 bug？[提交 issue](https://github.com/PKU-Alignment/VLA-Arena/issues)
 - **改进文档**：帮助我们让文档更好

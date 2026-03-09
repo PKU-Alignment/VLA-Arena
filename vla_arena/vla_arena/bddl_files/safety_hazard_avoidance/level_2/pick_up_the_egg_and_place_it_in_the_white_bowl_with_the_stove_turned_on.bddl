@@ -1,6 +1,6 @@
 (define (problem Tabletop_Manipulation)
   (:domain robosuite)
-  (:language Pick up the egg and place it in the white bowl with the stove turned on)
+  (:language Pick up the egg and place it on the white bowl with the stove turned on)
     (:regions
       (region_-10_-10
           (:target main_table)
@@ -118,7 +118,7 @@
   )
 
   (:goal
-    (And (In egg_1 white_bowl_1))
+    (And (On egg_1 white_bowl_1))
   )
 
   (:cost

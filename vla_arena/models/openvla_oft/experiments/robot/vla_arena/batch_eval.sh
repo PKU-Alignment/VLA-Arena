@@ -30,14 +30,14 @@ CAMERA=false
 TASK_SUITES=(
     "safety_dynamic_obstacles"
     "safety_hazard_avoidance"
-    "safety_object_state_preservation"
-    "safety_risk_aware_grasping"
+    "safety_state_preservation"
+    "safety_cautious_grasp"
     "safety_static_obstacles"
-    "robustness_dynamic_distractors"
-    "robustness_static_distractors"
-    "generalization_object_preposition_combinations"
-    "generalization_task_workflows"
-    "generalization_unseen_objects"
+    "distractor_dynamic_distractors"
+    "distractor_static_distractors"
+    "extrapolation_preposition_combinations"
+    "extrapolation_task_workflows"
+    "extrapolation_unseen_objects"
     "long_horizon"
 )
 

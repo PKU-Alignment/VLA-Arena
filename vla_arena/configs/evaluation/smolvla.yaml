@@ -21,6 +21,7 @@ add_noise: false
 randomize_color: false
 adjust_light: false
 camera_offset: false
+use_local_log: true
 
 replacements_file: "VLA-Arena/language_replacements"  # Path to replacements JSON file
 use_replacements: false                   # Whether to use instruction replacements

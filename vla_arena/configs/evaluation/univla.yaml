@@ -31,6 +31,7 @@ init_state_offset_random: false               # If true, add random offset in [0
 # Utils
 run_id_note: null                           # Extra note to add to end of run ID for logging
 local_log_dir: "./experiments/logs"         # Local directory for eval logs
+use_local_log: true                          # Whether to use local logs
 
 use_wandb: false                            # Whether to also log results in Weights & Biases
 wandb_entity: "your-wandb-entity"           # Name of WandB entity

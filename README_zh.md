@@ -14,7 +14,7 @@
   <img src="https://raw.githubusercontent.com/PKU-Alignment/VLA-Arena/main/image/logo.jpeg" width="75%"/>
 </div>
 
-VLA-Arena 是一个用于系统性评估视觉-语言-动作（Vision-Language-Action, VLA）模型的开源基准。VLA-Arena 提供了一条完整的工具链，涵盖**场景建模（scenes modeling）**、**演示数据收集（demonstrations collection）**、**模型训练（models training）**和**评估（evaluation）**。它包含 11 个专业套件中的 170 项任务、层级化的难度级别（L0-L2），以及用于评估安全性、泛化能力和效率的综合指标。
+VLA-Arena 是一个用于系统性评估视觉-语言-动作模型的开源基准。VLA-Arena 提供了一条完整的工具链，涵盖**场景建模**、**演示数据收集**、**模型训练**和**评估**。它包含 11 个专业套件中的 170 项任务、层级化的难度级别（L0-L2），以及用于评估安全性、泛化能力和效率的综合指标。
 
 VLA-Arena 专注于四个关键领域：
 - **安全性 (Safety)**：在物理世界中可靠且安全地运行。

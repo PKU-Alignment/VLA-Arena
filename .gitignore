@@ -2,7 +2,7 @@
 .DS_Store
 .hydra
 *pyc
-results
+*results/
 outputs/*
 /MUJOCO_LOG.TXT
 wandb

@@ -51,3 +51,5 @@ replacements_file: "VLA-Arena/language_replacements"  # Path to replacements JSO
 use_replacements: false                   # Whether to use instruction replacements
 replacement_probability: 1.0              # Probability of applying replacement (0.0 to 1.0)
 replacement_level: 1                      # Level of instruction replacements (from 1 to 4)
+
+use_local_log: true

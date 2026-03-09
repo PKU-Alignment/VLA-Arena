@@ -102,7 +102,7 @@ def save_rollout_video(
     rollout_images, idx, success, task_description, log_file=None, task_level=0
 ):
     """Saves an MP4 replay of an episode."""
-    rollout_dir = f'./rollouts/{DATE}'
+    rollout_dir = f'./rollouts/openvla/{DATE}'
     os.makedirs(rollout_dir, exist_ok=True)
     processed_task_description = (
         task_description.lower()
@@ -110,7 +110,7 @@ def save_rollout_video(
         .replace('\n', '_')
         .replace('.', '_')[:50]
     )
-    mp4_path = f'{rollout_dir}/{DATE_TIME}--openvla--episode={idx}--success={success}--level={task_level}--task={processed_task_description}.mp4'
+    mp4_path = f'{rollout_dir}/{DATE_TIME}--episode={idx}--success={success}--level={task_level}--task={processed_task_description}.mp4'
     video_writer = imageio.get_writer(mp4_path, fps=30)
     for img in rollout_images:
         video_writer.append_data(img)

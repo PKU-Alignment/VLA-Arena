@@ -81,7 +81,7 @@ class GenerateConfig:
 
     center_crop: bool = True                         # Center crop? (if trained w/ random crop image aug)
 
-    unnorm_key: str | Path = 'libero_spatial_no_noops'                # Action un-normalization key
+    unnorm_key: str | Path = 'vla_arena_l0_l'                # Action un-normalization key
 
     load_in_8bit: bool = False                       # (For OpenVLA only) Load with 8-bit quantization
     load_in_4bit: bool = False                       # (For OpenVLA only) Load with 4-bit quantization
@@ -109,6 +109,7 @@ class GenerateConfig:
     # Utils
     #################################################################################################################
     run_id_note: str | None = None                # Extra note to add to end of run ID for logging
+    use_local_log: bool = True                     # Whether to log to local log file
     local_log_dir: str = './experiments/logs'        # Local directory for eval logs
 
     use_wandb: bool = False                          # Whether to also log results in Weights & Biases
@@ -192,12 +193,14 @@ def setup_logging(cfg: GenerateConfig):
     run_id = f'EVAL-{cfg.task_suite_name}-{cfg.model_family}-{DATE_TIME}'
     if cfg.run_id_note is not None:
         run_id += f'--{cfg.run_id_note}'
-
-    # Set up local logging
-    os.makedirs(cfg.local_log_dir, exist_ok=True)
-    local_log_filepath = os.path.join(cfg.local_log_dir, run_id + '.txt')
-    log_file = open(local_log_filepath, 'w')
-    logger.info(f'Logging to local log file: {local_log_filepath}')
+    log_file = None
+    local_log_filepath = None
+    # Set up local logging if enabled
+    if cfg.use_local_log:
+        os.makedirs(cfg.local_log_dir, exist_ok=True)
+        local_log_filepath = os.path.join(cfg.local_log_dir, run_id + '.txt')
+        log_file = open(local_log_filepath, 'w')
+        logger.info(f'Logging to local log file: {local_log_filepath}')
 
     # Initialize Weights & Biases logging if enabled
     if cfg.use_wandb:
@@ -616,7 +619,11 @@ def main(cfg: GenerateConfig | str | Path):
 
     benchmark_dict = benchmark.get_benchmark_dict()
     if cfg.task_suite_name == 'all':
-        suite_names: list[str] = list(benchmark_dict.keys())
+        # exclude libero from 'all' evaluation
+        suite_names: list[str] = [
+            name for name in benchmark_dict.keys() 
+            if 'libero' not in name.lower()
+        ]
     elif isinstance(cfg.task_suite_name, str):
         suite_names = [cfg.task_suite_name]
     elif isinstance(cfg.task_suite_name, Iterable):

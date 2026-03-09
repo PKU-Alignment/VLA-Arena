@@ -10,7 +10,6 @@ MODEL=""            # Options: openvla/openvla_oft/openpi/univla/smolvla
 CHECKPOINT=""       # Path to the model checkpoint
 YAML_PATH=""        # Path to the base YAML configuration file for the specific model
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RESULTS_DIR="./batch_results/${MODEL}"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 

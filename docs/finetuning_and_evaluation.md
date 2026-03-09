@@ -62,7 +62,7 @@ uv run --project envs/openpi \
 For large-scale testing across multiple task suites and difficulty levels, use the provided batch script. This script automates YAML modification and result extraction into a unified summary.
 
 ##### Usage
-1. Open the script: `vla-arena/batch_eval_vla_arena.sh`.
+1. Open the script: `scripts/batch_eval_vla_arena.sh`.
 2. Configure the core variables at the top of the file:
    - `MODEL`: The model name (e.g., `openpi`, `openvla`).
    - `CHECKPOINT`: Path to your checkpoint to evaluate.
@@ -72,7 +72,7 @@ For large-scale testing across multiple task suites and difficulty levels, use t
 
 3. Run the script:
 ```bash
-bash vla_arena/batch_eval_vla_arena.sh
+bash scripts/batch_eval_vla_arena.sh
 ```
 
 ##### Features

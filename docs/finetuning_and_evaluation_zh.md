@@ -31,32 +31,6 @@ uv sync --project envs/openpi
 
 ### 微调
 
-#### 一键批量测评（推荐）
-
-针对多任务集和不同难度等级的大规模测试，建议使用提供的批处理脚本。该脚本可自动修改 YAML 配置，并将提取的测评结果整合到统一的摘要报告中。
-
-##### 使用方法
-1. 打开脚本文件：`vla-arena/batch_eval_vla_arena.sh`。
-2. 在文件开头配置核心变量：
-   - `MODEL`: 模型名称（例如：`openpi`, `openvla`）。
-   - `CHECKPOINT`: 待测评的检查点路径。
-   - `YAML_PATH`: 测评 YAML 配置模板的路径。
-   - `TASK_SUITES`: 待运行的任务集列表（例如：`("safety_dynamic_obstacles" "long_horizon")`）。
-   - `TASK_LEVELS`: 定义待测试的难度等级（例如：`(0 1 2)`）。
-
-3. 运行脚本：
-```bash
-bash vla_arena/batch_eval_vla_arena.sh
-```
-
-##### 功能特性
-
-* **自动配置**：自动在临时 YAML 备份中修改任务名称、等级和相关路径。
-* **数据提取**：使用健壮的正则表达式从日志中精准提取 **成功率 (Success Rate)**、**总成功数 (Total Successes)** 和 **平均代价 (Average Costs)**。
-* **统一报告**：为所有测试组合生成一份 `.csv` 摘要表和一份详细的 `.txt` 文本报告。
-* **鲁棒性**：包含错误跟踪功能，如果测评失败，将捕获 Python 回溯信息。
-
-#### 默认测评器
 
 
 ```bash
@@ -85,6 +59,32 @@ uv run --project envs/openpi \
 
 ### 评测
 
+#### 一键批量测评（推荐）
+
+针对多任务集和不同难度等级的大规模测试，建议使用提供的批处理脚本。该脚本可自动修改 YAML 配置，并将提取的测评结果整合到统一的摘要报告中。
+
+##### 使用方法
+1. 打开脚本文件：`scripts/batch_eval_vla_arena.sh`。
+2. 在文件开头配置核心变量：
+   - `MODEL`: 模型名称（例如：`openpi`, `openvla`）。
+   - `CHECKPOINT`: 待测评的检查点路径。
+   - `YAML_PATH`: 测评 YAML 配置模板的路径。
+   - `TASK_SUITES`: 待运行的任务集列表（例如：`("safety_dynamic_obstacles" "long_horizon")`）。
+   - `TASK_LEVELS`: 定义待测试的难度等级（例如：`(0 1 2)`）。
+
+3. 运行脚本：
+```bash
+bash scripts/batch_eval_vla_arena.sh
+```
+
+##### 功能特性
+
+* **自动配置**：自动在临时 YAML 备份中修改任务名称、等级和相关路径。
+* **数据提取**：使用健壮的正则表达式从日志中精准提取 **成功率 (Success Rate)**、**总成功数 (Total Successes)** 和 **平均代价 (Average Costs)**。
+* **统一报告**：为所有测试组合生成一份 `.csv` 摘要表和一份详细的 `.txt` 文本报告。
+* **鲁棒性**：包含错误跟踪功能，如果测评失败，将捕获 Python 回溯信息。
+
+#### 默认测评器
 ```bash
 uv run --project envs/<model_name> \
   vla-arena eval --model <model_name> --config vla_arena/configs/evaluation/<model_name>.yaml

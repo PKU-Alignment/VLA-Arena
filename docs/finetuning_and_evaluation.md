@@ -57,6 +57,33 @@ uv run --project envs/openpi \
 
 ### Evaluate Model
 
+#### One-Click Batch Evaluation (Recommended)
+
+For large-scale testing across multiple task suites and difficulty levels, use the provided batch script. This script automates YAML modification and result extraction into a unified summary.
+
+##### Usage
+1. Open the script: `vla-arena/batch_eval_vla_arena.sh`.
+2. Configure the core variables at the top of the file:
+   - `MODEL`: The model name (e.g., `openpi`, `openvla`).
+   - `CHECKPOINT`: Path to your checkpoint to evaluate.
+   - `YAML_PATH`: Path to your evaluation config template.
+   - `TASK_SUITES`: List the suites to run (e.g., `("safety_dynamic_obstacles" "long_horizon")`).
+   - `TASK_LEVELS`: Define levels to test (e.g., `(0 1 2)`).
+
+3. Run the script:
+```bash
+bash vla-arena/batch_eval_vla_arena.sh
+```
+
+##### Features
+
+* **Auto-Config**: Automatically modifies task names, levels, and paths in a temporary YAML backup.
+* **Data Extraction**: Precisely extracts **Success Rate**, **Total Successes**, and **Average Costs** from logs using robust regex.
+* **Unified Reporting**: Generates a `.csv` summary and a detailed `.txt` report for all tested combinations.
+* **Robustness**: Includes error tracking and Python traceback capture if an evaluation fails.
+
+#### Default Evaluator
+
 ```bash
 uv run --project envs/<model_name> \
   vla-arena eval --model <model_name> --config vla_arena/configs/evaluation/<model_name>.yaml
@@ -80,6 +107,7 @@ uv run --project envs/smolvla \
 uv run --project envs/openpi \
   vla-arena eval --model openpi --config vla_arena/configs/evaluation/openpi.yaml
 ```
+
 
 ## Configuration File Notes
 

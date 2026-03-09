@@ -4,7 +4,6 @@
 # Automatically modifies YAML, supports multiple models, and backups original YAML.
 
 set -e
-# export CUDA_VISIBLE_DEVICES=7
 
 # --- Configuration ---
 MODEL=""            # Options: openvla/openvla_oft/openpi/univla/smolvla
@@ -12,23 +11,28 @@ CHECKPOINT=""       # Path to the model checkpoint
 YAML_PATH=""        # Path to the base YAML configuration file for the specific model
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-RESULTS_DIR="./${MODEL}_batch_results"
+RESULTS_DIR="./batch_results/${MODEL}"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 
 DEFAULT_NUM_TRIALS=10
 DEFAULT_SEED=7
 
-# Evaluation parameters
+# Visual perturbation parameters
 ADD_NOISE=false
 ADJUST_LIGHT=false
 RANDOMIZE_COLOR=false
 CAMERA_OFFSET=false
-SAFETY=false
+
+SAFETY=false # Whether to enable safety evaluation
+
+# Instruction replacement parameters
 REPLACEMENTS_FILE="VLA-Arena/language_replacements"
 USE_REPLACEMENTS=false
 REPLACEMENT_PROBABILITY=1.0
 REPLACEMENT_LEVEL=1
+
 RANDOM_INIT_STATE_OFFSET=false
+UNNORM_KEY="vla_arena_l0_l"     # ONLY for openvla, openvla_oft, and univla
 
 # OpenPI specific parameters
 OPENPI_PORT=8000
@@ -229,7 +233,7 @@ modify_yaml() {
 
     # Model specific parameters
     if [[ "$model" == "openvla" || "$model" == "openvla_oft" || "$model" == "univla" ]]; then
-        yq -y -i ".task_suite_name = \"$suite\" | .task_level = $level | .num_trials_per_task = $trials | .seed = $seed | .local_log_dir = \"$log_dir\"" "$yaml"
+        yq -y -i ".task_suite_name = \"$suite\" | .task_level = $level | .num_trials_per_task = $trials | .seed = $seed | .unnorm_key = \"${UNNORM_KEY}\" | .local_log_dir = \"$log_dir\"" "$yaml"
         [[ -n "$checkpoint" ]] && yq -y -i ".pretrained_checkpoint = \"$checkpoint\"" "$yaml"
         [[ "$model" == "univla" ]] && yq -y -i ".action_decoder_path = \"${UNIVLA_ACTION_DECODER_PATH}\"" "$yaml"
     elif [[ "$model" == "openpi" ]]; then

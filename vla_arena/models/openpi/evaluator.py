@@ -887,7 +887,7 @@ def save_rollout_video(
     rollout_images, idx, success, task_description, log_file=None, task_level=0
 ):
     """Saves an MP4 replay of an episode."""
-    rollout_dir = f'./rollouts/{DATE}'
+    rollout_dir = f'./rollouts/openpi/{DATE}'
     os.makedirs(rollout_dir, exist_ok=True)
     processed_task_description = (
         task_description.lower()

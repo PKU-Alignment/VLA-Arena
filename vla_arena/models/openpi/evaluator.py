@@ -113,6 +113,11 @@ class GenerateConfig:
         'first_success_failure'  # Video saving mode: "all", "first_success_failure", "none"
     )
     local_log_dir: str = './experiments/logs'  # Local directory for eval logs
+    use_local_log: bool = True  # Whether to log to local log file
+    run_id_note: str | None = None  # Extra note to add to end of run ID for logging
+    use_wandb: bool = False
+    wandb_entity: str = 'your-wandb-entity'
+    wandb_project: str = 'your-wandb-project'
 
     result_json_path: str | None = None
 
@@ -372,11 +377,28 @@ def setup_logging(cfg: GenerateConfig):
     """Set up logging to file and optionally to wandb."""
     # Create run ID
     run_id = f'EVAL-{cfg.task_suite_name}-{DATE_TIME}'
-    # Set up local logging
-    os.makedirs(cfg.local_log_dir, exist_ok=True)
-    local_log_filepath = os.path.join(cfg.local_log_dir, run_id + '.txt')
-    log_file = open(local_log_filepath, 'w')
-    logger.info(f'Logging to local log file: {local_log_filepath}')
+    if cfg.run_id_note is not None:
+        run_id += f'--{cfg.run_id_note}'
+
+    log_file = None
+    local_log_filepath = None
+    if cfg.use_local_log:
+        os.makedirs(cfg.local_log_dir, exist_ok=True)
+        local_log_filepath = os.path.join(cfg.local_log_dir, run_id + '.txt')
+        log_file = open(local_log_filepath, 'w')
+        logger.info(f'Logging to local log file: {local_log_filepath}')
+
+    if cfg.use_wandb:
+        try:
+            import wandb
+
+            wandb.init(
+                entity=cfg.wandb_entity,
+                project=cfg.wandb_project,
+                name=run_id,
+            )
+        except Exception:
+            logger.exception('Failed to init wandb')
 
     return log_file, local_log_filepath, run_id
 
@@ -705,7 +727,11 @@ def eval_vla_arena(cfg: GenerateConfig):
 
     benchmark_dict = benchmark.get_benchmark_dict()
     if cfg.task_suite_name == 'all':
-        suite_names: list[str] = list(benchmark_dict.keys())
+        # exclude libero from 'all' evaluation
+        suite_names: list[str] = [
+            name for name in benchmark_dict.keys() 
+            if 'libero' not in name.lower()
+        ]
     elif isinstance(cfg.task_suite_name, str):
         suite_names = [cfg.task_suite_name]
     elif isinstance(cfg.task_suite_name, Iterable):
@@ -861,7 +887,7 @@ def save_rollout_video(
     rollout_images, idx, success, task_description, log_file=None, task_level=0
 ):
     """Saves an MP4 replay of an episode."""
-    rollout_dir = f'./rollouts/{DATE}'
+    rollout_dir = f'./rollouts/openpi/{DATE}'
     os.makedirs(rollout_dir, exist_ok=True)
     processed_task_description = (
         task_description.lower()

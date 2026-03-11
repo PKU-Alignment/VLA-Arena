@@ -44,7 +44,7 @@
   )
 
   (:goal
-    (And (In onion_1 new_bowl_1))
+    (And (On onion_1 new_bowl_1))
   )
 
   (:cost

@@ -25,7 +25,8 @@ VLA-Arena focuses on four key domains:
 
 ## 📰 News
 
-**2025.09.29**: VLA-Arena is officially released!
+- **[2025.12.27]** 📄 Our [paper](https://arxiv.org/abs/2512.22539) is now available!
+- **[2025.09.29]** 🚀 VLA-Arena is officially released!
 
 ## 🔥 Highlights
 
@@ -46,10 +47,6 @@ VLA-Arena focuses on four key domains:
 
 ## Quick Start
 
-- YAML-driven configs (`vla_arena/configs/...`)
-- Per-model isolated uv projects (`envs/openvla`, `envs/openpi`, …)
-- Unified CLI: `vla-arena train` / `vla-arena eval`
-
 > **Prerequisite**: install uv: https://docs.astral.sh/uv/
 
 ### Step 1 — Clone
@@ -57,40 +54,41 @@ VLA-Arena focuses on four key domains:
 ```bash
 git clone https://github.com/PKU-Alignment/VLA-Arena.git
 cd VLA-Arena
+
 ```
 
-### Step 2 — Configure YAML
+### Step 2 — Run (Evaluate or Train)
 
-Edit the configs for your model. Example (OpenVLA):
+You can directly evaluate using our official finetuned models, or train your own. *(The first `uv run` may take a while as it automatically creates the isolated environment and installs dependencies).*
 
-- `vla_arena/configs/train/openvla.yaml`
-  - `vla_path`
-  - `data_root_dir`
-  - `dataset_name`
-- `vla_arena/configs/evaluation/openvla.yaml`
-  - `pretrained_checkpoint`
-  - `task_suite_name`
-  - `task_level`
-
-Other models follow the same pattern: use the matching `vla_arena/configs/train/<model>.yaml`, `vla_arena/configs/evaluation/<model>.yaml`, and `envs/<model>`.
-
-### Step 3 — Train (one command)
-
-The first `uv run` may take a while: it will create the environment and install dependencies automatically.
-
-```bash
-uv run --project envs/openvla \
-  vla-arena train --model openvla --config vla_arena/configs/train/openvla.yaml
-```
-
-### Step 4 — Eval (one command)
+**To Evaluate:**
 
 ```bash
 uv run --project envs/openvla \
   vla-arena eval --model openvla --config vla_arena/configs/evaluation/openvla.yaml
+
 ```
 
-For data collection and dataset conversion, see `docs/data_collection.md`.
+**To Train:**
+
+```bash
+uv run --project envs/openvla \
+  vla-arena train --model openvla --config vla_arena/configs/train/openvla.yaml
+
+```
+
+---
+
+### ⚙️ Configuration
+
+Before running the commands above, edit the YAML configs for your model setup. Example (OpenVLA):
+
+* **Training Config** (`vla_arena/configs/train/openvla.yaml`): Set `vla_path`, `data_root_dir`, and `dataset_name`.
+* **Evaluation Config** (`vla_arena/configs/evaluation/openvla.yaml`): Set `pretrained_checkpoint`, `task_suite_name`, and `task_level`.
+
+Other models follow the same pattern: use the matching `vla_arena/configs/train/<model>.yaml`, `vla_arena/configs/evaluation/<model>.yaml`, and `envs/<model>`.
+
+> 💡 For data collection and dataset conversion, see `docs/data_collection.md`.
 
 ## Task Suites Overview
 
@@ -333,7 +331,7 @@ Share your custom tasks through the following steps, enabling the community to r
 2. **Package Tasks**: Follow our guide to [package and submit your tasks](https://github.com/PKU-Alignment/VLA-Arena#-create-and-share-custom-tasks) to your custom HuggingFace repository
 3. **Update Task Store**: Open a [Pull Request](https://github.com/vla-arena/vla-arena.github.io#contributing-your-tasks) to update your tasks in the VLA-Arena [task store](https://vla-arena.github.io/#taskstore)
 
-## 💡 Contributing
+## Contributing
 
 - **Report Issues**: Found a bug? [Open an issue](https://github.com/PKU-Alignment/VLA-Arena/issues)
 - **Improve Documentation**: Help us make the docs better

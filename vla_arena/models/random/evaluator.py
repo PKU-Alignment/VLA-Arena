@@ -55,6 +55,8 @@ class EvaluatorConfig:
 
     save_video_mode: str = 'first_success_failure'
     local_log_dir: str = './experiments/logs'
+    use_local_log: bool = True
+    run_id_note: str | None = None
     seed: int = 7
 
     use_wandb: bool = False
@@ -88,14 +90,25 @@ def get_action(
 
 def setup_logging(cfg: EvaluatorConfig):
     run_id = f'EVAL-{cfg.task_suite_name}-{cfg.model_name}-{DATE_TIME}'
-    os.makedirs(cfg.local_log_dir, exist_ok=True)
-    log_path = os.path.join(cfg.local_log_dir, run_id + '.txt')
-    log_file = open(log_path, 'w')
-    logger.info('Logging to %s', log_path)
-    if cfg.use_wandb:
-        import wandb
+    if cfg.run_id_note is not None:
+        run_id += f'--{cfg.run_id_note}'
 
-        wandb.init(entity=cfg.wandb_entity, project=cfg.wandb_project, name=run_id)
+    log_file = None
+    log_path = None
+    if cfg.use_local_log:
+        os.makedirs(cfg.local_log_dir, exist_ok=True)
+        log_path = os.path.join(cfg.local_log_dir, run_id + '.txt')
+        log_file = open(log_path, 'w')
+        logger.info('Logging to %s', log_path)
+
+    if cfg.use_wandb:
+        try:
+            import wandb
+
+            wandb.init(entity=cfg.wandb_entity, project=cfg.wandb_project, name=run_id)
+        except Exception:
+            logger.exception('Failed to init wandb')
+
     return log_file, log_path, run_id
 
 

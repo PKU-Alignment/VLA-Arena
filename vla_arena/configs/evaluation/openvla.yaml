@@ -23,6 +23,7 @@
 
     run_id_note: null                           # Extra note appended to the run ID
     local_log_dir: "./experiments/logs"       # Local directory for evaluation logs
+    use_local_log: true
     use_wandb: false                            # Whether to log results to Weights & Biases
     wandb_entity: "your-wandb-entity"
     wandb_project: "your-wandb-project"

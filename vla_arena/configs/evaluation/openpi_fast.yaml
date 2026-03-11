@@ -24,7 +24,7 @@ replan_steps: 5                    # Number of actions to execute before replann
 # VLA-Arena environment-specific parameters
 #################################################################################################################
 task_suite_name: "safety_static_obstacles"  # Task suite name (e.g., "safety_static_obstacles", "safety_dynamic_obstacles", "long_horizon")
-task_level: 0                      # Task level (0 or 1)
+task_level: 0                      # Task level (0, 1, or 2)
 num_steps_wait: 10                 # Number of steps to wait for objects to stabilize in sim
 num_trials_per_task: 10            # Number of rollouts per task
 add_noise: false                   # Add noise to observations
@@ -37,6 +37,7 @@ safety: false                      # Enable safety mode
 # Utils
 #################################################################################################################
 save_video_mode: "first_success_failure"  # Video saving mode: "all", "first_success_failure", "none"
+use_local_log: true
 local_log_dir: "./experiments/logs"       # Local directory for eval logs
 seed: 7                                   # Random seed (for reproducibility)
 result_json_path: default                 # Path to save aggregated JSON results (default -> ./results/openpi_json_<DATE_TIME>.json)

@@ -55,6 +55,7 @@ class EvaluatorConfig:
 
     # Logging and reproducibility
     save_video_mode: str = 'first_success_failure'  # all | first_success_failure | none
+    use_local_log: bool = True
     local_log_dir: str = './experiments/logs'
     seed: int = 7
 
@@ -86,17 +87,21 @@ def get_action(
 
 def setup_logging(cfg: EvaluatorConfig):
     run_id = f'EVAL-{cfg.task_suite_name}-{cfg.model_name}'
-    os.makedirs(cfg.local_log_dir, exist_ok=True)
-    log_path = os.path.join(cfg.local_log_dir, run_id + '.txt')
-    log_file = open(log_path, 'w')
-    logger.info('Logging to %s', log_path)
+    log_file = None
+    local_log_filepath = None
+    # Set up local logging if enabled
+    if cfg.use_local_log:
+        os.makedirs(cfg.local_log_dir, exist_ok=True)
+        local_log_filepath = os.path.join(cfg.local_log_dir, run_id + '.txt')
+        log_file = open(local_log_filepath, 'w')
+        logger.info(f'Logging to local log file: {local_log_filepath}')
 
     if cfg.use_wandb:
         import wandb
 
         wandb.init(entity=cfg.wandb_entity, project=cfg.wandb_project, name=run_id)
 
-    return log_file, log_path, run_id
+    return log_file, local_log_filepath, run_id
 
 
 def log_message(message: str, log_file=None):
@@ -346,10 +351,11 @@ def main(cfg: EvaluatorConfig | str | pathlib.Path | None = None):
 
     # Support single suite or multiple suites in one run
     if cfg.task_suite_name == 'all':
-        suite_names: list[str] = list(benchmark_dict.keys())
         # exclude libero from 'all' evaluation
-        if 'libero' in suite_names:
-            suite_names.remove('libero')
+        suite_names: list[str] = [
+            name for name in benchmark_dict.keys() 
+            if 'libero' not in name.lower()
+        ]
     elif isinstance(cfg.task_suite_name, str):
         suite_names = [cfg.task_suite_name]
     else:

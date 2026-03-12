@@ -205,7 +205,7 @@ def save_rollout_video(
     )
     video_path = (
         Path(video_out_path)
-        / f'{DATE_TIME}--smolvla--episode={episode_idx}--success={success}--task={task_segment}.mp4'
+        / f'{DATE_TIME}--episode={episode_idx}--success={success}--task={task_segment}.mp4'
     )
     writer = imageio.get_writer(str(video_path), fps=30)
     for image in frames:

@@ -126,7 +126,7 @@ class GenerateConfig:
     #################################################################################################################
     # Instruction replacement parameters
     #################################################################################################################
-    use_replacements: bool = True  # Whether to use instruction replacements
+    use_replacements: bool = False  # Whether to use instruction replacements
     replacements_file: str = (
         'VLA-Arena/language_replacements'
     )  # Path to replacements JSON file
@@ -262,9 +262,19 @@ def _start_policy_server_process(
     cmd: list[str],
 ) -> subprocess.Popen[bytes]:
     logger.info('Auto-starting OpenPI policy server: %s', shlex.join(cmd))
+    child_env = os.environ.copy()
+    # Pass deterministic GPU flags to the server subprocess so that
+    # XLA/cuBLAS use deterministic algorithms (equivalent to
+    # torch.backends.cudnn.deterministic = True for JAX-based models).
+    _xla_det_flag = '--xla_gpu_deterministic_ops=true'
+    _existing_xla = child_env.get('XLA_FLAGS', '')
+    if _xla_det_flag not in _existing_xla:
+        child_env['XLA_FLAGS'] = (_existing_xla + ' ' + _xla_det_flag).strip()
+    child_env.setdefault('CUBLAS_WORKSPACE_CONFIG', ':4096:8')
     return subprocess.Popen(
         cmd,
         start_new_session=True,
+        env=child_env,
     )
 
 

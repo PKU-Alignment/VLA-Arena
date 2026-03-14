@@ -40,6 +40,7 @@ init_state_offset_random: false      # If true, add random offset in [0, num_ini
 # Utils
 #################################################################################################################
 save_video_mode: "first_success_failure"  # Video saving mode: "all", "first_success_failure", "none"
+use_local_log: true
 local_log_dir: "./experiments/logs"       # Local directory for eval logs
 seed: 7                                   # Random seed (for reproducibility)
 result_json_path: default                 # Path to save aggregated JSON results (default -> ./results/openpi_json_<DATE_TIME>.json)
@@ -51,5 +52,3 @@ replacements_file: "VLA-Arena/language_replacements"  # Path to replacements JSO
 use_replacements: false                   # Whether to use instruction replacements
 replacement_probability: 1.0              # Probability of applying replacement (0.0 to 1.0)
 replacement_level: 1                      # Level of instruction replacements (from 1 to 4)
-
-use_local_log: true

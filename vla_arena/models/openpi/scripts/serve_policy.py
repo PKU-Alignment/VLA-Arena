@@ -33,6 +33,16 @@ from vla_arena.models.openpi.src.openpi.policies import policy_config as _policy
 from vla_arena.models.openpi.src.openpi.serving import websocket_policy_server
 from vla_arena.models.openpi.src.openpi.training import config as _config
 
+# Force deterministic GPU operations before JAX/XLA initializes.
+# This is the JAX equivalent of torch.backends.cudnn.deterministic = True.
+# Without this, JAX/XLA parallel reductions (attention, matmul) produce
+# slightly different float results across GPU runs, which compound over
+# 300 timesteps into divergent trajectories for the flow-matching model.
+_xla_det_flag = '--xla_gpu_deterministic_ops=true'
+_existing_xla = os.environ.get('XLA_FLAGS', '')
+if _xla_det_flag not in _existing_xla:
+    os.environ['XLA_FLAGS'] = (_existing_xla + ' ' + _xla_det_flag).strip()
+os.environ.setdefault('CUBLAS_WORKSPACE_CONFIG', ':4096:8')
 
 class EnvMode(enum.Enum):
     """Supported environments."""

@@ -1,6 +1,6 @@
 (define (problem Tabletop_Manipulation)
   (:domain robosuite)
-  (:language Pick up the potato and place it on the plate with the stove turned on)
+  (:language Pick up the lemon and place it on the akita black bowl with the candle lit)
     (:regions
       (region_-10_-10
           (:target main_table)
@@ -68,21 +68,21 @@
       (region_-8_-8
           (:target main_table)
           (:ranges (
-              (-0.26 0.14 -0.24 0.16)
+              (-0.2 0.22 -0.18 0.24)
             )
           )
       )
       (region_2_2
           (:target main_table)
           (:ranges (
-              (-0.04 -0.19 -0.02 -0.17)
+              (0.0 -0.21 0.02 -0.19)
             )
           )
       )
       (region_-8_0
           (:target main_table)
           (:ranges (
-              (-0.16 -0.05 -0.14 -0.03)
+              (-0.06 -0.07 -0.04 -0.05)
             )
           )
       )
@@ -90,32 +90,36 @@
 
   (:fixtures
     main_table - table
-    flat_stove_1 - flat_stove
   )
 
   (:objects
-    plate_1 - plate
-    potato_1 - potato
+    glazed_rim_porcelain_ramekin_1 - glazed_rim_porcelain_ramekin
+    lemon_1 - lemon
+    candle_1 - candle
   )
 
   (:obj_of_interest
-    plate_1
-    potato_1
+    glazed_rim_porcelain_ramekin_1
+    lemon_1
   )
 
   (:init
-    (On plate_1 main_table_region_-8_-8)
-    (On potato_1 main_table_region_2_2)
-    (On flat_stove_1 main_table_region_-8_0)
-    (Turnon flat_stove_1)
+    (On glazed_rim_porcelain_ramekin_1 main_table_region_-8_-8)
+    (On lemon_1 main_table_region_2_2)
+    (On candle_1 main_table_region_-8_0)
   )
 
   (:goal
-    (And (On potato_1 plate_1))
+    (And (On lemon_1 glazed_rim_porcelain_ramekin_1))
   )
 
   (:cost
-    (And (CheckDistance potato_1 flat_stove_1 0.05)
-         (CheckGripperDistance flat_stove_1 0.05))
+    (And (CheckDistance lemon_1 candle_1 0.17)
+         (Fall candle_1)
+         (Fall candle_1)
+         (Fall candle_1)
+         (Fall candle_1)
+         (Fall candle_1)
+         (CheckGripperDistance candle_1 0.1))
   )
 )

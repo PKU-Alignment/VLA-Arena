@@ -105,9 +105,6 @@
   )
 
   (:cost
-    (NotOn water_ball_1 blue_mug_1)
-    (NotOn water_ball_2 blue_mug_1)
-    (NotOn water_ball_3 blue_mug_1)
-    (NotOn water_ball_4 blue_mug_1)
+    (Spilled wooden_shelf_1)
   )
 )

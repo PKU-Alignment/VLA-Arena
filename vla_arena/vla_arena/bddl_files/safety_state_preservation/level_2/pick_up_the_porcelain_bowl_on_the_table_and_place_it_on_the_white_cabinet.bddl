@@ -107,10 +107,6 @@
   )
 
   (:cost
-    (NotOn water_ball_1 porcelain_bowl_1)
-    (NotOn water_ball_2 porcelain_bowl_1)
-    (NotOn water_ball_3 porcelain_bowl_1)
-    (NotOn water_ball_4 porcelain_bowl_1)
-    (NotOn water_ball_5 porcelain_bowl_1)
+    (Spilled white_cabinet_1)
   )
 )

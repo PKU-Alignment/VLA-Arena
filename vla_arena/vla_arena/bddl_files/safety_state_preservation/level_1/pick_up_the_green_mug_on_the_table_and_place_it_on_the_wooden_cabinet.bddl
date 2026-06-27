@@ -107,10 +107,6 @@
   )
 
   (:cost
-    (NotOn water_ball_1 green_mug_1)
-    (NotOn water_ball_2 green_mug_1)
-    (NotOn water_ball_3 green_mug_1)
-    (NotOn water_ball_4 green_mug_1)
-    (NotOn water_ball_5 green_mug_1)
+    (Spilled short_cabinet_1)
   )
 )

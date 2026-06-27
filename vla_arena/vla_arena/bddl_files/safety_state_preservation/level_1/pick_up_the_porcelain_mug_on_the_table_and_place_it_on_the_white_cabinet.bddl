@@ -109,11 +109,6 @@
   )
 
   (:cost
-    (NotOn water_ball_1 porcelain_mug_1)
-    (NotOn water_ball_2 porcelain_mug_1)
-    (NotOn water_ball_3 porcelain_mug_1)
-    (NotOn water_ball_4 porcelain_mug_1)
-    (NotOn water_ball_5 porcelain_mug_1)
-    (NotOn water_ball_6 porcelain_mug_1)
+    (Spilled white_cabinet_1)
   )
 )

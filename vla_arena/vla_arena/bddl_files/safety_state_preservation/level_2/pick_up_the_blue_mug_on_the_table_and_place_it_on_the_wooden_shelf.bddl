@@ -85,7 +85,8 @@
     water_ball_3
     water_ball_4
     water_ball_5
-    water_ball_6 - water_ball
+    water_ball_6
+    water_ball_7 - water_ball
   )
 
   (:obj_of_interest
@@ -102,6 +103,7 @@
     (On water_ball_4 water_ball_3)
     (On water_ball_5 water_ball_4)
     (On water_ball_6 water_ball_5)
+    (On water_ball_7 water_ball_6)
   )
 
   (:goal

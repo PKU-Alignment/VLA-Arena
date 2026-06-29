@@ -68,14 +68,14 @@
       (region_-8_-8
           (:target main_table)
           (:ranges (
-              (-0.34 -0.16 -0.32 -0.14)
+              (-0.34 -0.2 -0.33 -0.18)
             )
           )
       )
       (region_2_2
           (:target main_table)
           (:ranges (
-              (0.0 -0.02 0.02 0)
+              (0.03 0.15 0.05 0.17)
             )
           )
       )
@@ -89,7 +89,7 @@
       (region_-4_-4
           (:target main_table)
           (:ranges (
-              (-0.28 -0.08 -0.26 -0.06)
+              (-0.28 -0.1 -0.26 -0.08)
             )
           )
       )
@@ -123,6 +123,6 @@
 
   (:cost
     (And (CheckDistance kiwi_1 flat_stove_1 0.05)
-         (CheckGripperDistance flat_stove_1 0.05))
+         (CheckGripperDistance flat_stove_1 0.01))
   )
 )

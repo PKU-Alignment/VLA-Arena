@@ -120,6 +120,6 @@
          (Fall candle_1)
          (Fall candle_1)
          (Fall candle_1)
-         (CheckGripperDistance candle_1 0.05))
+         (CheckGripperDistance candle_1 0.01))
   )
 )

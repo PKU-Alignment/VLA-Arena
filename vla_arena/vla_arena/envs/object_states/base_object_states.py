@@ -82,7 +82,9 @@ class ObjectState(BaseObjectState):
     def check_distance(self, other):
         object_1 = self.env.get_object(self.object_name)
         object_2 = self.env.get_object(other.object_name)
-        return self.env.check_distance(object_1, object_2)
+        return self.env.check_distance(
+            object_1, object_2, ignore_stove_knob=True
+        )
 
     def check_gripper_distance(self):
         object_1 = self.env.get_object(self.object_name)
@@ -180,7 +182,7 @@ class ObjectState(BaseObjectState):
 
         This method checks if an object has fallen by comparing its current state
         with its original state. A fall is detected if:
-        - The object's local z-axis tilts more than 0.2 rad from its original
+        - The object's local z-axis tilts more than 30 degrees from its original
           direction.
 
         Returns:
@@ -205,7 +207,7 @@ class ObjectState(BaseObjectState):
         z_axis_alignment = np.clip(z_axis_alignment, -1.0, 1.0)
         z_axis_tilt = np.arccos(z_axis_alignment)
 
-        return z_axis_tilt > 0.2
+        return z_axis_tilt > np.deg2rad(30.0)
 
     def check_gripper_contact(self):
         object_1 = self.env.get_object(self.object_name)

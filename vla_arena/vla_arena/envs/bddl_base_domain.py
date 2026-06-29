@@ -1277,7 +1277,31 @@ class BDDLBaseDomain(SingleArmEnv):
                 return normal_force
         return normal_force
 
-    def check_distance(self, geoms_1, geoms_2=None):
+    def _is_stove_knob_geom(self, geom_name):
+        try:
+            geom_id = self.sim.model.geom_name2id(geom_name)
+        except ValueError:
+            return False
+
+        body_id = self.sim.model.geom_bodyid[geom_id]
+        body_name = self.sim.model.body_id2name(body_id) or ''
+        geom_name = geom_name or ''
+        name_text = f'{geom_name} {body_name}'.lower()
+        return 'flat_stove' in name_text and (
+            'button' in name_text or 'knob' in name_text
+        )
+
+    def _filter_stove_knob_geoms(self, geom_names):
+        return [
+            geom_name
+            for geom_name in geom_names
+            if not self._is_stove_knob_geom(geom_name)
+        ]
+
+    def check_distance(
+        self, geoms_1, geoms_2=None, aggregation='p25',
+        ignore_stove_knob=False,
+    ):
         if type(geoms_1) is str:
             geoms_1 = [geoms_1]
         elif isinstance(geoms_1, MujocoModel):
@@ -1286,8 +1310,11 @@ class BDDLBaseDomain(SingleArmEnv):
             geoms_2 = [geoms_2]
         elif isinstance(geoms_2, MujocoModel):
             geoms_2 = geoms_2.contact_geoms
+        if ignore_stove_knob:
+            geoms_1 = self._filter_stove_knob_geoms(geoms_1)
+            geoms_2 = self._filter_stove_knob_geoms(geoms_2)
 
-        min_dist = float('inf')
+        distances = []
         # print(geoms_1)
         # print(geoms_2)
 
@@ -1320,10 +1347,15 @@ class BDDLBaseDomain(SingleArmEnv):
                     fromto,
                 )
 
-                if dist < min_dist:
-                    min_dist = dist
+                distances.append(dist)
 
-        return min_dist
+        if not distances:
+            return float('inf')
+        if aggregation == 'min':
+            return float(np.min(distances))
+        if aggregation == 'p25':
+            return float(np.percentile(distances, 25))
+        return float(np.mean(distances))
 
     def check_gripper_distance(self, object_geoms):
         g_geoms = [
@@ -1335,7 +1367,12 @@ class BDDLBaseDomain(SingleArmEnv):
             ._important_geoms['right_fingerpad'],
         ]
         gripper_geoms = ['gripper0_right_' + g[0] for g in g_geoms]
-        return self.check_distance(object_geoms, gripper_geoms)
+        return self.check_distance(
+            object_geoms,
+            gripper_geoms,
+            aggregation='min',
+            ignore_stove_knob=True,
+        )
 
     def check_gripper_distance_part(self, object_1, geom_ids):
         assert isinstance(
@@ -1359,7 +1396,12 @@ class BDDLBaseDomain(SingleArmEnv):
                     geoms_to_check.append(geom_name)
             else:
                 raise NotImplementedError(f'Invalid geom_id_1: {geom_name}')
-        dist = self.check_distance(geoms_to_check, gripper_geoms)
+        dist = self.check_distance(
+            geoms_to_check,
+            gripper_geoms,
+            aggregation='min',
+            ignore_stove_knob=True,
+        )
         # print(dist)
         return dist
 

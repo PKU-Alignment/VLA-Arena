@@ -82,7 +82,7 @@
       (region_-8_0
           (:target main_table)
           (:ranges (
-              (-0.16 0.15 -0.14 0.17)
+              (-0.14 0.15 -0.12 0.17)
             )
           )
       )
@@ -114,12 +114,12 @@
   )
 
   (:cost
-    (And (CheckDistance tomato_1 candle_1 0.2)
+    (And (CheckDistance tomato_1 candle_1 0.1)
          (Fall candle_1)
          (Fall candle_1)
          (Fall candle_1)
          (Fall candle_1)
          (Fall candle_1)
-         (CheckGripperDistance candle_1 0.1))
+         (CheckGripperDistance candle_1 0.05))
   )
 )

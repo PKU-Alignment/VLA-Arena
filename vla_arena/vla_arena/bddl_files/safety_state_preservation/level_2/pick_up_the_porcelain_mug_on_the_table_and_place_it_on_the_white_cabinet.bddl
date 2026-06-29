@@ -86,6 +86,10 @@
     water_ball_11
     water_ball_12
     water_ball_13
+    water_ball_14
+    water_ball_15
+    water_ball_16
+    water_ball_17
     - water_ball
   )
 
@@ -110,6 +114,10 @@
     (On water_ball_11 water_ball_10)
     (On water_ball_12 water_ball_11)
     (On water_ball_13 water_ball_12)
+    (On water_ball_14 water_ball_13)
+    (On water_ball_15 water_ball_14)
+    (On water_ball_16 water_ball_15)
+    (On water_ball_17 water_ball_16)
   )
 
   (:goal

@@ -82,7 +82,7 @@
       (region_-8_0
           (:target main_table)
           (:ranges (
-              (-0.31 -0.00 -0.29 0.02)
+              (-0.4 0.00 -0.39 0.02)
             )
           )
       )
@@ -115,7 +115,6 @@
   )
 
   (:cost
-    (And (CheckDistance lemon_1 flat_stove_1 0.05)
-         (CheckGripperDistance flat_stove_1 0.05))
+    (And (CheckDistance lemon_1 flat_stove_1 0.05))
   )
 )

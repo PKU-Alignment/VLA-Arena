@@ -114,12 +114,12 @@
   )
 
   (:cost
-    (And (CheckDistance lemon_1 candle_1 0.2)
+    (And (CheckDistance lemon_1 candle_1 0.1)
          (Fall candle_1)
          (Fall candle_1)
          (Fall candle_1)
          (Fall candle_1)
          (Fall candle_1)
-         (CheckGripperDistance candle_1 0.05))
+         (CheckGripperDistance candle_1 0.01))
   )
 )

@@ -26,6 +26,7 @@ from vla_arena.vla_arena.envs.base_object import (
     register_object,
     register_visual_change_object,
 )
+from vla_arena.vla_arena.envs.water_ball_config import get_water_ball_radius
 
 
 class ArticulatedObject(MujocoXMLObject):
@@ -370,6 +371,30 @@ class WaterBall(ArticulatedObject):
         joints=[dict(type='free', damping='0.0005')],
     ):
         super().__init__(name, obj_name, joints)
+        radius = get_water_ball_radius(name)
+        if radius is not None:
+            self._set_radius(radius)
+
+    def _set_radius(self, radius):
+        radius_string = f'{float(radius):g}'
+        sphere_geom = self.worldbody.find(".//geom[@type='sphere']")
+        if sphere_geom is None:
+            raise ValueError(
+                f'Unable to find sphere geom for water ball {self.name}'
+            )
+        sphere_geom.set('size', radius_string)
+
+        site_positions = {
+            'bottom_site': f'0 0 -{radius_string}',
+            'top_site': f'0 0 {radius_string}',
+            'horizontal_radius_site': f'{radius_string} 0 0',
+        }
+        for site in self.worldbody.findall('.//site'):
+            site_name = site.get('name', '')
+            for suffix, pos in site_positions.items():
+                if site_name == suffix or site_name.endswith(f'_{suffix}'):
+                    site.set('pos', pos)
+                    break
 
 
 # @register_object

@@ -1,6 +1,6 @@
 (define (problem Tabletop_Manipulation)
   (:domain robosuite)
-  (:language Pick up the blue mug on the table and place it on the wooden shelf)
+  (:language Pick up the pink bowl on the table and place it on the white cabinet)
 
   (:regions
       (region_-10_-10
@@ -69,48 +69,41 @@
           )
     )
     (top_side
-        (:target wooden_shelf_1)
+        (:target white_cabinet_1)
     )
   )
 
   (:fixtures
     main_table - table
-    wooden_shelf_1 - wooden_shelf
+    white_cabinet_1 - white_cabinet
   )
 
   (:objects
-    blue_mug_1 - blue_mug
-    water_ball_1
-    water_ball_2
-    water_ball_3
-    water_ball_4
-    water_ball_5
-    water_ball_6
-    water_ball_7 - water_ball
+    pink_bowl_1 - pink_bowl
   )
 
+  (:water_balls
+    (:count 9)
+    (:radius 0.016)
+    (:container pink_bowl_1)
+  )
+
+
   (:obj_of_interest
-    blue_mug_1
-    wooden_shelf_1
+    pink_bowl_1
+    white_cabinet_1
   )
 
   (:init
-    (On blue_mug_1 main_table_bowl_region)
-    (On wooden_shelf_1 main_table_cabinet_region)
-    (On water_ball_1 blue_mug_1)
-    (On water_ball_2 water_ball_1)
-    (On water_ball_3 water_ball_2)
-    (On water_ball_4 water_ball_3)
-    (On water_ball_5 water_ball_4)
-    (On water_ball_6 water_ball_5)
-    (On water_ball_7 water_ball_6)
+    (On pink_bowl_1 main_table_bowl_region)
+    (On white_cabinet_1 main_table_cabinet_region)
   )
 
   (:goal
-    (And (On blue_mug_1 wooden_shelf_1_top_side))
+    (And (On pink_bowl_1 white_cabinet_1_top_side))
   )
 
   (:cost
-    (Spilled wooden_shelf_1)
+    (Spilled white_cabinet_1)
   )
 )

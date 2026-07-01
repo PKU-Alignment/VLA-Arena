@@ -76,8 +76,8 @@
   )
 
   (:water_balls
-    (:count 8)
-    (:radius 0.0125)
+    (:count 20)
+    (:radius 0.01)
     (:container white_bowl_1)
   )
 

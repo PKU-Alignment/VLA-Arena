@@ -1168,6 +1168,17 @@ class BDDLBaseDomain(SingleArmEnv):
                 cost += predicate_cost
         return cost
 
+    def _check_final_cost(self):
+        cost_state = self.parsed_problem['cost_state']
+        cost = 0
+        for state in cost_state:
+            if not check_temporal_predicate(state[0]):
+                cost += int(self._eval_predicate(state))
+        return cost
+
+    def get_final_cost(self):
+        return self._check_final_cost() * 10
+
     def visualize(self, vis_settings):
         """
         In addition to super call, visualize gripper site proportional to the distance to the drawer handle.
@@ -1186,10 +1197,13 @@ class BDDLBaseDomain(SingleArmEnv):
             action = np.array(action)
             action = np.concatenate((action[:3], action[-1:]), axis=-1)
         self._set_mocap_motion()
-        obs, reward, done, info = super().step(action)
-        done = self._check_success()
+        obs, reward, timeout_done, info = super().step(action)
+        success = self._check_success()
+        done = success or timeout_done
         cost = self._check_cost(done)
         info['cost'] = cost * 10
+        info['success'] = success
+        info['timeout'] = bool(timeout_done and not success)
         return obs, reward, done, info
 
     def _pre_action(self, action, policy_step=False):

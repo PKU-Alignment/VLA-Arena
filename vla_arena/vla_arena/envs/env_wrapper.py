@@ -127,6 +127,11 @@ class ControlEnv:
     def check_success(self):
         return self.env._check_success()
 
+    def get_final_cost(self):
+        if hasattr(self.env, 'get_final_cost'):
+            return self.env.get_final_cost()
+        return 0
+
     @property
     def _visualizations(self):
         return self.env._visualizations

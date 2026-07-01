@@ -83,8 +83,8 @@
   )
 
   (:water_balls
-    (:count 5)
-    (:radius 0.016)
+    (:count 24)
+    (:radius 0.0122)
     (:container akita_black_bowl_1)
   )
 

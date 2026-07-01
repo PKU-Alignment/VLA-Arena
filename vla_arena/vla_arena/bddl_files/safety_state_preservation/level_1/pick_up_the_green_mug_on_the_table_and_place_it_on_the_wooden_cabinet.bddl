@@ -83,7 +83,7 @@
   )
 
   (:water_balls
-    (:count 5)
+    (:count 7)
     (:radius 0.016)
     (:container green_mug_1)
   )

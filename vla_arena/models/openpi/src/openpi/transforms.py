@@ -30,6 +30,55 @@ DataDict: TypeAlias = at.PyTree
 NormStats: TypeAlias = _normalize.NormStats
 
 
+_NORM_EPS = 1e-6
+
+
+@dataclasses.dataclass(frozen=True)
+class _QuantileStats:
+    q01: np.ndarray
+    q99: np.ndarray
+    quantile_range: np.ndarray
+    min_value: np.ndarray | None
+    max_value: np.ndarray | None
+    full_range: np.ndarray | None
+    degenerate_mask: np.ndarray
+    minmax_fallback_mask: np.ndarray | None
+
+
+def _get_quantile_stats(stats: NormStats, dim: int) -> _QuantileStats:
+    assert stats.q01 is not None
+    assert stats.q99 is not None
+    q01 = stats.q01[..., :dim]
+    q99 = stats.q99[..., :dim]
+    quantile_range = q99 - q01
+    degenerate_mask = quantile_range < _NORM_EPS
+    if stats.min is None or stats.max is None:
+        return _QuantileStats(
+            q01=q01,
+            q99=q99,
+            quantile_range=quantile_range,
+            min_value=None,
+            max_value=None,
+            full_range=None,
+            degenerate_mask=degenerate_mask,
+            minmax_fallback_mask=None,
+        )
+
+    min_value = stats.min[..., :dim]
+    max_value = stats.max[..., :dim]
+    full_range = max_value - min_value
+    return _QuantileStats(
+        q01=q01,
+        q99=q99,
+        quantile_range=quantile_range,
+        min_value=min_value,
+        max_value=max_value,
+        full_range=full_range,
+        degenerate_mask=degenerate_mask,
+        minmax_fallback_mask=degenerate_mask & (full_range > _NORM_EPS),
+    )
+
+
 T = TypeVar('T')
 S = TypeVar('S')
 
@@ -167,10 +216,20 @@ class Normalize(DataTransformFn):
         return (x - mean) / (std + 1e-6)
 
     def _normalize_quantile(self, x, stats: NormStats):
-        assert stats.q01 is not None
-        assert stats.q99 is not None
-        q01, q99 = stats.q01[..., : x.shape[-1]], stats.q99[..., : x.shape[-1]]
-        return (x - q01) / (q99 - q01 + 1e-6) * 2.0 - 1.0
+        quantile_stats = _get_quantile_stats(stats, x.shape[-1])
+        normalized = (x - quantile_stats.q01) / (quantile_stats.quantile_range + _NORM_EPS) * 2.0 - 1.0
+        if quantile_stats.minmax_fallback_mask is None:
+            return normalized
+
+        assert quantile_stats.min_value is not None
+        assert quantile_stats.max_value is not None
+        assert quantile_stats.full_range is not None
+        minmax_normalized = (x - quantile_stats.min_value) / (quantile_stats.full_range + _NORM_EPS) * 2.0 - 1.0
+        return np.where(
+            quantile_stats.degenerate_mask,
+            np.where(quantile_stats.minmax_fallback_mask, minmax_normalized, 0.0),
+            normalized,
+        )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -206,17 +265,24 @@ class Unnormalize(DataTransformFn):
 
     def _unnormalize_quantile(self, x, stats: NormStats):
         assert stats.q01 is not None
-        assert stats.q99 is not None
-        q01, q99 = stats.q01, stats.q99
-        if (dim := q01.shape[-1]) < x.shape[-1]:
-            return np.concatenate(
-                [
-                    (x[..., :dim] + 1.0) / 2.0 * (q99 - q01 + 1e-6) + q01,
-                    x[..., dim:],
-                ],
-                axis=-1,
+        dim = min(stats.q01.shape[-1], x.shape[-1])
+        x_normalized = x[..., :dim]
+        quantile_stats = _get_quantile_stats(stats, dim)
+
+        unnormalized = (x_normalized + 1.0) / 2.0 * (quantile_stats.quantile_range + _NORM_EPS) + quantile_stats.q01
+        if quantile_stats.minmax_fallback_mask is not None:
+            assert quantile_stats.min_value is not None
+            assert quantile_stats.full_range is not None
+            minmax_unnormalized = (x_normalized + 1.0) / 2.0 * (quantile_stats.full_range + _NORM_EPS) + quantile_stats.min_value
+            unnormalized = np.where(
+                quantile_stats.degenerate_mask,
+                np.where(quantile_stats.minmax_fallback_mask, minmax_unnormalized, quantile_stats.q01),
+                unnormalized,
             )
-        return (x + 1.0) / 2.0 * (q99 - q01 + 1e-6) + q01
+
+        if dim < x.shape[-1]:
+            return np.concatenate([unnormalized, x[..., dim:]], axis=-1)
+        return unnormalized
 
 
 @dataclasses.dataclass(frozen=True)

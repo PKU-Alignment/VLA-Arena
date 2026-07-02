@@ -14,6 +14,7 @@
 
 import numpy as np
 import vla_arena.models.openpi.src.openpi.models.tokenizer as _tokenizer
+import vla_arena.models.openpi.src.openpi.shared.normalize as _normalize
 import vla_arena.models.openpi.src.openpi.transforms as _transforms
 import pytest
 
@@ -153,3 +154,71 @@ def test_extract_prompt_from_task():
         ValueError, match='task_index=2 not found in task mapping'
     ):
         transform({'task_index': 2})
+
+
+def test_quantile_normalize_falls_back_to_minmax_for_sparse_nonzero_dim():
+    stats = _normalize.NormStats(
+        mean=np.array([0.0, 0.0]),
+        std=np.array([1.0, 0.03]),
+        q01=np.array([-1.0, 0.0]),
+        q99=np.array([1.0, 0.0]),
+        min=np.array([-1.0, -0.675]),
+        max=np.array([1.0, 0.45]),
+    )
+    transform = _transforms.Normalize({'actions': stats}, use_quantiles=True)
+
+    data = transform({'actions': np.array([[0.0, 0.45]])})
+
+    assert np.allclose(data['actions'], np.array([[0.0, 1.0]]), atol=1e-5)
+
+
+def test_quantile_unnormalize_matches_minmax_fallback():
+    stats = _normalize.NormStats(
+        mean=np.array([0.0, 0.0]),
+        std=np.array([1.0, 0.03]),
+        q01=np.array([-1.0, 0.0]),
+        q99=np.array([1.0, 0.0]),
+        min=np.array([-1.0, -0.675]),
+        max=np.array([1.0, 0.45]),
+    )
+    normalize = _transforms.Normalize({'actions': stats}, use_quantiles=True)
+    unnormalize = _transforms.Unnormalize({'actions': stats}, use_quantiles=True)
+    actions = np.array([[0.0, 0.45], [0.5, -0.675]])
+
+    normalized = normalize({'actions': actions})['actions']
+    recovered = unnormalize({'actions': normalized})['actions']
+
+    assert np.allclose(recovered, actions, atol=1e-5)
+
+
+def test_quantile_normalize_keeps_legacy_behavior_without_minmax_stats():
+    stats = _normalize.NormStats(
+        mean=np.array([0.0]),
+        std=np.array([1.0]),
+        q01=np.array([0.0]),
+        q99=np.array([0.0]),
+    )
+    transform = _transforms.Normalize({'actions': stats}, use_quantiles=True)
+
+    data = transform({'actions': np.array([[0.45]])})
+
+    assert data['actions'][0, 0] > 100000
+
+
+def test_quantile_normalize_constant_dim_with_minmax_stats_outputs_zero():
+    stats = _normalize.NormStats(
+        mean=np.array([0.0]),
+        std=np.array([0.0]),
+        q01=np.array([0.0]),
+        q99=np.array([0.0]),
+        min=np.array([0.0]),
+        max=np.array([0.0]),
+    )
+    normalize = _transforms.Normalize({'actions': stats}, use_quantiles=True)
+    unnormalize = _transforms.Unnormalize({'actions': stats}, use_quantiles=True)
+
+    normalized = normalize({'actions': np.array([[0.0]])})['actions']
+    recovered = unnormalize({'actions': normalized})['actions']
+
+    assert np.allclose(normalized, np.array([[0.0]]))
+    assert np.allclose(recovered, np.array([[0.0]]))

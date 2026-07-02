@@ -38,6 +38,28 @@ def test_serialize_deserialize():
     )
     assert np.allclose(norm_stats['test'].mean, norm_stats2['test'].mean)
     assert np.allclose(norm_stats['test'].std, norm_stats2['test'].std)
+    assert np.allclose(norm_stats['test'].min, norm_stats2['test'].min)
+    assert np.allclose(norm_stats['test'].max, norm_stats2['test'].max)
+
+
+def test_deserialize_legacy_stats_without_min_max():
+    serialized = '''
+    {
+      "norm_stats": {
+        "test": {
+          "mean": [0.0, 1.0],
+          "std": [1.0, 2.0],
+          "q01": [-1.0, 0.0],
+          "q99": [1.0, 2.0]
+        }
+      }
+    }
+    '''
+
+    norm_stats = normalize.deserialize_json(serialized)
+
+    assert norm_stats['test'].min is None
+    assert norm_stats['test'].max is None
 
 
 def test_multiple_batch_dimensions():

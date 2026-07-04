@@ -52,7 +52,6 @@ def get_regions(t, regions, group):
                         [float(x) for x in rect_range]
                     )
             elif attribute[0] == ':yaw_rotation':
-                # print(attribute[1])
                 for value in attribute[1]:
                     region_dict['yaw_rotation'] = [eval(x) for x in value]
             elif attribute[0] == ':rgba':

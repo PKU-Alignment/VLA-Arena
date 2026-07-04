@@ -1264,7 +1264,6 @@ class BDDLBaseDomain(SingleArmEnv):
         normal_force = 0
         for i in range(self.sim.data.ncon):
             contact = self.sim.data.contact[i]
-            # print(f"contact: {self.sim.model.geom_id2name(contact.geom1)} {self.sim.model.geom_id2name(contact.geom2)}")
             # check contact geom in geoms
             c1_in_g1 = self.sim.model.geom_id2name(contact.geom1) in geoms_1
             c2_in_g2 = (
@@ -1329,8 +1328,6 @@ class BDDLBaseDomain(SingleArmEnv):
             geoms_2 = self._filter_stove_knob_geoms(geoms_2)
 
         distances = []
-        # print(geoms_1)
-        # print(geoms_2)
 
         # Iterate through all geometry pairs
         for g1_name in geoms_1:
@@ -1416,7 +1413,6 @@ class BDDLBaseDomain(SingleArmEnv):
             aggregation='min',
             ignore_stove_knob=True,
         )
-        # print(dist)
         return dist
 
     def check_spilled(self, target_object_name):
@@ -1561,8 +1557,6 @@ class BDDLBaseDomain(SingleArmEnv):
         assert isinstance(
             geom_ids_1, list
         ), 'geom_ids_1 must be a list of geom ids'
-        # print(object_1)
-        # print(geom_ids_1)
         geom_1 = object_1.contact_geoms
         geoms_to_check = []
         for geom_name in geom_1:

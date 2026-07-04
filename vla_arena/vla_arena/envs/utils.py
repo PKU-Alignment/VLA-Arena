@@ -233,7 +233,6 @@ class MultiRegionRandomSampler(ObjectPositionSampler):
 
             if not success:
                 raise RandomizationError('Cannot place all objects ):')
-        # print(placed_objects)
         return placed_objects
 
 

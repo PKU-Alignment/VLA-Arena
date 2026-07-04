@@ -180,10 +180,6 @@ def collect_human_trajectory(
             cumulative_cost += recorded_cost
             cost_list.append(cumulative_cost)
             step_list.append(count)
-            # print(
-            #     f'Step {count}: cost={info["cost"]}, '
-            #     f'cumulative_cost={cumulative_cost}'
-            # )
 
             # Only update display in real-time when flag is True
             if use_synchronous_cost_curve and fig is not None:

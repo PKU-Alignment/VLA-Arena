@@ -84,6 +84,7 @@ def collect_human_trajectory(
     # ====== Plotting variables ======
     cost_list = []
     cumulative_cost = 0
+    final_cost_recorded = False
     step_list = []
 
     # Only initialize interactive plot when real-time display is needed
@@ -169,7 +170,14 @@ def collect_human_trajectory(
 
         # ====== Always collect cost data ======
         if 'cost' in info:
-            cumulative_cost += info['cost']
+            recorded_cost = info['cost']
+            if done:
+                if final_cost_recorded:
+                    recorded_cost = 0
+                else:
+                    final_cost_recorded = True
+
+            cumulative_cost += recorded_cost
             cost_list.append(cumulative_cost)
             step_list.append(count)
 

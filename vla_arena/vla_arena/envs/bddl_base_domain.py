@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import xml.etree.ElementTree as ET
 
 import mujoco
 import numpy as np
@@ -543,6 +544,45 @@ class BDDLBaseDomain(SingleArmEnv):
 
         for fixture in self.fixtures:
             self.model.merge_assets(fixture)
+
+        self._exclude_gripper_water_contacts()
+
+    def _exclude_gripper_water_contacts(self):
+        water_ball_bodies = [
+            object_body.root_body
+            for object_name, object_body in self.objects_dict.items()
+            if object_name.startswith('water_ball')
+        ]
+        if not water_ball_bodies:
+            return
+
+        gripper_collision_bodies = []
+        for body in self.model.worldbody.iter('body'):
+            body_name = body.get('name')
+            if body_name is None:
+                continue
+            has_gripper_collision_geom = any(
+                geom.get('name', '').startswith('gripper')
+                and 'collision' in geom.get('name', '')
+                for geom in body.findall('./geom')
+            )
+            if has_gripper_collision_geom:
+                gripper_collision_bodies.append(body_name)
+
+        for water_body in water_ball_bodies:
+            for gripper_body in gripper_collision_bodies:
+                self.model.contact.append(
+                    ET.Element(
+                        'exclude',
+                        attrib={
+                            'name': (
+                                f'exclude_{water_body}_{gripper_body}'
+                            ),
+                            'body1': water_body,
+                            'body2': gripper_body,
+                        },
+                    )
+                )
 
     def _setup_placement_initializer(self, mujoco_arena):
         self.placement_initializer = SequentialCompositeSampler(
@@ -1128,6 +1168,17 @@ class BDDLBaseDomain(SingleArmEnv):
                 cost += predicate_cost
         return cost
 
+    def _check_final_cost(self):
+        cost_state = self.parsed_problem['cost_state']
+        cost = 0
+        for state in cost_state:
+            if not check_temporal_predicate(state[0]):
+                cost += int(self._eval_predicate(state))
+        return cost
+
+    def get_final_cost(self):
+        return self._check_final_cost() * 10
+
     def visualize(self, vis_settings):
         """
         In addition to super call, visualize gripper site proportional to the distance to the drawer handle.
@@ -1146,10 +1197,13 @@ class BDDLBaseDomain(SingleArmEnv):
             action = np.array(action)
             action = np.concatenate((action[:3], action[-1:]), axis=-1)
         self._set_mocap_motion()
-        obs, reward, done, info = super().step(action)
-        done = self._check_success()
+        obs, reward, timeout_done, info = super().step(action)
+        success = self._check_success()
+        done = success or timeout_done
         cost = self._check_cost(done)
         info['cost'] = cost * 10
+        info['success'] = success
+        info['timeout'] = bool(timeout_done and not success)
         return obs, reward, done, info
 
     def _pre_action(self, action, policy_step=False):
@@ -1210,7 +1264,6 @@ class BDDLBaseDomain(SingleArmEnv):
         normal_force = 0
         for i in range(self.sim.data.ncon):
             contact = self.sim.data.contact[i]
-            # print(f"contact: {self.sim.model.geom_id2name(contact.geom1)} {self.sim.model.geom_id2name(contact.geom2)}")
             # check contact geom in geoms
             c1_in_g1 = self.sim.model.geom_id2name(contact.geom1) in geoms_1
             c2_in_g2 = (
@@ -1237,7 +1290,31 @@ class BDDLBaseDomain(SingleArmEnv):
                 return normal_force
         return normal_force
 
-    def check_distance(self, geoms_1, geoms_2=None):
+    def _is_stove_knob_geom(self, geom_name):
+        try:
+            geom_id = self.sim.model.geom_name2id(geom_name)
+        except ValueError:
+            return False
+
+        body_id = self.sim.model.geom_bodyid[geom_id]
+        body_name = self.sim.model.body_id2name(body_id) or ''
+        geom_name = geom_name or ''
+        name_text = f'{geom_name} {body_name}'.lower()
+        return 'flat_stove' in name_text and (
+            'button' in name_text or 'knob' in name_text
+        )
+
+    def _filter_stove_knob_geoms(self, geom_names):
+        return [
+            geom_name
+            for geom_name in geom_names
+            if not self._is_stove_knob_geom(geom_name)
+        ]
+
+    def check_distance(
+        self, geoms_1, geoms_2=None, aggregation='p25',
+        ignore_stove_knob=False,
+    ):
         if type(geoms_1) is str:
             geoms_1 = [geoms_1]
         elif isinstance(geoms_1, MujocoModel):
@@ -1246,10 +1323,11 @@ class BDDLBaseDomain(SingleArmEnv):
             geoms_2 = [geoms_2]
         elif isinstance(geoms_2, MujocoModel):
             geoms_2 = geoms_2.contact_geoms
+        if ignore_stove_knob:
+            geoms_1 = self._filter_stove_knob_geoms(geoms_1)
+            geoms_2 = self._filter_stove_knob_geoms(geoms_2)
 
-        min_dist = float('inf')
-        # print(geoms_1)
-        # print(geoms_2)
+        distances = []
 
         # Iterate through all geometry pairs
         for g1_name in geoms_1:
@@ -1280,10 +1358,15 @@ class BDDLBaseDomain(SingleArmEnv):
                     fromto,
                 )
 
-                if dist < min_dist:
-                    min_dist = dist
+                distances.append(dist)
 
-        return min_dist
+        if not distances:
+            return float('inf')
+        if aggregation == 'min':
+            return float(np.min(distances))
+        if aggregation == 'p25':
+            return float(np.percentile(distances, 25))
+        return float(np.mean(distances))
 
     def check_gripper_distance(self, object_geoms):
         g_geoms = [
@@ -1295,7 +1378,12 @@ class BDDLBaseDomain(SingleArmEnv):
             ._important_geoms['right_fingerpad'],
         ]
         gripper_geoms = ['gripper0_right_' + g[0] for g in g_geoms]
-        return self.check_distance(object_geoms, gripper_geoms)
+        return self.check_distance(
+            object_geoms,
+            gripper_geoms,
+            aggregation='min',
+            ignore_stove_knob=True,
+        )
 
     def check_gripper_distance_part(self, object_1, geom_ids):
         assert isinstance(
@@ -1319,9 +1407,60 @@ class BDDLBaseDomain(SingleArmEnv):
                     geoms_to_check.append(geom_name)
             else:
                 raise NotImplementedError(f'Invalid geom_id_1: {geom_name}')
-        dist = self.check_distance(geoms_to_check, gripper_geoms)
-        # print(dist)
+        dist = self.check_distance(
+            geoms_to_check,
+            gripper_geoms,
+            aggregation='min',
+            ignore_stove_knob=True,
+        )
         return dist
+
+    def check_spilled(self, target_object_name):
+        table_geoms = [
+            self.sim.model.geom_id2name(i)
+            for i in range(self.sim.model.ngeom)
+            if self.sim.model.geom_id2name(i)
+            and self.sim.model.geom_id2name(i).endswith('table_collision')
+        ]
+
+        target_object = self.get_object(target_object_name)
+        target_geoms = []
+        if target_object is not None:
+            target_geoms = target_object.contact_geoms
+
+        spill_target_geoms = set(table_geoms + list(target_geoms))
+        if not spill_target_geoms:
+            return 0
+
+        water_ball_geoms = {
+            object_name: set(
+                object_body.contact_geoms + object_body.visual_geoms
+            )
+            for object_name, object_body in self.objects_dict.items()
+            if object_name.startswith('water_ball')
+        }
+
+        spilled_count = 0
+        contacted_water_balls = set()
+        for i in range(self.sim.data.ncon):
+            contact = self.sim.data.contact[i]
+            geom_1_name = self.sim.model.geom_id2name(contact.geom1)
+            geom_2_name = self.sim.model.geom_id2name(contact.geom2)
+            for water_ball_name, geoms in water_ball_geoms.items():
+                if water_ball_name in contacted_water_balls:
+                    continue
+                water_contacts_target = (
+                    geom_1_name in geoms
+                    and geom_2_name in spill_target_geoms
+                ) or (
+                    geom_2_name in geoms
+                    and geom_1_name in spill_target_geoms
+                )
+                if water_contacts_target:
+                    contacted_water_balls.add(water_ball_name)
+                    spilled_count += 1
+                    break
+        return spilled_count
 
     def _check_contact(self, sim, geoms_1, geoms_2=None):
         """
@@ -1336,7 +1475,6 @@ class BDDLBaseDomain(SingleArmEnv):
         Returns:
             bool: True if any geom in @geoms_1 is in contact with any geom in @geoms_2.
         """
-        # Check if either geoms_1 or geoms_2 is a string, convert to list if so
         if type(geoms_1) is str:
             geoms_1 = [geoms_1]
         elif isinstance(geoms_1, MujocoModel):
@@ -1345,48 +1483,63 @@ class BDDLBaseDomain(SingleArmEnv):
             geoms_2 = [geoms_2]
         elif isinstance(geoms_2, MujocoModel):
             geoms_2 = geoms_2.contact_geoms
+
+        geoms_1 = set(geoms_1)
+        geoms_2 = None if geoms_2 is None else set(geoms_2)
+
         for i in range(sim.data.ncon):
             contact = sim.data.contact[i]
             geom_1_name = sim.model.geom_id2name(contact.geom1)
-            if 'pad_collision' in geom_1_name:
-                geom_1_name = geom_1_name[15:]
             geom_2_name = sim.model.geom_id2name(contact.geom2)
-            # check contact geom in geoms
-            c1_in_g1 = geom_1_name in geoms_1
-            c2_in_g2 = geom_2_name in geoms_2 if geoms_2 is not None else True
-            # check contact geom in geoms (flipped)
-            c2_in_g1 = geom_1_name in geoms_1
-            c1_in_g2 = geom_2_name in geoms_2 if geoms_2 is not None else True
-            if (c1_in_g1 and c2_in_g2) or (c1_in_g2 and c2_in_g1):
-                print(geom_2_name)
+            if geom_1_name is None or geom_2_name is None:
+                continue
+
+            if geoms_2 is None:
+                if geom_1_name in geoms_1 or geom_2_name in geoms_1:
+                    return True
+                continue
+
+            if (
+                geom_1_name in geoms_1
+                and geom_2_name in geoms_2
+            ) or (
+                geom_2_name in geoms_1
+                and geom_1_name in geoms_2
+            ):
                 return True
         return False
 
+    def _get_gripper_collision_geoms(self):
+        gripper = self.robots[0].gripper[self.robots[0].arms[0]]
+        gripper_prefix = getattr(gripper, 'naming_prefix', '')
+        gripper_geoms = []
+        if gripper_prefix:
+            gripper_geoms = [
+                geom_name
+                for i in range(self.sim.model.ngeom)
+                for geom_name in [self.sim.model.geom_id2name(i)]
+                if geom_name
+                and geom_name.startswith(gripper_prefix)
+                and 'collision' in geom_name
+            ]
+        if gripper_geoms:
+            return gripper_geoms
+
+        important_geoms = getattr(gripper, 'important_geoms', {})
+        return [
+            geom_name
+            for geom_group in important_geoms.values()
+            for geom_name in geom_group
+        ]
+
     def check_gripper_contact(self, object_geoms):
         """
-        Checks whether the specified gripper as defined by @gripper is grasping the specified object in the environment.
-        If multiple grippers are specified, will return True if at least one gripper is grasping the object.
-
-        By default, this will return True if at least one geom in both the "left_fingerpad" and "right_fingerpad" geom
-        groups are in contact with any geom specified by @object_geoms. Custom gripper geom groups can be
-        specified with @gripper as well.
-
-        Args:
-            gripper (GripperModel or str or list of str or list of list of str or dict): If a MujocoModel, this is specific
-                gripper to check for grasping (as defined by "left_fingerpad" and "right_fingerpad" geom groups). Otherwise,
-                this sets custom gripper geom groups which together define a grasp. This can be a string
-                (one group of single gripper geom), a list of string (multiple groups of single gripper geoms) or a
-                list of list of string (multiple groups of multiple gripper geoms), or a dictionary in the case
-                where the robot has multiple arms/grippers. At least one geom from each group must be in contact
-                with any geom in @object_geoms for this method to return True.
-            object_geoms (str or list of str or MujocoModel): If a MujocoModel is inputted, will check for any
-                collisions with the model's contact_geoms. Otherwise, this should be specific geom name(s) composing
-                the object to check for contact.
+        Checks whether any collision geom on the gripper is touching the
+        specified object geoms.
 
         Returns:
-            bool: True if the gripper is grasping the given object
+            bool: True if any gripper collision geom contacts the given object
         """
-        # Convert object, gripper geoms into standardized form
         if isinstance(object_geoms, MujocoModel):
             o_geoms = object_geoms.contact_geoms
         else:
@@ -1394,26 +1547,16 @@ class BDDLBaseDomain(SingleArmEnv):
                 [object_geoms] if type(object_geoms) is str else object_geoms
             )
 
-        g_geoms = [
-            self.robots[0]
-            .gripper[self.robots[0].arms[0]]
-            ._important_geoms['left_fingerpad'],
-            self.robots[0]
-            .gripper[self.robots[0].arms[0]]
-            ._important_geoms['right_fingerpad'],
-        ]
-        # Search for collisions between each gripper geom group and the object geoms group
-        for g_group in g_geoms:
-            if self._check_contact(self.sim, g_group, o_geoms):
-                return True
-        return False
+        return self._check_contact(
+            self.sim,
+            self._get_gripper_collision_geoms(),
+            o_geoms,
+        )
 
     def check_gripper_contact_part(self, object_1, geom_ids_1):
         assert isinstance(
             geom_ids_1, list
         ), 'geom_ids_1 must be a list of geom ids'
-        # print(object_1)
-        # print(geom_ids_1)
         geom_1 = object_1.contact_geoms
         geoms_to_check = []
         for geom_name in geom_1:

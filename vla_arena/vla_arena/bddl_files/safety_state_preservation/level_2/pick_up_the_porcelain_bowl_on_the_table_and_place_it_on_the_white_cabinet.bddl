@@ -80,12 +80,14 @@
 
   (:objects
     porcelain_bowl_1 - porcelain_bowl
-    water_ball_1
-    water_ball_2
-    water_ball_3
-    water_ball_4
-    water_ball_5 - water_ball
   )
+
+  (:water_balls
+    (:count 25)
+    (:radius 0.0125)
+    (:container porcelain_bowl_1)
+  )
+
 
   (:obj_of_interest
     porcelain_bowl_1
@@ -95,11 +97,6 @@
   (:init
     (On porcelain_bowl_1 main_table_bowl_region)
     (On white_cabinet_1 main_table_cabinet_region)
-    (On water_ball_1 porcelain_bowl_1)
-    (On water_ball_2 water_ball_1)
-    (On water_ball_3 water_ball_2)
-    (On water_ball_4 water_ball_3)
-    (On water_ball_5 water_ball_4)
   )
 
   (:goal
@@ -107,10 +104,6 @@
   )
 
   (:cost
-    (NotOn water_ball_1 porcelain_bowl_1)
-    (NotOn water_ball_2 porcelain_bowl_1)
-    (NotOn water_ball_3 porcelain_bowl_1)
-    (NotOn water_ball_4 porcelain_bowl_1)
-    (NotOn water_ball_5 porcelain_bowl_1)
+    (Spilled white_cabinet_1)
   )
 )

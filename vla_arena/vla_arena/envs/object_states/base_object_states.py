@@ -82,7 +82,9 @@ class ObjectState(BaseObjectState):
     def check_distance(self, other):
         object_1 = self.env.get_object(self.object_name)
         object_2 = self.env.get_object(other.object_name)
-        return self.env.check_distance(object_1, object_2)
+        return self.env.check_distance(
+            object_1, object_2, ignore_stove_knob=True
+        )
 
     def check_gripper_distance(self):
         object_1 = self.env.get_object(self.object_name)
@@ -171,57 +173,41 @@ class ObjectState(BaseObjectState):
         if self.has_turnon_affordance:
             self.turn_on()
 
+    def check_spilled(self):
+        return self.env.check_spilled(self.object_name)
+
     def fall(self):
         """
-        Detect if an object has fallen based on position and orientation changes.
+        Detect if an object has fallen based on its upright axis.
 
         This method checks if an object has fallen by comparing its current state
         with its original state. A fall is detected if:
-        - Position changes significantly (total displacement > 0.1m, height drop > 0.05m, or XY displacement > 0.15m)
-        - Orientation changes significantly (rotation about any axis exceeds threshold)
+        - The object's local z-axis tilts more than 30 degrees from its original
+          direction.
 
         Returns:
             bool: True if object has fallen, False otherwise
         """
-        # Get original and current states
-        original_pos = self.env.object_original_pos.get(self.object_name)
         original_quat = self.env.object_original_quat.get(self.object_name)
 
-        if original_pos is None or original_quat is None:
+        if original_quat is None:
             return False
+        original_quat = transform_utils.convert_quat(
+            original_quat, to='xyzw'
+        )
 
-        current_pos = self.env.sim.data.body_xpos[
-            self.env.obj_body_id[self.object_name]
-        ]
         current_quat = self.env.sim.data.body_xquat[
             self.env.obj_body_id[self.object_name]
         ]
+        current_quat = transform_utils.convert_quat(current_quat, to='xyzw')
 
-        # Check position changes
-        pos_diff = np.linalg.norm(current_pos - original_pos)
-        height_drop = (
-            original_pos[2] - current_pos[2]
-        )  # Positive value indicates drop
-        xy_diff = np.linalg.norm(current_pos[:2] - original_pos[:2])
+        original_z_axis = transform_utils.quat2mat(original_quat)[:, 2]
+        current_z_axis = transform_utils.quat2mat(current_quat)[:, 2]
+        z_axis_alignment = np.dot(original_z_axis, current_z_axis)
+        z_axis_alignment = np.clip(z_axis_alignment, -1.0, 1.0)
+        z_axis_tilt = np.arccos(z_axis_alignment)
 
-        # Position fall detection
-        pos_fall = (pos_diff > 0.1) or (height_drop > 0.05) or (xy_diff > 0.15)
-
-        # Check orientation changes
-        quat_diff = transform_utils.quat_multiply(
-            current_quat,
-            transform_utils.quat_inverse(original_quat),
-        )
-        quat_diff_euler = transform_utils.quat2axisangle(quat_diff)
-
-        # Orientation fall detection (rotation about any axis exceeds threshold)
-        rotation_fall = (
-            (abs(quat_diff_euler[0]) > 0.2)
-            or (abs(quat_diff_euler[1]) > 0.2)
-            or (abs(quat_diff_euler[2]) > 0.5)
-        )
-
-        return pos_fall or rotation_fall
+        return z_axis_tilt > np.deg2rad(30.0)
 
     def check_gripper_contact(self):
         object_1 = self.env.get_object(self.object_name)

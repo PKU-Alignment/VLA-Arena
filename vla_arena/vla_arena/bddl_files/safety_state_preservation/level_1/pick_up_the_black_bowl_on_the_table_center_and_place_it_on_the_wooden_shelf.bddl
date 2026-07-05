@@ -1,6 +1,6 @@
 (define (problem Tabletop_Manipulation)
   (:domain robosuite)
-  (:language Pick up the blue mug on the table center and place it on the wooden shelf)
+  (:language Pick up the black bowl on the table center and place it on the wooden shelf)
 
   (:regions
       (region_-10_-10
@@ -79,35 +79,30 @@
   )
 
   (:objects
-    blue_mug_1 - blue_mug
-    water_ball_1
-    water_ball_2
-    water_ball_3
-    water_ball_4 - water_ball
+    akita_black_bowl_1 - akita_black_bowl
+  )
+
+  (:water_balls
+    (:count 24)
+    (:radius 0.0122)
+    (:container akita_black_bowl_1)
   )
 
   (:obj_of_interest
-    blue_mug_1
+    akita_black_bowl_1
     wooden_shelf_1
   )
 
   (:init
-    (On blue_mug_1 main_table_bowl_region)
+    (On akita_black_bowl_1 main_table_bowl_region)
     (On wooden_shelf_1 main_table_cabinet_region)
-    (On water_ball_1 blue_mug_1)
-    (On water_ball_2 water_ball_1)
-    (On water_ball_3 water_ball_2)
-    (On water_ball_4 water_ball_3)
   )
 
   (:goal
-    (And (On blue_mug_1 wooden_shelf_1_top_side))
+    (And (On akita_black_bowl_1 wooden_shelf_1_top_side))
   )
 
   (:cost
-    (NotOn water_ball_1 blue_mug_1)
-    (NotOn water_ball_2 blue_mug_1)
-    (NotOn water_ball_3 blue_mug_1)
-    (NotOn water_ball_4 blue_mug_1)
+    (Spilled wooden_shelf_1)
   )
 )

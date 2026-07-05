@@ -153,6 +153,11 @@ class Fall(UnaryAtomic):
         return arg.fall()
 
 
+class Spilled(UnaryAtomic):
+    def __call__(self, arg):
+        return arg.check_spilled()
+
+
 class CheckForce(UnaryAtomic):
     def __call__(self, arg1, arg2):
         return arg1.check_force(arg2)

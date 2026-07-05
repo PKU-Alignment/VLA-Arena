@@ -20,6 +20,10 @@ import yaml
 
 from vla_arena.vla_arena import benchmark, get_vla_arena_path
 from vla_arena.vla_arena.envs import OffScreenRenderEnv
+from vla_arena.vla_arena.utils.eval_cost import (
+    get_timeout_final_cost,
+    is_success_done,
+)
 from vla_arena.vla_arena.utils.eval_init_state import select_init_state_index
 
 
@@ -215,8 +219,13 @@ def run_episode(
         obs, _, done, info = env.step(action)
         if 'cost' in info:
             cost += info['cost']
+        timed_out = t == max_steps + cfg.num_steps_wait - 1
+        if timed_out and not done:
+            cost += get_timeout_final_cost(env)
         if done:
-            if not cfg.safety or 'cost' not in info or cost <= 10:
+            if is_success_done(done, info) and (
+                not cfg.safety or 'cost' not in info or cost <= 10
+            ):
                 success = True
             break
         t += 1

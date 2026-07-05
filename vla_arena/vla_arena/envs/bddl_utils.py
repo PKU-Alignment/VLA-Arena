@@ -16,6 +16,11 @@
 import numpy as np
 from bddl.parsing import *
 
+from vla_arena.vla_arena.envs.water_ball_config import (
+    clear_water_ball_properties,
+    register_water_ball_property,
+)
+
 
 pi = np.pi
 
@@ -47,7 +52,6 @@ def get_regions(t, regions, group):
                         [float(x) for x in rect_range]
                     )
             elif attribute[0] == ':yaw_rotation':
-                # print(attribute[1])
                 for value in attribute[1]:
                     region_dict['yaw_rotation'] = [eval(x) for x in value]
             elif attribute[0] == ':rgba':
@@ -114,6 +118,120 @@ def get_moving_objects(t, moving_objects, group):
         moving_objects.append(moving_object_dict)
 
 
+def get_water_balls(t, water_ball_config, group):
+    group.pop(0)
+    for attribute in group:
+        if attribute[0] == ':count':
+            assert len(attribute) == 2
+            water_ball_config['count'] = int(attribute[1])
+        elif attribute[0] == ':radius':
+            assert len(attribute) == 2
+            water_ball_config['radius'] = float(attribute[1])
+        elif attribute[0] == ':container':
+            assert len(attribute) == 2
+            water_ball_config['container'] = attribute[1]
+        elif attribute[0] == ':prefix':
+            assert len(attribute) == 2
+            water_ball_config['prefix'] = attribute[1]
+        else:
+            raise NotImplementedError(
+                f'Invalid water ball attribute: {attribute[0]}'
+            )
+
+
+def _is_water_ball_name(name, prefix):
+    return name == prefix or name.startswith(f'{prefix}_')
+
+
+def _infer_water_ball_container(objects, fixtures, obj_of_interest, prefix):
+    fixture_names = {
+        fixture_name
+        for fixture_list in fixtures.values()
+        for fixture_name in fixture_list
+    }
+    object_names = [
+        object_name
+        for category_name, object_list in objects.items()
+        if category_name != prefix
+        for object_name in object_list
+        if not _is_water_ball_name(object_name, prefix)
+        and object_name not in fixture_names
+    ]
+    object_name_set = set(object_names)
+
+    for object_name in obj_of_interest:
+        if object_name in object_name_set:
+            return object_name
+
+    if len(object_names) == 1:
+        return object_names[0]
+
+    raise ValueError(
+        'Unable to infer water ball container. Add '
+        '(:container <object_name>) to the :water_balls section.'
+    )
+
+
+def expand_water_balls(
+    objects,
+    fixtures,
+    initial_state,
+    obj_of_interest,
+    water_ball_config,
+    object_properties,
+):
+    if not water_ball_config:
+        return
+
+    count = water_ball_config.get('count')
+    radius = water_ball_config.get('radius')
+    prefix = water_ball_config.get('prefix', 'water_ball')
+
+    if count is None:
+        raise ValueError(':water_balls requires (:count <int>).')
+    if count < 0:
+        raise ValueError(':water_balls count must be non-negative.')
+    if radius is not None and radius <= 0:
+        raise ValueError(':water_balls radius must be positive.')
+
+    container = water_ball_config.get('container')
+    if container is None and count > 0:
+        container = _infer_water_ball_container(
+            objects, fixtures, obj_of_interest, prefix
+        )
+
+    water_ball_names = [f'{prefix}_{idx}' for idx in range(1, count + 1)]
+    for category_name in list(objects.keys()):
+        objects[category_name] = [
+            object_name
+            for object_name in objects[category_name]
+            if not _is_water_ball_name(object_name, prefix)
+        ]
+        if not objects[category_name]:
+            objects.pop(category_name)
+
+    if water_ball_names:
+        objects[prefix] = water_ball_names
+
+    initial_state[:] = [
+        state
+        for state in initial_state
+        if not (
+            len(state) >= 3
+            and (
+                _is_water_ball_name(state[1], prefix)
+                or _is_water_ball_name(state[2], prefix)
+            )
+        )
+    ]
+
+    for idx, water_ball_name in enumerate(water_ball_names):
+        support = container if idx == 0 else water_ball_names[idx - 1]
+        initial_state.append(['on', water_ball_name, support])
+        object_properties[water_ball_name] = {'radius': radius}
+        register_water_ball_property(water_ball_name, radius)
+
+
 def get_scenes(t, scene_properties, group):
     group.pop(0)
     while group:
@@ -157,10 +275,12 @@ def get_problem_info(problem_filename):
 def robosuite_parse_problem(problem_filename):
     domain_name = 'robosuite'
     problem_filename = problem_filename
+    clear_water_ball_properties()
     tokens = scan_tokens(filename=problem_filename)
     if isinstance(tokens, list) and tokens.pop(0) == 'define':
         problem_name = 'unknown'
         objects = {}
+        object_properties = {}
         obj_of_interest = []
         initial_state = []
         goal_state = []
@@ -171,6 +291,7 @@ def robosuite_parse_problem(problem_filename):
         language_instruction = ''
         cost_state = []
         moving_objects = []
+        water_ball_config = {}
         camera_names = []
         noise = []
         camera_configs = {}
@@ -236,6 +357,8 @@ def robosuite_parse_problem(problem_filename):
                 package_predicates(group[1], cost_state, '', 'costs')
             elif t == ':moving_objects':
                 get_moving_objects(t, moving_objects, group)
+            elif t == ':water_balls':
+                get_water_balls(t, water_ball_config, group)
             elif t == ':image_settings':
                 group.pop(0)
                 while group:
@@ -266,6 +389,15 @@ def robosuite_parse_problem(problem_filename):
             else:
                 print('%s is not recognized in problem' % t)
 
+        expand_water_balls(
+            objects,
+            fixtures,
+            initial_state,
+            obj_of_interest,
+            water_ball_config,
+            object_properties,
+        )
+
         if camera_names and camera_names[-1] != 'robot0_eye_in_hand':
             camera_names.append('robot0_eye_in_hand')
             camera_configs['robot0_eye_in_hand'] = [0, 0, 0]
@@ -274,6 +406,7 @@ def robosuite_parse_problem(problem_filename):
             'fixtures': fixtures,
             'regions': regions,
             'objects': objects,
+            'object_properties': object_properties,
             'scene_properties': scene_properties,
             'initial_state': initial_state,
             'goal_state': goal_state,

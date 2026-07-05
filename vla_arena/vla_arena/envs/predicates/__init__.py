@@ -33,6 +33,7 @@ VALIDATE_PREDICATE_FN_DICT = {
     'turnoff': TurnOff(),
     'collide': Collide(),
     'fall': Fall(),
+    'spilled': Spilled(),
     'checkforce': CheckForce(),
     'checkdistance': CheckDistance(),
     'incontactpart': InContactPart(),

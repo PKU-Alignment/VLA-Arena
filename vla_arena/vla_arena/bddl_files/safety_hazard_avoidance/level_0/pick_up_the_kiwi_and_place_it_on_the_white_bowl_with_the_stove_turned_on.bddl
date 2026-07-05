@@ -115,8 +115,8 @@
   )
 
   (:cost
-    (And (CheckDistance kiwi_1 flat_stove_1 0.05)
-         (CheckGripperDistance flat_stove_1 0.05)
+    (And (CheckDistance kiwi_1 flat_stove_1 0.03)
+         (CheckGripperDistance flat_stove_1 0.01)
     )
   )
 )

@@ -183,6 +183,8 @@ def grab_language_from_bddl_file(bddl_filename, problem_folder, level_dir):
                 package_predicates(group[1], cost_state, '', 'costs')
             elif t == ':moving_objects':
                 get_moving_objects(t, moving_objects, group)
+            elif t == ':water_balls':
+                pass
             elif t == ':image_settings':
                 group.pop(0)
                 while group:
@@ -285,6 +287,8 @@ def grab_language_from_bddl_path(bddl_file_path):
                 package_predicates(group[1], cost_state, '', 'costs')
             elif t == ':moving_objects':
                 get_moving_objects(t, moving_objects, group)
+            elif t == ':water_balls':
+                pass
             elif t == ':image_settings':
                 group.pop(0)
                 while group:

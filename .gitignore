@@ -16,6 +16,7 @@ build/
 runs/
 adapter-tmp/
 .venv/
+.worktrees/
 __pycache__/
 assets/
 checkpoints

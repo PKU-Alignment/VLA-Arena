@@ -170,7 +170,13 @@ class Normalize(DataTransformFn):
         assert stats.q01 is not None
         assert stats.q99 is not None
         q01, q99 = stats.q01[..., : x.shape[-1]], stats.q99[..., : x.shape[-1]]
-        return (x - q01) / (q99 - q01 + 1e-6) * 2.0 - 1.0
+        quantile_span = q99 - q01
+        quantile = (x - q01) / (quantile_span + 1e-6) * 2.0 - 1.0
+        return np.where(
+            quantile_span > 1e-6,
+            quantile,
+            self._normalize(x, stats),
+        )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -211,12 +217,18 @@ class Unnormalize(DataTransformFn):
         if (dim := q01.shape[-1]) < x.shape[-1]:
             return np.concatenate(
                 [
-                    (x[..., :dim] + 1.0) / 2.0 * (q99 - q01 + 1e-6) + q01,
+                    self._unnormalize_quantile(x[..., :dim], stats),
                     x[..., dim:],
                 ],
                 axis=-1,
             )
-        return (x + 1.0) / 2.0 * (q99 - q01 + 1e-6) + q01
+        quantile_span = q99 - q01
+        quantile = (x + 1.0) / 2.0 * (quantile_span + 1e-6) + q01
+        return np.where(
+            quantile_span > 1e-6,
+            quantile,
+            self._unnormalize(x, stats),
+        )
 
 
 @dataclasses.dataclass(frozen=True)
